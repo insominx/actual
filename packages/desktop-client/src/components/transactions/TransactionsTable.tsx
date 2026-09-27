@@ -2246,7 +2246,8 @@ function NotesCell({
   const [isTruncated, setIsTruncated] = useState(false);
   const checkTruncated = useCallback(() => {
     const el = textRef.current;
-    setIsTruncated(el != null && el.scrollWidth > el.clientWidth);
+    const next = el != null && el.scrollWidth > el.clientWidth;
+    setIsTruncated(next);
   }, []);
   const resizeRef = useResizeObserver<HTMLSpanElement>(checkTruncated);
   const setTextRef = useCallback(

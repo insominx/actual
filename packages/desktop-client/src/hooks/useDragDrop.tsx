@@ -304,14 +304,10 @@ export function useDrop<T extends { id: string }>({
   const lastClientY = useRef<number | null>(null);
   // Track if react-aria thinks we're a drop target (needed to attach dragover listener)
   const [isDropActive, setIsDropActive] = useState(false);
-
-  // Reset state when cursor leaves
-  useEffect(() => {
-    if (!isCursorOver) {
-      setDropPos(null);
-      lastClientY.current = null;
-    }
-  }, [isCursorOver]);
+  const dropPosRef = useRef(dropPos);
+  dropPosRef.current = dropPos;
+  const isCursorOverRef = useRef(isCursorOver);
+  isCursorOverRef.current = isCursorOver;
 
   const acceptedTypes = Array.isArray(types) ? types : [types];
 
@@ -333,7 +329,15 @@ export function useDrop<T extends { id: string }>({
     },
     onDropExit() {
       setIsDropActive(false);
-      setIsCursorOver(false);
+      if (isCursorOverRef.current) {
+        isCursorOverRef.current = false;
+        setIsCursorOver(false);
+      }
+      if (dropPosRef.current != null) {
+        dropPosRef.current = null;
+        setDropPos(null);
+      }
+      lastClientY.current = null;
     },
     async onDrop(e) {
       if (!onDrop) return;
@@ -412,11 +416,22 @@ export function useDrop<T extends { id: string }>({
         clientY <= rect.bottom;
 
       if (!cursorInBounds) {
-        setIsCursorOver(false);
+        if (isCursorOverRef.current) {
+          isCursorOverRef.current = false;
+          setIsCursorOver(false);
+        }
+        if (dropPosRef.current != null) {
+          dropPosRef.current = null;
+          setDropPos(null);
+        }
+        lastClientY.current = null;
         return;
       }
 
-      setIsCursorOver(true);
+      if (!isCursorOverRef.current) {
+        isCursorOverRef.current = true;
+        setIsCursorOver(true);
+      }
       lastClientY.current = clientY;
 
       const hoverMiddleY = (rect.bottom - rect.top) / 2;
@@ -424,7 +439,10 @@ export function useDrop<T extends { id: string }>({
       const newPos: DropPosition =
         hoverClientY < hoverMiddleY ? 'before' : 'after';
 
-      setDropPos(newPos);
+      if (dropPosRef.current !== newPos) {
+        dropPosRef.current = newPos;
+        setDropPos(newPos);
+      }
     };
 
     const element = dropRef.current;
