@@ -161,11 +161,27 @@ async function stagePublicData(): Promise<void> {
   );
 }
 
+// Node on Windows cannot execute the extensionless Yarn shim (ENOENT) or
+// yarn.cmd directly (EINVAL). cmd.exe resolves yarn.cmd from PATH.
+function spawnYarn(
+  args: readonly string[],
+  options: Parameters<typeof spawn>[2],
+): ChildProcess {
+  if (process.platform === 'win32') {
+    return spawn(
+      process.env.ComSpec ?? 'cmd.exe',
+      ['/d', '/s', '/c', 'yarn', ...args],
+      options,
+    );
+  }
+
+  return spawn('yarn', [...args], options);
+}
+
 const lootCoreBackend = (): Plugin => ({
   name: 'loot-core-backend',
   configureServer(server) {
-    const child: ChildProcess = spawn(
-      'yarn',
+    const child: ChildProcess = spawnYarn(
       [
         'vite',
         'build',
