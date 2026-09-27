@@ -76,6 +76,9 @@ export function useSchedules({
     statusLabels: new Map(),
   });
   const [upcomingLength] = useSyncedPref('upcomingScheduledTransactionLength');
+  // Equivalent queries may be recreated by callers on every render. Depend on
+  // their contents so setData does not restart the subscription in a loop.
+  const queryKey = query?.serializeAsString();
 
   const scheduleQueryRef = useRef<LiveQuery<ScheduleEntity> | null>(null);
   const statusQueryRef = useRef<LiveQuery<TransactionEntity> | null>(null);
@@ -139,7 +142,8 @@ export function useSchedules({
       scheduleQueryRef.current?.unsubscribe();
       statusQueryRef.current?.unsubscribe();
     };
-  }, [query, upcomingLength]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryKey, upcomingLength]);
 
   return {
     isLoading,

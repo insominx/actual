@@ -1,5 +1,5 @@
 import { q } from '@actual-app/core/shared/query';
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { liveQuery } from '#queries/liveQuery';
@@ -78,6 +78,30 @@ describe('useSchedules', () => {
 
     expect(calls[0].unsubscribe).toHaveBeenCalled();
     expect(calls[1].unsubscribe).toHaveBeenCalled();
+  });
+
+  it('keeps the subscription when a rerender creates an equivalent query', () => {
+    renderHook(() => useSchedules({ query: q('schedules').select('*') }));
+
+    act(() => {
+      calls[0].onData([], []);
+      calls[1].onData([], []);
+    });
+
+    expect(calls).toHaveLength(2);
+    expect(calls[0].unsubscribe).not.toHaveBeenCalled();
+  });
+
+  it('replaces the subscription when the query changes', () => {
+    const { rerender } = renderHook(
+      ({ id }) => useSchedules({ query: q('schedules').filter({ id }) }),
+      { initialProps: { id: 'first' } },
+    );
+
+    rerender({ id: 'second' });
+
+    expect(calls).toHaveLength(2);
+    expect(calls[0].unsubscribe).toHaveBeenCalledTimes(1);
   });
 });
 
