@@ -141,6 +141,30 @@ A new column should appear which shows the balance of the account after each tra
 
 ![Show running balance](/img/tips-tricks/running-balance.webp)
 
+## Resize Table Columns
+
+On desktop, you can make the Account, Payee, Notes, Category group and Category columns of the transaction list wider or narrower. The date and amount columns can't be resized.
+
+To resize a column with the mouse:
+
+1. Click on an account.
+2. Move the cursor to the right edge of a column header until it changes to a resize cursor.
+3. Drag the edge left or right. The width is saved when you let go of the mouse button.
+
+To resize a column with the keyboard:
+
+1. Press <Key k="tab" /> until the resize handle at the right edge of the column header is focused.
+2. Press <Key arrow="left" /> or <Key arrow="right" /> to change the width in small steps. The width is saved when you release the key.
+3. Press <Key k="home" /> to return the column to its default width, or <Key k="escape" /> to cancel a change you haven't released yet.
+
+Widths are saved on the device you are using, not synced to your other devices. Each account and the _All accounts_ view remember their own widths.
+
+To return every column to its default width:
+
+1. Click on the 3 dots to show the actions menu.
+2. Select "Manage table columns".
+3. Click "Reset column widths". This applies right away and doesn't change which columns are shown or their order.
+
 ## Using Emojis in Actual
 
 Actual supports emojis in many places, including payees, categories, and notes. You can use emojis to add visual

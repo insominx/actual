@@ -111,6 +111,15 @@ export type LocalPrefs = Partial<{
   sidebarWidth: number;
   'mobile.showSpentColumn': boolean;
   'mobile.bankSyncProvidersCollapsed': boolean;
+  // Device-local transaction table text column widths, keyed by view id
+  // (account id or special view). Read and written only through
+  // useTransactionColumnWidths, never useLocalPref.
+  'transaction-table-widths': Record<
+    string,
+    Partial<
+      Record<'account' | 'payee' | 'notes' | 'group' | 'category', number>
+    >
+  >;
 }>;
 
 export type Theme = 'light' | 'dark' | 'auto' | 'midnight' | string;

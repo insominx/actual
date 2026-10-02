@@ -46,6 +46,9 @@ test.describe('Mobile Accounts', () => {
 
     await expect(accountPage.heading).toHaveText('Bank of America');
     await expect(accountPage.transactionList).toBeVisible();
+    await expect(page.getByRole('separator', { name: /Resize/ })).toHaveCount(
+      0,
+    );
     expect(await accountPage.getBalance()).toBeGreaterThan(0);
     await expect(accountPage.noTransactionsMessage).not.toBeVisible();
     await expect(page).toMatchThemeScreenshots();

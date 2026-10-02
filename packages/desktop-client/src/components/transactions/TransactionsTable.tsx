@@ -12,6 +12,7 @@ import {
 } from 'react';
 import type {
   CSSProperties,
+  FocusEvent,
   ForwardedRef,
   KeyboardEvent,
   ReactNode,
@@ -147,6 +148,7 @@ import {
   isFutureTransaction,
 } from '#util/schedule-actions';
 
+import { ColumnResizeHandle } from './table/ColumnResizeHandle';
 import {
   isTransactionTableColumnAvailableInChildRows,
   isTransactionTableColumnDisplayOnly,
@@ -154,6 +156,16 @@ import {
   useTransactionTableColumnLabels,
 } from './table/columns';
 import type { TransactionTableColumnId } from './table/columns';
+import {
+  isResizableTextColumn,
+  resolveTextColumnStyle,
+  tableMinWidth,
+} from './table/columnWidths';
+import type {
+  ResizableTextColumnId,
+  TextColumnStyle,
+  TextColumnWidths,
+} from './table/columnWidths';
 import {
   deserializeTransaction,
   isLastChild,
@@ -229,6 +241,18 @@ type TransactionHeaderProps = {
   ascDesc: 'asc' | 'desc';
   field: string;
   amountColumnWidths: AmountColumnWidths;
+  textColumnWidths: TextColumnWidths;
+  // Resize handles are only rendered when these are provided
+  columnWidthsViewKey?: string;
+  onColumnResizeDraft?: (
+    columnId: ResizableTextColumnId,
+    width: number | null,
+  ) => void;
+  onColumnResizeCommit?: (
+    columnId: ResizableTextColumnId,
+    width: number | null,
+  ) => void;
+  onColumnResizeCancel?: () => void;
 };
 
 const TransactionHeader = memo(
@@ -241,6 +265,11 @@ const TransactionHeader = memo(
     field,
     showSelection,
     amountColumnWidths,
+    textColumnWidths,
+    columnWidthsViewKey,
+    onColumnResizeDraft,
+    onColumnResizeCommit,
+    onColumnResizeCancel,
   }: TransactionHeaderProps) => {
     const dispatchSelected = useSelectedDispatch();
     const { t } = useTranslation();
@@ -377,11 +406,38 @@ const TransactionHeader = memo(
         )}
         {columns.map(columnId => {
           const { sortDirection, ...cellProps } = headerConfig[columnId];
+          const textColumnId = isResizableTextColumn(columnId)
+            ? columnId
+            : null;
+          const textStyle = textColumnId
+            ? resolveTextColumnStyle(textColumnId, textColumnWidths)
+            : null;
           return (
             <HeaderCell
               key={columnId}
               id={columnId}
               {...cellProps}
+              {...(textStyle && {
+                width: textStyle.width,
+                style: textStyle.style,
+              })}
+              resizeHandle={
+                textColumnId &&
+                onColumnResizeDraft &&
+                onColumnResizeCommit &&
+                onColumnResizeCancel ? (
+                  <ColumnResizeHandle
+                    key={columnWidthsViewKey}
+                    columnLabel={columnLabels[textColumnId]}
+                    width={textColumnWidths[textColumnId]}
+                    onDraft={width => onColumnResizeDraft(textColumnId, width)}
+                    onCommit={width =>
+                      onColumnResizeCommit(textColumnId, width)
+                    }
+                    onCancel={onColumnResizeCancel}
+                  />
+                ) : undefined
+              }
               icon={
                 sortDirection
                   ? field === columnId
@@ -560,6 +616,8 @@ type HeaderCellProps = {
   icon?: 'asc' | 'desc' | 'clickable';
   tooltip?: ReactNode;
   onClick?: () => void;
+  style?: CSSProperties;
+  resizeHandle?: ReactNode;
 } & Pick<CSSProperties, 'width' | 'alignItems' | 'marginLeft' | 'marginRight'>;
 
 function HeaderCell({
@@ -572,6 +630,8 @@ function HeaderCell({
   icon,
   tooltip,
   onClick,
+  style: cellStyle,
+  resizeHandle,
 }: HeaderCellProps) {
   const style = {
     whiteSpace: 'nowrap' as CSSProperties['whiteSpace'],
@@ -592,6 +652,7 @@ function HeaderCell({
       style={{
         borderTopWidth: 0,
         borderBottomWidth: 0,
+        ...cellStyle,
       }}
       unexposedContent={({ value: cellValue }) => {
         const content = onClick ? (
@@ -608,12 +669,17 @@ function HeaderCell({
           <Text style={style}>{cellValue}</Text>
         );
 
-        return tooltip ? (
-          <Tooltip content={tooltip} placement="bottom end">
-            {content}
-          </Tooltip>
-        ) : (
-          content
+        return (
+          <>
+            {tooltip ? (
+              <Tooltip content={tooltip} placement="bottom end">
+                {content}
+              </Tooltip>
+            ) : (
+              content
+            )}
+            {resizeHandle}
+          </>
         );
       }}
     />
@@ -639,11 +705,13 @@ type PayeeCellProps = {
   onManagePayees: (id: PayeeEntity['id'] | undefined) => void;
   onNavigateToTransferAccount: (id: AccountEntity['id']) => void;
   onNavigateToSchedule: (id: ScheduleEntity['id']) => void;
+  columnStyle: TextColumnStyle;
 };
 
 function PayeeCell({
   id,
   payee,
+  columnStyle,
   focused,
   payees,
   accounts,
@@ -671,9 +739,9 @@ function PayeeCell({
   return transaction.is_parent ? (
     <Cell
       name="payee"
-      width="flex"
+      width={columnStyle.width}
       focused={focused}
-      style={{ padding: 0 }}
+      style={{ padding: 0, ...columnStyle.style }}
       plain
     >
       <CellButton
@@ -774,7 +842,8 @@ function PayeeCell({
     </Cell>
   ) : (
     <CustomCell
-      width="flex"
+      width={columnStyle.width}
+      style={columnStyle.style}
       name="payee"
       textAlign="flex"
       value={payee?.id}
@@ -1040,6 +1109,7 @@ type TransactionProps = {
   onDrop?: OnDropCallback;
   index: number;
   amountColumnWidths: AmountColumnWidths;
+  textColumnWidths?: TextColumnWidths;
 };
 
 const Transaction = memo(function Transaction({
@@ -1099,6 +1169,7 @@ const Transaction = memo(function Transaction({
   onDrop,
   index,
   amountColumnWidths,
+  textColumnWidths,
 }: TransactionProps) {
   const { t } = useTranslation();
 
@@ -1590,6 +1661,18 @@ const Transaction = memo(function Transaction({
     />
   );
 
+  const accountColumnStyle = resolveTextColumnStyle(
+    'account',
+    textColumnWidths,
+  );
+  const payeeColumnStyle = resolveTextColumnStyle('payee', textColumnWidths);
+  const notesColumnStyle = resolveTextColumnStyle('notes', textColumnWidths);
+  const groupColumnStyle = resolveTextColumnStyle('group', textColumnWidths);
+  const categoryColumnStyle = resolveTextColumnStyle(
+    'category',
+    textColumnWidths,
+  );
+
   const renderColumnCell = (columnId: TransactionTableColumnId) => {
     switch (columnId) {
       case 'date':
@@ -1658,8 +1741,9 @@ const Transaction = memo(function Transaction({
           <Field
             key={columnId}
             /* Account blank placeholder for Child transaction */
+            width={accountColumnStyle.width}
             style={{
-              flex: 1,
+              ...accountColumnStyle.style,
               backgroundColor: theme.tableRowBackgroundHover,
               border: 0,
             }}
@@ -1669,7 +1753,8 @@ const Transaction = memo(function Transaction({
             key={columnId}
             /* Account field for non-child transaction */
             name="account"
-            width="flex"
+            width={accountColumnStyle.width}
+            style={accountColumnStyle.style}
             textAlign="flex"
             value={accountId}
             formatter={acctId => {
@@ -1717,6 +1802,7 @@ const Transaction = memo(function Transaction({
             /* Payee field for all transactions */
             id={id}
             payee={payee}
+            columnStyle={payeeColumnStyle}
             focused={focusedField === 'payee'}
             /* Filter out the account we're currently in as it is not a valid transfer */
             accounts={accounts.filter(account => account.id !== accountId)}
@@ -1741,6 +1827,7 @@ const Transaction = memo(function Transaction({
         return (
           <NotesCell
             key={columnId}
+            columnStyle={notesColumnStyle}
             note={notes ?? ''}
             scheduleNote={isPreview ? schedule?.name : null}
             focused={focusedField === 'notes'}
@@ -1757,11 +1844,12 @@ const Transaction = memo(function Transaction({
           <Cell
             key={columnId}
             name="group"
-            width="flex"
+            width={groupColumnStyle.width}
             style={{
               fontStyle: 'italic',
               color: theme.pageTextSubdued,
               fontWeight: 300,
+              ...groupColumnStyle.style,
             }}
             value={
               categoryId
@@ -1776,7 +1864,7 @@ const Transaction = memo(function Transaction({
             key={columnId}
             /* Category field (Split button) for parent transactions */
             name="category"
-            width="flex"
+            width={categoryColumnStyle.width}
             focused={focusedField === 'category'}
             style={{
               padding: 0,
@@ -1784,6 +1872,7 @@ const Transaction = memo(function Transaction({
               alignItems: 'center',
               justifyContent: 'flex-start',
               height: '100%',
+              ...categoryColumnStyle.style,
             }}
             plain
           >
@@ -1873,7 +1962,7 @@ const Transaction = memo(function Transaction({
             /* Category field for transfer and off budget transactions
               (NOT preview, it is covered first) */
             name="category"
-            width="flex"
+            width={categoryColumnStyle.width}
             exposed={focusedField === 'category'}
             focused={focusedField === 'category'}
             onExpose={name => onEdit(id, name)}
@@ -1891,6 +1980,7 @@ const Transaction = memo(function Transaction({
               fontStyle: 'italic',
               color: theme.pageTextSubdued,
               fontWeight: 300,
+              ...categoryColumnStyle.style,
             }}
             inputProps={{
               readOnly: true,
@@ -1902,7 +1992,8 @@ const Transaction = memo(function Transaction({
             key={columnId}
             /* Category field for normal and child transactions */
             name="category"
-            width="flex"
+            width={categoryColumnStyle.width}
+            style={categoryColumnStyle.style}
             textAlign="flex"
             value={categoryId}
             formatter={value =>
@@ -2226,9 +2317,11 @@ type NotesCellProps = {
   onUpdate: (value: string) => void;
   onClickTag: (tag: string) => void;
   onExpose: (name: string) => void;
+  columnStyle: TextColumnStyle;
 };
 
 function NotesCell({
+  columnStyle,
   note,
   scheduleNote,
   focused,
@@ -2274,7 +2367,8 @@ function NotesCell({
 
   return (
     <CustomCell
-      width="flex"
+      width={columnStyle.width}
+      style={columnStyle.style}
       name="notes"
       value={displayedNote}
       valueStyle={valueStyle}
@@ -2415,6 +2509,7 @@ type NewTransactionProps = {
   balance?: number | null;
   transactions: TransactionEntity[];
   amountColumnWidths: AmountColumnWidths;
+  textColumnWidths: TextColumnWidths;
   transferAccountsByTransaction: {
     [id: TransactionEntity['id']]: AccountEntity | null;
   };
@@ -2423,6 +2518,7 @@ type NewTransactionProps = {
 function NewTransaction({
   transactions,
   amountColumnWidths,
+  textColumnWidths,
   accounts,
   categoryGroups,
   payees,
@@ -2493,6 +2589,7 @@ function NewTransaction({
           key={transaction.id}
           index={index}
           amountColumnWidths={amountColumnWidths}
+          textColumnWidths={textColumnWidths}
           editing={editingTransaction === transaction.id}
           transaction={transaction}
           subtransactions={transaction.is_parent ? childTransactions : null}
@@ -2577,6 +2674,18 @@ function NewTransaction({
   );
 }
 
+type ColumnWidthProps = {
+  // Custom text column widths for the current view. Resize handles are only
+  // shown when `onCommitColumnWidth` is provided.
+  textColumnWidths?: TextColumnWidths;
+  columnWidthsViewKey?: string;
+  onCommitColumnWidth?: (
+    viewKey: string,
+    columnId: ResizableTextColumnId,
+    width: number | null,
+  ) => void;
+};
+
 type TransactionTableInnerProps = {
   tableRef: Ref<TableHandleRef<TransactionEntity>>;
   listContainerRef: RefObject<HTMLDivElement>;
@@ -2657,7 +2766,34 @@ type TransactionTableInnerProps = {
   draggedDate?: string | null;
   onDragChange?: OnDragChangeCallback<TransactionEntity>;
   onDrop?: OnDropCallback;
+} & ColumnWidthProps;
+
+type ColumnWidthDraft = {
+  viewKey: string | undefined;
+  columnId: ResizableTextColumnId;
+  width: number | null;
 };
+
+const EMPTY_TEXT_COLUMN_WIDTHS: TextColumnWidths = {};
+
+// Cells focus with `preventScroll` when moving within a row, so the
+// horizontal shell has to bring the focused element into view itself
+function revealFocusedElement(e: FocusEvent<HTMLDivElement>) {
+  const shell = e.currentTarget;
+  if (shell.scrollWidth <= shell.clientWidth || e.target === shell) {
+    return;
+  }
+  const bounds = shell.getBoundingClientRect();
+  const target = e.target.getBoundingClientRect();
+  if (target.left < bounds.left) {
+    shell.scrollLeft -= bounds.left - target.left;
+  } else if (target.right > bounds.right) {
+    shell.scrollLeft += Math.min(
+      target.right - bounds.right,
+      target.left - bounds.left,
+    );
+  }
+}
 
 function TransactionTableInner({
   tableNavigator,
@@ -2667,11 +2803,68 @@ function TransactionTableInner({
   newNavigator,
   renderEmpty,
   showHiddenCategories,
+  textColumnWidths = EMPTY_TEXT_COLUMN_WIDTHS,
+  columnWidthsViewKey,
+  onCommitColumnWidth,
   ...props
 }: TransactionTableInnerProps) {
   const containerRef = createRef<HTMLDivElement>();
   const isAddingPrev = usePrevious(props.isAdding);
   const [scrollWidth, setScrollWidth] = useState(0);
+
+  // An in-progress resize. It is never persisted; only the completed gesture
+  // is handed to `onCommitColumnWidth`.
+  const [columnWidthDraft, setColumnWidthDraft] =
+    useState<ColumnWidthDraft | null>(null);
+
+  // Switching accounts keeps this table mounted, so drop any draft from the
+  // previous view before it can paint
+  useLayoutEffect(() => {
+    setColumnWidthDraft(null);
+  }, [columnWidthsViewKey]);
+
+  const effectiveColumnWidths = useMemo(() => {
+    if (!columnWidthDraft || columnWidthDraft.viewKey !== columnWidthsViewKey) {
+      return textColumnWidths;
+    }
+    const next = { ...textColumnWidths };
+    if (columnWidthDraft.width == null) {
+      delete next[columnWidthDraft.columnId];
+    } else {
+      next[columnWidthDraft.columnId] = columnWidthDraft.width;
+    }
+    return next;
+  }, [textColumnWidths, columnWidthDraft, columnWidthsViewKey]);
+
+  const onColumnResizeDraft = useCallback(
+    (columnId: ResizableTextColumnId, width: number | null) => {
+      setColumnWidthDraft(prev => ({
+        viewKey:
+          prev?.columnId === columnId ? prev.viewKey : columnWidthsViewKey,
+        columnId,
+        width,
+      }));
+    },
+    [columnWidthsViewKey],
+  );
+
+  const onColumnResizeCommit = useCallback(
+    (columnId: ResizableTextColumnId, width: number | null) => {
+      const viewKey =
+        columnWidthDraft?.columnId === columnId
+          ? columnWidthDraft.viewKey
+          : columnWidthsViewKey;
+      setColumnWidthDraft(null);
+      if (viewKey != null && viewKey === columnWidthsViewKey) {
+        onCommitColumnWidth?.(viewKey, columnId, width);
+      }
+    },
+    [columnWidthDraft, columnWidthsViewKey, onCommitColumnWidth],
+  );
+
+  const onColumnResizeCancel = useCallback(() => {
+    setColumnWidthDraft(null);
+  }, []);
 
   function saveScrollWidth(parent: number, child: number) {
     const width = parent > 0 && child > 0 && parent - child;
@@ -2828,6 +3021,7 @@ function TransactionTableInner({
         showZeroInDeposit={isChildDeposit}
         balance={balances?.[trans.id] ?? 0}
         amountColumnWidths={amountColumnWidths}
+        textColumnWidths={effectiveColumnWidths}
         focusedField={editing ? tableNavigator.focusedField : undefined}
         accounts={accounts}
         categoryGroups={categoryGroups}
@@ -2884,6 +3078,13 @@ function TransactionTableInner({
     );
   };
 
+  const minTableWidth = tableMinWidth({
+    columns: props.columns,
+    widths: effectiveColumnWidths,
+    amountColumnWidths,
+    scrollWidth,
+  });
+
   return (
     <View
       innerRef={containerRef}
@@ -2893,93 +3094,116 @@ function TransactionTableInner({
         ...props.style,
       }}
     >
-      <View>
-        <TransactionHeader
-          hasSelected={props.selectedItems.size > 0}
-          columns={props.columns}
-          scrollWidth={scrollWidth}
-          onSort={props.onSort}
-          ascDesc={props.ascDesc}
-          field={props.sortField}
-          showSelection={props.showSelection}
-          amountColumnWidths={amountColumnWidths}
-        />
-
-        {props.isAdding && (
-          <View
-            {...newNavigator.getNavigatorProps({
-              onKeyDown: (e: KeyboardEvent) => props.onCheckNewEnter(e),
-            })}
-          >
-            <NewTransaction
-              transactions={props.newTransactions}
-              amountColumnWidths={amountColumnWidths}
-              transferAccountsByTransaction={
-                props.transferAccountsByTransaction
-              }
-              editingTransaction={newNavigator.editingId}
-              focusedField={newNavigator.focusedField}
-              accounts={props.accounts}
-              categoryGroups={props.categoryGroups}
-              payees={props.payees || []}
-              columns={props.columns}
-              dateFormat={dateFormat}
-              hideFraction={props.hideFraction}
-              onClose={props.onCloseAddTransaction}
-              onSchedule={props.onScheduleTemporary}
-              onAdd={props.onAddTemporary}
-              onAddAndClose={props.onAddAndCloseTemporary}
-              onAddSplit={props.onAddSplit}
-              onToggleSplit={props.onToggleSplit}
-              onSplit={props.onSplit}
-              onEdit={newNavigator.onEdit}
-              onSave={props.onSave}
-              onDelete={props.onDelete}
-              onManagePayees={props.onManagePayees}
-              onCreatePayee={props.onCreatePayee}
-              onNavigateToTransferAccount={onNavigateToTransferAccount}
-              onNavigateToSchedule={onNavigateToSchedule}
-              onNotesTagClick={onNotesTagClick}
-              onDistributeRemainder={props.onDistributeRemainder}
-              showHiddenCategories={showHiddenCategories}
-            />
-          </View>
-        )}
-      </View>
-      {/*// * On Windows, makes the scrollbar always appear
-         //   the full height of the container ??? */}
-
+      {/* Header, new rows and body scroll horizontally together once custom
+          widths no longer fit; vertical scrolling stays on the list */}
       <View
-        style={{ flex: 1, overflow: 'hidden' }}
-        data-testid="transaction-table"
+        style={{ flex: 1, overflowX: 'auto', overflowY: 'hidden' }}
+        data-testid="transaction-table-scroll"
+        onFocus={revealFocusedElement}
       >
-        <Table
-          navigator={tableNavigator}
-          ref={tableRef}
-          listContainerRef={listContainerRef}
-          items={transactionsToRender}
-          renderItem={renderRow}
-          renderEmpty={renderEmpty}
-          loadMore={props.loadMoreTransactions}
-          isSelected={id => props.selectedItems.has(id)}
-          onKeyDown={e => props.onCheckEnter(e)}
-          saveScrollWidth={saveScrollWidth}
-        />
+        <View
+          style={{
+            flex: 1,
+            ...(minTableWidth != null && { minWidth: minTableWidth }),
+          }}
+        >
+          <View>
+            <TransactionHeader
+              hasSelected={props.selectedItems.size > 0}
+              columns={props.columns}
+              scrollWidth={scrollWidth}
+              onSort={props.onSort}
+              ascDesc={props.ascDesc}
+              field={props.sortField}
+              showSelection={props.showSelection}
+              amountColumnWidths={amountColumnWidths}
+              textColumnWidths={effectiveColumnWidths}
+              {...(onCommitColumnWidth && {
+                columnWidthsViewKey,
+                onColumnResizeDraft,
+                onColumnResizeCommit,
+                onColumnResizeCancel,
+              })}
+            />
 
-        {props.isAdding && (
-          <div
-            key="shadow"
-            style={{
-              position: 'absolute',
-              top: -20,
-              left: 0,
-              right: 0,
-              height: 20,
-              backgroundColor: theme.errorText,
-              boxShadow: '0 0 6px rgba(0, 0, 0, .20)',
-            }}
-          />
-        )}
+            {props.isAdding && (
+              <View
+                {...newNavigator.getNavigatorProps({
+                  onKeyDown: (e: KeyboardEvent) => props.onCheckNewEnter(e),
+                })}
+              >
+                <NewTransaction
+                  transactions={props.newTransactions}
+                  amountColumnWidths={amountColumnWidths}
+                  textColumnWidths={effectiveColumnWidths}
+                  transferAccountsByTransaction={
+                    props.transferAccountsByTransaction
+                  }
+                  editingTransaction={newNavigator.editingId}
+                  focusedField={newNavigator.focusedField}
+                  accounts={props.accounts}
+                  categoryGroups={props.categoryGroups}
+                  payees={props.payees || []}
+                  columns={props.columns}
+                  dateFormat={dateFormat}
+                  hideFraction={props.hideFraction}
+                  onClose={props.onCloseAddTransaction}
+                  onSchedule={props.onScheduleTemporary}
+                  onAdd={props.onAddTemporary}
+                  onAddAndClose={props.onAddAndCloseTemporary}
+                  onAddSplit={props.onAddSplit}
+                  onToggleSplit={props.onToggleSplit}
+                  onSplit={props.onSplit}
+                  onEdit={newNavigator.onEdit}
+                  onSave={props.onSave}
+                  onDelete={props.onDelete}
+                  onManagePayees={props.onManagePayees}
+                  onCreatePayee={props.onCreatePayee}
+                  onNavigateToTransferAccount={onNavigateToTransferAccount}
+                  onNavigateToSchedule={onNavigateToSchedule}
+                  onNotesTagClick={onNotesTagClick}
+                  onDistributeRemainder={props.onDistributeRemainder}
+                  showHiddenCategories={showHiddenCategories}
+                />
+              </View>
+            )}
+          </View>
+          {/*// * On Windows, makes the scrollbar always appear
+             //   the full height of the container ??? */}
+
+          <View
+            style={{ flex: 1, overflow: 'hidden' }}
+            data-testid="transaction-table"
+          >
+            <Table
+              navigator={tableNavigator}
+              ref={tableRef}
+              listContainerRef={listContainerRef}
+              items={transactionsToRender}
+              renderItem={renderRow}
+              renderEmpty={renderEmpty}
+              loadMore={props.loadMoreTransactions}
+              isSelected={id => props.selectedItems.has(id)}
+              onKeyDown={e => props.onCheckEnter(e)}
+              saveScrollWidth={saveScrollWidth}
+            />
+
+            {props.isAdding && (
+              <div
+                key="shadow"
+                style={{
+                  position: 'absolute',
+                  top: -20,
+                  left: 0,
+                  right: 0,
+                  height: 20,
+                  backgroundColor: theme.errorText,
+                  boxShadow: '0 0 6px rgba(0, 0, 0, .20)',
+                }}
+              />
+            )}
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -3054,7 +3278,7 @@ export type TransactionTableProps = {
   showSelection: boolean;
   allowSplitTransaction?: boolean;
   onManagePayees: (id?: PayeeEntity['id']) => void;
-};
+} & ColumnWidthProps;
 
 export const TransactionTable = forwardRef(
   (

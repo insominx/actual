@@ -24,6 +24,14 @@ Manually add transactions by clicking on **Add New**. The Payee and the Category
 
 ![Adding a transaction](/img/a-tour-of-actual/tour-account-register-adding-transaction.webp)
 
+## Resizing Columns
+
+On desktop, you can change the width of the Account, Payee, Notes, Category group and Category columns. Hover over the right edge of the column header until the cursor changes, then drag it left or right. The date and amount columns keep their size.
+
+If the columns become wider than the window, scroll the transaction list sideways to see the rest.
+
+Column widths are saved on the device you are using, separately for each account and for the _All accounts_ view. See [Resize Table Columns](../getting-started/tips-tricks.md#resize-table-columns) for keyboard controls and how to reset the widths.
+
 ## Filtering on transactions
 
 Clicking on **Filter** lets you filter on all the fields. In the screenshot, we see that we filtered for where the Payee is _Kroger_ and the Category is _Food_.

@@ -50,6 +50,7 @@ import {
   TransactionTable,
   useAmountColumnWidths,
 } from './TransactionsTable';
+import type { TransactionTableProps } from './TransactionsTable';
 
 const queryClient = createTestQueryClient();
 
@@ -171,7 +172,13 @@ type LiveTransactionTableProps = {
     transaction: TransactionEntity,
     updatedFieldName?: string | null,
   ) => Promise<TransactionEntity>;
-};
+} & Pick<
+  TransactionTableProps,
+  | 'columnOrder'
+  | 'textColumnWidths'
+  | 'columnWidthsViewKey'
+  | 'onCommitColumnWidth'
+>;
 
 function LiveTransactionTable(props: LiveTransactionTableProps) {
   const { transactions: transactionsProp, onTransactionsChange } = props;
@@ -1860,5 +1867,219 @@ describe('useAmountColumnWidths', () => {
     expect(result.current.amount).toBeGreaterThan(
       DEFAULT_AMOUNT_COLUMN_WIDTHS.amount,
     );
+  });
+});
+
+describe('Transaction column resizing', () => {
+  function headerCell(container: HTMLElement, id: string) {
+    const cell = container.querySelector<HTMLElement>(
+      `[data-testid="transaction-table-header"] [data-testid="${id}"]`,
+    );
+    if (!cell) {
+      throw new Error(`No header cell for ${id}`);
+    }
+    return cell;
+  }
+
+  function rowCell(container: HTMLElement, id: string) {
+    const cell = container.querySelector<HTMLElement>(
+      `[data-testid="transaction-table"] [data-testid="row"] [data-testid="${id}"]`,
+    );
+    if (!cell) {
+      throw new Error(`No row cell for ${id}`);
+    }
+    return cell;
+  }
+
+  function resizeHandle(container: HTMLElement, id: string) {
+    return within(headerCell(container, id)).getByRole('separator');
+  }
+
+  function renderResizable(
+    extraProps: Partial<LiveTransactionTableProps> = {},
+  ) {
+    const onCommitColumnWidth = vi.fn();
+    const result = renderTransactions({
+      textColumnWidths: { payee: 200 },
+      columnWidthsViewKey: 'view-a',
+      onCommitColumnWidth,
+      ...extraProps,
+    });
+    return { ...result, onCommitColumnWidth };
+  }
+
+  test('no resize handles without a commit callback', () => {
+    const { container } = renderTransactions({
+      textColumnWidths: { payee: 200 },
+    });
+    expect(screen.queryAllByRole('separator')).toHaveLength(0);
+    expect(headerCell(container, 'payee')).toBeInTheDocument();
+  });
+
+  test('renders handles only for text columns and applies stored widths', () => {
+    const { container } = renderResizable();
+
+    expect(
+      within(
+        container.querySelector<HTMLElement>(
+          '[data-testid="transaction-table-header"]',
+        )!,
+      ).getAllByRole('separator'),
+    ).toHaveLength(4); // account, payee, notes, category
+    expect(headerCell(container, 'payee')).toHaveStyle({ width: '200px' });
+    expect(rowCell(container, 'payee')).toHaveStyle({ width: '200px' });
+  });
+
+  test('a completed drag commits once for the current view', () => {
+    const { container, onCommitColumnWidth } = renderResizable();
+    const handle = resizeHandle(container, 'payee');
+
+    fireEvent.pointerDown(handle, { pointerId: 1, button: 0, clientX: 100 });
+    fireEvent.pointerMove(handle, { pointerId: 1, clientX: 140 });
+    expect(headerCell(container, 'payee')).toHaveStyle({ width: '240px' });
+    expect(rowCell(container, 'payee')).toHaveStyle({ width: '240px' });
+    expect(onCommitColumnWidth).not.toHaveBeenCalled();
+
+    fireEvent.pointerUp(handle, { pointerId: 1, clientX: 140 });
+    expect(onCommitColumnWidth).toHaveBeenCalledTimes(1);
+    expect(onCommitColumnWidth).toHaveBeenCalledWith('view-a', 'payee', 240);
+  });
+
+  test('a view change mid-drag discards the draft and never commits', () => {
+    const { container, onCommitColumnWidth, updateProps } = renderResizable();
+
+    fireEvent.pointerDown(resizeHandle(container, 'payee'), {
+      pointerId: 1,
+      button: 0,
+      clientX: 100,
+    });
+    fireEvent.pointerMove(resizeHandle(container, 'payee'), {
+      pointerId: 1,
+      clientX: 150,
+    });
+    expect(headerCell(container, 'payee')).toHaveStyle({ width: '250px' });
+
+    act(() => {
+      updateProps({
+        textColumnWidths: { payee: 300 },
+        columnWidthsViewKey: 'view-b',
+        onCommitColumnWidth,
+      });
+    });
+    expect(headerCell(container, 'payee')).toHaveStyle({ width: '300px' });
+    expect(rowCell(container, 'payee')).toHaveStyle({ width: '300px' });
+
+    fireEvent.pointerUp(resizeHandle(container, 'payee'), {
+      pointerId: 1,
+      clientX: 150,
+    });
+    expect(onCommitColumnWidth).not.toHaveBeenCalled();
+  });
+
+  test('reordering columns keeps the width on the column id', () => {
+    const { container, updateProps, onCommitColumnWidth } = renderResizable({
+      columnOrder: ['date', 'account', 'payee', 'notes', 'category'],
+    });
+    expect(headerCell(container, 'payee')).toHaveStyle({ width: '200px' });
+
+    updateProps({
+      columnOrder: ['date', 'notes', 'category', 'account', 'payee'],
+      textColumnWidths: { payee: 200 },
+      columnWidthsViewKey: 'view-a',
+      onCommitColumnWidth,
+    });
+    const header = container.querySelector<HTMLElement>(
+      '[data-testid="transaction-table-header"]',
+    )!;
+    const cellIds = [...header.querySelectorAll('[data-testid]')]
+      .map(el => el.getAttribute('data-testid'))
+      .filter(id => ['notes', 'payee'].includes(id ?? ''));
+    expect(cellIds).toEqual(['notes', 'payee']);
+    expect(headerCell(container, 'payee')).toHaveStyle({ width: '200px' });
+    expect(rowCell(container, 'payee')).toHaveStyle({ width: '200px' });
+    expect(headerCell(container, 'notes')).not.toHaveStyle({
+      width: '200px',
+    });
+  });
+
+  test('unmounting mid-drag never commits', () => {
+    const { container, onCommitColumnWidth, unmount } = renderResizable();
+    const handle = resizeHandle(container, 'payee');
+
+    fireEvent.pointerDown(handle, { pointerId: 1, button: 0, clientX: 100 });
+    fireEvent.pointerMove(handle, { pointerId: 1, clientX: 150 });
+    unmount();
+
+    document.dispatchEvent(
+      new PointerEvent('pointerup', { pointerId: 1, clientX: 150 }),
+    );
+    fireEvent.pointerUp(handle, { pointerId: 1, clientX: 150 });
+    expect(onCommitColumnWidth).not.toHaveBeenCalled();
+  });
+
+  test.each(['pointerCancel', 'lostPointerCapture'] as const)(
+    '%s discards the draft and restores the start width',
+    eventName => {
+      const { container, onCommitColumnWidth } = renderResizable();
+      const handle = resizeHandle(container, 'payee');
+
+      fireEvent.pointerDown(handle, { pointerId: 1, button: 0, clientX: 100 });
+      fireEvent.pointerMove(handle, { pointerId: 1, clientX: 150 });
+      expect(headerCell(container, 'payee')).toHaveStyle({ width: '250px' });
+
+      fireEvent[eventName](handle, { pointerId: 1 });
+      fireEvent.pointerUp(handle, { pointerId: 1, clientX: 150 });
+
+      expect(headerCell(container, 'payee')).toHaveStyle({ width: '200px' });
+      expect(rowCell(container, 'payee')).toHaveStyle({ width: '200px' });
+      expect(onCommitColumnWidth).not.toHaveBeenCalled();
+    },
+  );
+
+  test('a drag leaves no global listeners or update loops behind', () => {
+    const isTracked = (type: unknown) =>
+      typeof type === 'string' && /^(pointer|key)/.test(type);
+    const trackers = [window, document].map(target => ({
+      add: vi.spyOn(target, 'addEventListener'),
+      remove: vi.spyOn(target, 'removeEventListener'),
+    }));
+    const spies = trackers.flatMap(({ add, remove }) => [add, remove]);
+    const consoleError = vi.spyOn(console, 'error');
+
+    try {
+      const { container, unmount } = renderResizable();
+      const handle = resizeHandle(container, 'payee');
+
+      // Only listeners registered once the drag starts belong to it
+      const startCounts = trackers.map(({ add }) => add.mock.calls.length);
+      fireEvent.pointerDown(handle, { pointerId: 1, button: 0, clientX: 100 });
+      for (let x = 101; x < 130; x++) {
+        fireEvent.pointerMove(handle, { pointerId: 1, clientX: x });
+      }
+      unmount();
+
+      const leaked = trackers.flatMap(({ add, remove }, index) =>
+        add.mock.calls
+          .slice(startCounts[index])
+          .filter(([type]) => isTracked(type))
+          .filter(
+            ([type, listener]) =>
+              !remove.mock.calls.some(
+                ([removedType, removedListener]) =>
+                  removedType === type && removedListener === listener,
+              ),
+          )
+          .map(([type]) => type),
+      );
+      expect(leaked).toEqual([]);
+      expect(
+        consoleError.mock.calls.some(args =>
+          String(args[0]).includes('Maximum update depth'),
+        ),
+      ).toBe(false);
+    } finally {
+      spies.forEach(spy => spy.mockRestore());
+      consoleError.mockRestore();
+    }
   });
 });

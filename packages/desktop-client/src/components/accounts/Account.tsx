@@ -53,6 +53,7 @@ import type {
   TransactionTableColumn,
   TransactionTableColumnId,
 } from '#components/transactions/table/columns';
+import type { TextColumnWidths } from '#components/transactions/table/columnWidths';
 import { TransactionList } from '#components/transactions/TransactionList';
 import { validateAccountName } from '#components/util/accountValidation';
 import { useAccountPreviewTransactions } from '#hooks/useAccountPreviewTransactions';
@@ -71,6 +72,8 @@ import {
 } from '#hooks/useSplitsExpanded';
 import { useSyncedPref } from '#hooks/useSyncedPref';
 import { useTransactionBatchActions } from '#hooks/useTransactionBatchActions';
+import { useTransactionColumnWidths } from '#hooks/useTransactionColumnWidths';
+import type { UseTransactionColumnWidthsResult } from '#hooks/useTransactionColumnWidths';
 import { useTransactionFilters } from '#hooks/useTransactionFilters';
 import { calculateRunningBalancesBottomUp } from '#hooks/useTransactions';
 import {
@@ -231,6 +234,11 @@ type AccountInternalProps = {
   transactionColumns: TransactionTableColumn[];
   columnOrder: TransactionTableColumnId[];
   saveColumns: (columns: TransactionTableColumn[], applyToAll: boolean) => void;
+  textColumnWidths?: TextColumnWidths;
+  columnWidthsViewKey?: string;
+  onCommitColumnWidth?: UseTransactionColumnWidthsResult['commitWidth'];
+  hasCustomColumnWidths?: boolean;
+  onResetColumnWidths?: UseTransactionColumnWidthsResult['resetWidths'];
   modalShowing?: boolean;
   accounts: AccountEntity[];
   newTransactions: Array<TransactionEntity['id']>;
@@ -955,6 +963,8 @@ class AccountInternal extends PureComponent<
         return column;
       });
 
+    const { columnWidthsViewKey, onResetColumnWidths } = this.props;
+
     this.props.dispatch(
       pushModal({
         modal: {
@@ -962,6 +972,11 @@ class AccountInternal extends PureComponent<
           options: {
             columns,
             onSave: this.onSaveColumns,
+            ...(columnWidthsViewKey != null &&
+              onResetColumnWidths && {
+                onResetWidths: () => onResetColumnWidths(columnWidthsViewKey),
+                hasCustomWidths: !!this.props.hasCustomColumnWidths,
+              }),
           },
         },
       }),
@@ -1934,6 +1949,9 @@ class AccountInternal extends PureComponent<
                   showGroup={this.props.showGroup}
                   showAccount={this.showAccountColumn()}
                   columnOrder={this.props.columnOrder}
+                  textColumnWidths={this.props.textColumnWidths}
+                  columnWidthsViewKey={this.props.columnWidthsViewKey}
+                  onCommitColumnWidth={this.props.onCommitColumnWidth}
                   allowReorder={
                     !!accountId &&
                     accountId !== 'offbudget' &&
@@ -2072,6 +2090,13 @@ export function Account() {
     showGroup,
     saveColumns,
   } = useTransactionTableColumns(params.id);
+  const columnWidthsViewKey = params.id || 'all-accounts';
+  const {
+    widths: textColumnWidths,
+    hasCustomWidths: hasCustomColumnWidths,
+    commitWidth: onCommitColumnWidth,
+    resetWidths: onResetColumnWidths,
+  } = useTransactionColumnWidths(columnWidthsViewKey);
 
   const modalShowing = useSelector(state => state.modals.modalStack.length > 0);
   const accountsSyncing = useSelector(state => state.account.accountsSyncing);
@@ -2129,6 +2154,11 @@ export function Account() {
             transactionColumns={transactionColumns}
             columnOrder={columnOrder}
             saveColumns={saveColumns}
+            textColumnWidths={textColumnWidths}
+            columnWidthsViewKey={columnWidthsViewKey}
+            onCommitColumnWidth={onCommitColumnWidth}
+            hasCustomColumnWidths={hasCustomColumnWidths}
+            onResetColumnWidths={onResetColumnWidths}
             payees={payees}
             modalShowing={modalShowing}
             accountsSyncing={accountsSyncing}

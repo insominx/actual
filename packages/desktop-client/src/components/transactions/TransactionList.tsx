@@ -116,6 +116,9 @@ type TransactionListProps = Pick<
   | 'columnOrder'
   | 'sortField'
   | 'transactions'
+  | 'textColumnWidths'
+  | 'columnWidthsViewKey'
+  | 'onCommitColumnWidth'
 > & {
   tableRef: RefObject<TableHandleRef<TransactionEntity> | null>;
   allTransactions: TransactionEntity[];
@@ -150,6 +153,9 @@ export function TransactionList({
   showGroup,
   showAccount,
   columnOrder,
+  textColumnWidths,
+  columnWidthsViewKey,
+  onCommitColumnWidth,
   isAdding,
   isNew,
   isMatched,
@@ -528,6 +534,9 @@ export function TransactionList({
         showCategory
         showGroup={showGroup}
         columnOrder={columnOrder}
+        textColumnWidths={textColumnWidths}
+        columnWidthsViewKey={columnWidthsViewKey}
+        onCommitColumnWidth={onCommitColumnWidth}
         currentAccountId={account && account.id}
         currentCategoryId={category && category.id}
         isAdding={isAdding}

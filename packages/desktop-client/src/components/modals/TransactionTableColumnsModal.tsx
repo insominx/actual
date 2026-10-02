@@ -35,6 +35,8 @@ type TransactionTableColumnsModalProps = Extract<
 export function TransactionTableColumnsModal({
   columns: initialColumns,
   onSave,
+  onResetWidths,
+  hasCustomWidths = false,
 }: TransactionTableColumnsModalProps) {
   const { t } = useTranslation();
   const columnLabels = useTransactionTableColumnLabels();
@@ -42,6 +44,7 @@ export function TransactionTableColumnsModal({
   const [columns, setColumns] =
     useState<TransactionTableColumn[]>(initialColumns);
   const [applyToAll, setApplyToAll] = useState(false);
+  const [widthsReset, setWidthsReset] = useState(false);
 
   const onToggleColumn = (id: TransactionTableColumnId, isVisible: boolean) => {
     setColumns(prev => {
@@ -187,9 +190,23 @@ export function TransactionTableColumnsModal({
             <ModalButtons
               style={{ marginTop: 0 }}
               leftContent={
-                <Button variant="bare" onPress={onResetToDefault}>
-                  <Trans>Reset to default</Trans>
-                </Button>
+                <View style={{ flexDirection: 'row', gap: 5 }}>
+                  <Button variant="bare" onPress={onResetToDefault}>
+                    <Trans>Reset to default</Trans>
+                  </Button>
+                  {onResetWidths && (
+                    <Button
+                      variant="bare"
+                      isDisabled={!hasCustomWidths || widthsReset}
+                      onPress={() => {
+                        setWidthsReset(true);
+                        onResetWidths();
+                      }}
+                    >
+                      <Trans>Reset column widths</Trans>
+                    </Button>
+                  )}
+                </View>
               }
             >
               <Button style={{ marginRight: 10 }} onPress={() => state.close()}>

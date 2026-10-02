@@ -595,6 +595,9 @@ export type Modal =
           columns: TransactionTableColumn[],
           applyToAll: boolean,
         ) => void;
+        // Clears this view's device-local column widths immediately
+        onResetWidths?: () => void;
+        hasCustomWidths?: boolean;
       };
     }
   | {
