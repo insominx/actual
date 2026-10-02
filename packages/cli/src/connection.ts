@@ -1,5 +1,6 @@
 import * as api from '@actual-app/api';
 
+import { AgentError, updateAgentContext } from './agent-output';
 import type { CacheState } from './cache';
 import {
   CACHE_VERSION,
@@ -44,6 +45,75 @@ export async function withConnection<T>(
 ): Promise<T> {
   const config = await resolveConfig(globalOpts);
 
+  if (config.offline) {
+    let cached = config.syncId
+      ? readCacheState(getMetaDir(config.dataDir, config.syncId))
+      : null;
+    if (cached && config.serverUrl && cached.serverUrl !== config.serverUrl) {
+      throw new AgentError(
+        'MISSING_CONTEXT',
+        'The cached budget belongs to a different server.',
+      );
+    }
+    const id = config.budgetId ?? cached?.budgetId;
+    if (!id && !skipBudget) {
+      throw new AgentError(
+        'MISSING_CONTEXT',
+        'Offline access needs a local budget ID or a previously downloaded sync budget.',
+      );
+    }
+    await api.init({ dataDir: config.dataDir, verbose: globalOpts.verbose });
+    let release: Release | null = null;
+    try {
+      if (skipBudget) return await fn(config);
+      const budgets = await api.getBudgets();
+      const selected = budgets.find(b => b.id === id);
+      if (!selected?.id) {
+        throw new AgentError(
+          'MISSING_CONTEXT',
+          'The selected budget does not exist in this data directory.',
+        );
+      }
+      const identity =
+        selected.groupId ?? config.syncId ?? `local-${selected.id}`;
+      const meta = getMetaDir(config.dataDir, identity);
+      if (!config.noLock) {
+        release = await (mutates ? acquireExclusive : acquireShared)(meta, {
+          timeoutMs: config.lockTimeout * 1000,
+        });
+      }
+      cached = readCacheState(meta);
+      await api.loadBudget(selected.id, { offline: true });
+      const prefs = await api.getPreferences();
+      updateAgentContext({
+        budgetId: selected.id,
+        syncId: selected.groupId ?? null,
+        serverUrl: null,
+        mode: 'offline-local',
+        currency: prefs.defaultCurrencyCode ?? null,
+        lastSyncedAt: cached?.lastSyncedAt ?? null,
+        freshness: 'unknown',
+      });
+      const result = await fn(config);
+      if (mutates) {
+        updateAgentContext({ commit: 'committed-local' });
+        if (cached) writeCacheState(meta, { ...cached, lastSyncedAt: 0 });
+      }
+      return result;
+    } finally {
+      try {
+        await api.shutdown();
+      } finally {
+        await release?.();
+      }
+    }
+  }
+
+  updateAgentContext({
+    syncId: config.syncId ?? null,
+    serverUrl: new URL(config.serverUrl).origin,
+  });
+
   info(`Connecting to ${config.serverUrl}...`, globalOpts.verbose);
 
   if (config.sessionToken) {
@@ -61,7 +131,8 @@ export async function withConnection<T>(
       verbose: globalOpts.verbose,
     });
   } else {
-    throw new Error(
+    throw new AgentError(
+      'MISSING_CONTEXT',
       'Authentication required. Provide --password or --session-token, or set ACTUAL_PASSWORD / ACTUAL_SESSION_TOKEN.',
     );
   }
@@ -69,7 +140,8 @@ export async function withConnection<T>(
   try {
     if (skipBudget) return await fn(config);
     if (!config.syncId) {
-      throw new Error(
+      throw new AgentError(
+        'MISSING_CONTEXT',
         'Sync ID is required for this command. Set --sync-id or ACTUAL_SYNC_ID.',
       );
     }
@@ -148,15 +220,37 @@ export async function withConnection<T>(
         writeCacheState(meta, state);
       }
 
+      updateAgentContext({
+        budgetId: state.budgetId,
+        mode: 'remote-cache',
+        lastSyncedAt: state.lastSyncedAt,
+        freshness: 'observed',
+      });
+      if (globalOpts.outputVersion === '2') {
+        const prefs = await api.getPreferences();
+        updateAgentContext({ currency: prefs.defaultCurrencyCode ?? null });
+      }
       const result = await fn(config);
 
       if (mutates) {
+        updateAgentContext({ commit: 'committed-local' });
         info(`Pushing changes for ${config.syncId}...`, globalOpts.verbose);
-        await api.sync();
+        try {
+          await api.sync();
+        } catch (error) {
+          if (globalOpts.outputVersion !== '2') throw error;
+          throw new AgentError(
+            'PARTIAL_COMPLETION',
+            'Local changes committed, but synchronization failed. Retry synchronization rather than the mutation.',
+            true,
+          );
+        }
+        updateAgentContext({ commit: 'synced' });
         state = { ...state, lastSyncedAt: Date.now() };
         writeCacheState(meta, state);
       }
 
+      updateAgentContext({ lastSyncedAt: state.lastSyncedAt });
       return result;
     } finally {
       if (release) await release();

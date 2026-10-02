@@ -42,7 +42,9 @@ export type ApiHandlers = {
   'api/batch-budget-end': () => Promise<void>;
 
   'api/load-budget': (
-    ...args: Parameters<BudgetFileHandlers['load-budget']>
+    arg: Parameters<BudgetFileHandlers['load-budget']>[0] & {
+      offline?: boolean;
+    },
   ) => Promise<void>;
 
   'api/download-budget': (arg: {

@@ -1,0 +1,56 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-package-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "sync-server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "disposable-integration",
+          "command": "yarn workspace @actual-app/cli test:integration"
+        }
+      ]
+    },
+    "delivery": {
+      "commands": [
+        {
+          "id": "cli-package-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "sync-server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "packaged-integration",
+          "command": "yarn workspace @actual-app/cli test:integration"
+        },
+        {
+          "id": "targeted-lint",
+          "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/api/methods.ts packages/loot-core/src/server/api.ts packages/loot-core/src/types/api-handlers.ts"
+        },
+        {
+          "id": "targeted-format",
+          "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/README.md packages/api/methods.ts packages/loot-core/src/server/api.ts packages/loot-core/src/types/api-handlers.ts packages/docs/docs/api/cli.md packages/docs/docs/api/reference.md .workflow upcoming-release-notes/agent-cli-foundation.md"
+        }
+      ]
+    }
+  }
+}

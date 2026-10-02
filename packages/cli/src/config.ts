@@ -4,9 +4,13 @@ import { join } from 'path';
 
 import { cosmiconfig } from 'cosmiconfig';
 
+import { AgentError } from './agent-output';
+import { readProfileSecret, selectedProfile } from './profiles';
 import { isRecord, parseBoolEnv, parseNonNegativeIntFlag } from './utils';
 
 export type CliConfig = {
+  offline?: boolean;
+  budgetId?: string;
   serverUrl: string;
   password?: string;
   sessionToken?: string;
@@ -20,6 +24,11 @@ export type CliConfig = {
 };
 
 export type CliGlobalOpts = {
+  offline?: boolean;
+  budgetId?: string;
+  profile?: string;
+  profilesFile?: string;
+  outputVersion?: string;
   serverUrl?: string;
   password?: string;
   sessionToken?: string;
@@ -168,48 +177,95 @@ export async function resolveConfig(
   cliOpts: CliGlobalOpts,
 ): Promise<CliConfig> {
   const fileConfig = await loadConfigFile();
+  const profile = await selectedProfile(
+    cliOpts.profile ?? process.env.ACTUAL_PROFILE,
+    cliOpts.profilesFile,
+  );
+  const explicitLocal = cliOpts.budgetId !== undefined;
+  const explicitRemote = cliOpts.syncId !== undefined;
+  if (explicitLocal && explicitRemote) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      'Choose --budget-id or --sync-id, not both.',
+    );
+  }
+  const budgetId =
+    cliOpts.budgetId ??
+    (!explicitRemote
+      ? (process.env.ACTUAL_BUDGET_ID ?? profile?.budgetId)
+      : undefined);
+  const offline =
+    cliOpts.offline ??
+    parseBoolEnv(process.env.ACTUAL_OFFLINE, 'ACTUAL_OFFLINE') ??
+    profile?.offline ??
+    false;
+  if (budgetId && !offline) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      'Local --budget-id selection requires --offline. Use a sync ID for online access.',
+    );
+  }
+  if (offline && (cliOpts.refresh || cliOpts.cache === false)) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      'Offline access cannot request a server refresh.',
+    );
+  }
 
   const serverUrl =
     cliOpts.serverUrl ??
     process.env.ACTUAL_SERVER_URL ??
+    profile?.serverUrl ??
     fileConfig.serverUrl ??
     '';
 
-  const password =
-    cliOpts.password ??
-    readFileEnv('ACTUAL_PASSWORD_FILE') ??
-    process.env.ACTUAL_PASSWORD ??
-    fileConfig.password;
+  const password = offline
+    ? undefined
+    : (cliOpts.password ??
+      readFileEnv('ACTUAL_PASSWORD_FILE') ??
+      process.env.ACTUAL_PASSWORD ??
+      (await readProfileSecret(profile?.passwordFile)) ??
+      fileConfig.password);
 
-  const sessionToken =
-    cliOpts.sessionToken ??
-    readFileEnv('ACTUAL_SESSION_TOKEN_FILE') ??
-    process.env.ACTUAL_SESSION_TOKEN ??
-    fileConfig.sessionToken;
+  const sessionToken = offline
+    ? undefined
+    : (cliOpts.sessionToken ??
+      readFileEnv('ACTUAL_SESSION_TOKEN_FILE') ??
+      process.env.ACTUAL_SESSION_TOKEN ??
+      (await readProfileSecret(profile?.sessionTokenFile)) ??
+      fileConfig.sessionToken);
 
   const syncId =
-    cliOpts.syncId ?? process.env.ACTUAL_SYNC_ID ?? fileConfig.syncId;
+    cliOpts.syncId ??
+    (!budgetId
+      ? (process.env.ACTUAL_SYNC_ID ?? profile?.syncId ?? fileConfig.syncId)
+      : undefined);
 
   const dataDir =
     cliOpts.dataDir ??
     process.env.ACTUAL_DATA_DIR ??
+    profile?.dataDir ??
     fileConfig.dataDir ??
     join(homedir(), '.actual-cli', 'data');
 
-  const encryptionPassword =
-    cliOpts.encryptionPassword ??
-    readFileEnv('ACTUAL_ENCRYPTION_PASSWORD_FILE') ??
-    process.env.ACTUAL_ENCRYPTION_PASSWORD ??
-    fileConfig.encryptionPassword;
+  const encryptionPassword = offline
+    ? undefined
+    : (cliOpts.encryptionPassword ??
+      readFileEnv('ACTUAL_ENCRYPTION_PASSWORD_FILE') ??
+      process.env.ACTUAL_ENCRYPTION_PASSWORD ??
+      (await readProfileSecret(profile?.encryptionPasswordFile)) ??
+      fileConfig.encryptionPassword);
 
-  if (!serverUrl) {
-    throw new Error(
+  if (!serverUrl && !offline) {
+    throw new AgentError(
+      'MISSING_CONTEXT',
       'Server URL is required. Set --server-url, ACTUAL_SERVER_URL env var, or serverUrl in config file.',
     );
   }
 
-  if (!password && !sessionToken) {
-    throw new Error(
+  if (!password && !sessionToken && !offline) {
+    throw new AgentError(
+      'MISSING_CONTEXT',
       'Authentication required. Set --password/--session-token, ACTUAL_PASSWORD/ACTUAL_SESSION_TOKEN env var, or password/sessionToken in config file.',
     );
   }
@@ -246,6 +302,8 @@ export async function resolveConfig(
     false;
 
   return {
+    ...(offline ? { offline: true } : {}),
+    ...(budgetId ? { budgetId } : {}),
     serverUrl,
     password,
     sessionToken,

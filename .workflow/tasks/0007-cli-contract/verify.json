@@ -1,0 +1,28 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-package-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "sync-server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "disposable-integration",
+          "command": "yarn workspace @actual-app/cli test:integration"
+        }
+      ]
+    }
+  }
+}

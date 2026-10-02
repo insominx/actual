@@ -14,6 +14,7 @@ vi.mock('@actual-app/api', () => ({
   loadBudget: vi.fn().mockResolvedValue(undefined),
   sync: vi.fn().mockResolvedValue(undefined),
   shutdown: vi.fn().mockResolvedValue(undefined),
+  getPreferences: vi.fn().mockResolvedValue({ defaultCurrencyCode: 'USD' }),
   getBudgets: vi
     .fn()
     .mockResolvedValue([{ id: 'bud-disk-1', groupId: 'sync-1' }]),
@@ -236,6 +237,21 @@ describe('withConnection', () => {
 
   it('calls api.shutdown on success', async () => {
     await withConnection({}, async () => 'ok', { mutates: false });
+    expect(api.shutdown).toHaveBeenCalled();
+  });
+
+  it('reports a failed push as partial completion without replaying the write', async () => {
+    const mutation = vi.fn().mockResolvedValue('committed');
+    vi.mocked(api.sync).mockRejectedValueOnce(
+      new Error('password=secret network failure'),
+    );
+    await expect(
+      withConnection({ outputVersion: '2' }, mutation, { mutates: true }),
+    ).rejects.toMatchObject({
+      code: 'PARTIAL_COMPLETION',
+      retryable: true,
+    });
+    expect(mutation).toHaveBeenCalledTimes(1);
     expect(api.shutdown).toHaveBeenCalled();
   });
 

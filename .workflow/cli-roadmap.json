@@ -1,0 +1,339 @@
+{
+  "schemaVersion": 1,
+  "created": "2026-10-02",
+  "intent": "Maximally useful CLI for agent-only Actual operation, preserving existing engine authority.",
+  "status": "partially-implemented",
+  "tasks": [
+    {
+      "key": "cli-contract",
+      "folder": "0007-cli-contract",
+      "title": "CLI schemas, discovery, and compatibility",
+      "stage": "Foundation",
+      "mode": "AFK",
+      "dependencies": [],
+      "status": "completed-locally"
+    },
+    {
+      "key": "cli-integration-harness",
+      "folder": "0008-cli-integration-harness",
+      "title": "Disposable CLI and API integration harness",
+      "stage": "Foundation",
+      "mode": "AFK",
+      "dependencies": ["0007-cli-contract"],
+      "status": "completed-locally"
+    },
+    {
+      "key": "cli-sessions",
+      "folder": "0009-cli-sessions",
+      "title": "Explicit budget sessions, profiles, and offline mode",
+      "stage": "Foundation",
+      "mode": "AFK",
+      "dependencies": ["0007-cli-contract", "0008-cli-integration-harness"],
+      "status": "completed-locally"
+    },
+    {
+      "key": "cli-runtime",
+      "folder": "0010-cli-runtime",
+      "title": "Headless runtime bootstrap and server management",
+      "stage": "Foundation",
+      "mode": "AFK",
+      "dependencies": ["0009-cli-sessions"],
+      "status": "ready-for-review"
+    },
+    {
+      "key": "cli-budget-lifecycle",
+      "folder": "0011-cli-budget-lifecycle",
+      "title": "Headless budget creation, selection, and cloning",
+      "stage": "Foundation",
+      "mode": "AFK",
+      "dependencies": ["0009-cli-sessions"],
+      "status": "ready-for-review"
+    },
+    {
+      "key": "cli-sync",
+      "folder": "0012-cli-sync",
+      "title": "Synchronization freshness, pending writes, and watch",
+      "stage": "Foundation",
+      "mode": "AFK",
+      "dependencies": ["0009-cli-sessions", "0011-cli-budget-lifecycle"],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-backups",
+      "folder": "0013-cli-backups",
+      "title": "Budget backup, validation, restore, and isolated comparison",
+      "stage": "Foundation",
+      "mode": "AFK",
+      "dependencies": ["0011-cli-budget-lifecycle", "0012-cli-sync"],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-mutations",
+      "folder": "0014-cli-mutations",
+      "title": "Preview, apply, receipts, and safe retry protocol",
+      "stage": "Foundation",
+      "mode": "AFK",
+      "dependencies": [
+        "0007-cli-contract",
+        "0008-cli-integration-harness",
+        "0012-cli-sync",
+        "0013-cli-backups"
+      ],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-accounts",
+      "folder": "0015-cli-accounts",
+      "title": "Account management, groups, and balance inspection",
+      "stage": "Domain tools",
+      "mode": "AFK",
+      "dependencies": ["0011-cli-budget-lifecycle", "0014-cli-mutations"],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-catalog-settings",
+      "folder": "0016-cli-catalog-settings",
+      "title": "Categories, payees, tags, notes, and preference tools",
+      "stage": "Domain tools",
+      "mode": "AFK",
+      "dependencies": ["0014-cli-mutations"],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-query",
+      "folder": "0017-cli-query",
+      "title": "Read-only query metadata, search, paging, and aggregation",
+      "stage": "Domain tools",
+      "mode": "AFK",
+      "dependencies": ["0009-cli-sessions", "0012-cli-sync"],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-transactions",
+      "folder": "0018-cli-transactions",
+      "title": "Transaction inspection, batch edits, splits, and duplicate merges",
+      "stage": "Domain tools",
+      "mode": "AFK",
+      "dependencies": [
+        "0014-cli-mutations",
+        "0015-cli-accounts",
+        "0016-cli-catalog-settings",
+        "0017-cli-query"
+      ],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-transfers",
+      "folder": "0019-cli-transfers",
+      "title": "Transfer candidate discovery, matching, and repair",
+      "stage": "Domain tools",
+      "mode": "AFK",
+      "dependencies": ["0018-cli-transactions"],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-file-parsing",
+      "folder": "0020-cli-file-parsing",
+      "title": "File inspection, parsing, and shared import mappings",
+      "stage": "Domain tools",
+      "mode": "AFK",
+      "dependencies": [
+        "0015-cli-accounts",
+        "0016-cli-catalog-settings",
+        "0017-cli-query"
+      ],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-imports",
+      "folder": "0021-cli-imports",
+      "title": "Import preview, duplicate matching, commit, and history",
+      "stage": "Domain tools",
+      "mode": "AFK",
+      "dependencies": [
+        "0020-cli-file-parsing",
+        "0018-cli-transactions",
+        "0019-cli-transfers",
+        "0014-cli-mutations"
+      ],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-reconciliation",
+      "folder": "0022-cli-reconciliation",
+      "title": "Shared reconciliation authority and statement workflows",
+      "stage": "Domain tools",
+      "mode": "AFK",
+      "dependencies": ["0021-cli-imports", "0019-cli-transfers"],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-rules",
+      "folder": "0023-cli-rules",
+      "title": "Rule testing, previews, and controlled application",
+      "stage": "Domain tools",
+      "mode": "AFK",
+      "dependencies": ["0018-cli-transactions", "0021-cli-imports"],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-schedules",
+      "folder": "0024-cli-schedules",
+      "title": "Schedules, upcoming bills, and posting controls",
+      "stage": "Domain tools",
+      "mode": "AFK",
+      "dependencies": ["0018-cli-transactions", "0019-cli-transfers"],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-budgeting",
+      "folder": "0025-cli-budgeting",
+      "title": "Allocations, carryover, templates, and reservations",
+      "stage": "Domain tools",
+      "mode": "AFK",
+      "dependencies": [
+        "0016-cli-catalog-settings",
+        "0018-cli-transactions",
+        "0024-cli-schedules",
+        "0014-cli-mutations"
+      ],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-cash-planning",
+      "folder": "0026-cli-cash-planning",
+      "title": "Cash-planning API, targets, goals, and scenarios",
+      "stage": "Domain tools",
+      "mode": "AFK",
+      "dependencies": [
+        "0017-cli-query",
+        "0016-cli-catalog-settings",
+        "0014-cli-mutations"
+      ],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-reports",
+      "folder": "0027-cli-reports",
+      "title": "Explainable financial reports and exports",
+      "stage": "Domain tools",
+      "mode": "AFK",
+      "dependencies": [
+        "0017-cli-query",
+        "0019-cli-transfers",
+        "0026-cli-cash-planning",
+        "0025-cli-budgeting"
+      ],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-data-quality",
+      "folder": "0028-cli-data-quality",
+      "title": "Data quality and history-coverage checks",
+      "stage": "Domain tools",
+      "mode": "AFK",
+      "dependencies": [
+        "0021-cli-imports",
+        "0022-cli-reconciliation",
+        "0023-cli-rules",
+        "0027-cli-reports"
+      ],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-reversal",
+      "folder": "0029-cli-reversal",
+      "title": "Receipt-based reversal and recovery workflows",
+      "stage": "Domain tools",
+      "mode": "AFK",
+      "dependencies": [
+        "0018-cli-transactions",
+        "0019-cli-transfers",
+        "0021-cli-imports",
+        "0022-cli-reconciliation",
+        "0025-cli-budgeting",
+        "0026-cli-cash-planning"
+      ],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-bank-sync",
+      "folder": "0030-cli-bank-sync",
+      "title": "Configured bank-sync diagnostics and controlled refresh",
+      "stage": "Domain tools",
+      "mode": "AFK",
+      "dependencies": [
+        "0021-cli-imports",
+        "0012-cli-sync",
+        "0019-cli-transfers"
+      ],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-workflows",
+      "folder": "0031-cli-workflows",
+      "title": "Complete setup, intake, checkup, close, and goal workflows",
+      "stage": "Workflows and delivery",
+      "mode": "AFK",
+      "dependencies": [
+        "0010-cli-runtime",
+        "0015-cli-accounts",
+        "0016-cli-catalog-settings",
+        "0024-cli-schedules",
+        "0025-cli-budgeting",
+        "0028-cli-data-quality",
+        "0029-cli-reversal"
+      ],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-automation",
+      "folder": "0032-cli-automation",
+      "title": "Saved jobs, file intake, and unattended execution",
+      "stage": "Workflows and delivery",
+      "mode": "AFK",
+      "dependencies": ["0031-cli-workflows", "0030-cli-bank-sync"],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-mcp",
+      "folder": "0033-cli-mcp",
+      "title": "Optional MCP adapter over the same operation registry",
+      "stage": "Optional interface",
+      "mode": "AFK",
+      "dependencies": ["0007-cli-contract", "0031-cli-workflows"],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-distribution",
+      "folder": "0034-cli-distribution",
+      "title": "Packaging, cross-platform documentation, and upgrades",
+      "stage": "Workflows and delivery",
+      "mode": "AFK",
+      "dependencies": ["0031-cli-workflows", "0010-cli-runtime"],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-acceptance",
+      "folder": "0035-cli-acceptance",
+      "title": "Agent-only workflow acceptance and performance proof",
+      "stage": "Workflows and delivery",
+      "mode": "AFK",
+      "dependencies": [
+        "0034-cli-distribution",
+        "0032-cli-automation",
+        "0030-cli-bank-sync"
+      ],
+      "status": "planned-prerequisite-hold"
+    },
+    {
+      "key": "cli-personal-setup",
+      "folder": "0036-cli-personal-setup",
+      "title": "Personal account setup and institution-export validation",
+      "stage": "Personal adoption",
+      "mode": "HITL",
+      "dependencies": ["0035-cli-acceptance"],
+      "status": "planned-prerequisite-hold"
+    }
+  ]
+}

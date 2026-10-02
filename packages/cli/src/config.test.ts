@@ -1,4 +1,5 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { randomUUID } from 'node:crypto';
 import { homedir, tmpdir } from 'os';
 import { join } from 'path';
 
@@ -21,6 +22,27 @@ function mockConfigFile(config: Record<string, unknown> | null) {
 }
 
 describe('resolveConfig', () => {
+  it('allows explicit offline local selection without credentials', async () => {
+    const config = await resolveConfig({
+      offline: true,
+      budgetId: 'local-budget',
+      dataDir: 'disposable',
+    });
+    expect(config.offline).toBe(true);
+    expect(config.budgetId).toBe('local-budget');
+    expect(config.syncId).toBeUndefined();
+  });
+  it('rejects ambiguous local/remote selectors and online local access', async () => {
+    await expect(
+      resolveConfig({ offline: true, budgetId: 'local', syncId: 'remote' }),
+    ).rejects.toThrow('not both');
+    await expect(resolveConfig({ budgetId: 'local' })).rejects.toThrow(
+      'requires --offline',
+    );
+    await expect(
+      resolveConfig({ offline: true, refresh: true }),
+    ).rejects.toThrow('cannot request');
+  });
   const savedEnv: Record<string, string | undefined> = {};
   const baseEnvKeys = [
     'ACTUAL_SERVER_URL',
@@ -32,6 +54,10 @@ describe('resolveConfig', () => {
     'ACTUAL_CACHE_TTL',
     'ACTUAL_LOCK_TIMEOUT',
     'ACTUAL_NO_LOCK',
+    'ACTUAL_PROFILE',
+    'ACTUAL_PROFILES_FILE',
+    'ACTUAL_BUDGET_ID',
+    'ACTUAL_OFFLINE',
   ];
   const envKeys = [...baseEnvKeys, ...baseEnvKeys.map(key => `${key}_FILE`)];
 
@@ -40,6 +66,11 @@ describe('resolveConfig', () => {
       savedEnv[key] = process.env[key];
       delete process.env[key];
     }
+    // Never read a developer's selected profile during configuration tests.
+    process.env.ACTUAL_PROFILES_FILE = join(
+      tmpdir(),
+      `actual-no-profiles-${randomUUID()}.json`,
+    );
     mockConfigFile(null);
   });
 
@@ -322,6 +353,16 @@ describe('resolveConfig', () => {
 
     afterEach(() => {
       rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('does not read server secret files during offline access', async () => {
+      process.env.ACTUAL_PASSWORD_FILE = join(dir, 'missing-password');
+      process.env.ACTUAL_SESSION_TOKEN_FILE = join(dir, 'missing-token');
+      process.env.ACTUAL_ENCRYPTION_PASSWORD_FILE = join(dir, 'missing-key');
+      const config = await resolveConfig({ offline: true, budgetId: 'local' });
+      expect(config.password).toBeUndefined();
+      expect(config.sessionToken).toBeUndefined();
+      expect(config.encryptionPassword).toBeUndefined();
     });
 
     it('reads a value from the file it points at, trimming whitespace', async () => {

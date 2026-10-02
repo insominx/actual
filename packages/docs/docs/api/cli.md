@@ -26,7 +26,28 @@ npm install --location=global @actual-app/cli
 
 ## Configuration
 
-The CLI requires a connection to a running Actual sync server. Configuration can be provided via environment variables, CLI flags, or a config file.
+Online commands require a running Actual sync server. Explicit offline commands use an existing local budget or downloaded cache. Configuration accepts CLI flags, environment variables, device-local profiles, and existing config files, in that priority order.
+
+### Agent operation
+
+```bash
+actual capabilities
+actual schema transactions.import
+actual --output-version 2 --refresh accounts list
+actual profiles set personal --file profile.json
+actual --profile personal --output-version 2 context
+actual --profile personal --offline --output-version 2 accounts list
+```
+
+Discovery requires no credentials or budget. Existing commands retain their default output; `--output-version 2` returns one JSON document after completion. New discovery, context, and profile commands always use version 2. Context identifies the selected budget, currency, scale, connection mode, observed freshness, and local or synced commit status.
+
+Version 2 uses exit codes 2 for invalid input, 3 for missing context, 4 for future stale previews, 5 for engine failures, and 6 for committed changes whose push failed. After exit code 6, retry synchronization instead of the mutation. Preview, operation receipts, and reversal remain unavailable.
+
+Profiles contain `serverUrl`, a `syncId` or local `budgetId`, `dataDir`, optional `offline`, and secret file references. Use `passwordFile`, `sessionTokenFile`, and `encryptionPasswordFile`; plaintext secrets are rejected. The store defaults to `~/.actual-cli/profiles.json`. Select it with `--profile` or `ACTUAL_PROFILE`, and override its path with `--profiles-file` or `ACTUAL_PROFILES_FILE`. `profiles use <name>` selects a default without changing the budget.
+
+Offline access requires `--offline --budget-id <local-id>` or a previously cached sync ID. Explicit local and sync flags cannot be combined. Offline mode ignores server credentials and reports unknown freshness. Offline writes record sync messages and return `committed-local`; the next online access to that cached sync budget refreshes. Offline mode cannot request a server refresh. Local creation and publication remain planned.
+
+See the repository's `packages/cli/README.md` for the full contract and disposable verification commands.
 
 ### Environment Variables
 

@@ -13,7 +13,7 @@ export function parseBoolFlag(value: string, flagName: string): boolean {
 
 export function parseIntFlag(value: string, flagName: string): number {
   const parsed = value.trim() === '' ? NaN : Number(value);
-  if (!Number.isInteger(parsed)) {
+  if (!Number.isSafeInteger(parsed)) {
     throw new Error(`Invalid ${flagName}: "${value}". Expected an integer.`);
   }
   return parsed;

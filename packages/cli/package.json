@@ -17,6 +17,8 @@
   ],
   "type": "module",
   "imports": {
+    "#agent-output": "./src/agent-output.ts",
+    "#profiles": "./src/profiles.ts",
     "#cache": "./src/cache.ts",
     "#commands/*": "./src/commands/*.ts",
     "#config": "./src/config.ts",
@@ -29,6 +31,7 @@
   "scripts": {
     "build": "vite build",
     "test": "vitest --run",
+    "test:integration": "node --test integration/cli.test.mjs",
     "typecheck": "tsgo -b"
   },
   "dependencies": {

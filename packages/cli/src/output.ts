@@ -1,5 +1,7 @@
 import Table from 'cli-table3';
 
+import { bufferAgentOutput } from './agent-output';
+
 export type OutputFormat = 'json' | 'table' | 'csv';
 
 // Fields containing integer-cent values, auto-formatted as decimals in table/csv output.
@@ -118,5 +120,6 @@ function escapeCsv(value: string): string {
 }
 
 export function printOutput(data: unknown, format: OutputFormat = 'json') {
+  if (bufferAgentOutput(data)) return;
   process.stdout.write(formatOutput(data, format) + '\n');
 }

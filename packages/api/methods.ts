@@ -37,8 +37,11 @@ export async function runImport(
   await send('api/finish-import');
 }
 
-export async function loadBudget(budgetId: string) {
-  return send('api/load-budget', { id: budgetId });
+export async function loadBudget(
+  budgetId: string,
+  { offline = false }: { offline?: boolean } = {},
+) {
+  return send('api/load-budget', { id: budgetId, offline });
 }
 
 export async function downloadBudget(

@@ -2,7 +2,7 @@
 
 Command-line interface for [Actual Budget](https://actualbudget.org). Query and modify your budget data from the terminal — accounts, transactions, categories, payees, rules, schedules, and more.
 
-> **Note:** This CLI connects to a running [Actual sync server](https://actualbudget.org/docs/install/). It does not operate on local budget files directly.
+The CLI connects to a running Actual sync server. Explicit offline mode also supports existing local budgets and downloaded caches.
 
 ## Installation
 
@@ -10,7 +10,7 @@ Command-line interface for [Actual Budget](https://actualbudget.org). Query and 
 npm install -g @actual-app/cli
 ```
 
-Requires Node.js >= 22.
+Requires Node.js >= 22.18.0.
 
 ## Quick Start
 
@@ -36,8 +36,69 @@ Configuration is resolved in this order (highest priority first):
 
 1. **CLI flags** (`--server-url`, `--password`, etc.)
 2. **Environment variables**
-3. **Config file** (via [cosmiconfig](https://github.com/cosmiconfig/cosmiconfig))
-4. **Defaults** (`dataDir` defaults to `~/.actual-cli/data`)
+3. **Named device-local profile**, if selected
+4. **Config file** (via [cosmiconfig](https://github.com/cosmiconfig/cosmiconfig))
+5. **Defaults** (`dataDir` defaults to `~/.actual-cli/data`)
+
+An explicit `--budget-id` selects a local budget and suppresses inherited sync IDs. An explicit `--sync-id` suppresses inherited local IDs. Supplying both flags is an error.
+
+### Agent discovery and JSON results
+
+```bash
+actual capabilities
+actual schema transactions.import
+actual --output-version 2 --refresh accounts list
+actual --output-version 2 context
+```
+
+`capabilities` and `schema` need no credentials, budget, or engine initialization. Their metadata comes from the registered commands. Each operation describes its options, positional arguments, JSON payload where applicable, and current capabilities.
+
+Existing commands retain their default output. Opt in to the agent contract with `--output-version 2`. Discovery, context, and profile commands always use version 2. Version 2 requires JSON output. Help and version flags remain text.
+
+Version 2 writes one JSON document after the command finishes. Success contains `schemaVersion`, `operation`, `context`, `data`, and `warnings`. Context includes local and sync IDs, currency, scale 100, connection mode, observed sync time, and commit status. Unknown metadata is `null` or `unknown`. A cached read does not establish that the server has no newer changes; use `--refresh` when required.
+
+Errors contain a stable code, a message, retryability, and optional field details. Unknown engine errors use a generic message to avoid disclosing credentials. Diagnostics use stderr.
+
+| Exit code | Error code           | Meaning                                                 |
+| --------- | -------------------- | ------------------------------------------------------- |
+| 2         | `INVALID_INPUT`      | The command or JSON input is invalid.                   |
+| 3         | `MISSING_CONTEXT`    | Required configuration or budget selection is missing.  |
+| 4         | `STALE_PREVIEW`      | Reserved for the future preview protocol.               |
+| 5         | `ENGINE_FAILURE`     | The engine, authentication, lock, or connection failed. |
+| 6         | `PARTIAL_COMPLETION` | Local changes committed but synchronization failed.     |
+
+When a push fails, synchronize again instead of repeating the mutation. Preview, receipts, and reversal are not implemented yet. Discovery reports those capabilities as unavailable. Lists retain their existing payloads; paging and truncation metadata are planned separately.
+
+### Device-local profiles and offline mode
+
+Create a profile JSON file with connection settings and secret file references:
+
+```json
+{
+  "serverUrl": "http://localhost:5006",
+  "syncId": "your-sync-id",
+  "dataDir": "/private/actual-cache",
+  "passwordFile": "/private/actual-password"
+}
+```
+
+```bash
+actual profiles set personal --file profile.json
+actual profiles list
+actual profiles show personal
+actual profiles use personal
+actual --profile personal --output-version 2 context
+actual --profile personal --offline --output-version 2 accounts list
+actual --offline --budget-id <local-id> --data-dir <directory> --output-version 2 accounts list
+```
+
+Profiles save only device-local configuration. They never change transactions or allocations. Profile JSON rejects plaintext passwords, token values, embedded URL credentials, and unknown fields. It accepts `passwordFile`, `sessionTokenFile`, and `encryptionPasswordFile`. Protect those files with your operating system's access controls. Use absolute paths for portable selection across working directories.
+
+The store defaults to `~/.actual-cli/profiles.json`. Override it with `--profiles-file` or `ACTUAL_PROFILES_FILE`. Select a profile with `--profile`, `ACTUAL_PROFILE`, or `profiles use`. Environment variables still override profile fields. Profile edits replace the file atomically; concurrent profile edits use the last writer's configuration.
+
+`--offline` requires an existing local budget ID or a previously downloaded sync budget in the selected data directory. It does not download anything. It also ignores server secret files. You can use `ACTUAL_OFFLINE=true` and `ACTUAL_BUDGET_ID`, or a profile with `offline: true` and `budgetId`.
+
+Offline writes report `committed-local`. They record the engine's sync messages for later synchronization. For a cached sync budget, the next online command refreshes before returning data. `--offline` cannot be combined with `--refresh`, `--no-cache`, or an actual synchronization request. Offline reads report unknown freshness. Local budget creation and publication remain future work.
 
 ### Environment Variables
 
@@ -191,6 +252,17 @@ The CLI keeps a local copy of your budget so repeated commands don't hit the syn
 The CLI takes a shared lock for reads and an exclusive lock for writes on the per-budget cache directory. Many parallel reads are safe; writes serialize. If another CLI process is holding the lock, subsequent invocations wait up to `--lock-timeout` seconds (default `10`) before failing with an error. Pass `--no-lock` to opt out in trusted single-process setups.
 
 ## Running Locally (Development)
+
+Run the disposable integration suite after type checking and rebuilding the packages:
+
+```bash
+yarn typecheck
+yarn exec lage build --scope=@actual-app/cli --no-cache
+yarn workspace @actual-app/sync-server build
+yarn workspace @actual-app/cli test:integration
+```
+
+The harness creates a temporary server, budgets, credentials, and two client caches. It removes them after each test. Type checking emits files into some build directories, so rebuild before running packaged integration tests. Linux execution remains to be verified; this implementation was tested on Windows.
 
 If you're working on the CLI within the monorepo:
 

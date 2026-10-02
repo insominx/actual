@@ -1,0 +1,215 @@
+import { AgentError } from './agent-output';
+import { isRecord } from './utils';
+
+export type JsonSchema = {
+  type?:
+    | 'object'
+    | 'array'
+    | 'string'
+    | 'integer'
+    | 'number'
+    | 'boolean'
+    | 'null';
+  properties?: Record<string, JsonSchema>;
+  required?: string[];
+  additionalProperties?: boolean;
+  items?: JsonSchema;
+  anyOf?: JsonSchema[];
+  enum?: unknown[];
+  format?: 'date';
+};
+
+const string: JsonSchema = { type: 'string' };
+const money: JsonSchema = { type: 'integer' };
+const boolean: JsonSchema = { type: 'boolean' };
+const date: JsonSchema = { type: 'string', format: 'date' };
+const nullableId: JsonSchema = { anyOf: [string, { type: 'null' }] };
+const object = (
+  properties: Record<string, JsonSchema>,
+  required: string[] = [],
+): JsonSchema => ({
+  type: 'object',
+  properties,
+  required,
+  additionalProperties: false,
+});
+const split = object({ amount: money, category: string, notes: string }, [
+  'amount',
+]);
+const importProperties = {
+  account: string,
+  date,
+  amount: money,
+  payee: nullableId,
+  payee_name: string,
+  imported_payee: string,
+  category: string,
+  notes: string,
+  imported_id: string,
+  transfer_id: string,
+  cleared: boolean,
+  subtransactions: { type: 'array', items: split } satisfies JsonSchema,
+};
+const transactionUpdate = object({
+  ...importProperties,
+  id: string,
+  is_parent: boolean,
+  is_child: boolean,
+  parent_id: string,
+  starting_balance_flag: boolean,
+  sort_order: { type: 'number' },
+  reconciled: boolean,
+  tombstone: boolean,
+  forceUpcoming: boolean,
+  schedule: string,
+});
+delete transactionUpdate.properties?.payee_name;
+const rule = object(
+  {
+    id: string,
+    stage: { enum: ['pre', 'post', 'default', null] },
+    conditionsOp: { enum: ['and', 'or'] },
+    conditions: { type: 'array', items: { type: 'object' } },
+    actions: { type: 'array', items: { type: 'object' } },
+    tombstone: boolean,
+  },
+  ['stage', 'conditionsOp', 'conditions', 'actions'],
+);
+const schedule = object({
+  id: string,
+  name: string,
+  posts_transaction: boolean,
+  rule: string,
+  next_date: date,
+  completed: boolean,
+  payee: nullableId,
+  account: nullableId,
+  amount: {
+    anyOf: [money, object({ num1: money, num2: money }, ['num1', 'num2'])],
+  },
+  amountOp: { enum: ['is', 'isapprox', 'isbetween'] },
+  date: { anyOf: [date, { type: 'object' }] },
+});
+
+export function operationPayloadSchema(name: string): JsonSchema | undefined {
+  switch (name) {
+    case 'profiles.set':
+      return object({
+        serverUrl: string,
+        syncId: string,
+        budgetId: string,
+        dataDir: string,
+        offline: boolean,
+        passwordFile: string,
+        sessionTokenFile: string,
+        encryptionPasswordFile: string,
+      });
+    case 'transactions.add':
+    case 'transactions.import':
+      return { type: 'array', items: object(importProperties, ['date']) };
+    case 'transactions.update':
+      return transactionUpdate;
+    case 'rules.create':
+      return rule;
+    case 'rules.update':
+      return { ...rule, required: [...(rule.required ?? []), 'id'] };
+    case 'schedules.create':
+      return {
+        ...schedule,
+        required: ['date', 'amountOp', 'posts_transaction'],
+      };
+    case 'schedules.update':
+      return schedule;
+    case 'query.run':
+      return object({
+        table: string,
+        select: { type: 'array' },
+        filter: { type: 'object' },
+        orderBy: { anyOf: [{ type: 'array' }, string, { type: 'object' }] },
+        groupBy: { type: 'array' },
+        limit: money,
+        offset: money,
+        options: { type: 'object' },
+        calculate: {},
+        withDead: boolean,
+      });
+    default:
+      return undefined;
+  }
+}
+
+export function validateJson(
+  value: unknown,
+  schema: JsonSchema,
+  path = 'data',
+) {
+  function fail() {
+    throw new AgentError(
+      'INVALID_INPUT',
+      'JSON input does not match the operation schema.',
+      false,
+      { field: path },
+    );
+  }
+  if (schema.anyOf) {
+    for (const alternative of schema.anyOf) {
+      try {
+        validateJson(value, alternative, path);
+        return;
+      } catch (error) {
+        if (!(error instanceof AgentError)) throw error;
+      }
+    }
+    fail();
+  }
+  if (schema.enum && !schema.enum.includes(value)) fail();
+  switch (schema.type) {
+    case 'object':
+      if (!isRecord(value)) return fail();
+      for (const field of schema.required ?? []) if (!(field in value)) fail();
+      for (const [key, child] of Object.entries(value)) {
+        const property = schema.properties?.[key];
+        if (property) {
+          validateJson(child, property, `${path}.${key}`);
+        } else if (schema.additionalProperties === false) {
+          throw new AgentError('INVALID_INPUT', 'Unknown JSON field.', false, {
+            field: `${path}.${key}`,
+          });
+        }
+      }
+      break;
+    case 'array':
+      if (!Array.isArray(value)) return fail();
+      if (schema.items) {
+        value.forEach((child, index) =>
+          validateJson(child, schema.items ?? {}, `${path}[${index}]`),
+        );
+      }
+      break;
+    case 'integer':
+      if (typeof value !== 'number' || !Number.isSafeInteger(value)) fail();
+      break;
+    case 'number':
+      if (typeof value !== 'number' || !Number.isFinite(value)) fail();
+      break;
+    case 'string':
+      if (typeof value !== 'string') return fail();
+      if (
+        schema.format === 'date' &&
+        (!/^\d{4}-\d{2}-\d{2}$/.test(value) ||
+          !Number.isFinite(Date.parse(value)) ||
+          new Date(value).toISOString().slice(0, 10) !== value)
+      ) {
+        fail();
+      }
+      break;
+    case 'boolean':
+      if (typeof value !== 'boolean') fail();
+      break;
+    case 'null':
+      if (value !== null) fail();
+      break;
+    default:
+      break;
+  }
+}

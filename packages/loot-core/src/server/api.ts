@@ -47,6 +47,7 @@ import * as db from './db';
 import { APIError, withErrorCode } from './errors';
 import { runMutator } from './mutators';
 import * as prefs from './prefs';
+import { getServer } from './server-config';
 import * as sheet from './sheet';
 import { batchMessages, setSyncingMode } from './sync';
 
@@ -160,7 +161,12 @@ handlers['api/batch-budget-end'] = async function () {
   batchPromise = null;
 };
 
-handlers['api/load-budget'] = async function ({ id }) {
+handlers['api/load-budget'] = async function ({ id, offline = false }) {
+  if (offline && getServer()) {
+    throw APIError(
+      'Offline budget loading requires initialization without a server',
+    );
+  }
   const { id: currentId } = prefs.getPrefs() || {};
 
   if (currentId !== id) {
@@ -168,6 +174,8 @@ handlers['api/load-budget'] = async function ({ id }) {
     const { error } = await handlers['load-budget']({ id });
 
     if (!error) {
+      // The budgetfile loader disables synchronization without a server.
+      // API offline sessions must still record CRDT messages for later sync.
       connection.send('finish-load');
     } else {
       connection.send('show-budgets');
@@ -175,6 +183,7 @@ handlers['api/load-budget'] = async function ({ id }) {
       throw withErrorCode(new Error(getSyncError(error, id)), error);
     }
   }
+  if (offline) setSyncingMode('offline');
 };
 
 handlers['api/download-budget'] = async function ({ syncId, password }) {

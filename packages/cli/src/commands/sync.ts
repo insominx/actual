@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import type { Command } from 'commander';
 
+import { AgentError } from '#agent-output';
 import { CACHE_FILE_NAME, getMetaDir, readCacheState } from '#cache';
 import type { CliConfig } from '#config';
 import { resolveConfig } from '#config';
@@ -95,6 +96,12 @@ export function registerSyncCommand(program: Command) {
         return;
       }
 
+      if ((await resolveConfig(opts)).offline) {
+        throw new AgentError(
+          'INVALID_INPUT',
+          'Synchronization requires an online connection. Omit --offline.',
+        );
+      }
       await withConnection(
         opts,
         async config => {
