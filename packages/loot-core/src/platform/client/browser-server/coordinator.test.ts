@@ -103,6 +103,26 @@ describe('SharedWorker coordinator', () => {
   // ── Initialization ──────────────────────────────────────────────────
 
   describe('initialization', () => {
+    it('forwards initialization-failure acknowledgement even when the backend is unavailable', () => {
+      const leader = connectTab(coordinator);
+      sendInit(leader);
+      simulateWorkerConnect(leader);
+      sendMsg(leader, {
+        type: '__from-worker',
+        msg: {
+          type: 'app-init-failure',
+          error: { message: 'Initialization failed' },
+        },
+      });
+      leader.postMessage.mockClear();
+      const acknowledgement = { name: '__app-init-failure-acknowledged' };
+      sendMsg(leader, acknowledgement);
+      expect(leader.postMessage).toHaveBeenCalledWith({
+        type: '__to-worker',
+        msg: acknowledgement,
+      });
+    });
+
     it('first tab is elected as lobby leader', () => {
       const port = connectTab(coordinator);
       sendInit(port);
@@ -233,6 +253,11 @@ describe('SharedWorker coordinator', () => {
       expect(state.budgetGroups.has('__lobby')).toBe(false);
       expect(state.budgetGroups.has('my-budget')).toBe(true);
       expect(state.portToBudget.get(leader)).toBe('my-budget');
+
+      expect(leader.postMessage).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: '__to-worker' }),
+      );
+      simulateWorkerConnect(leader);
 
       // Should have forwarded load-budget to the Worker
       expect(leader.postMessage).toHaveBeenCalledWith(
@@ -731,6 +756,134 @@ describe('SharedWorker coordinator', () => {
   // ── Budget-replacing operations ─────────────────────────────────────
 
   describe('budget-replacing operations', () => {
+    it('keeps an existing budget group and roles unchanged when loading its prefs', () => {
+      const leader = setupBudgetGroup(coordinator, 'budget-1');
+      const follower = connectTab(coordinator);
+      sendInit(follower);
+      sendMsg(follower, {
+        id: 'load-follower',
+        name: 'load-budget',
+        args: { id: 'budget-1' },
+      });
+      sendMsg(follower, { id: 'prefs-follower', name: 'load-prefs' });
+      const group = coordinator.getState().budgetGroups.get('budget-1');
+      leader.postMessage.mockClear();
+      follower.postMessage.mockClear();
+      sendMsg(leader, {
+        type: '__from-worker',
+        msg: {
+          type: 'reply',
+          id: 'prefs-follower',
+          result: { id: 'budget-1' },
+        },
+      });
+
+      expect(coordinator.getState().budgetGroups.get('budget-1')).toBe(group);
+      expect(group.leaderPort).toBe(leader);
+      expect(group.followers.has(follower)).toBe(true);
+      expect(follower.postMessage).toHaveBeenCalledWith({
+        type: 'reply',
+        id: 'prefs-follower',
+        result: { id: 'budget-1' },
+      });
+      expect(leader.postMessage).not.toHaveBeenCalled();
+      expect(follower.postMessage).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: '__role-change' }),
+      );
+    });
+
+    it.each(['create-budget', 'create-demo-budget', 'import-budget'])(
+      '%s from the lobby registers the active budget before another tab opens it',
+      opName => {
+        const creator = connectTab(coordinator);
+        sendInit(creator);
+        simulateWorkerConnect(creator);
+        sendMsg(creator, { id: 'create-1', name: opName });
+        sendMsg(creator, {
+          type: '__from-worker',
+          msg: { type: 'reply', id: 'create-1', result: {} },
+        });
+        sendMsg(creator, { id: 'prefs-1', name: 'load-prefs' });
+        creator.postMessage.mockClear();
+        sendMsg(creator, {
+          type: '__from-worker',
+          msg: {
+            type: 'reply',
+            id: 'prefs-1',
+            result: { id: 'created-budget' },
+          },
+        });
+
+        expect(coordinator.getState().budgetGroups.has('__lobby')).toBe(false);
+        expect(coordinator.getState().portToBudget.get(creator)).toBe(
+          'created-budget',
+        );
+        expect(creator.postMessage).toHaveBeenCalledWith({
+          type: '__role-change',
+          role: 'LEADER',
+          budgetId: 'created-budget',
+        });
+        expect(creator.postMessage).not.toHaveBeenCalledWith(
+          expect.objectContaining({ type: '__become-leader' }),
+        );
+
+        const follower = connectTab(coordinator);
+        sendInit(follower);
+        sendMsg(follower, {
+          id: 'load-2',
+          name: 'load-budget',
+          args: { id: 'created-budget' },
+        });
+        const state = coordinator.getState();
+        expect(state.budgetGroups.size).toBe(1);
+        expect(state.budgetGroups.get('created-budget').leaderPort).toBe(
+          creator,
+        );
+        expect(
+          state.budgetGroups.get('created-budget').followers.has(follower),
+        ).toBe(true);
+        expect(follower.postMessage).not.toHaveBeenCalledWith(
+          expect.objectContaining({ type: '__become-leader' }),
+        );
+        expect(follower.postMessage).toHaveBeenCalledWith({
+          type: '__role-change',
+          role: 'FOLLOWER',
+          budgetId: 'created-budget',
+        });
+      },
+    );
+
+    it('registers a replacement budget created by an existing leader', () => {
+      const creator = setupBudgetGroup(coordinator, 'original-budget');
+      sendMsg(creator, { id: 'create-1', name: 'create-budget' });
+      sendMsg(creator, {
+        type: '__from-worker',
+        msg: { type: 'reply', id: 'create-1', result: {} },
+      });
+      sendMsg(creator, { id: 'prefs-1', name: 'load-prefs' });
+      creator.postMessage.mockClear();
+      sendMsg(creator, {
+        type: '__from-worker',
+        msg: {
+          type: 'reply',
+          id: 'prefs-1',
+          result: { id: 'replacement-budget' },
+        },
+      });
+
+      expect(coordinator.getState().budgetGroups.has('original-budget')).toBe(
+        false,
+      );
+      expect(coordinator.getState().portToBudget.get(creator)).toBe(
+        'replacement-budget',
+      );
+      expect(creator.postMessage).toHaveBeenCalledWith({
+        type: '__role-change',
+        role: 'LEADER',
+        budgetId: 'replacement-budget',
+      });
+    });
+
     it.each(['create-budget', 'import-budget', 'duplicate-budget'])(
       '%s from follower gets own temporary Worker',
       (opName: string) => {
@@ -863,6 +1016,11 @@ describe('SharedWorker coordinator', () => {
       expect(state.budgetGroups.has(tempId)).toBe(false);
       expect(state.budgetGroups.has('new-budget-123')).toBe(true);
       expect(state.portToBudget.get(creator)).toBe('new-budget-123');
+      expect(creator.postMessage).toHaveBeenCalledWith({
+        type: '__role-change',
+        role: 'LEADER',
+        budgetId: 'new-budget-123',
+      });
     });
   });
 
@@ -923,6 +1081,371 @@ describe('SharedWorker coordinator', () => {
   // ── Track restore ───────────────────────────────────────────────────
 
   describe('__track-restore', () => {
+    it('does not execute queued writes after their tab is evicted from the budget', () => {
+      const leader = setupBudgetGroup(coordinator, 'budget-1');
+      sendMsg(leader, {
+        type: '__track-restore',
+        requestId: '__restore-budget',
+        budgetId: 'budget-1',
+      });
+      simulateWorkerConnect(leader);
+      const follower = connectTab(coordinator);
+      sendInit(follower);
+      sendMsg(follower, {
+        id: 'queued-load',
+        name: 'load-budget',
+        args: { id: 'budget-1' },
+      });
+      sendMsg(follower, {
+        id: 'queued-write',
+        name: 'transactions-batch-update',
+      });
+      sendMsg(leader, { id: 'replace-budget', name: 'create-budget' });
+      leader.postMessage.mockClear();
+      sendMsg(leader, {
+        type: '__from-worker',
+        msg: { type: 'reply', id: '__restore-budget', result: {} },
+      });
+      expect(follower.postMessage).toHaveBeenCalledWith({
+        type: 'error',
+        id: 'queued-write',
+        error: expect.objectContaining({ code: 'budget-detached' }),
+      });
+      expect(leader.postMessage).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: '__to-worker',
+          msg: expect.objectContaining({ id: 'queued-write' }),
+        }),
+      );
+    });
+
+    it('delivers a queued follower request once after restore and routes its reply', () => {
+      const leader = setupBudgetGroup(coordinator, 'budget-1');
+      sendMsg(leader, {
+        type: '__track-restore',
+        requestId: '__restore-budget',
+        budgetId: 'budget-1',
+      });
+      simulateWorkerConnect(leader);
+      const follower = connectTab(coordinator);
+      sendInit(follower);
+      const request = {
+        id: 'queued-load',
+        name: 'load-budget',
+        args: { id: 'budget-1' },
+      };
+      sendMsg(follower, request);
+      leader.postMessage.mockClear();
+      follower.postMessage.mockClear();
+      sendMsg(leader, {
+        type: '__from-worker',
+        msg: { type: 'reply', id: '__restore-budget', result: {} },
+      });
+      expect(
+        leader.postMessage.mock.calls.filter(
+          ([message]) => message.type === '__to-worker',
+        ),
+      ).toEqual([[{ type: '__to-worker', msg: request }]]);
+      const reply = { type: 'reply', id: 'queued-load', result: {} };
+      sendMsg(leader, { type: '__from-worker', msg: reply });
+      expect(follower.postMessage).toHaveBeenCalledWith(reply);
+      expect(
+        coordinator.getState().budgetGroups.get('budget-1').requestToPort.size,
+      ).toBe(0);
+    });
+
+    it('settles queued requests on initialization failure and never flushes them on a late connect', () => {
+      const leader = setupBudgetGroup(coordinator, 'budget-1');
+      sendMsg(leader, {
+        type: '__track-restore',
+        requestId: '__restore-budget',
+        budgetId: 'budget-1',
+      });
+      sendMsg(leader, { id: 'queued-prefs', name: 'load-prefs' });
+      leader.postMessage.mockClear();
+      sendMsg(leader, {
+        type: '__from-worker',
+        msg: {
+          type: 'app-init-failure',
+          error: { message: 'Initialization failed' },
+        },
+      });
+      expect(leader.postMessage).toHaveBeenCalledWith({
+        type: 'error',
+        id: 'queued-prefs',
+        error: expect.objectContaining({ code: 'backend-unavailable' }),
+      });
+      simulateWorkerConnect(leader);
+      expect(leader.postMessage).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: '__to-worker' }),
+      );
+      expect(leader.postMessage).not.toHaveBeenCalledWith({ type: 'connect' });
+    });
+
+    it('keeps another budget responsive while a group restores', () => {
+      const restoring = setupBudgetGroup(coordinator, 'budget-1');
+      const connected = setupBudgetGroup(coordinator, 'budget-2');
+      sendMsg(restoring, {
+        type: '__track-restore',
+        requestId: '__restore-budget',
+        budgetId: 'budget-1',
+      });
+      const queued = { id: 'queued-prefs', name: 'load-prefs' };
+      sendMsg(restoring, queued);
+      connected.postMessage.mockClear();
+      const request = { id: 'other-budget-prefs', name: 'load-prefs' };
+      sendMsg(connected, request);
+      expect(connected.postMessage).toHaveBeenCalledWith({
+        type: '__to-worker',
+        msg: request,
+      });
+      expect(connected.postMessage).not.toHaveBeenCalledWith({
+        type: '__to-worker',
+        msg: queued,
+      });
+    });
+
+    it('cancels queued work when its follower closes the budget', () => {
+      const leader = setupBudgetGroup(coordinator, 'budget-1');
+      sendMsg(leader, {
+        type: '__track-restore',
+        requestId: '__restore-budget',
+        budgetId: 'budget-1',
+      });
+      simulateWorkerConnect(leader);
+      const follower = connectTab(coordinator);
+      sendInit(follower);
+      sendMsg(follower, {
+        id: 'queued-load',
+        name: 'load-budget',
+        args: { id: 'budget-1' },
+      });
+      sendMsg(follower, {
+        id: 'queued-write',
+        name: 'transactions-batch-update',
+      });
+      sendMsg(follower, { id: 'close-follower', name: 'close-budget' });
+      expect(follower.postMessage).toHaveBeenCalledWith({
+        type: 'error',
+        id: 'queued-write',
+        error: expect.objectContaining({ code: 'budget-detached' }),
+      });
+      leader.postMessage.mockClear();
+      sendMsg(leader, {
+        type: '__from-worker',
+        msg: { type: 'reply', id: '__restore-budget', result: {} },
+      });
+      expect(leader.postMessage).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: '__to-worker' }),
+      );
+    });
+
+    it.each([true, false])(
+      'queues requests until both connect and restore complete (connect first: %s)',
+      connectFirst => {
+        const leader = setupBudgetGroup(coordinator, 'budget-1');
+        const promoted = connectTab(coordinator);
+        sendInit(promoted);
+        sendMsg(promoted, {
+          id: 'join-1',
+          name: 'load-budget',
+          args: { id: 'budget-1' },
+        });
+        sendMsg(leader, {
+          type: '__from-worker',
+          msg: { type: 'reply', id: 'join-1', result: {} },
+        });
+        sendMsg(leader, { type: 'tab-closing' });
+        sendMsg(promoted, {
+          type: '__track-restore',
+          requestId: '__restore-budget',
+          budgetId: 'budget-1',
+        });
+        promoted.postMessage.mockClear();
+        const requests = [
+          { id: 'prefs-during-restore', name: 'load-prefs' },
+          {
+            id: 'write-during-restore',
+            name: 'transactions-batch-update',
+            args: { updated: [{ id: 'transaction-1', amount: -13000 }] },
+          },
+          { name: 'client-connected-to-backend' },
+        ];
+        for (const request of requests) {
+          sendMsg(promoted, request);
+        }
+        expect(promoted.postMessage).not.toHaveBeenCalled();
+        const restore = () =>
+          sendMsg(promoted, {
+            type: '__from-worker',
+            msg: {
+              type: 'reply',
+              id: '__restore-budget',
+              result: { data: {}, error: null },
+            },
+          });
+        if (connectFirst) {
+          simulateWorkerConnect(promoted);
+        } else {
+          restore();
+        }
+        expect(promoted.postMessage).not.toHaveBeenCalledWith(
+          expect.objectContaining({ type: '__to-worker' }),
+        );
+        if (connectFirst) {
+          restore();
+        } else {
+          simulateWorkerConnect(promoted);
+        }
+        const forwarded = promoted.postMessage.mock.calls
+          .map(([message]) => message)
+          .filter(message => message.type === '__to-worker');
+        expect(forwarded).toEqual(
+          requests.map(msg => ({ type: '__to-worker', msg })),
+        );
+        simulateWorkerConnect(promoted);
+        expect(
+          promoted.postMessage.mock.calls.filter(
+            ([message]) => message.type === '__to-worker',
+          ),
+        ).toHaveLength(3);
+        sendMsg(promoted, {
+          type: '__from-worker',
+          msg: {
+            type: 'reply',
+            id: 'prefs-during-restore',
+            result: { id: 'budget-1' },
+          },
+        });
+        expect(promoted.postMessage).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'reply',
+            id: 'prefs-during-restore',
+          }),
+        );
+      },
+    );
+
+    it('does not forward queued requests from a tab that leaves during restore', () => {
+      const leader = setupBudgetGroup(coordinator, 'budget-1');
+      sendMsg(leader, {
+        type: '__track-restore',
+        requestId: '__restore-budget',
+        budgetId: 'budget-1',
+      });
+      simulateWorkerConnect(leader);
+      const follower = connectTab(coordinator);
+      sendInit(follower);
+      sendMsg(follower, {
+        id: 'queued-load',
+        name: 'load-budget',
+        args: { id: 'budget-1' },
+      });
+      sendMsg(follower, { id: 'queued-prefs', name: 'load-prefs' });
+      sendMsg(follower, { name: 'client-connected-to-backend' });
+      expect(leader.postMessage).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: '__to-worker',
+          msg: expect.objectContaining({ id: 'queued-load' }),
+        }),
+      );
+      sendMsg(follower, { type: 'tab-closing' });
+      leader.postMessage.mockClear();
+      sendMsg(leader, {
+        type: '__from-worker',
+        msg: { type: 'reply', id: '__restore-budget', result: {} },
+      });
+      expect(leader.postMessage).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: '__to-worker' }),
+      );
+    });
+
+    it.each([
+      { name: 'transactions-batch-update', catchErrors: false },
+      { name: 'transactions-batch-update', catchErrors: true },
+      { name: 'api/transactions-update', catchErrors: false },
+    ])(
+      'settles interrupted $name requests without replay (catchErrors: $catchErrors)',
+      request => {
+        const leader = setupBudgetGroup(coordinator, 'budget-1');
+        const promoted = connectTab(coordinator);
+        sendInit(promoted);
+        sendMsg(promoted, {
+          id: 'join-1',
+          name: 'load-budget',
+          args: { id: 'budget-1' },
+        });
+        sendMsg(leader, {
+          type: '__from-worker',
+          msg: { type: 'reply', id: 'join-1', result: {} },
+        });
+        sendMsg(promoted, { id: 'interrupted-write', ...request });
+        promoted.postMessage.mockClear();
+        sendMsg(leader, { type: 'tab-closing' });
+        const error = expect.objectContaining({ code: 'backend-restarted' });
+        const expected = request.name.startsWith('api/')
+          ? { type: 'reply', id: 'interrupted-write', error }
+          : request.catchErrors
+            ? {
+                type: 'reply',
+                id: 'interrupted-write',
+                result: { error, data: null },
+              }
+            : { type: 'error', id: 'interrupted-write', error };
+        expect(promoted.postMessage).toHaveBeenCalledWith(expected);
+        simulateWorkerConnect(promoted);
+        expect(promoted.postMessage).not.toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: '__to-worker',
+            msg: expect.objectContaining({ id: 'interrupted-write' }),
+          }),
+        );
+      },
+    );
+
+    it.each([
+      { type: 'error', error: { message: 'Restore failed' } },
+      {
+        type: 'reply',
+        result: { error: { message: 'Restore failed' }, data: null },
+      },
+      {
+        type: 'reply',
+        result: { error: null, data: { error: 'opening-budget' } },
+      },
+    ])('rejects queued requests when restore fails: %j', failure => {
+      const leader = setupBudgetGroup(coordinator, 'budget-1');
+      sendMsg(leader, {
+        type: '__track-restore',
+        requestId: '__restore-budget',
+        budgetId: 'budget-1',
+      });
+      simulateWorkerConnect(leader);
+      sendMsg(leader, { id: 'queued-prefs', name: 'load-prefs' });
+      leader.postMessage.mockClear();
+      sendMsg(leader, {
+        type: '__from-worker',
+        msg: { id: '__restore-budget', ...failure },
+      });
+      expect(leader.postMessage).toHaveBeenCalledWith({
+        type: 'error',
+        id: 'queued-prefs',
+        error: expect.objectContaining({ code: 'backend-unavailable' }),
+      });
+      expect(
+        coordinator.getState().budgetGroups.get('budget-1').backendConnected,
+      ).toBe(false);
+      expect(leader.postMessage).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'connect' }),
+      );
+      sendMsg(leader, { id: 'later-prefs', name: 'load-prefs' });
+      expect(leader.postMessage).toHaveBeenCalledWith({
+        type: 'error',
+        id: 'later-prefs',
+        error: expect.objectContaining({ code: 'backend-unavailable' }),
+      });
+    });
+
     it('registers a budget restore for reply routing', () => {
       const leader = setupBudgetGroup(coordinator, 'budget-1');
 

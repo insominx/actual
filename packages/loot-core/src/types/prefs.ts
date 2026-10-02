@@ -99,6 +99,8 @@ export type LocalPrefs = Partial<{
   'budget.summaryCollapsed': boolean;
   'budget.showHiddenCategories': boolean;
   'budget.startMonth': string;
+  'budget.displayMode': 'budget' | 'expenses';
+  'budget.expensePeriod': 'month' | 'year';
   'flags.updateNotificationShownForVersion': string;
   'tour.introSeen': boolean;
   'schedules.showCompleted': boolean;

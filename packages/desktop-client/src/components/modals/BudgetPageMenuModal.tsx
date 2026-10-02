@@ -6,6 +6,7 @@ import { Menu } from '@actual-app/components/menu';
 import { styles } from '@actual-app/components/styles';
 import { theme } from '@actual-app/components/theme';
 
+import { parseDisplayMode } from '#components/budget/expense-view/expenseData';
 import { Modal, ModalCloseButton, ModalHeader } from '#components/common/Modal';
 import { useLocalPref } from '#hooks/useLocalPref';
 import type { Modal as ModalType } from '#modals/modalsSlice';
@@ -36,6 +37,7 @@ export function BudgetPageMenuModal({
             rightContent={<ModalCloseButton onPress={() => state.close()} />}
           />
           <BudgetPageMenu
+            onClose={() => state.close()}
             getItemStyle={() => defaultMenuItemStyle}
             onAddCategoryGroup={onAddCategoryGroup}
             onToggleHiddenCategories={onToggleHiddenCategories}
@@ -54,18 +56,26 @@ type BudgetPageMenuProps = Omit<
   onAddCategoryGroup: () => void;
   onToggleHiddenCategories: () => void;
   onSwitchBudgetFile: () => void;
+  onClose: () => void;
 };
 
 function BudgetPageMenu({
+  onClose,
   onAddCategoryGroup,
   onToggleHiddenCategories,
   onSwitchBudgetFile,
   ...props
 }: BudgetPageMenuProps) {
   const [showHiddenCategories] = useLocalPref('budget.showHiddenCategories');
+  const [displayModePref, setDisplayMode] = useLocalPref('budget.displayMode');
+  const displayMode = parseDisplayMode(displayModePref);
 
   const onMenuSelect = (name: string) => {
     switch (name) {
+      case 'toggle-display-mode':
+        setDisplayMode(displayMode === 'expenses' ? 'budget' : 'expenses');
+        onClose();
+        break;
       case 'add-category-group':
         onAddCategoryGroup?.();
         break;
@@ -89,6 +99,11 @@ function BudgetPageMenu({
       {...props}
       onMenuSelect={onMenuSelect}
       items={[
+        {
+          name: 'toggle-display-mode',
+          text:
+            displayMode === 'expenses' ? t('Show budget') : t('Show expenses'),
+        },
         {
           name: 'add-category-group',
           text: t('Add category group'),

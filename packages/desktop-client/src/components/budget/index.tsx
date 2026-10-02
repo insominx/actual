@@ -24,6 +24,7 @@ import {
 import { useCategories } from '#hooks/useCategories';
 import { useGlobalPref } from '#hooks/useGlobalPref';
 import { useLocalPref } from '#hooks/useLocalPref';
+import { useMetadataPref } from '#hooks/useMetadataPref';
 import { useNavigate } from '#hooks/useNavigate';
 import { SheetNameProvider } from '#hooks/useSheetName';
 import { useSpreadsheet } from '#hooks/useSpreadsheet';
@@ -32,6 +33,9 @@ import { useSyncedPref } from '#hooks/useSyncedPref';
 import { AutoSizingBudgetTable } from './DynamicBudgetTable';
 import * as envelopeBudget from './envelope/EnvelopeBudgetComponents';
 import { EnvelopeBudgetProvider } from './envelope/EnvelopeBudgetContext';
+import { BudgetDisplayModeSelector } from './expense-view/BudgetDisplayModeSelector';
+import { parseDisplayMode } from './expense-view/expenseData';
+import { ExpenseView } from './expense-view/ExpenseView';
 import * as trackingBudget from './tracking/TrackingBudgetComponents';
 import { TrackingBudgetProvider } from './tracking/TrackingBudgetContext';
 import { prewarmAllMonths, prewarmMonth } from './util';
@@ -45,6 +49,8 @@ export function Budget() {
   );
   const [startMonthPref, setStartMonthPref] = useLocalPref('budget.startMonth');
   const startMonth = startMonthPref || currentMonth;
+  const [displayModePref] = useLocalPref('budget.displayMode');
+  const [budgetId] = useMetadataPref('id');
   const [bounds, setBounds] = useState({
     start: startMonth,
     end: startMonth,
@@ -175,6 +181,22 @@ export function Budget() {
     applyBudgetAction.mutate({ month, type, args });
   };
 
+  if (parseDisplayMode(displayModePref) === 'expenses') {
+    return (
+      <View
+        style={{
+          ...styles.page,
+          paddingLeft: 8,
+          paddingRight: 8,
+          overflow: 'hidden',
+        }}
+      >
+        <BudgetDisplayModeSelector />
+        <ExpenseView key={budgetId} initialMonth={startMonth} />
+      </View>
+    );
+  }
+
   if (!initialized || !categoryGroups) {
     return null;
   }
@@ -256,6 +278,7 @@ export function Budget() {
           overflow: 'hidden',
         }}
       >
+        <BudgetDisplayModeSelector />
         <View style={{ flex: 1 }}>{table}</View>
       </View>
     </SheetNameProvider>

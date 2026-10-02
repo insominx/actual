@@ -14,6 +14,22 @@ Based on this, you can then choose which months to show:
 
 ![Budget months to show](/img/a-tour-of-actual/tour-budget-calendar-choose.webp)
 
+## Expenses View
+
+Choose **Expenses** above the budget table to view spending without changing your budget. On mobile, open the **Budget page menu** and choose **Show expenses**. Choose **Budget**, or **Show budget** on mobile, to return to your allocations and the month you were budgeting.
+
+Use **Month** to see one column for each day, or **Year** to see the twelve months of the selected year. The arrows and **Today** button move through expense periods only; they do not change the month shown in Budget. Expand a category group to see its categories. On narrow screens, scroll the grid horizontally; category names stay visible.
+
+The amounts show **net spending** from on-budget accounts:
+
+- Expense payments increase spending. Refunds reduce spending, so a refund-only period can have a negative total.
+- Transfers between on-budget accounts are excluded. An expense-categorized transfer to an off-budget account counts as spending; an expense-categorized transfer back reduces spending. Only the on-budget side counts.
+- Income categories and transactions originating in off-budget accounts are excluded.
+- Uncategorized outflows appear in their own row. Uncategorized inflows do not count. Payments whose category was deleted appear as uncategorized outflows.
+- Hidden expense categories and groups, and history from closed on-budget accounts, remain included.
+
+The Expenses view updates when transactions change, including after undo. It is read-only: selecting it does not change your budgeting method, allocations, categories, or transactions. Your display and month/year choices are saved separately for each budget on this device, not synced to other devices.
+
 ## The Month header
 
 At the top of each month, you have a couple of choices in the user interface.

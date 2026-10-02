@@ -51,6 +51,7 @@
     "#components/budget/goals/useBudgetAutomationCategories": "./src/components/budget/goals/useBudgetAutomationCategories.ts",
     "#components/budget/goals/validateAutomation": "./src/components/budget/goals/validateAutomation.ts",
     "#components/budget/util": "./src/components/budget/util.ts",
+    "#components/budget/expense-view/expenseData": "./src/components/budget/expense-view/expenseData.ts",
     "#components/codemirror/autocompleteTabAccept": "./src/components/codemirror/autocompleteTabAccept.ts",
     "#components/formula/queryTimeFrame": "./src/components/formula/queryTimeFrame.ts",
     "#components/mobile/utils": "./src/components/mobile/utils.ts",

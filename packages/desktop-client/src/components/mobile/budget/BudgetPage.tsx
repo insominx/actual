@@ -43,6 +43,8 @@ import {
   useSortCategoriesMutation,
 } from '#budget';
 import { closeBudget } from '#budgetfiles/budgetfilesSlice';
+import { parseDisplayMode } from '#components/budget/expense-view/expenseData';
+import { ExpenseView } from '#components/budget/expense-view/ExpenseView';
 import { prewarmMonth } from '#components/budget/util';
 import { FinancialText } from '#components/FinancialText';
 import { MobilePageHeader, Page } from '#components/Page';
@@ -52,6 +54,7 @@ import { useFeatureFlag } from '#hooks/useFeatureFlag';
 import { useFormat } from '#hooks/useFormat';
 import { useLocale } from '#hooks/useLocale';
 import { useLocalPref } from '#hooks/useLocalPref';
+import { useMetadataPref } from '#hooks/useMetadataPref';
 import { useNavigate } from '#hooks/useNavigate';
 import { useOverspentCategories } from '#hooks/useOverspentCategories';
 import { SheetNameProvider } from '#hooks/useSheetName';
@@ -89,6 +92,8 @@ export function BudgetPage() {
   const currMonth = monthUtils.currentMonth();
   const [startMonth = currMonth, setStartMonthPref] =
     useLocalPref('budget.startMonth');
+  const [displayModePref] = useLocalPref('budget.displayMode');
+  const [budgetId] = useMetadataPref('id');
   const [monthBounds, setMonthBounds] = useState({
     start: startMonth,
     end: startMonth,
@@ -536,6 +541,43 @@ export function BudgetPage() {
     onSwitchBudgetFile,
     onToggleHiddenCategories,
   ]);
+
+  if (parseDisplayMode(displayModePref) === 'expenses' && categoryGroups) {
+    return (
+      <Page
+        padding={0}
+        header={
+          <MobilePageHeader
+            title={<Trans>Expenses</Trans>}
+            leftContent={
+              <Button
+                variant="bare"
+                style={{ margin: 10 }}
+                onPress={onOpenBudgetPageMenu}
+                aria-label={t('Budget page menu')}
+              >
+                <SvgLogo
+                  style={{ color: theme.mobileHeaderText }}
+                  width="20"
+                  height="20"
+                />
+                <SvgCheveronRight
+                  style={{
+                    flexShrink: 0,
+                    color: theme.mobileHeaderTextSubdued,
+                  }}
+                  width="14"
+                  height="14"
+                />
+              </Button>
+            }
+          />
+        }
+      >
+        <ExpenseView key={budgetId} initialMonth={startMonth} />
+      </Page>
+    );
+  }
 
   if (!categoryGroups || !initialized) {
     return (
