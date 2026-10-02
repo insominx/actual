@@ -18,6 +18,7 @@ import * as cleanupGroupActions from './cleanup-groups';
 import * as cleanupActions from './cleanup-template';
 import { storeNoteCleanups } from './cleanup-template-notes';
 import * as goalActions from './goal-template';
+import { getReservations } from './reservations';
 import { sortCategories } from './sort-categories';
 import * as goalNoteActions from './template-notes';
 
@@ -67,6 +68,7 @@ export type BudgetHandlers = {
   'budget/store-note-cleanups': typeof storeNoteCleanups;
   'budget/render-note-templates': typeof goalNoteActions.unparse;
   'budget/create-cleanup-group': typeof cleanupGroupActions.createCleanupGroup;
+  'budget/get-reservations': typeof getReservations;
 };
 
 export const app = createApp<BudgetHandlers>();
@@ -180,6 +182,7 @@ app.method(
   'budget/create-cleanup-group',
   mutator(undoable(cleanupGroupActions.createCleanupGroup)),
 );
+app.method('budget/get-reservations', getReservations);
 
 // Server must return AQL entities not the raw DB data
 async function getCategories({ hidden }: { hidden?: boolean } = {}) {

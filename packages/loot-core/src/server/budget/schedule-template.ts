@@ -1,11 +1,13 @@
 // @ts-strict-ignore
 
+import { aqlQuery } from '#server/aql';
 import * as db from '#server/db';
 import { collectFormulasFromActions } from '#server/rules/balanceOfFormula';
 import { getRuleForSchedule } from '#server/schedules/app';
 import { prefetchBalanceOfForTransaction } from '#server/transactions/transaction-rules';
 import type { Currency } from '#shared/currencies';
 import * as monthUtils from '#shared/months';
+import { q } from '#shared/query';
 import {
   extractScheduleConds,
   getDateWithSkippedWeekend,
@@ -13,6 +15,7 @@ import {
 } from '#shared/schedules';
 import { amountToInteger } from '#shared/util';
 import type { CategoryEntity, TransactionEntity } from '#types/models';
+import type { ReservationUnavailableReason } from '#types/models/reservations';
 import type { ScheduleTemplate, Template } from '#types/models/templates';
 
 import { getSheetValue, isTrackingBudget } from './actions';
@@ -410,4 +413,174 @@ export async function runSchedule(
     }
   }
   return { to_budget, errors, remainder, perScheduleMonthly };
+}
+
+export type ScheduleClaim = {
+  scheduleId: string;
+  template: ScheduleTemplate;
+  scheduleName: string;
+  target: number;
+  nextDate: string;
+  monthlyRate: number;
+  monthsRemaining: number;
+};
+
+export type ScheduleClaimsResult =
+  | { ok: true; claims: ScheduleClaim[] }
+  | {
+      ok: false;
+      reason: Exclude<ReservationUnavailableReason, 'invalid-template'>;
+    };
+
+function hasScheduleModifiers(template: ScheduleTemplate) {
+  return (
+    Boolean(template.full) ||
+    template.adjustment != null ||
+    template.adjustmentType != null
+  );
+}
+
+function scheduleModifierKey(template: ScheduleTemplate) {
+  return JSON.stringify([
+    Boolean(template.full),
+    template.adjustment ?? null,
+    template.adjustmentType ?? null,
+  ]);
+}
+
+/**
+ * Resolves a category's schedule templates into reservation claims, or the
+ * first reason (in `ReservationUnavailableReason` order) they cannot be. Never
+ * returns a partial list. Read-only: `runSchedule` behavior is unaffected.
+ */
+export async function getScheduleClaims(
+  templates: ScheduleTemplate[],
+  month: string,
+  category: CategoryEntity,
+  currency: Currency,
+): Promise<ScheduleClaimsResult> {
+  if (templates.length === 0) {
+    return { ok: true, claims: [] };
+  }
+
+  // `createScheduleList` throws on a missing schedule and silently takes the
+  // first of several name matches, so both are resolved here first.
+  const liveSchedules = await db.all<
+    Pick<db.DbSchedule, 'id' | 'name' | 'completed'>
+  >('SELECT id, name, completed FROM schedules WHERE tombstone = 0');
+
+  let isMissing = false;
+  let isAmbiguous = false;
+  const resolved: Array<{
+    template: ScheduleTemplate;
+    schedule: Pick<db.DbSchedule, 'id' | 'name' | 'completed'>;
+  }> = [];
+  for (const template of templates) {
+    const matches = template.scheduleId
+      ? liveSchedules.filter(s => s.id === template.scheduleId)
+      : template.name?.trim()
+        ? liveSchedules.filter(s => s.name?.trim() === template.name.trim())
+        : [];
+    if (matches.length === 0) {
+      isMissing = true;
+    } else if (matches.length > 1) {
+      isAmbiguous = true;
+    } else {
+      resolved.push({ template, schedule: matches[0] });
+    }
+  }
+  if (isMissing) {
+    return { ok: false, reason: 'missing-schedule' };
+  }
+  if (isAmbiguous) {
+    return { ok: false, reason: 'ambiguous-schedule' };
+  }
+  if (resolved.some(({ schedule }) => schedule.completed)) {
+    return { ok: false, reason: 'inactive-schedule' };
+  }
+
+  // Identical references to one schedule count once; the same schedule with
+  // different modifiers cannot be reserved consistently.
+  const uniqueById = new Map<string, ScheduleTemplate>();
+  const modifierKeysById = new Map<string, Set<string>>();
+  for (const { template, schedule } of resolved) {
+    if (!uniqueById.has(schedule.id)) {
+      uniqueById.set(schedule.id, { ...template, scheduleId: schedule.id });
+      modifierKeysById.set(schedule.id, new Set());
+    }
+    modifierKeysById.get(schedule.id).add(scheduleModifierKey(template));
+  }
+  const isDuplicate = [...modifierKeysById.values()].some(
+    keys => keys.size > 1,
+  );
+  const hasModifiers = [...uniqueById.values()].some(hasScheduleModifiers);
+
+  let list: Awaited<ReturnType<typeof createScheduleList>>;
+  try {
+    list = await createScheduleList(
+      [...uniqueById.values()],
+      month,
+      category,
+      currency,
+    );
+  } catch {
+    return { ok: false, reason: 'inactive-schedule' };
+  }
+  if (
+    list.errors.length > 0 ||
+    list.t.length !== uniqueById.size ||
+    list.t.some(entry => !entry.next_date_string)
+  ) {
+    return { ok: false, reason: 'inactive-schedule' };
+  }
+  if (isDuplicate) {
+    return { ok: false, reason: 'duplicate-schedule' };
+  }
+  if (hasModifiers) {
+    return { ok: false, reason: 'unsupported-template' };
+  }
+  const isSupported = list.t.every(
+    entry =>
+      entry.repeat &&
+      (entry.target_frequency === 'monthly' ||
+        entry.target_frequency === 'yearly') &&
+      entry.target_interval > 0 &&
+      Number.isFinite(entry.target) &&
+      entry.target > 0,
+  );
+  if (!isSupported) {
+    return { ok: false, reason: 'unsupported-template' };
+  }
+
+  // Payments and skips only advance the stored next date; `createScheduleList`
+  // re-derives its date from the start of the month and never moves.
+  const { data: storedDates }: { data: Array<{ id: string; next_date }> } =
+    await aqlQuery(
+      q('schedules')
+        .filter({ id: { $oneof: [...uniqueById.keys()] } })
+        .select(['id', 'next_date']),
+    );
+  const storedNextDateById = new Map(
+    storedDates.map(row => [row.id, row.next_date]),
+  );
+
+  const claims = list.t.map(entry => {
+    const scheduleId = entry.template.scheduleId;
+    const nextDate: string =
+      storedNextDateById.get(scheduleId) ?? entry.next_date_string;
+    return {
+      scheduleId,
+      template: entry.template,
+      scheduleName: entry.name,
+      target: entry.target,
+      nextDate,
+      monthlyRate: getMonthlyBaseContribution(entry),
+      monthsRemaining: Math.max(
+        0,
+        monthUtils.differenceInCalendarMonths(nextDate, month),
+      ),
+    };
+  });
+
+  return { ok: true, claims };
 }

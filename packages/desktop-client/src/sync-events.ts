@@ -6,7 +6,7 @@ import { t } from 'i18next';
 import { accountGroupQueries } from './account-groups';
 import { accountQueries } from './accounts';
 import { resetSync, sync } from './app/appSlice';
-import { categoryQueries } from './budget';
+import { categoryQueries, reservationQueries } from './budget';
 import {
   closeAndDownloadBudget,
   uploadBudget,
@@ -65,6 +65,7 @@ export function listenForSyncEvent(store: AppStore, queryClient: QueryClient) {
   });
 
   let attemptedSyncRepair = false;
+  let reservationResetTimer: ReturnType<typeof setTimeout> | null = null;
 
   const unlistenSuccess = listen('sync-event', event => {
     const prefs = store.getState().prefs.local;
@@ -102,6 +103,19 @@ export function listenForSyncEvent(store: AppStore, queryClient: QueryClient) {
       }
 
       const tables = event.tables;
+
+      // Reservations derive from balances, templates and schedules, so any
+      // applied change can move them. A plain invalidation would join a first
+      // load that is still in flight and keep its outdated result; a reset
+      // cancels it. Events in one tick share a single refetch.
+      if (reservationResetTimer === null) {
+        reservationResetTimer = setTimeout(() => {
+          reservationResetTimer = null;
+          void queryClient.resetQueries({
+            queryKey: reservationQueries.all(),
+          });
+        }, 0);
+      }
 
       if (tables.includes('prefs')) {
         void store.dispatch(loadPrefs());
@@ -436,5 +450,8 @@ export function listenForSyncEvent(store: AppStore, queryClient: QueryClient) {
   return () => {
     unlistenUnauthorized();
     unlistenSuccess();
+    if (reservationResetTimer !== null) {
+      clearTimeout(reservationResetTimer);
+    }
   };
 }

@@ -12,6 +12,7 @@ import {
   CarryoverIndicator,
 } from '#components/budget/BalanceWithCarryover';
 import { BalanceMenu } from '#components/budget/envelope/BalanceMenu';
+import { ReservationBreakdown } from '#components/budget/ReservationBreakdown';
 import {
   Modal,
   ModalCloseButton,
@@ -23,13 +24,14 @@ import { useCategory } from '#hooks/useCategory';
 import type { Modal as ModalType } from '#modals/modalsSlice';
 import { envelopeBudget } from '#spreadsheet/bindings';
 
-type EnvelopeBalanceMenuModalProps = Omit<
-  Extract<ModalType, { name: 'envelope-balance-menu' }>['options'],
-  'month'
->;
+type EnvelopeBalanceMenuModalProps = Extract<
+  ModalType,
+  { name: 'envelope-balance-menu' }
+>['options'];
 
 export function EnvelopeBalanceMenuModal({
   categoryId,
+  month,
   onCarryover,
   onTransfer,
   onCover,
@@ -101,6 +103,11 @@ export function EnvelopeBalanceMenuModal({
               )}
             </BalanceWithCarryover>
           </View>
+          <ReservationBreakdown
+            categoryId={categoryId}
+            month={month}
+            style={{ fontSize: 15, padding: '10px 15px' }}
+          />
           <BalanceMenu
             categoryId={categoryId}
             getItemStyle={() => defaultMenuItemStyle}

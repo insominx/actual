@@ -114,7 +114,7 @@ global.getDatabaseDump = async function (tables) {
           [],
           true,
         ),
-      ];
+      ] as const;
     }),
   );
 

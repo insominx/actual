@@ -202,6 +202,9 @@ export function ExperimentalFeatures() {
             >
               <Trans>Currency support</Trans>
             </FeatureToggle>
+            <FeatureToggle flag="budgetReservations">
+              <Trans>Category reservations</Trans>
+            </FeatureToggle>
             <FeatureToggle
               flag="mobileCalculator"
               feedbackLink="https://github.com/actualbudget/actual/issues/8255"

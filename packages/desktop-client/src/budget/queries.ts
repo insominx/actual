@@ -3,6 +3,7 @@ import type {
   CategoryEntity,
   CategoryGroupEntity,
 } from '@actual-app/core/types/models';
+import type { ReservationsResult } from '@actual-app/core/types/models/reservations';
 import { queryOptions } from '@tanstack/react-query';
 import i18n from 'i18next';
 
@@ -26,6 +27,22 @@ export const categoryQueries = {
         list: [],
       },
       // Manually invalidated when categories change
+      staleTime: Infinity,
+    }),
+};
+
+export const reservationQueries = {
+  all: () => ['reservations'],
+  month: (budgetId: string, month: string) =>
+    queryOptions<ReservationsResult>({
+      queryKey: [...reservationQueries.all(), budgetId, month],
+      queryFn: async ({ signal }) => {
+        const result = await send('budget/get-reservations', { month });
+        // `send` cannot be cancelled; a superseded response is dropped here.
+        signal.throwIfAborted();
+        return result;
+      },
+      // Invalidated on every applied sync event
       staleTime: Infinity,
     }),
 };

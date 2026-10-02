@@ -68,4 +68,8 @@ declare global {
   var currentMonth: string | null;
 
   var emptyDatabase: (avoidUpdate?: boolean) => () => Promise<void>;
+
+  var getDatabaseDump: (
+    tables?: string[],
+  ) => Promise<Record<string, unknown[]>>;
 }

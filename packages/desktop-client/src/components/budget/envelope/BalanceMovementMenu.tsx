@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
 
+import { ReservationBreakdown } from '#components/budget/ReservationBreakdown';
 import { useFormat } from '#hooks/useFormat';
 import { envelopeBudget } from '#spreadsheet/bindings';
 
@@ -41,18 +42,25 @@ export function BalanceMovementMenu({
   return (
     <span tabIndex={-1} ref={ref}>
       {menu === 'menu' && (
-        <BalanceMenu
-          categoryId={categoryId}
-          onCarryover={carryover => {
-            onBudgetAction(month, 'carryover', {
-              category: categoryId,
-              flag: carryover,
-            });
-            onClose();
-          }}
-          onTransfer={() => setMenu('transfer')}
-          onCover={() => setMenu('cover')}
-        />
+        <>
+          <ReservationBreakdown
+            categoryId={categoryId}
+            month={month}
+            style={{ minWidth: 260 }}
+          />
+          <BalanceMenu
+            categoryId={categoryId}
+            onCarryover={carryover => {
+              onBudgetAction(month, 'carryover', {
+                category: categoryId,
+                flag: carryover,
+              });
+              onClose();
+            }}
+            onTransfer={() => setMenu('transfer')}
+            onCover={() => setMenu('cover')}
+          />
+        </>
       )}
 
       {menu === 'transfer' && (
