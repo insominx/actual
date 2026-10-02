@@ -1,0 +1,68 @@
+{
+  "recorded": "2026-09-27",
+  "fork": {
+    "repository": "https://github.com/code-with-jov/actual-pay-periods",
+    "commit": "62128aa6e24a957e1e85db2ebc7cd43fccfb995b",
+    "fetch": "git fetch --depth 1 origin <commit>, then --deepen=600 --filter=blob:none into %TEMP%/pp-study/fork (outside repo)",
+    "license": "MIT (LICENSE.txt, Copyright James Long); vendored file keeps upstream MIT terms"
+  },
+  "upstream_baseline": {
+    "repository": "https://github.com/actualbudget/actual",
+    "merge_base": "62a18ba77081fb799a391a672beb81899cab86ac",
+    "merge_base_date": "2026-09-01T21:44:31Z",
+    "fork_commits_ahead": 47,
+    "changed_files": 116,
+    "local_head_contains_merge_base": true
+  },
+  "adr": {
+    "repository": "https://github.com/lefevreste/budget-fr",
+    "path": "docs/budget-fr/adr/0006-layered-budget-period-assignment.md",
+    "repo_head": "8e09931212734e52e36735b2d05ea664fc1f8c3b",
+    "last_commit_touching_file": "4baa7dacb3158c649a9412dcddb53c1691c10dd3",
+    "last_commit_date": "2026-09-09T11:36:25+02:00",
+    "sha256": "5C3AA726D274AFB9F1F5994D7D80619E82708BA68F91B80A2DFF236A07CBD7BD",
+    "use": "competing design evidence only (transaction-level calendar-month assignment); not vendored"
+  },
+  "local": {
+    "head": "9a71fd2230b2ab9dc0323c48d96386b3e80f2f27",
+    "node": "v26.3.0",
+    "date_fns_root_node_modules": "4.4.0",
+    "date_fns_fork_lockfile": "4.4.0 (loot-core range ^4.4.0)",
+    "date_fns_mismatch": false
+  },
+  "files": [
+    {
+      "path": "packages/loot-core/src/shared/pay-periods.ts",
+      "git_blob": "0791764c44659452671e478f479e315a9fe110e3",
+      "sha256_pinned": "F1F1659351D6D32A13C5839E0A3EA88A10D9630FCD8658909BD88E4D6739EDA5",
+      "probe_path": "probes/vendor/pay-periods.ts",
+      "sha256_probe": "F1F1659351D6D32A13C5839E0A3EA88A10D9630FCD8658909BD88E4D6739EDA5",
+      "transformation": "none",
+      "bytes_source": "git cat-file blob (LF, no autocrlf conversion)",
+      "pure": true,
+      "imports": ["date-fns (value)", "date-fns (type Locale)"],
+      "notes": "Loaded by Node built-in type stripping; emits MODULE_TYPELESS_PACKAGE_JSON warning (ESM syntax detection), no other diagnostics."
+    },
+    {
+      "path": "packages/loot-core/src/shared/pay-period-config.ts",
+      "sha256_pinned": "811D10FAF355FABC537BF3CF5275D5FBA4329CAC4A65A7BB1665063C3DEC4DB4",
+      "vendored": false,
+      "pure": true,
+      "notes": "Module-singleton registry; survey-only (probes pass configs explicitly)."
+    },
+    {
+      "path": "packages/loot-core/src/server/budget/pay-period-config.ts",
+      "sha256_pinned": "7A6F516FAB8C01E754159996146657FD46327245C217B3BAA5E6C6A4E6832BEB",
+      "vendored": false,
+      "pure": false,
+      "notes": "Reads preferences via #server/db and rebuilds sheets; forbidden in probe process (extraction rule 3)."
+    },
+    {
+      "path": "packages/docs/docs/experimental/pay-periods.md",
+      "sha256_pinned": "654F15BAB21EDBB5EA17201333ED1AF088B5316CD23BC218A9A7C299A9BE62E8",
+      "vendored": false,
+      "pure": true,
+      "notes": "User-facing limitations; quoted as disclosure evidence."
+    }
+  ]
+}

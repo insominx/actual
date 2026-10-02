@@ -1,7 +1,7 @@
 # Task Progress: expense-only budget view
 
-Current status: implemented (uncommitted), with verification gaps
-Current phase: E1–E3 and cross-tab/handover follow-ups complete; review pending
+Current status: complete, committed in `5f33b8073`
+Current phase: E1–E3 and cross-tab/handover follow-ups complete; local verification reviewed
 Execution path: AFK, batches E1 → E2 → E3 (plan §8)
 Verdict: feature, local cross-tab and handover lifecycle implemented; baseline lint and remote-sync verification limits remain
 
@@ -11,9 +11,7 @@ Verdict: feature, local cross-tab and handover lifecycle implemented; baseline l
 
 ## Agent next actions
 
-1. Review the task diff and execution decisions D1–D6; no commit or branch was created.
-2. Review D5/D6's coordinator follow-ups and normal-UA browser regression. Remote-server sync still needs a separate configured-server check; interrupted writes must be reconciled before retrying because their prior outcome can be unknown.
-3. Resolve repository-wide lint failures separately; do not mix baseline cleanup into this feature.
+None for this task. Remote-server verification and repository-wide lint cleanup remain outside this task's completed local scope.
 
 ## Implementation checklist
 
@@ -62,6 +60,8 @@ See `execution-decisions.md`, D1–D6, and `implementation.md` for as-built owne
 - Scripted smoke: 20100 → 21100 → 20100 in both tabs, then 22100 after submitting read/write immediately on promotion. `evidence/two-tab-verification.json` and `two-tabs-after-handover.png` record D5/D6. The 3007-leaf year view reconciles to 320100 with 6 rows (88ms latest observation). Remote-server sync is not verified.
 
 ## Execution log
+
+- 2026-10-02 — Confirmed implementation and coordinator fixes are already committed in `5f33b8073`. Reviewed current local acceptance evidence and reran expense query (5), coordinator (64), serialization (6), and client expense tests (23): passed. Browser expense desktop/mobile and normal-user-agent cross-tab/handover checks passed. Broad lint still reports baseline formatting failures; remote-server synchronization remains unverified.
 
 - 2026-10-01 — Continued D6 safe handover slice: reproduced a hanging request immediately after promotion, then observed nine failing-first coordinator cases. Buffer new work until connection and restore succeed; reject unknown-outcome interrupted requests without replay; reject cancelled/failed work using existing response envelopes. Additional red tests guard evicted writes and failure acknowledgement. Final coordinator 64 tests pass, four browser tests pass, and strengthened smoke submits a read/write during handover successfully. No real budget, automatic mutation retry or storage migration was used.
 
