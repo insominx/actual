@@ -770,7 +770,7 @@ function PayeeCell({
               modal: {
                 name: 'payee-autocomplete',
                 options: {
-                  onSelect: (payeeId: PayeeEntity['id']) => {
+                  onSelect: (payeeId: PayeeEntity['id'] | null) => {
                     onUpdate('payee', payeeId);
                   },
                 },

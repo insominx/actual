@@ -171,6 +171,9 @@ export const GenericInput = ({
                         name: 'payee-autocomplete',
                         options: {
                           onSelect: newValue => {
+                            if (newValue === null) {
+                              return;
+                            }
                             if (props.multi === true) {
                               props.onChange([...multiValue, newValue]);
                               return;
