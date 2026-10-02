@@ -1,0 +1,10 @@
+Project: D:\Projects\personal\Budget\actual
+Task: 0006-cash-planning
+Profile: default
+Result: passed
+
+| type | check | status | detail |
+|---|---|---|---|
+| scripted | cash-planning-core | pass | 4391ms |
+| scripted | cash-planning-client | pass | 6202ms |
+| scripted | root-types | pass | 3448ms |

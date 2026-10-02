@@ -11,6 +11,7 @@ import {
   closeAndDownloadBudget,
   uploadBudget,
 } from './budgetfiles/budgetfilesSlice';
+import { cashPlanningQueries } from './hooks/useCashPlanning';
 import { pushModal } from './modals/modalsSlice';
 import { addNotification } from './notifications/notificationsSlice';
 import type { Notification } from './notifications/notificationsSlice';
@@ -114,10 +115,13 @@ export function listenForSyncEvent(store: AppStore, queryClient: QueryClient) {
           void queryClient.resetQueries({
             queryKey: reservationQueries.all(),
           });
+          void queryClient.resetQueries({
+            queryKey: cashPlanningQueries.all(),
+          });
         }, 0);
       }
 
-      if (tables.includes('prefs')) {
+      if (tables.includes('prefs') || tables.includes('preferences')) {
         void store.dispatch(loadPrefs());
       }
 

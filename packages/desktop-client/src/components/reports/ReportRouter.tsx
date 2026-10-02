@@ -10,6 +10,7 @@ import { BalanceForecast } from './reports/BalanceForecast';
 import { BudgetAnalysis } from './reports/BudgetAnalysis';
 import { Calendar } from './reports/Calendar';
 import { CashFlow } from './reports/CashFlow';
+import { CashPlanning } from './reports/CashPlanning';
 import { Crossover } from './reports/Crossover';
 import { CustomReport } from './reports/CustomReport';
 import { Formula } from './reports/Formula';
@@ -40,6 +41,14 @@ export function ReportRouter() {
 
   return (
     <Routes>
+      <Route
+        path="/cash-planning"
+        element={
+          <ReportBoundary>
+            <CashPlanning />
+          </ReportBoundary>
+        }
+      />
       <Route path="/" element={<ReportsDashboardRouter />} />
       <Route path="/:dashboardId" element={<ReportsDashboardRouter />} />
       <Route

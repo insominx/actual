@@ -194,7 +194,7 @@ const sidebars = {
             type: 'doc',
             id: 'reports/index',
           },
-          items: ['reports/custom-reports'],
+          items: ['reports/custom-reports', 'reports/cash-planning'],
         },
         'settings/index',
         'custom-themes',

@@ -159,7 +159,10 @@ describe('listenForSyncEvent reservations', () => {
       serverPush('sync-event', { type, tables: ['zero_budgets'] });
       await nextTicks();
 
-      expect(resetQueries).toHaveBeenCalledTimes(1);
+      expect(resetQueries).toHaveBeenCalledTimes(2);
+      expect(resetQueries).toHaveBeenCalledWith({
+        queryKey: ['cash-planning'],
+      });
       expect(resetQueries).toHaveBeenCalledWith({
         queryKey: ['reservations'],
       });
@@ -173,7 +176,8 @@ describe('listenForSyncEvent reservations', () => {
     serverPush('sync-event', { type: 'applied', tables: [] });
     await nextTicks();
 
-    expect(resetQueries).toHaveBeenCalledTimes(1);
+    expect(resetQueries).toHaveBeenCalledTimes(2);
+    expect(resetQueries).toHaveBeenCalledWith({ queryKey: ['cash-planning'] });
   });
 
   it('coalesces events in one tick', async () => {
@@ -184,7 +188,8 @@ describe('listenForSyncEvent reservations', () => {
     serverPush('sync-event', { type: 'success', tables: ['schedules'] });
     await nextTicks();
 
-    expect(resetQueries).toHaveBeenCalledTimes(1);
+    expect(resetQueries).toHaveBeenCalledTimes(2);
+    expect(resetQueries).toHaveBeenCalledWith({ queryKey: ['cash-planning'] });
   });
 
   it('does not refetch an unobserved month in the background', async () => {

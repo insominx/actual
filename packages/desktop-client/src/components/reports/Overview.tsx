@@ -754,6 +754,12 @@ export function Overview({ dashboard }: OverviewProps) {
       }
       padding={10}
     >
+      <Button
+        style={{ alignSelf: 'flex-start', marginBottom: 10 }}
+        onPress={() => void navigate('/reports/cash-planning')}
+      >
+        <Trans>Cash planning</Trans>
+      </Button>
       {isImporting ? (
         <LoadingIndicator message={t('Import is running...')} />
       ) : (

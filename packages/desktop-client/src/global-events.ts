@@ -8,6 +8,7 @@ import { accountQueries } from './accounts';
 import { setAppState } from './app/appSlice';
 import { categoryQueries } from './budget';
 import { closeBudgetUI } from './budgetfiles/budgetfilesSlice';
+import { cashPlanningQueries } from './hooks/useCashPlanning';
 import { closeModal, pushModal, replaceModal } from './modals/modalsSlice';
 import type { Modal } from './modals/modalsSlice';
 import {
@@ -51,7 +52,11 @@ export function handleGlobalEvents(store: AppStore, queryClient: QueryClient) {
   const unlistenSync = syncEvents.listenForSyncEvent(store, queryClient);
 
   const unlistenUndo = listen('undo-event', undoState => {
+    void queryClient.resetQueries({ queryKey: cashPlanningQueries.all() });
     const { tables, undoTag } = undoState;
+    if (tables.includes('prefs') || tables.includes('preferences')) {
+      void store.dispatch(loadPrefs());
+    }
     const promises: Promise<unknown>[] = [];
 
     if (
