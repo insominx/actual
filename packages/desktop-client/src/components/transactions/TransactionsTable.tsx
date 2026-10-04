@@ -174,8 +174,10 @@ import {
   makeTemporaryTransactions,
   selectAscDesc,
   serializeTransaction,
+  trackClearedField,
 } from './table/utils';
 import type {
+  ClearedFieldsByTransaction,
   SerializedTransaction,
   TransactionEditFunction,
   TransactionUpdateFunction,
@@ -2750,6 +2752,7 @@ type TransactionTableInnerProps = {
   onApplyRules: (
     transaction: TransactionEntity,
     field: string,
+    clearedFields?: ClearedFieldsByTransaction,
   ) => Promise<TransactionEntity>;
   onSplit: (id: TransactionEntity['id']) => void;
   onAddSplit: (id: TransactionEntity['id']) => void;
@@ -3277,6 +3280,7 @@ export type TransactionTableProps = {
   onApplyRules: (
     transaction: TransactionEntity,
     field: string | null,
+    clearedFields?: ClearedFieldsByTransaction,
   ) => Promise<TransactionEntity>;
   onSplit: (id: TransactionEntity['id']) => TransactionEntity['id'];
   onAddSplit: (id: TransactionEntity['id']) => TransactionEntity['id'];
@@ -3543,6 +3547,14 @@ export const TransactionTable = forwardRef(
     const afterSaveFunc = useRef<null | (() => void)>(null);
     const [_, forceRerender] = useState({});
     const selectedItems = useSelectedItems();
+    // Fields the user explicitly emptied while entering the new transaction,
+    // tracked per row id so a clear on one split row doesn't affect its
+    // siblings. Rules re-run on every field commit, and they may not re-fill
+    // these (e.g. a cleared pre-assigned category must stay cleared until the
+    // row is added or reset).
+    const clearedFields = useRef(
+      new Map<TransactionEntity['id'], Set<string>>(),
+    );
 
     latestState.current = {
       newTransactions: newTransactions ?? [],
@@ -3554,6 +3566,7 @@ export const TransactionTable = forwardRef(
     // Derive new transactions from the `isAdding` prop
     if (prevIsAdding !== props.isAdding) {
       if (!prevIsAdding && props.isAdding) {
+        clearedFields.current.clear();
         setNewTransactions(
           makeTemporaryTransactions(
             props.currentAccountId,
@@ -3584,6 +3597,7 @@ export const TransactionTable = forwardRef(
         } else {
           const lastDate =
             transactions.length > 0 ? transactions[0].date : null;
+          clearedFields.current.clear();
           setNewTransactions(
             makeTemporaryTransactions(
               props.currentAccountId,
@@ -3636,6 +3650,7 @@ export const TransactionTable = forwardRef(
                 }),
               );
               // Reset form like onAddTemporary does
+              clearedFields.current.clear();
               setNewTransactions(
                 makeTemporaryTransactions(
                   props.currentAccountId,
@@ -3902,10 +3917,23 @@ export const TransactionTable = forwardRef(
 
         if (isTemporaryId(transaction.id)) {
           if (onApplyRulesProp) {
+            // Remember fields the user explicitly emptied so later rule runs
+            // (triggered by edits to other fields) can't re-fill them either.
+            // `transaction` is the row that was actually edited (a split
+            // child or the parent), so track the clear against its own id.
+            if (updatedFieldName !== null) {
+              trackClearedField(
+                clearedFields.current,
+                transaction,
+                updatedFieldName,
+              );
+            }
+
             try {
               groupedTransaction = await onApplyRulesProp(
                 groupedTransaction,
                 updatedFieldName,
+                clearedFields.current,
               );
             } catch (error) {
               // Rules are a convenience while entering a transaction; if they
@@ -4172,6 +4200,7 @@ export const TransactionTable = forwardRef(
     );
 
     function onCloseAddTransaction() {
+      clearedFields.current.clear();
       setNewTransactions(
         makeTemporaryTransactions(
           props.currentAccountId,
