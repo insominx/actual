@@ -628,6 +628,7 @@ export async function executeScopedChange(
     | 'transfers.match'
     | 'transfers.unmatch'
     | 'transfers.repair'
+    | 'imports.mapping-save'
     | 'transactions.merge'
     | 'cash-planning.save',
   payload: Record<string, unknown>,
@@ -1365,6 +1366,11 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
     apply: p =>
       api.applyTransactionClearing(p as api.TransactionClearingProposal),
   },
+  'imports.mapping-save': {
+    preview: r =>
+      api.previewImportMappingSave(r as api.ImportMappingSaveRequest),
+    apply: p => api.applyImportMappingSave(p as api.ImportMappingSaveProposal),
+  },
   'transfers.match': {
     preview: r => api.previewTransferMatch(r as api.TransferMatchRequest),
     apply: p => api.applyTransferMatch(p as api.TransferMatchProposal),
@@ -1493,6 +1499,7 @@ function changeRequest(
   | api.TransactionCategorizationRequest
   | api.TransactionClearingRequest
   | api.TransferMatchRequest
+  | api.ImportMappingSaveRequest
   | api.TransferUnmatchRequest
   | api.TransferRepairRequest
   | api.TransactionMergeRequest
@@ -1628,6 +1635,29 @@ function changeRequest(
       ...(payload.allowReconciled === undefined
         ? {}
         : { allowReconciled: payload.allowReconciled }),
+    };
+  }
+  if (operation === 'imports.mapping-save') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['account', 'format', 'settings', 'reset'].includes(key),
+      ) ||
+      typeof payload.account !== 'string' ||
+      typeof payload.format !== 'string' ||
+      !(payload.settings === undefined || isRecord(payload.settings)) ||
+      !(payload.reset === undefined || typeof payload.reset === 'boolean')
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Import mapping save takes account, format, and settings (object) or reset.',
+      );
+    }
+    return {
+      account: payload.account,
+      format: payload.format,
+      ...(payload.settings === undefined ? {} : { settings: payload.settings }),
+      ...(payload.reset === undefined ? {} : { reset: payload.reset }),
     };
   }
   if (operation === 'transfers.match') {

@@ -111,6 +111,14 @@ describe('registered agent commands', () => {
     ['transfers.match', ['transfers', 'match', '--ids', 'a,b']],
     ['transfers.unmatch', ['transfers', 'unmatch', 'a']],
     ['transfers.repair', ['transfers', 'repair', 'a']],
+    [
+      'imports.mappings.set',
+      ['imports', 'mappings', 'set', '--account', 'a', '--settings', '{}'],
+    ],
+    [
+      'imports.mappings.reset',
+      ['imports', 'mappings', 'reset', '--account', 'a'],
+    ],
     ['cash-planning.reset', ['cash-planning', 'reset']],
     [
       'cash-planning.set-target',

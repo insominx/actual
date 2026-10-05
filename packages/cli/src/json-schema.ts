@@ -215,6 +215,15 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
           object({ id: string, allowReconciled: boolean }, ['id']),
           object(
             {
+              account: string,
+              format: string,
+              settings: { type: 'object' },
+              reset: boolean,
+            },
+            ['account', 'format'],
+          ),
+          object(
+            {
               subtransactions: {
                 type: 'array',
                 items: object(
