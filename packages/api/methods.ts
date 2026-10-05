@@ -116,6 +116,12 @@ import type {
   TransactionSplitRequest,
   TransactionUpdateProposal,
   TransactionUpdateRequest,
+  TransferMatchProposal,
+  TransferMatchRequest,
+  TransferRepairProposal,
+  TransferRepairRequest,
+  TransferUnmatchProposal,
+  TransferUnmatchRequest,
 } from '@actual-app/core/types/change-proposals';
 import type {
   ImportTransactionEntity,
@@ -141,6 +147,13 @@ export type {
   TransactionCategorizationProposal,
   TransactionClearingRequest,
   TransactionClearingProposal,
+  TransferMatchRequest,
+  TransferMatchProposal,
+  TransferUnmatchRequest,
+  TransferUnmatchProposal,
+  TransferRepairRequest,
+  TransferRepairProposal,
+  TransferRepairOutcome,
   TransactionMergeRequest,
   TransactionMergeProposal,
   TransactionMergeOutcome,
@@ -464,6 +477,24 @@ export function applyTransactionClearing(
   proposal: TransactionClearingProposal,
 ) {
   return send('api/transactions-apply-clearing', proposal);
+}
+export function previewTransferMatch(request: TransferMatchRequest) {
+  return send('api/transfers-preview-match', request);
+}
+export function applyTransferMatch(proposal: TransferMatchProposal) {
+  return send('api/transfers-apply-match', proposal);
+}
+export function previewTransferUnmatch(request: TransferUnmatchRequest) {
+  return send('api/transfers-preview-unmatch', request);
+}
+export function applyTransferUnmatch(proposal: TransferUnmatchProposal) {
+  return send('api/transfers-apply-unmatch', proposal);
+}
+export function previewTransferRepair(request: TransferRepairRequest) {
+  return send('api/transfers-preview-repair', request);
+}
+export function applyTransferRepair(proposal: TransferRepairProposal) {
+  return send('api/transfers-apply-repair', proposal);
 }
 export function previewTransactionMerge(request: TransactionMergeRequest) {
   return send('api/transactions-preview-merge', request);

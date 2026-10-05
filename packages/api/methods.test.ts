@@ -6330,7 +6330,7 @@ describe('transfer review', () => {
     });
     expect(clean.counterpart?.amount).toBe(1000);
     await api.internal!.send('transactions-batch-update', {
-      deleted: [{ id: orphan.transfer_id }],
+      deleted: [{ id: orphan.transfer_id! }],
       runTransfers: false,
     });
     expect(await api.inspectTransfer(orphan.id)).toMatchObject({
@@ -6339,5 +6339,184 @@ describe('transfer review', () => {
     });
     const audit = await api.auditTransfers();
     expect(audit.findings.map(f => f.transaction.id)).toEqual([orphan.id]);
+  });
+});
+
+describe('guarded transfer match, unmatch and repair', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('links imported opposite entries without new money movement and repairs broken links', async () => {
+    const group = await api.createCategoryGroup({ name: 'TM group' });
+    const food = await api.createCategory({ name: 'TM food', group_id: group });
+    const checking = await api.createAccount({ name: 'TM checking' }, 0);
+    const savings = await api.createAccount({ name: 'TM savings' }, 0);
+    const equity = await api.createAccount(
+      { name: 'TM equity', offbudget: true },
+      0,
+    );
+    await api.importTransactions(checking, [
+      {
+        date: '2026-08-01',
+        amount: -50000,
+        imported_id: 'tm-out',
+        category: food,
+      },
+      {
+        date: '2026-08-05',
+        amount: -70000,
+        imported_id: 'tm-eq',
+        category: food,
+      },
+    ]);
+    await api.importTransactions(savings, [
+      { date: '2026-08-02', amount: 50000, imported_id: 'tm-in' },
+    ]);
+    await api.importTransactions(equity, [
+      { date: '2026-08-05', amount: 70000, imported_id: 'tm-eq-in' },
+    ]);
+    const all = async () => [
+      ...(await api.getTransactions(checking, '2026-08-01', '2026-08-31')),
+      ...(await api.getTransactions(savings, '2026-08-01', '2026-08-31')),
+      ...(await api.getTransactions(equity, '2026-08-01', '2026-08-31')),
+    ];
+    const total = (rows: Array<{ amount: number }>) =>
+      rows.reduce((sum, row) => sum + row.amount, 0);
+    const before = await all();
+    const out = before.find(r => r.amount === -50000)!;
+    const into = before.find(r => r.amount === 50000)!;
+    const eqOut = before.find(r => r.amount === -70000)!;
+    const eqIn = before.find(r => r.amount === 70000)!;
+
+    const proposal = await api.previewTransferMatch({ ids: [into.id, out.id] });
+    expect(proposal.after).toMatchObject({
+      classification: 'internal',
+      categoryCleared: true,
+      reconciledIds: [],
+    });
+    expect(await all()).toEqual(before);
+    expect(await api.applyTransferMatch(proposal)).toMatchObject({
+      status: 'committed-local',
+      affectedIds: [out.id, into.id],
+    });
+    let rows = await all();
+    expect(rows).toHaveLength(before.length);
+    expect(total(rows)).toBe(total(before));
+    expect(rows.find(r => r.id === out.id)).toMatchObject({
+      transfer_id: into.id,
+      category: null,
+      amount: -50000,
+      date: '2026-08-01',
+    });
+    expect(rows.find(r => r.id === into.id)?.transfer_id).toBe(out.id);
+    expect((await api.inspectTransfer(out.id)).issues).toEqual([]);
+    expect(await api.applyTransferMatch(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    await expect(
+      api.previewTransferMatch({ ids: [out.id, eqIn.id] }),
+    ).rejects.toThrow(/already linked/);
+
+    // Budget boundary keeps the on-budget category.
+    const boundary = await api.previewTransferMatch({
+      ids: [eqOut.id, eqIn.id],
+    });
+    expect(boundary.after.classification).toBe('budget-boundary');
+    expect(boundary.after.categoryCleared).toBe(false);
+    await api.applyTransferMatch(boundary);
+    rows = await all();
+    expect(rows.find(r => r.id === eqOut.id)?.category).toBe(food);
+    expect(total(rows)).toBe(total(before));
+
+    // Unmatch keeps both rows as ordinary transactions.
+    const unmatch = await api.previewTransferUnmatch({ id: into.id });
+    await api.applyTransferUnmatch(unmatch);
+    rows = await all();
+    expect(rows).toHaveLength(before.length);
+    for (const id of [out.id, into.id]) {
+      expect(rows.find(r => r.id === id)).toMatchObject({
+        transfer_id: null,
+        payee: null,
+      });
+    }
+    await expect(api.previewTransferUnmatch({ id: out.id })).rejects.toThrow(
+      /not linked/,
+    );
+
+    // Resync: a counterpart whose amount drifted follows its source.
+    await api.applyTransferMatch(
+      await api.previewTransferMatch({ ids: [out.id, into.id] }),
+    );
+    await api.internal!.send('transactions-batch-update', {
+      updated: [{ id: into.id, amount: 40000 }],
+      runTransfers: false,
+    });
+    expect((await api.inspectTransfer(out.id)).issues).toEqual([
+      'amount-mismatch',
+    ]);
+    const resync = await api.previewTransferRepair({ id: out.id });
+    expect(resync.after.repair).toBe('resync');
+    expect(await api.applyTransferRepair(resync)).toMatchObject({
+      status: 'committed-local',
+      counterpartId: into.id,
+    });
+    expect((await all()).find(r => r.id === into.id)?.amount).toBe(50000);
+    await expect(api.previewTransferRepair({ id: out.id })).rejects.toThrow(
+      /no transfer issues/,
+    );
+
+    // Unlink: the counterpart disappeared without the engine's cleanup.
+    await api.internal!.send('transactions-batch-update', {
+      deleted: [{ id: into.id }],
+      runTransfers: false,
+    });
+    const unlink = await api.previewTransferRepair({ id: out.id });
+    expect(unlink.after).toEqual({
+      repair: 'unlink',
+      issues: ['missing-counterpart'],
+    });
+    await api.applyTransferRepair(unlink);
+    expect((await all()).find(r => r.id === out.id)).toMatchObject({
+      transfer_id: null,
+      payee: null,
+    });
+
+    // Relink: a transfer payee without a link gets its counterpart back.
+    const savingsPayee = (await api.getPayees()).find(
+      p => p.transfer_acct === savings,
+    )!;
+    await api.internal!.send('transactions-batch-update', {
+      updated: [{ id: out.id, payee: savingsPayee.id }],
+      runTransfers: false,
+    });
+    const relink = await api.previewTransferRepair({ id: out.id });
+    expect(relink.after.repair).toBe('relink');
+    const relinked = await api.applyTransferRepair(relink);
+    expect(relinked).toMatchObject({ status: 'committed-local' });
+    const created = (await all()).find(
+      r => r.id === (relinked as { counterpartId: string }).counterpartId,
+    )!;
+    expect(created).toMatchObject({
+      account: savings,
+      amount: 50000,
+      transfer_id: out.id,
+    });
+
+    // Reconciled rows need an explicit allowance.
+    await api.applyTransferUnmatch(
+      await api.previewTransferUnmatch({ id: out.id }),
+    );
+    await api.updateTransaction(out.id, { reconciled: true });
+    await expect(
+      api.previewTransferMatch({ ids: [out.id, created.id] }),
+    ).rejects.toThrow(/reconciled/);
+    expect(
+      (
+        await api.previewTransferMatch({
+          ids: [out.id, created.id],
+          allowReconciled: true,
+        })
+      ).after.reconciledIds,
+    ).toEqual([out.id]);
   });
 });

@@ -332,6 +332,58 @@ export type TransactionClearingProposal = CatalogProposal<
   }
 >;
 
+export type TransferLegSnapshot = {
+  id: string;
+  account: string;
+  amount: number;
+  date: number;
+  payee: string | null;
+  category: string | null;
+  transferId: string | null;
+  parentId: string | null;
+  reconciled: boolean;
+};
+type TransferLinkPlan = {
+  id: string;
+  payee: string | null;
+  transferId: string | null;
+  category: string | null;
+};
+export type TransferMatchRequest = {
+  ids: string[];
+  allowReconciled?: boolean;
+};
+export type TransferMatchProposal = CatalogProposal<
+  'transfers.match',
+  TransferMatchRequest,
+  { transactions: TransferLegSnapshot[] },
+  {
+    classification: 'internal' | 'off-budget-internal' | 'budget-boundary';
+    categoryCleared: boolean;
+    transactions: TransferLinkPlan[];
+    reconciledIds: string[];
+  }
+>;
+export type TransferUnmatchRequest = { id: string; allowReconciled?: boolean };
+export type TransferUnmatchProposal = CatalogProposal<
+  'transfers.unmatch',
+  TransferUnmatchRequest,
+  { transactions: TransferLegSnapshot[] },
+  { transactions: TransferLinkPlan[]; reconciledIds: string[] }
+>;
+export type TransferRepairRequest = { id: string; allowReconciled?: boolean };
+export type TransferRepairProposal = CatalogProposal<
+  'transfers.repair',
+  TransferRepairRequest,
+  { transactions: TransferLegSnapshot[] },
+  { repair: 'unlink' | 'resync' | 'relink'; issues: string[] }
+>;
+export type TransferRepairOutcome = CatalogCommit<{
+  changed: boolean;
+  affectedIds: string[];
+  counterpartId: string | null;
+}>;
+
 export type TransactionMergeRequest = {
   ids: [string, string];
   allowReconciled?: boolean;
@@ -834,6 +886,9 @@ export type ChangeProposal =
   | TransactionDeletionProposal
   | TransactionCategorizationProposal
   | TransactionClearingProposal
+  | TransferMatchProposal
+  | TransferUnmatchProposal
+  | TransferRepairProposal
   | TransactionMergeProposal
   | TransactionSplitProposal
   | CashPlanSaveProposal

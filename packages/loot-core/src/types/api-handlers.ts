@@ -140,6 +140,13 @@ import type {
   TransactionUpdateOutcome,
   TransactionUpdateProposal,
   TransactionUpdateRequest,
+  TransferMatchProposal,
+  TransferMatchRequest,
+  TransferRepairOutcome,
+  TransferRepairProposal,
+  TransferRepairRequest,
+  TransferUnmatchProposal,
+  TransferUnmatchRequest,
 } from './change-proposals';
 import type {
   AccountEntity,
@@ -387,6 +394,24 @@ export type ApiHandlers = {
   'api/transactions-apply-clearing': (
     arg: TransactionClearingProposal,
   ) => Promise<TransactionUpdateOutcome>;
+  'api/transfers-preview-match': (
+    arg: TransferMatchRequest,
+  ) => Promise<TransferMatchProposal>;
+  'api/transfers-apply-match': (
+    arg: TransferMatchProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/transfers-preview-unmatch': (
+    arg: TransferUnmatchRequest,
+  ) => Promise<TransferUnmatchProposal>;
+  'api/transfers-apply-unmatch': (
+    arg: TransferUnmatchProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/transfers-preview-repair': (
+    arg: TransferRepairRequest,
+  ) => Promise<TransferRepairProposal>;
+  'api/transfers-apply-repair': (
+    arg: TransferRepairProposal,
+  ) => Promise<TransferRepairOutcome>;
   'api/transactions-preview-merge': (
     arg: TransactionMergeRequest,
   ) => Promise<TransactionMergeProposal>;

@@ -240,6 +240,14 @@ import {
   transferClearsCategory,
 } from './transactions/transfer';
 import {
+  performTransferMatch,
+  performTransferRepair,
+  performTransferUnmatch,
+  prepareTransferMatch,
+  prepareTransferRepair,
+  prepareTransferUnmatch,
+} from './transfers/guarded';
+import {
   auditTransfers,
   findTransferCandidates,
   inspectTransfer,
@@ -3417,6 +3425,39 @@ function guardedCatalogHandlers<
   );
   handlers['api/transactions-preview-clearing'] = transactionClearing.preview;
   handlers['api/transactions-apply-clearing'] = transactionClearing.apply;
+  const transferMatch = guardedCatalogHandlers(
+    prepareTransferMatch,
+    guardedApply({
+      operation: 'transfers.match',
+      noun: 'Transfer match',
+      prepare: prepareTransferMatch,
+      perform: performTransferMatch,
+    }),
+  );
+  handlers['api/transfers-preview-match'] = transferMatch.preview;
+  handlers['api/transfers-apply-match'] = transferMatch.apply;
+  const transferUnmatch = guardedCatalogHandlers(
+    prepareTransferUnmatch,
+    guardedApply({
+      operation: 'transfers.unmatch',
+      noun: 'Transfer unmatch',
+      prepare: prepareTransferUnmatch,
+      perform: performTransferUnmatch,
+    }),
+  );
+  handlers['api/transfers-preview-unmatch'] = transferUnmatch.preview;
+  handlers['api/transfers-apply-unmatch'] = transferUnmatch.apply;
+  const transferRepair = guardedCatalogHandlers(
+    prepareTransferRepair,
+    guardedApply({
+      operation: 'transfers.repair',
+      noun: 'Transfer repair',
+      prepare: prepareTransferRepair,
+      perform: performTransferRepair,
+    }),
+  );
+  handlers['api/transfers-preview-repair'] = transferRepair.preview;
+  handlers['api/transfers-apply-repair'] = transferRepair.apply;
   const transactionMerge = guardedCatalogHandlers(
     prepareTransactionMerge,
     guardedApply({
