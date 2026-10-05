@@ -19,6 +19,10 @@ import type {
   CatalogInspectRow,
 } from '#server/catalog-inspect';
 import type { batchUpdateTransactions } from '#server/transactions';
+import type {
+  TransferCandidates,
+  TransferInspection,
+} from '#server/transfers/inspect';
 import type { QueryState } from '#shared/query';
 import type {
   CashPlanInspection,
@@ -309,6 +313,19 @@ export type ApiHandlers = {
     cutoff?: string;
     includeClosed?: boolean;
   }) => Promise<AccountInspection>;
+  'api/transfers-candidates': (arg: {
+    account?: string;
+    start?: string;
+    end?: string;
+    days?: number;
+    limit?: number;
+  }) => Promise<TransferCandidates>;
+  'api/transfers-inspect': (arg: { id: string }) => Promise<TransferInspection>;
+  'api/transfers-audit': (arg: { account?: string }) => Promise<{
+    checked: number;
+    linked: number;
+    findings: TransferInspection[];
+  }>;
   'api/catalog-inspect': (arg: {
     kind: CatalogInspectKind;
     includeDeleted?: boolean;

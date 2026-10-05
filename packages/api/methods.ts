@@ -1138,6 +1138,33 @@ export function inspectPreferences(key?: string) {
 }
 
 /**
+ * List unlinked transaction pairs in different accounts whose amounts cancel
+ * within a date window (default 3 days), with evidence, classification and
+ * ambiguity. Read-only.
+ */
+export function findTransferCandidates(
+  options: {
+    account?: string;
+    start?: string;
+    end?: string;
+    days?: number;
+    limit?: number;
+  } = {},
+) {
+  return send('api/transfers-candidates', options);
+}
+
+/** Check one transaction's transfer link from both sides. Read-only. */
+export function inspectTransfer(id: string) {
+  return send('api/transfers-inspect', { id });
+}
+
+/** List transfer links with issues across the budget. Read-only. */
+export function auditTransfers(options: { account?: string } = {}) {
+  return send('api/transfers-audit', options);
+}
+
+/**
  * Inspect accounts as of a cutoff day (default today): engine balances split
  * into cleared, uncleared, reconciled and future activity, on-budget and
  * off-budget totals, groups, duplicate names, and closed accounts with a

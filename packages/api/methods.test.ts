@@ -6236,3 +6236,108 @@ describe('guarded clearing and unlocking', () => {
     expect(unlocked.amount).toBe(-300);
   });
 });
+
+describe('transfer review', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('lists candidates with ambiguity and classification, and audits broken links', async () => {
+    const checking = await api.createAccount({ name: 'TR checking' }, 0);
+    const savings = await api.createAccount({ name: 'TR savings' }, 0);
+    const card = await api.createAccount({ name: 'TR card' }, 0);
+    const equity = await api.createAccount(
+      { name: 'TR equity', offbudget: true },
+      0,
+    );
+    await api.addTransactions(checking, [
+      { date: '2026-08-01', amount: -50000, notes: 'to savings' },
+      { date: '2026-08-10', amount: -20000, notes: 'card payment a' },
+      { date: '2026-08-11', amount: -20000, notes: 'card payment b' },
+      { date: '2026-08-20', amount: -70000, notes: 'to equity' },
+      { date: '2026-08-25', amount: -99000, notes: 'far apart' },
+    ]);
+    await api.addTransactions(savings, [
+      { date: '2026-08-02', amount: 50000, notes: 'from checking' },
+      { date: '2026-08-31', amount: 99000, notes: 'far apart in' },
+    ]);
+    await api.addTransactions(card, [
+      { date: '2026-08-11', amount: 20000, notes: 'card credit' },
+    ]);
+    await api.addTransactions(equity, [
+      { date: '2026-08-20', amount: 70000, notes: 'equity in' },
+    ]);
+    const result = await api.findTransferCandidates({
+      start: '2026-08-01',
+      end: '2026-08-31',
+    });
+    const byNotes = (from: string) =>
+      result.candidates.filter(c => c.from.notes === from);
+    expect(byNotes('to savings')).toHaveLength(1);
+    expect(byNotes('to savings')[0]).toMatchObject({
+      amount: 50000,
+      dateGapDays: 1,
+      classification: 'internal',
+      ambiguous: false,
+    });
+    // Two same-amount outflows near one card credit are both ambiguous.
+    expect([
+      ...byNotes('card payment a'),
+      ...byNotes('card payment b'),
+    ]).toEqual([
+      expect.objectContaining({ ambiguous: true }),
+      expect.objectContaining({ ambiguous: true }),
+    ]);
+    expect(byNotes('to equity')[0].classification).toBe('budget-boundary');
+    expect(byNotes('far apart')).toHaveLength(0);
+    expect(result.ambiguousCount).toBe(2);
+    expect(
+      (
+        await api.findTransferCandidates({ start: '2026-08-01', days: 6 })
+      ).candidates.filter(c => c.from.notes === 'far apart'),
+    ).toHaveLength(1);
+    await expect(api.findTransferCandidates({ days: 99 })).rejects.toThrow(
+      /days/,
+    );
+
+    // A real transfer is linked and clean; broken links are reported.
+    const savingsPayee = (await api.getPayees()).find(
+      p => p.transfer_acct === savings,
+    )!;
+    await api.addTransactions(
+      checking,
+      [{ date: '2026-08-15', amount: -1000, payee: savingsPayee.id }],
+      { runTransfers: true },
+    );
+    await api.addTransactions(
+      checking,
+      [{ date: '2026-08-16', amount: -2000, payee: savingsPayee.id }],
+      { runTransfers: true },
+    );
+    const rows = await api.getTransactions(
+      checking,
+      '2026-08-15',
+      '2026-08-16',
+    );
+    const linked = rows.find(r => r.amount === -1000)!;
+    const orphan = rows.find(r => r.amount === -2000)!;
+    const clean = await api.inspectTransfer(linked.id);
+    expect(clean).toMatchObject({
+      linked: true,
+      classification: 'internal',
+      issues: [],
+      categoryCleared: true,
+      repair: 'none',
+    });
+    expect(clean.counterpart?.amount).toBe(1000);
+    await api.internal!.send('transactions-batch-update', {
+      deleted: [{ id: orphan.transfer_id }],
+      runTransfers: false,
+    });
+    expect(await api.inspectTransfer(orphan.id)).toMatchObject({
+      issues: ['missing-counterpart'],
+      repair: 'unlink',
+    });
+    const audit = await api.auditTransfers();
+    expect(audit.findings.map(f => f.transaction.id)).toEqual([orphan.id]);
+  });
+});

@@ -239,6 +239,11 @@ import {
   prepareTransferTransaction,
   transferClearsCategory,
 } from './transactions/transfer';
+import {
+  auditTransfers,
+  findTransferCandidates,
+  inspectTransfer,
+} from './transfers/inspect';
 
 let IMPORT_MODE = false;
 
@@ -4869,6 +4874,22 @@ handlers['api/catalog-inspect'] = async function (arg) {
 handlers['api/accounts-inspect'] = async function (arg) {
   checkFileOpen();
   return inspectAccounts(arg);
+};
+
+// Read-only transfer review: unlinked candidate pairs with evidence and
+// ambiguity, one transaction's link checked from both sides, and a
+// budget-wide audit of broken links.
+handlers['api/transfers-candidates'] = async function (arg) {
+  checkFileOpen();
+  return findTransferCandidates(arg ?? {});
+};
+handlers['api/transfers-inspect'] = async function (arg) {
+  checkFileOpen();
+  return inspectTransfer(arg?.id);
+};
+handlers['api/transfers-audit'] = async function (arg) {
+  checkFileOpen();
+  return auditTransfers(arg ?? {});
 };
 
 handlers['api/note-update'] = withMutation(async function ({ id, note }) {

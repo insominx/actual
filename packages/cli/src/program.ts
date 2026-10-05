@@ -26,6 +26,7 @@ import { registerServerCommand } from './commands/server';
 import { registerSyncCommand } from './commands/sync';
 import { registerTagsCommand } from './commands/tags';
 import { registerTransactionsCommand } from './commands/transactions';
+import { registerTransfersCommand } from './commands/transfers';
 import { withConnection } from './connection';
 import { readJsonInput } from './input';
 import { operationPayloadSchema, validateJson } from './json-schema';
@@ -166,6 +167,7 @@ export function createProgram(
   registerNotesCommand(program);
   registerPreferencesCommand(program);
   registerCashPlanningCommand(program);
+  registerTransfersCommand(program);
   registerRulesCommand(program);
   registerSchedulesCommand(program);
   registerQueryCommand(program);
