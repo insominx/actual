@@ -62,6 +62,8 @@ import type {
   CategoryGroupUpdateRequest,
   CategoryUpdateProposal,
   CategoryUpdateRequest,
+  NoteSetProposal,
+  NoteSetRequest,
   PayeeCreationProposal,
   PayeeCreationRequest,
   PayeeDeletionProposal,
@@ -142,6 +144,9 @@ export type {
   TagUpdateProposal,
   TagDeletionRequest,
   TagDeletionProposal,
+  NoteSetRequest,
+  NoteSetProposal,
+  NoteTarget,
   PayeeMergeOutcome,
   TagCreationOutcome,
   PayeeCreationOutcome,
@@ -325,6 +330,12 @@ export function previewTagDeletion(request: TagDeletionRequest) {
 }
 export function applyTagDeletion(proposal: TagDeletionProposal) {
   return send('api/tag-apply-deletion', proposal);
+}
+export function previewNoteSet(request: NoteSetRequest) {
+  return send('api/note-preview-set', request);
+}
+export function applyNoteSet(proposal: NoteSetProposal) {
+  return send('api/note-apply-set', proposal);
 }
 export function previewRuleCreation(request: RuleCreationRequest) {
   return send('api/rule-preview-creation', request);
@@ -872,6 +883,15 @@ export function deleteCategory(
 
 export function getNote(id: NoteEntity['id']) {
   return send('api/note-get', { id });
+}
+
+/**
+ * Resolve a note ID (`account-<id>`, a category or group ID, `budget-<YYYY-MM>`
+ * or `<categoryId>-<YYYY-MM>`) to its live target and read the stored text.
+ * Returns `note: null` when no note exists; nothing is written.
+ */
+export function getNoteTarget(id: NoteEntity['id']) {
+  return send('api/note-target', { id });
 }
 
 export function updateNote(id: NoteEntity['id'], note: NoteEntity['note']) {

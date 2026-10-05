@@ -137,6 +137,22 @@ export type TagDeletionProposal = CatalogProposal<
   { action: 'tombstone' }
 >;
 
+export type NoteTarget =
+  | {
+      kind: 'account' | 'category' | 'category-group';
+      id: string;
+      name: string;
+    }
+  | { kind: 'month'; month: string }
+  | { kind: 'category-month'; id: string; name: string; month: string };
+export type NoteSetRequest = { id: string; note: string };
+export type NoteSetProposal = CatalogProposal<
+  'notes.set',
+  NoteSetRequest,
+  { note: { id: string; note: string | null } | null },
+  { target: NoteTarget; note: { id: string; note: string } }
+>;
+
 export type RuleFieldsRequest = Omit<NewRuleEntity, 'stage' | 'tombstone'> & {
   stage: NewRuleEntity['stage'] | 'default';
 };
@@ -647,6 +663,7 @@ export type ChangeProposal =
   | TagCreationProposal
   | TagUpdateProposal
   | TagDeletionProposal
+  | NoteSetProposal
   | RuleCreationProposal
   | RuleUpdateProposal
   | RuleDeletionProposal

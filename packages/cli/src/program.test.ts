@@ -72,6 +72,7 @@ describe('registered agent commands', () => {
     ['tags.create', ['tags', 'create', '--tag', 'groceries']],
     ['tags.update', ['tags', 'update', 'tag-id', '--color', 'red']],
     ['tags.delete', ['tags', 'delete', 'tag-id']],
+    ['notes.set', ['notes', 'set', '--account', 'a1', '--note', 'x']],
     [
       'rules.create',
       [

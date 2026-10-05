@@ -89,6 +89,9 @@ import type {
   TagCreationProposal,
   TagCreationRequest,
   TagDeletionProposal,
+  NoteSetProposal,
+  NoteSetRequest,
+  NoteTarget,
   TagDeletionRequest,
   TagUpdateProposal,
   TagUpdateRequest,
@@ -241,6 +244,13 @@ export type ApiHandlers = {
   'api/tag-apply-deletion': (
     arg: TagDeletionProposal,
   ) => Promise<TransactionUpdateOutcome>;
+  'api/note-preview-set': (arg: NoteSetRequest) => Promise<NoteSetProposal>;
+  'api/note-apply-set': (
+    arg: NoteSetProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/note-target': (arg: {
+    id: string;
+  }) => Promise<{ target: NoteTarget; note: string | null }>;
   'api/rule-preview-creation': (
     arg: RuleCreationRequest,
   ) => Promise<RuleCreationProposal>;

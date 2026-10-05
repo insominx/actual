@@ -15,7 +15,7 @@ app.method('notes-save', updateNotes);
 app.method('notes-save-undoable', mutator(undoable(updateNotes)));
 app.method('notes-get', getNote);
 
-async function updateNotes({ id, note }: NoteEntity) {
+export async function updateNotes({ id, note }: NoteEntity) {
   await db.update('notes', { id, note });
 }
 

@@ -4721,6 +4721,108 @@ describe('guarded tag creation, updates and deletions', () => {
   });
 });
 
+describe('guarded note changes', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('resolves note targets, reads without writing and sets notes with acknowledgements', async () => {
+    const accountId = await api.createAccount({
+      name: 'Notes',
+      offbudget: false,
+    });
+    const groupId = await api.createCategoryGroup({ name: 'Note group' });
+    const categoryId = await api.createCategory({
+      name: 'Note cat',
+      group_id: groupId,
+    });
+
+    expect(await api.getNoteTarget(`account-${accountId}`)).toEqual({
+      target: { kind: 'account', id: accountId, name: 'Notes' },
+      note: null,
+    });
+    expect(await api.getNote(`account-${accountId}`)).toBeNull();
+    expect((await api.getNoteTarget(groupId)).target.kind).toBe(
+      'category-group',
+    );
+    expect((await api.getNoteTarget('budget-2026-10')).target).toEqual({
+      kind: 'month',
+      month: '2026-10',
+    });
+    expect((await api.getNoteTarget(`${categoryId}-2026-10`)).target).toEqual({
+      kind: 'category-month',
+      id: categoryId,
+      name: 'Note cat',
+      month: '2026-10',
+    });
+    for (const id of ['missing', 'account-missing', 'budget-2026-13', '']) {
+      await expect(api.getNoteTarget(id)).rejects.toThrow();
+    }
+
+    const proposal = await api.previewNoteSet({
+      id: categoryId,
+      note: 'first',
+    });
+    expect(proposal.before.note).toBeNull();
+    expect(proposal.after).toEqual({
+      target: { kind: 'category', id: categoryId, name: 'Note cat' },
+      note: { id: categoryId, note: 'first' },
+    });
+    expect(proposal.sideEffects.join(' ')).toContain('#template');
+    expect(await api.getNote(categoryId)).toBeNull();
+    expect(await api.applyNoteSet(proposal)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+      affectedIds: [categoryId],
+    });
+    expect((await api.getNoteTarget(categoryId)).note).toBe('first');
+    expect(await api.applyNoteSet(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+
+    const same = await api.previewNoteSet({ id: categoryId, note: 'first' });
+    expect(await api.applyNoteSet(same)).toMatchObject({ changed: false });
+    const cleared = await api.previewNoteSet({ id: categoryId, note: '' });
+    expect(await api.applyNoteSet(cleared)).toMatchObject({ changed: true });
+    expect((await api.getNoteTarget(categoryId)).note).toBe('');
+  });
+  test('rejects malformed, orphan and stale note requests', async () => {
+    const accountId = await api.createAccount({
+      name: 'Stale',
+      offbudget: false,
+    });
+    const id = `account-${accountId}`;
+    for (const request of [
+      {},
+      { id },
+      { id, note: 1 },
+      { id, note: 'x', extra: true },
+      { id: 'missing', note: 'x' },
+      { id: 'budget-26-01', note: 'x' },
+      { id, note: 'x'.repeat(100_001) },
+    ]) {
+      await expect(
+        api.previewNoteSet(
+          request as unknown as Parameters<typeof api.previewNoteSet>[0],
+        ),
+      ).rejects.toThrow();
+    }
+    const proposal = await api.previewNoteSet({ id, note: 'planned' });
+    expect(
+      await api.applyNoteSet({
+        ...proposal,
+        budget: { ...proposal.budget, id: 'wrong' },
+      }),
+    ).toMatchObject({ code: 'MISSING_CONTEXT' });
+    await api.updateNote(id, 'concurrent');
+    expect(await api.applyNoteSet(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    expect((await api.getNote(id))?.note).toBe('concurrent');
+    await api.deleteAccount(accountId);
+    await expect(api.previewNoteSet({ id, note: 'late' })).rejects.toThrow();
+  });
+});
+
 describe('guarded rule creation, updates and deletions', () => {
   const ruleFields = {
     stage: 'pre' as const,

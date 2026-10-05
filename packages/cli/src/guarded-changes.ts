@@ -586,6 +586,7 @@ export async function executeCatalogChange(
     | 'payees.merge'
     | 'tags.update'
     | 'tags.delete'
+    | 'notes.set'
     | 'rules.update'
     | 'rules.delete'
     | 'schedules.update'
@@ -1219,6 +1220,10 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
     preview: r => api.previewTagDeletion(r as api.TagDeletionRequest),
     apply: p => api.applyTagDeletion(p as api.TagDeletionProposal),
   },
+  'notes.set': {
+    preview: r => api.previewNoteSet(r as api.NoteSetRequest),
+    apply: p => api.applyNoteSet(p as api.NoteSetProposal),
+  },
   'rules.create': {
     preview: r => api.previewRuleCreation(r as api.RuleCreationRequest),
     apply: p => api.applyRuleCreation(p as api.RuleCreationProposal),
@@ -1338,6 +1343,7 @@ function changeRequest(
   | api.TagCreationRequest
   | api.TagUpdateRequest
   | api.TagDeletionRequest
+  | api.NoteSetRequest
   | api.RuleCreationRequest
   | api.RuleUpdateRequest
   | api.RuleDeletionRequest
@@ -1491,6 +1497,19 @@ function changeRequest(
       );
     }
     return { id, fields: payload as api.TagUpdateRequest['fields'] };
+  }
+  if (operation === 'notes.set') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(key => key !== 'note') ||
+      typeof payload.note !== 'string'
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Note change takes {"note":"<text>"}; the note ID is the change ID.',
+      );
+    }
+    return { id, note: payload.note };
   }
   if (
     operation === 'categories.delete' ||

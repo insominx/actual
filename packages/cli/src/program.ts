@@ -13,6 +13,7 @@ import { registerCategoriesCommand } from './commands/categories';
 import { registerCategoryGroupsCommand } from './commands/category-groups';
 import { registerChangesCommand } from './commands/changes';
 import { registerDiagnosticsCommand } from './commands/diagnostics';
+import { registerNotesCommand } from './commands/notes';
 import { registerPayeesCommand } from './commands/payees';
 import { registerProfilesCommand } from './commands/profiles';
 import { registerQueryCommand } from './commands/query';
@@ -158,6 +159,7 @@ export function createProgram(
   registerChangesCommand(program);
   registerPayeesCommand(program);
   registerTagsCommand(program);
+  registerNotesCommand(program);
   registerRulesCommand(program);
   registerSchedulesCommand(program);
   registerQueryCommand(program);

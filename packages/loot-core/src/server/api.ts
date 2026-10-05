@@ -138,6 +138,12 @@ import { guardedApply, guardedSourceHash } from './guarded-proposal';
 import { importActual } from './importers/actual';
 import { runMutator } from './mutators';
 import {
+  performNoteSet,
+  prepareNoteSet,
+  readNote,
+  resolveNoteTarget,
+} from './notes/guarded';
+import {
   inspectPayeeCreation,
   createPayee as performPayeeCreation,
 } from './payees/app';
@@ -3258,6 +3264,17 @@ function guardedCatalogHandlers<
   );
   handlers['api/tag-preview-deletion'] = tagDeletion.preview;
   handlers['api/tag-apply-deletion'] = tagDeletion.apply;
+  const noteSet = guardedCatalogHandlers(
+    prepareNoteSet,
+    guardedApply({
+      operation: 'notes.set',
+      noun: 'Note change',
+      prepare: prepareNoteSet,
+      perform: performNoteSet,
+    }),
+  );
+  handlers['api/note-preview-set'] = noteSet.preview;
+  handlers['api/note-apply-set'] = noteSet.apply;
   const transactionImport = guardedCatalogHandlers(
     prepareTransactionImport,
     guardedApply({
@@ -4681,6 +4698,15 @@ handlers['api/category-delete'] = withMutation(async function ({
 handlers['api/note-get'] = async function ({ id }) {
   checkFileOpen();
   return handlers['notes-get']({ id });
+};
+
+// Read-only: resolves a note ID to its live target and returns the stored
+// text, or null when no note exists. A missing note is never created.
+handlers['api/note-target'] = async function ({ id }) {
+  checkFileOpen();
+  const target = await resolveNoteTarget(id);
+  const row = await readNote(id);
+  return { target, note: row?.note ?? null };
 };
 
 handlers['api/note-update'] = withMutation(async function ({ id, note }) {
