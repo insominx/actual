@@ -284,7 +284,7 @@
         "0028-cli-data-quality",
         "0029-cli-reversal"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-automation",

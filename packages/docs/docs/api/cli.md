@@ -499,6 +499,30 @@ actual bank-sync results [run-id] [--limit 10]
 
 `bank-sync refresh` runs the engine's bank sync only for open accounts that are already linked to a provider. Each outcome is `imported` (with `addedIds` and `matchedIds`), `no-new-transactions`, `not-linked`, `auth-required`, `rate-limited` (retryable), `attention-required`, `account-missing` or `provider-error`, with a `prerequisite` when you need to act in the app. With no linked accounts the result is a `prerequisite` and no provider is contacted: linking and reauthentication need provider consent in the Actual app, and file imports (`actual imports`) keep working. An empty feed is not verified history coverage; record statement evidence with `actual checkup statement add`. Every run is recorded in `bank-sync-runs/` in the CLI data directory as `committed-local` before the push and `synced` after it; if the push fails, the command returns `PARTIAL_COMPLETION` with the run ID so `actual bank-sync results <run-id>` still shows the outcomes. The legacy `actual server bank-sync` command is unchanged.
 
+### Workflows
+
+```bash
+# New local budget (optional), accounts and categories; one guarded change per item
+actual workflow setup --spec '{"budgetName":"Household","accounts":[{"name":"Checking","offbudget":false,"initialBalance":0}],"categoryGroups":[{"name":"Bills","categories":["Rent"]}]}'
+
+# Import several files (manifest of file, account, settings), then review transfers and data quality
+actual workflow intake manifest.json [--from-month 2026-09 --to-month 2026-09]
+
+# Read-only checkup: data quality (two months), schedules due in 7 days, bank sync status
+actual workflow weekly-checkup [--as-of 2026-09-15]
+
+# Backup, reconcile each statement (finish only with --finish), then review
+actual workflow monthly-close --month 2026-09 --statements '[{"accountId":"<id>","endingBalance":123456}]' [--finish] [--backup-directory ./backups]
+
+# Saved cash plan beside a transient scenario; saves nothing
+actual workflow goal-review [--scenario '{"categoryTargets":{"<id>":50000}}']
+
+# Run records
+actual workflow run list | inspect <run-id> | resume <run-id> | cancel <run-id>
+```
+
+Workflows are fixed sequences of the same reads and guarded changes the other commands use; they never run shell commands or contain their own finance logic. Each run is a device-local record in `workflow-runs/` in the CLI data directory with the budget, the validated input, every step's status (`committed`, `completed`, `unresolved`, `failed`, `not-run`), operation IDs and unresolved items. A mutation step fixes its operation ID (`<run-id>-<step>`) and payload before it runs, so `workflow run resume` never repeats a committed change: an interrupted step replays its receipt from the change journal. Intake binds each file to the SHA-256 observed when the run started. `--stop-after <step>` pauses a run; `cancel` keeps committed steps and marks the rest `not-run`. Running a workflow authorizes the mutations it lists (one run, not one prompt per operation); `monthly-close` finishes a reconciliation only with `--finish` and a zero difference, and `summary.closeComplete` is true only when every statement reconciled. Invalid or ambiguous import rows, unmatched statements, transfer candidates and months without statement evidence stay in `unresolved` and the run ends `needs-review`. Goal review never saves; save a reviewed plan with `actual cash-planning save`.
+
 ### Checkup
 
 ```bash

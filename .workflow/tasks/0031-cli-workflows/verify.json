@@ -1,0 +1,36 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "workflows-integration",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/workflows.test.mjs"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src/workflows.ts packages/cli/src/workflow-runs.ts packages/cli/src/commands/workflow.ts packages/cli/src/workflows.test.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src/workflows.ts packages/cli/src/workflow-runs.ts packages/cli/src/commands/workflow.ts packages/cli/src/workflows.test.ts packages/cli/integration/workflows.test.mjs"
+        }
+      ]
+    }
+  }
+}

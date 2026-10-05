@@ -195,30 +195,31 @@ Example `.actualrc.json`:
 
 ## Commands
 
-| Command           | Description                                                          |
-| ----------------- | -------------------------------------------------------------------- |
-| `accounts`        | Manage accounts                                                      |
-| `account-groups`  | Manage account groups                                                |
-| `budgets`         | Manage budgets, allocations, moves, templates and reservations       |
-| `categories`      | Manage categories                                                    |
-| `category-groups` | Manage category groups                                               |
-| `transactions`    | Manage transactions                                                  |
-| `payees`          | Manage payees                                                        |
-| `tags`            | Manage tags                                                          |
-| `notes`           | Read and change notes                                                |
-| `preferences`     | Inspect and change preferences                                       |
-| `cash-planning`   | Inspect and save cash plans                                          |
-| `transfers`       | Review, match and repair transfers                                   |
-| `imports`         | Inspect, preview and import files; saved mappings and import history |
-| `rules`           | Manage transaction rules                                             |
-| `reconcile`       | Reconcile an account against a statement; finish; adjust             |
-| `reports`         | Cash flow, category and net worth reports; CSV/HTML export           |
-| `checkup`         | Data-quality findings, month coverage and statement evidence         |
-| `bank-sync`       | Bank sync status, refresh of linked accounts and run results         |
-| `schedules`       | Manage schedules; list upcoming occurrences; post or skip the next   |
-| `query`           | Run an ActualQL query                                                |
-| `server`          | Server utilities and lookups                                         |
-| `sync`            | Refresh or inspect local cache                                       |
+| Command           | Description                                                            |
+| ----------------- | ---------------------------------------------------------------------- |
+| `accounts`        | Manage accounts                                                        |
+| `account-groups`  | Manage account groups                                                  |
+| `budgets`         | Manage budgets, allocations, moves, templates and reservations         |
+| `categories`      | Manage categories                                                      |
+| `category-groups` | Manage category groups                                                 |
+| `transactions`    | Manage transactions                                                    |
+| `payees`          | Manage payees                                                          |
+| `tags`            | Manage tags                                                            |
+| `notes`           | Read and change notes                                                  |
+| `preferences`     | Inspect and change preferences                                         |
+| `cash-planning`   | Inspect and save cash plans                                            |
+| `transfers`       | Review, match and repair transfers                                     |
+| `imports`         | Inspect, preview and import files; saved mappings and import history   |
+| `rules`           | Manage transaction rules                                               |
+| `reconcile`       | Reconcile an account against a statement; finish; adjust               |
+| `reports`         | Cash flow, category and net worth reports; CSV/HTML export             |
+| `checkup`         | Data-quality findings, month coverage and statement evidence           |
+| `bank-sync`       | Bank sync status, refresh of linked accounts and run results           |
+| `workflow`        | Setup, intake, weekly checkup, monthly close, goal review; run records |
+| `schedules`       | Manage schedules; list upcoming occurrences; post or skip the next     |
+| `query`           | Run an ActualQL query                                                  |
+| `server`          | Server utilities and lookups                                           |
+| `sync`            | Refresh or inspect local cache                                         |
 
 Run `actual <command> --help` for subcommands and options.
 

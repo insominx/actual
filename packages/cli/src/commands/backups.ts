@@ -17,10 +17,55 @@ import {
 import { captureBudgetSnapshot } from '#budget-snapshot';
 import { getMetaDir, readCacheState } from '#cache';
 import { resolveConfig } from '#config';
+import type { CliGlobalOpts } from '#config';
 import { withConnection } from '#connection';
 import { executeBudgetRestore } from '#guarded-changes';
 import { acquireExclusive } from '#lock';
 import { printOutput } from '#output';
+
+// Exports the selected budget into an atomic backup artifact. Shared by
+// backups create and the monthly-close workflow.
+export async function createBudgetBackup(
+  opts: CliGlobalOpts,
+  directory: string,
+) {
+  let created: Awaited<ReturnType<typeof createBackupArtifact>> | undefined;
+  await withConnection(
+    opts,
+    async config => {
+      const inspection = await api.inspectBudget();
+      const status = await api.getSyncStatus();
+      const archive = await api.exportBudget();
+      created = await createBackupArtifact(
+        directory,
+        archive,
+        {
+          source: {
+            id: inspection.id,
+            name: inspection.name,
+            syncId: inspection.syncId,
+            cloudFileId: inspection.cloudFileId,
+            currency: inspection.currency,
+          },
+          sourceEncrypted: Boolean(inspection.encryptKeyId),
+          remoteFreshness: config.offline ? 'unknown' : 'observed',
+          lastSyncedTimestamp: status.lastSyncedTimestamp,
+          pendingMessages: status.pendingMessages,
+          lastSyncedAt: inspection.syncId
+            ? readCacheState(getMetaDir(config.dataDir, inspection.syncId))
+                ?.lastSyncedAt || null
+            : null,
+        },
+        config.lockTimeout * 1000,
+      );
+    },
+    { mutates: false },
+  );
+  if (!created) {
+    throw new AgentError('ENGINE_FAILURE', 'Backup was not created.');
+  }
+  return created;
+}
 
 export function registerBackupsCommand(program: Command) {
   const backups = program
@@ -315,37 +360,6 @@ export function registerBackupsCommand(program: Command) {
         );
       }
       const opts = program.opts();
-      await withConnection(
-        opts,
-        async config => {
-          const inspection = await api.inspectBudget();
-          const status = await api.getSyncStatus();
-          const archive = await api.exportBudget();
-          const result = await createBackupArtifact(
-            input.directory,
-            archive,
-            {
-              source: {
-                id: inspection.id,
-                name: inspection.name,
-                syncId: inspection.syncId,
-                cloudFileId: inspection.cloudFileId,
-                currency: inspection.currency,
-              },
-              sourceEncrypted: Boolean(inspection.encryptKeyId),
-              remoteFreshness: config.offline ? 'unknown' : 'observed',
-              lastSyncedTimestamp: status.lastSyncedTimestamp,
-              pendingMessages: status.pendingMessages,
-              lastSyncedAt: inspection.syncId
-                ? readCacheState(getMetaDir(config.dataDir, inspection.syncId))
-                    ?.lastSyncedAt || null
-                : null,
-            },
-            config.lockTimeout * 1000,
-          );
-          printOutput(result, opts.format);
-        },
-        { mutates: false },
-      );
+      printOutput(await createBudgetBackup(opts, input.directory), opts.format);
     });
 }
