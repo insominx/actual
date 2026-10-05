@@ -290,7 +290,12 @@ actual transactions update <id> --data '{"notes":"Updated note"}'
 
 # Delete a transaction
 actual transactions delete <id>
+
+# Set one category on a frozen list of transactions (guarded; "none" clears it)
+actual transactions categorize --ids <id>,<id> --category <id> --operation-id <unique-id> [--allow-reconciled]
 ```
+
+`transactions categorize` freezes the selected IDs and their current categories in the preview. Apply rejects the batch with `STALE_PREVIEW` if any record changed after preview, instead of widening or narrowing it. Split parents are rejected (categorize their children), transfers between two on-budget accounts and off-budget transactions cannot take a category, and reconciled transactions need `--allow-reconciled`; the proposal lists them in `reconciledIds`. Rules are not rerun. Preview the same batch with `actual changes preview transactions.categorize --operation-id <unique-id> --data '{"ids":["<id>"],"category":"<id>"}'`.
 
 ### Payees
 

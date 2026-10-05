@@ -147,7 +147,7 @@ export async function prepareTransactionCategorization(
     schemaVersion: 1,
     operation: 'transactions.categorize',
     budget: guardedBudgetIdentity(),
-    request: { ids, category, allowReconciled },
+    request,
     before: {
       sourceHash: await guardedSourceHash(),
       transactions: rows.map(row => ({

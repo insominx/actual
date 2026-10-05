@@ -1,0 +1,18 @@
+# 0018 packaged batch categorization (Linux, 2026-10-05 00:41 PDT)
+# Build: yarn exec lage build --scope=@actual-app/cli --no-cache; yarn workspace @actual-app/sync-server build
+# Command: (packages/cli) node --test integration/guarded-transaction-categorize.test.mjs
+
+✔ guarded transaction categorization preserves raw domains and acknowledgements (online) (11020.76647ms)
+✔ guarded transaction categorization preserves raw domains and acknowledgements (offline) (10665.862712ms)
+✔ killed guarded transaction categorization at before-engine retains its exact outcome without replay (38797.734215ms)
+✔ killed guarded transaction categorization at after-engine retains its exact outcome without replay (39015.3816ms)
+✔ killed guarded transaction categorization at before-sync retains its exact outcome without replay (39983.194344ms)
+✔ categorization rejects stale affected records and guarded rows without writes (9605.241576ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 149153.796885

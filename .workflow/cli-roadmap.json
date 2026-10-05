@@ -120,7 +120,7 @@
         "0016-cli-catalog-settings",
         "0017-cli-query"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "partially-implemented"
     },
     {
       "key": "cli-transfers",
