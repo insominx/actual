@@ -195,6 +195,13 @@ import {
   prepareScheduleDeletion,
   prepareScheduleUpdate,
 } from './schedules/guarded';
+import {
+  performSchedulePost,
+  performScheduleSkip,
+  prepareSchedulePost,
+  prepareScheduleSkip,
+} from './schedules/guarded-occurrence';
+import { inspectSchedules } from './schedules/inspect';
 import { getServer } from './server-config';
 import * as sheet from './sheet';
 import { batchMessages, getSyncStatus, setSyncingMode } from './sync';
@@ -3473,6 +3480,28 @@ function guardedCatalogHandlers<
   );
   handlers['api/rules-preview-apply'] = ruleApply.preview;
   handlers['api/rules-apply'] = ruleApply.apply;
+  const schedulePost = guardedCatalogHandlers(
+    prepareSchedulePost,
+    guardedApply({
+      operation: 'schedules.post',
+      noun: 'Schedule post',
+      prepare: prepareSchedulePost,
+      perform: performSchedulePost,
+    }),
+  );
+  handlers['api/schedules-preview-post'] = schedulePost.preview;
+  handlers['api/schedules-post'] = schedulePost.apply;
+  const scheduleSkip = guardedCatalogHandlers(
+    prepareScheduleSkip,
+    guardedApply({
+      operation: 'schedules.skip',
+      noun: 'Schedule skip',
+      prepare: prepareScheduleSkip,
+      perform: performScheduleSkip,
+    }),
+  );
+  handlers['api/schedules-preview-skip'] = scheduleSkip.preview;
+  handlers['api/schedules-skip'] = scheduleSkip.apply;
   const transferMatch = guardedCatalogHandlers(
     prepareTransferMatch,
     guardedApply({
@@ -4995,6 +5024,10 @@ handlers['api/import-mapping-get'] = async function (arg) {
 handlers['api/rules-matches'] = async function (arg) {
   checkFileOpen();
   return findRuleMatches(arg);
+};
+handlers['api/schedules-inspect'] = async function (arg) {
+  checkFileOpen();
+  return inspectSchedules(arg ?? {});
 };
 handlers['api/rules-test'] = async function (arg) {
   checkFileOpen();

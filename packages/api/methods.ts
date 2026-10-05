@@ -20,6 +20,7 @@ import type {
 } from '@actual-app/core/server/aql/schema-metadata';
 import type { ImportableBudgetType } from '@actual-app/core/server/importers/index';
 import type { RuleTestRequest } from '@actual-app/core/server/rules/evaluate';
+import type { ScheduleInspectionRequest } from '@actual-app/core/server/schedules/inspect';
 import type { Query } from '@actual-app/core/shared/query';
 import type { ImportTransactionsOpts } from '@actual-app/core/types/api-handlers';
 import type {
@@ -76,8 +77,6 @@ import type {
   ImportMappingSaveProposal,
   ImportMappingSaveRequest,
   NoteSetProposal,
-  RuleApplyProposal,
-  RuleApplyRequest,
   NoteSetRequest,
   PayeeCreationProposal,
   PayeeCreationRequest,
@@ -89,6 +88,8 @@ import type {
   PayeeUpdateRequest,
   PreferenceSetProposal,
   PreferenceSetRequest,
+  RuleApplyProposal,
+  RuleApplyRequest,
   RuleCreationProposal,
   RuleCreationRequest,
   RuleDeletionProposal,
@@ -99,6 +100,9 @@ import type {
   ScheduleCreationRequest,
   ScheduleDeletionProposal,
   ScheduleDeletionRequest,
+  ScheduleOccurrenceRequest,
+  SchedulePostProposal,
+  ScheduleSkipProposal,
   ScheduleUpdateProposal,
   ScheduleUpdateRequest,
   TagCreationProposal,
@@ -163,6 +167,12 @@ export type {
   RuleApplyRequest,
   RuleApplyProposal,
   RuleApplyOutcome,
+  ScheduleOccurrenceRequest,
+  ScheduleSnapshot,
+  SchedulePostProposal,
+  SchedulePostOutcome,
+  ScheduleSkipProposal,
+  ScheduleSkipOutcome,
   TransferMatchRequest,
   TransferMatchProposal,
   TransferUnmatchRequest,
@@ -537,6 +547,27 @@ export function applyFileImport(proposal: ImportFileProposal) {
 export function testRules(request: RuleTestRequest) {
   return send('api/rules-test', request);
 }
+/**
+ * Schedules with their status and the occurrences that fall in a date
+ * window (default today through 30 days). Read-only.
+ */
+export function inspectSchedules(request: ScheduleInspectionRequest = {}) {
+  return send('api/schedules-inspect', request);
+}
+/** Prepare posting a schedule's next occurrence. Read-only. */
+export function previewSchedulePost(request: ScheduleOccurrenceRequest) {
+  return send('api/schedules-preview-post', request);
+}
+export function applySchedulePost(proposal: SchedulePostProposal) {
+  return send('api/schedules-post', proposal);
+}
+/** Prepare skipping a schedule's next occurrence. Read-only. */
+export function previewScheduleSkip(request: ScheduleOccurrenceRequest) {
+  return send('api/schedules-preview-skip', request);
+}
+export function applyScheduleSkip(proposal: ScheduleSkipProposal) {
+  return send('api/schedules-skip', proposal);
+}
 /** Transactions a rule's conditions select now (newest first). Read-only. */
 export function findRuleMatches(ruleId: string, limit?: number) {
   return send('api/rules-matches', {
@@ -908,6 +939,11 @@ export type {
   RuleTestRequest,
   RuleTestResult,
 } from '@actual-app/core/server/rules/evaluate';
+export type {
+  ScheduleInspection,
+  ScheduleInspectionRequest,
+  ScheduleInspectionResult,
+} from '@actual-app/core/server/schedules/inspect';
 
 /**
  * Read-only marker of the loaded budget's change history. Two equal markers

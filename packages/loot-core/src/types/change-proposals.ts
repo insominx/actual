@@ -581,6 +581,42 @@ export type RuleApplyOutcome = CatalogCommit<{
   ruleApplication: { updatedIds: string[]; createdIds: string[] };
 }>;
 
+export type ScheduleOccurrenceRequest = {
+  id: string;
+  date: string;
+  today?: boolean;
+};
+export type ScheduleSnapshot = {
+  id: string;
+  name: string | null;
+  nextDate: string;
+  postsTransaction: boolean;
+  account: string | null;
+  payee: string | null;
+  amount: number;
+};
+export type SchedulePostProposal = CatalogProposal<
+  'schedules.post',
+  ScheduleOccurrenceRequest,
+  { schedule: ScheduleSnapshot },
+  {
+    rows: Array<Record<string, unknown>>;
+    transferAccount: string | null;
+  }
+>;
+export type SchedulePostOutcome = CatalogCommit<{
+  schedulePost: { transactionIds: string[] };
+}>;
+export type ScheduleSkipProposal = CatalogProposal<
+  'schedules.skip',
+  ScheduleOccurrenceRequest,
+  { schedule: ScheduleSnapshot },
+  { nextDate: string }
+>;
+export type ScheduleSkipOutcome = CatalogCommit<{
+  scheduleSkip: { previousDate: string; nextDate: string };
+}>;
+
 export type CategoryGroupUpdateRequest = {
   id: string;
   fields: {
@@ -996,6 +1032,8 @@ export type ChangeProposal =
   | TransactionImportProposal
   | ImportFileProposal
   | RuleApplyProposal
+  | SchedulePostProposal
+  | ScheduleSkipProposal
   | CategoryGroupCreationProposal
   | CategoryCreationProposal
   | CategoryGroupDeletionProposal

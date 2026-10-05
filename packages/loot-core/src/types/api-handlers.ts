@@ -23,6 +23,10 @@ import type {
   RuleTestRequest,
   RuleTestResult,
 } from '#server/rules/evaluate';
+import type {
+  ScheduleInspectionRequest,
+  ScheduleInspectionResult,
+} from '#server/schedules/inspect';
 import type { batchUpdateTransactions } from '#server/transactions';
 import type {
   ImportFileInspection,
@@ -94,9 +98,6 @@ import type {
   CategoryUpdateProposal,
   CategoryUpdateRequest,
   ImportFileOutcome,
-  RuleApplyOutcome,
-  RuleApplyProposal,
-  RuleApplyRequest,
   ImportFileProposal,
   ImportFileRequest,
   ImportMappingSaveProposal,
@@ -116,6 +117,9 @@ import type {
   PayeeUpdateRequest,
   PreferenceSetProposal,
   PreferenceSetRequest,
+  RuleApplyOutcome,
+  RuleApplyProposal,
+  RuleApplyRequest,
   RuleCreationOutcome,
   RuleCreationProposal,
   RuleCreationRequest,
@@ -128,6 +132,11 @@ import type {
   ScheduleCreationRequest,
   ScheduleDeletionProposal,
   ScheduleDeletionRequest,
+  ScheduleOccurrenceRequest,
+  SchedulePostOutcome,
+  SchedulePostProposal,
+  ScheduleSkipOutcome,
+  ScheduleSkipProposal,
   ScheduleUpdateProposal,
   ScheduleUpdateRequest,
   TagCreationOutcome,
@@ -356,6 +365,21 @@ export type ApiHandlers = {
   'api/import-mapping-apply-save': (
     arg: ImportMappingSaveProposal,
   ) => Promise<TransactionUpdateOutcome>;
+  'api/schedules-inspect': (
+    arg: ScheduleInspectionRequest,
+  ) => Promise<ScheduleInspectionResult>;
+  'api/schedules-preview-post': (
+    arg: ScheduleOccurrenceRequest,
+  ) => Promise<SchedulePostProposal>;
+  'api/schedules-post': (
+    arg: SchedulePostProposal,
+  ) => Promise<SchedulePostOutcome>;
+  'api/schedules-preview-skip': (
+    arg: ScheduleOccurrenceRequest,
+  ) => Promise<ScheduleSkipProposal>;
+  'api/schedules-skip': (
+    arg: ScheduleSkipProposal,
+  ) => Promise<ScheduleSkipOutcome>;
   'api/rules-test': (arg: RuleTestRequest) => Promise<RuleTestResult>;
   'api/rules-matches': (arg: {
     ruleId: string;
