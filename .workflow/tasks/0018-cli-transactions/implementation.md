@@ -26,7 +26,7 @@
 - Core `packages/loot-core/src/server/transactions/guarded-clear.ts` (`prepareTransactionClearing`, `performTransactionClearing`) writes through `batchUpdateTransactions` and verifies every frozen row after apply.
 - Types `TransactionClearingRequest|Proposal`; handlers `api/transactions-preview-clearing` and `api/transactions-apply-clearing`; public `previewTransactionClearing`, `applyTransactionClearing`.
 - CLI `transactions clear --ids [--uncleared] [--unlock] --operation-id`; `changes preview transactions.clear` payload schema.
-- API `guarded clearing and unlocking` 1/1; packaged `guarded-transaction-clear.test.mjs`.
+- API `guarded clearing and unlocking` 1/1; packaged `guarded-transaction-clear.test.mjs` 6/6 (three process kills included).
 
 ## Verification (Linux)
 

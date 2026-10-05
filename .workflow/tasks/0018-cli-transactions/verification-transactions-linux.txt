@@ -48,3 +48,14 @@
 ✔ split rejects invalid sums, children and stale previews without writes; get reads the whole split (11633.958236ms)
 ℹ pass 7
 ℹ fail 0
+
+# Clearing and unlocking (Linux, 2026-10-05 01:14 PDT): node --test integration/guarded-transaction-clear.test.mjs after CLI and server build
+✔ guarded transaction clearing preserves raw domains and acknowledgements (online) (9520.309981ms)
+✔ guarded transaction clearing preserves raw domains and acknowledgements (offline) (8708.271245ms)
+✔ killed guarded transaction clearing at before-engine retains its exact outcome without replay (36625.615599ms)
+✔ killed guarded transaction clearing at after-engine retains its exact outcome without replay (37123.360298ms)
+✔ killed guarded transaction clearing at before-sync retains its exact outcome without replay (38285.485647ms)
+✔ reconciled rows need an explicit unlock; stale and invalid requests write nothing (9914.313866ms)
+ℹ tests 6
+ℹ pass 6
+ℹ fail 0
