@@ -19,6 +19,7 @@ import type {
   QueryValidation,
 } from '@actual-app/core/server/aql/schema-metadata';
 import type { ImportableBudgetType } from '@actual-app/core/server/importers/index';
+import type { RuleTestRequest } from '@actual-app/core/server/rules/evaluate';
 import type { Query } from '@actual-app/core/shared/query';
 import type { ImportTransactionsOpts } from '@actual-app/core/types/api-handlers';
 import type {
@@ -75,6 +76,8 @@ import type {
   ImportMappingSaveProposal,
   ImportMappingSaveRequest,
   NoteSetProposal,
+  RuleApplyProposal,
+  RuleApplyRequest,
   NoteSetRequest,
   PayeeCreationProposal,
   PayeeCreationRequest,
@@ -157,6 +160,9 @@ export type {
   ImportFileProposal,
   ImportFileOutcome,
   ImportFileRowOutcome,
+  RuleApplyRequest,
+  RuleApplyProposal,
+  RuleApplyOutcome,
   TransferMatchRequest,
   TransferMatchProposal,
   TransferUnmatchRequest,
@@ -523,6 +529,28 @@ export function previewFileImport(request: ImportFileRequest) {
 export function applyFileImport(proposal: ImportFileProposal) {
   return send('api/import-file-apply', proposal);
 }
+/**
+ * Run the rules on one sample transaction the way an import would, without
+ * writing: the result, the rules that ran in order, and payees an import
+ * would create. Read-only.
+ */
+export function testRules(request: RuleTestRequest) {
+  return send('api/rules-test', request);
+}
+/** Transactions a rule's conditions select now (newest first). Read-only. */
+export function findRuleMatches(ruleId: string, limit?: number) {
+  return send('api/rules-matches', {
+    ruleId,
+    ...(limit === undefined ? {} : { limit }),
+  });
+}
+/** Prepare applying one rule's actions to frozen transactions. Read-only. */
+export function previewRuleApply(request: RuleApplyRequest) {
+  return send('api/rules-preview-apply', request);
+}
+export function applyRuleApply(proposal: RuleApplyProposal) {
+  return send('api/rules-apply', proposal);
+}
 export function previewTransferMatch(request: TransferMatchRequest) {
   return send('api/transfers-preview-match', request);
 }
@@ -875,6 +903,11 @@ export function validateQuery(query: Query): QueryValidation {
 }
 
 export type { QuerySchemaMetadata, QueryValidation };
+export type {
+  RuleMatches,
+  RuleTestRequest,
+  RuleTestResult,
+} from '@actual-app/core/server/rules/evaluate';
 
 /**
  * Read-only marker of the loaded budget's change history. Two equal markers

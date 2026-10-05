@@ -243,6 +243,14 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
           ),
           object(
             {
+              ruleId: string,
+              ids: { type: 'array', items: string },
+              allowReconciled: boolean,
+            },
+            ['ruleId', 'ids'],
+          ),
+          object(
+            {
               subtransactions: {
                 type: 'array',
                 items: object(

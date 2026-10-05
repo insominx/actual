@@ -630,6 +630,7 @@ export async function executeScopedChange(
     | 'transfers.repair'
     | 'imports.mapping-save'
     | 'imports.file'
+    | 'rules.apply'
     | 'transactions.merge'
     | 'cash-planning.save',
   payload: Record<string, unknown>,
@@ -1372,6 +1373,10 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
       api.previewImportMappingSave(r as api.ImportMappingSaveRequest),
     apply: p => api.applyImportMappingSave(p as api.ImportMappingSaveProposal),
   },
+  'rules.apply': {
+    preview: r => api.previewRuleApply(r as api.RuleApplyRequest),
+    apply: p => api.applyRuleApply(p as api.RuleApplyProposal),
+  },
   'imports.file': {
     preview: r => api.previewFileImport(r as api.ImportFileRequest),
     apply: p => api.applyFileImport(p as api.ImportFileProposal),
@@ -1506,6 +1511,7 @@ function changeRequest(
   | api.TransferMatchRequest
   | api.ImportMappingSaveRequest
   | api.ImportFileRequest
+  | api.RuleApplyRequest
   | api.TransferUnmatchRequest
   | api.TransferRepairRequest
   | api.TransactionMergeRequest
@@ -1664,6 +1670,33 @@ function changeRequest(
       format: payload.format,
       ...(payload.settings === undefined ? {} : { settings: payload.settings }),
       ...(payload.reset === undefined ? {} : { reset: payload.reset }),
+    };
+  }
+  if (operation === 'rules.apply') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['ruleId', 'ids', 'allowReconciled'].includes(key),
+      ) ||
+      typeof payload.ruleId !== 'string' ||
+      !Array.isArray(payload.ids) ||
+      !payload.ids.every(value => typeof value === 'string') ||
+      !(
+        payload.allowReconciled === undefined ||
+        typeof payload.allowReconciled === 'boolean'
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Rule application takes ruleId, ids (transaction IDs) and optional allowReconciled.',
+      );
+    }
+    return {
+      ruleId: payload.ruleId,
+      ids: payload.ids as string[],
+      ...(payload.allowReconciled === undefined
+        ? {}
+        : { allowReconciled: payload.allowReconciled }),
     };
   }
   if (operation === 'imports.file') {

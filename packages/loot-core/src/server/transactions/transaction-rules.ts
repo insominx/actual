@@ -321,13 +321,18 @@ export async function getAllRuleIdsFromSchedules(
 // remain authoritative in the persisted ledger. Context is local to one run.
 export type RuleLedgerContext = {
   plannedTransactions?: ReadonlyArray<TransactionEntity>;
+  // Ids of the rules whose actions ran, in order (read-only evaluation).
+  trace?: string[];
+  // Evaluate without writing: a payee name set by a rule that names no
+  // existing payee is recorded here instead of being created.
+  dryRun?: { newPayeeNames: string[] };
 };
 
 // Runner
 export async function runRules(
   trans,
   accounts: Map<string, db.DbAccount> | null = null,
-  { plannedTransactions = [] }: RuleLedgerContext = {},
+  { plannedTransactions = [], trace, dryRun }: RuleLedgerContext = {},
 ) {
   await ensureFormulaPreferencesLoaded();
 
@@ -397,8 +402,9 @@ export async function runRules(
         // bypass condition checking to run the rule even if the transaction date falls outside of the schedule's date range.
         await ensureBalanceFor(rules[i]);
         const changes = rules[i].execActions(finalTrans);
+        trace?.push(rules[i].id);
         finalTrans = Object.assign({}, finalTrans, changes);
-        await resolvePayeeNameForRules(finalTrans);
+        await resolvePayeeNameForRules(finalTrans, dryRun);
         lastCategoryIdForGroup = await refreshCategoryGroupIfChanged(
           finalTrans,
           lastCategoryIdForGroup,
@@ -410,13 +416,14 @@ export async function runRules(
         // if a rule is not linked to a schedule, run it.
         if (rules[i].evalConditions(finalTrans)) {
           await ensureBalanceFor(rules[i]);
+          trace?.push(rules[i].id);
           finalTrans = Object.assign(
             {},
             finalTrans,
             rules[i].execActions(finalTrans),
           );
         }
-        await resolvePayeeNameForRules(finalTrans);
+        await resolvePayeeNameForRules(finalTrans, dryRun);
         lastCategoryIdForGroup = await refreshCategoryGroupIfChanged(
           finalTrans,
           lastCategoryIdForGroup,
@@ -426,13 +433,14 @@ export async function runRules(
       // if there is no scheduleRuleID then just run all rules.
       if (rules[i].evalConditions(finalTrans)) {
         await ensureBalanceFor(rules[i]);
+        trace?.push(rules[i].id);
         finalTrans = Object.assign(
           {},
           finalTrans,
           rules[i].execActions(finalTrans),
         );
       }
-      await resolvePayeeNameForRules(finalTrans);
+      await resolvePayeeNameForRules(finalTrans, dryRun);
       lastCategoryIdForGroup = await refreshCategoryGroupIfChanged(
         finalTrans,
         lastCategoryIdForGroup,
@@ -440,7 +448,7 @@ export async function runRules(
     }
   }
 
-  return await finalizeTransactionForRules(finalTrans);
+  return await finalizeTransactionForRules(finalTrans, dryRun);
 }
 
 function conditionSpecialCases(cond: Condition | null): Condition | null {
@@ -754,6 +762,18 @@ export async function applyActions(
   transactions: TransactionEntity[],
   actions: Array<Action | RuleActionEntity>,
 ) {
+  const finalized = await planRuleActions(transactions, actions);
+  if (finalized === null) return null;
+  return batchUpdateTransactions({ updated: finalized });
+}
+
+// The rows applyActions would write, without writing. With dryRun, payee
+// names set by an action that match no payee get a placeholder id.
+export async function planRuleActions(
+  transactions: TransactionEntity[],
+  actions: Array<Action | RuleActionEntity>,
+  dryRun?: RuleLedgerContext['dryRun'],
+): Promise<TransactionEntity[] | null> {
   await ensureFormulaPreferencesLoaded();
 
   const parsedActions = actions
@@ -819,10 +839,10 @@ export async function applyActions(
 
   const finalized: TransactionEntity[] = [];
   for (const trans of updated) {
-    finalized.push(await finalizeTransactionForRules(trans));
+    finalized.push(await finalizeTransactionForRules(trans, dryRun));
   }
 
-  return batchUpdateTransactions({ updated: finalized });
+  return finalized;
 }
 
 export function getRulesForPayee(payeeId) {
@@ -1226,12 +1246,20 @@ export async function prepareTransactionForRules(
 
 async function resolvePayeeNameForRules(
   trans: TransactionEntity | TransactionForRules,
+  dryRun?: RuleLedgerContext['dryRun'],
 ): Promise<void> {
   if (!('payee_name' in trans) || trans.payee !== 'new') {
     return;
   }
 
   if (trans.payee_name) {
+    if (dryRun) {
+      const existing = (await getPayeeByName(trans.payee_name))?.id;
+      if (!existing) dryRun.newPayeeNames.push(trans.payee_name);
+      // A placeholder id the caller maps back to the payee name.
+      trans.payee = existing ?? `dry-run-payee:${trans.payee_name}`;
+      return;
+    }
     let payee_id = (await getPayeeByName(trans.payee_name))?.id;
     payee_id ??= await insertPayee({
       name: trans.payee_name,
@@ -1274,9 +1302,10 @@ async function refreshCategoryGroupIfChanged(
 
 export async function finalizeTransactionForRules(
   trans: TransactionEntity | TransactionForRules,
+  dryRun?: RuleLedgerContext['dryRun'],
 ): Promise<TransactionEntity> {
   if ('payee_name' in trans) {
-    await resolvePayeeNameForRules(trans);
+    await resolvePayeeNameForRules(trans, dryRun);
     delete trans.payee_name;
   }
 

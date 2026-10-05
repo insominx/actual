@@ -176,6 +176,7 @@ import {
   preparePreferenceSet,
 } from './preferences/catalog';
 import * as prefs from './prefs';
+import { findRuleMatches, testRules } from './rules/evaluate';
 import {
   performRuleCreation,
   performRuleDeletion,
@@ -184,6 +185,7 @@ import {
   prepareRuleDeletion,
   prepareRuleUpdate,
 } from './rules/guarded';
+import { performRuleApply, prepareRuleApply } from './rules/guarded-apply';
 import { applyApiScheduleFields } from './schedules/api-fields';
 import {
   performScheduleCreation,
@@ -3460,6 +3462,17 @@ function guardedCatalogHandlers<
   );
   handlers['api/import-file-preview'] = fileImport.preview;
   handlers['api/import-file-apply'] = fileImport.apply;
+  const ruleApply = guardedCatalogHandlers(
+    prepareRuleApply,
+    guardedApply({
+      operation: 'rules.apply',
+      noun: 'Rule application',
+      prepare: prepareRuleApply,
+      perform: performRuleApply,
+    }),
+  );
+  handlers['api/rules-preview-apply'] = ruleApply.preview;
+  handlers['api/rules-apply'] = ruleApply.apply;
   const transferMatch = guardedCatalogHandlers(
     prepareTransferMatch,
     guardedApply({
@@ -4979,6 +4992,14 @@ handlers['api/import-mapping-get'] = async function (arg) {
   };
 };
 
+handlers['api/rules-matches'] = async function (arg) {
+  checkFileOpen();
+  return findRuleMatches(arg);
+};
+handlers['api/rules-test'] = async function (arg) {
+  checkFileOpen();
+  return testRules(arg);
+};
 handlers['api/transfers-candidates'] = async function (arg) {
   checkFileOpen();
   return findTransferCandidates(arg ?? {});

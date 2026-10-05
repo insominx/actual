@@ -433,7 +433,7 @@ function normalizePayeeName(
   }
 }
 
-async function normalizeTransactions(
+export async function normalizeTransactions(
   transactions,
   acctId,
   {

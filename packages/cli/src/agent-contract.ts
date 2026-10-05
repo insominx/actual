@@ -75,6 +75,8 @@ const READ_OPERATIONS = new Set([
   'imports.mappings.get',
   'imports.preview',
   'imports.history',
+  'rules.test',
+  'rules.matches',
   'server.version',
   'server.get-id',
   'rules.payee-rules',

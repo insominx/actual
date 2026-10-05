@@ -18,6 +18,11 @@ import type {
   CatalogInspectKind,
   CatalogInspectRow,
 } from '#server/catalog-inspect';
+import type {
+  RuleMatches,
+  RuleTestRequest,
+  RuleTestResult,
+} from '#server/rules/evaluate';
 import type { batchUpdateTransactions } from '#server/transactions';
 import type {
   ImportFileInspection,
@@ -89,6 +94,9 @@ import type {
   CategoryUpdateProposal,
   CategoryUpdateRequest,
   ImportFileOutcome,
+  RuleApplyOutcome,
+  RuleApplyProposal,
+  RuleApplyRequest,
   ImportFileProposal,
   ImportFileRequest,
   ImportMappingSaveProposal,
@@ -348,6 +356,15 @@ export type ApiHandlers = {
   'api/import-mapping-apply-save': (
     arg: ImportMappingSaveProposal,
   ) => Promise<TransactionUpdateOutcome>;
+  'api/rules-test': (arg: RuleTestRequest) => Promise<RuleTestResult>;
+  'api/rules-matches': (arg: {
+    ruleId: string;
+    limit?: number;
+  }) => Promise<RuleMatches>;
+  'api/rules-preview-apply': (
+    arg: RuleApplyRequest,
+  ) => Promise<RuleApplyProposal>;
+  'api/rules-apply': (arg: RuleApplyProposal) => Promise<RuleApplyOutcome>;
   'api/import-file-preview': (
     arg: ImportFileRequest,
   ) => Promise<ImportFileProposal>;

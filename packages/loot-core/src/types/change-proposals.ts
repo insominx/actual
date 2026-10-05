@@ -558,6 +558,29 @@ export type ImportFileOutcome = CatalogCommit<{
   };
 }>;
 
+export type RuleApplyRequest = {
+  ruleId: string;
+  ids: string[];
+  allowReconciled?: boolean;
+};
+export type RuleApplyProposal = CatalogProposal<
+  'rules.apply',
+  RuleApplyRequest,
+  {
+    rule: Record<string, unknown>;
+    rows: Array<Record<string, unknown>>;
+  },
+  {
+    rows: Array<Record<string, unknown>>;
+    reconciledIds: string[];
+    newPayees: string[];
+    errors: string[];
+  }
+>;
+export type RuleApplyOutcome = CatalogCommit<{
+  ruleApplication: { updatedIds: string[]; createdIds: string[] };
+}>;
+
 export type CategoryGroupUpdateRequest = {
   id: string;
   fields: {
@@ -972,6 +995,7 @@ export type ChangeProposal =
   | TransactionAdditionProposal
   | TransactionImportProposal
   | ImportFileProposal
+  | RuleApplyProposal
   | CategoryGroupCreationProposal
   | CategoryCreationProposal
   | CategoryGroupDeletionProposal
