@@ -1565,6 +1565,16 @@ handlers['api/query'] = async function ({ query }) {
   return aqlQuery(query);
 };
 
+// Read-only marker of the local CRDT history. Any local or synchronized change
+// adds messages, so a different marker means the budget changed.
+handlers['api/query-snapshot'] = async function () {
+  checkFileOpen();
+  const row = await db.first<{ total: number; latest: string | null }>(
+    'SELECT COUNT(*) AS total, MAX(timestamp) AS latest FROM messages_crdt',
+  );
+  return { marker: `${row?.total ?? 0}:${row?.latest ?? ''}` };
+};
+
 handlers['api/budget-months'] = async function () {
   checkFileOpen();
   const { start, end } = await handlers['get-budget-bounds']();

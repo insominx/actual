@@ -676,6 +676,14 @@ export function validateQuery(query: Query): QueryValidation {
 
 export type { QuerySchemaMetadata, QueryValidation };
 
+/**
+ * Read-only marker of the loaded budget's change history. Two equal markers
+ * mean no local or synchronized change happened between the reads.
+ */
+export function getQuerySnapshot() {
+  return send('api/query-snapshot');
+}
+
 export function getBudgetMonths() {
   return send('api/budget-months');
 }

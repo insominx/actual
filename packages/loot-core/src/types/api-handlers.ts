@@ -416,6 +416,8 @@ export type ApiHandlers = {
 
   'api/query': (arg: { query: QueryState }) => Promise<unknown>;
 
+  'api/query-snapshot': () => Promise<{ marker: string }>;
+
   'api/budget-months': () => Promise<string[]>;
 
   'api/budget-month': (arg: { month: string }) => Promise<{
