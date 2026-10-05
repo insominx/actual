@@ -1,0 +1,40 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api exec vitest run -t \"guarded file import\""
+        },
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "file-imports-integration",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/file-imports.test.mjs"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/loot-core/src/server/transactions/import/guarded-file-import.ts packages/cli/src/commands/imports.ts packages/cli/src/guarded-changes.ts packages/cli/src/json-schema.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/loot-core/src/server/transactions/import/guarded-file-import.ts packages/cli/src/commands/imports.ts packages/cli/integration/file-imports.test.mjs"
+        }
+      ]
+    }
+  }
+}

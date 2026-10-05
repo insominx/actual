@@ -189,7 +189,18 @@ export function registerImportsCommand(program: Command) {
     await withConnection(
       opts,
       async () => {
-        printOutput(await api.previewFileImport(request), opts.format);
+        let proposal;
+        try {
+          proposal = await api.previewFileImport(request);
+        } catch (error) {
+          // The engine rejects unreadable files, invalid rows and stale
+          // hashes with an explanatory message; surface it as input error.
+          throw new AgentError(
+            'INVALID_INPUT',
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+        printOutput(proposal, opts.format);
       },
       { mutates: false },
     );

@@ -6689,3 +6689,86 @@ describe('import file inspection and saved mappings', () => {
     }
   });
 });
+
+describe('guarded file import', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('previews per-row outcomes without writes, commits the plan and marks changed files stale', async () => {
+    const dir = await fs.mkdtemp(path.join(__dirname, 'mocks', 'import-'));
+    try {
+      const account = await api.createAccount({ name: 'File import' }, 0);
+      await api.addTransactions(account, [
+        { date: '2026-10-02', amount: -1250, payee_name: 'Grocer' },
+      ]);
+      const [existing] = await api.getTransactions(
+        account,
+        '2026-10-01',
+        '2026-10-31',
+      );
+      const file = path.join(dir, 'card.csv');
+      await fs.writeFile(
+        file,
+        'Date,Payee,Amount\n2026-10-02,Grocer,-12.50\n2026-10-03,Bakery,-4.00\n2026-10-04,Broken,x\n',
+      );
+      const settings = {
+        fields: { date: 'Date', payee: 'Payee', amount: 'Amount' },
+        dateFormat: 'yyyy mm dd',
+      };
+      await expect(
+        api.previewFileImport({ path: file, accountId: account, settings }),
+      ).rejects.toThrow(/rows are invalid/);
+      const request = {
+        path: file,
+        accountId: account,
+        settings,
+        invalidRows: 'skip' as const,
+      };
+      const preview = await api.previewFileImport(request);
+      expect(
+        preview.after.rows.map(row => [row.outcome, row.match?.kind ?? null]),
+      ).toEqual([
+        ['duplicate', 'payee_date_amount'],
+        ['add', null],
+        ['invalid', null],
+      ]);
+      expect(preview.after.rows[0].match?.transactionId).toBe(existing.id);
+      expect(preview.after.summary).toMatchObject({
+        add: 1,
+        duplicate: 1,
+        invalid: 1,
+        newPayees: ['Bakery'],
+      });
+      expect(
+        await api.getTransactions(account, '2026-10-01', '2026-10-31'),
+      ).toHaveLength(1);
+      const outcome = await api.applyFileImport(preview);
+      expect(outcome.status).toBe('committed-local');
+      if (outcome.status !== 'committed-local') return;
+      expect(outcome.fileImport.addedIds).toHaveLength(1);
+      expect(outcome.fileImport.updatedIds).toEqual([]);
+      const again = await api.previewFileImport(request);
+      expect(again.after.rows.map(row => row.outcome)).toEqual([
+        'duplicate',
+        'duplicate',
+        'invalid',
+      ]);
+      await fs.writeFile(file, 'Date,Payee,Amount\n2026-10-09,Other,-1.00\n');
+      expect(await api.applyFileImport(again)).toMatchObject({
+        status: 'rejected',
+        code: 'STALE_PREVIEW',
+      });
+      await expect(
+        api.previewFileImport({
+          ...request,
+          sha256: preview.before.file.sha256,
+        }),
+      ).rejects.toThrow(/Import file changed/);
+      expect(
+        await api.getTransactions(account, '2026-10-01', '2026-10-31'),
+      ).toHaveLength(2);
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true });
+    }
+  });
+});

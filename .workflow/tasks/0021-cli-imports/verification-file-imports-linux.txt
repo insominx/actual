@@ -1,0 +1,14 @@
+# 0021 packaged file import proofs (Linux, 2026-10-05 01:44 PDT)
+# Build: yarn exec lage build --scope=@actual-app/cli --no-cache; yarn workspace @actual-app/sync-server build
+# Command: (packages/cli) node --test integration/file-imports.test.mjs
+✔ file import previews without writes, keeps match evidence distinct and never duplicates on reimport (10968.881525ms)
+✔ file import handles invalid rows explicitly and rejects changed sources and mappings as stale (7536.522255ms)
+✔ guarded file import preserves raw domains and acknowledgements (online) (4860.34366ms)
+✔ guarded file import preserves raw domains and acknowledgements (offline) (5070.114138ms)
+✔ killed guarded file import at before-engine retains its exact outcome without replay (35030.759185ms)
+✔ killed guarded file import at after-engine retains its exact outcome without replay (35158.059678ms)
+✔ killed guarded file import at before-sync retains its exact outcome without replay (36331.227172ms)
+ℹ tests 7
+ℹ pass 7
+ℹ fail 0
+# API: yarn workspace @actual-app/api exec vitest run -t "guarded file import" -> 1 passed

@@ -224,6 +224,25 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
           ),
           object(
             {
+              path: string,
+              accountId: string,
+              settings: { type: 'object' },
+              useSaved: boolean,
+              sha256: string,
+              invalidRows: { type: 'string', enum: ['reject', 'skip'] },
+              opts: object({
+                defaultCleared: boolean,
+                reimportDeleted: boolean,
+                payeeNameNormalization: {
+                  type: 'string',
+                  enum: ['original', 'title-case'],
+                },
+              }),
+            },
+            ['path', 'accountId'],
+          ),
+          object(
+            {
               subtransactions: {
                 type: 'array',
                 items: object(

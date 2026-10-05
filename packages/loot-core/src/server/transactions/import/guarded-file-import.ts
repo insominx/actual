@@ -11,6 +11,10 @@ import {
   guardedBudgetIdentity,
   guardedSourceHash,
 } from '#server/guarded-proposal';
+import {
+  performTransactionImport,
+  planTransactionImport,
+} from '#server/transactions/guarded-import';
 import { parseCategoryFields } from '#shared/import-mapping';
 import type {
   ImportFileProposal,
@@ -18,10 +22,6 @@ import type {
   ImportFileRowOutcome,
   TransactionImportProposal,
 } from '#types/change-proposals';
-import {
-  performTransactionImport,
-  planTransactionImport,
-} from '../guarded-import';
 
 import { inspectImportFile } from './inspect-file';
 
