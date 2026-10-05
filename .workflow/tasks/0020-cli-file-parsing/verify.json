@@ -1,0 +1,48 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        {
+          "id": "core-unit",
+          "command": "yarn workspace @actual-app/core exec vitest run src/shared/import-mapping.test.ts src/server/transactions/import"
+        },
+        {
+          "id": "dialog-unit",
+          "command": "yarn workspace @actual-app/web exec vitest run src/components/modals/ImportTransactionsModal"
+        },
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api test"
+        },
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "imports-integration",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/imports.test.mjs integration/browser-imports.test.mjs"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/loot-core/src/shared/import-mapping.ts packages/loot-core/src/server/transactions/import/inspect-file.ts packages/loot-core/src/server/transactions/import/mapping-save.ts packages/cli/src/commands/imports.ts packages/desktop-client/src/components/modals/ImportTransactionsModal"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/loot-core/src/shared/import-mapping.ts packages/loot-core/src/server/transactions/import/inspect-file.ts packages/loot-core/src/server/transactions/import/mapping-save.ts packages/cli/src/commands/imports.ts packages/cli/integration/imports.test.mjs packages/cli/integration/browser-imports.test.mjs"
+        }
+      ]
+    }
+  }
+}

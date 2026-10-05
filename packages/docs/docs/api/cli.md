@@ -423,6 +423,23 @@ actual transfers repair <id> [--allow-reconciled]
 
 `transfers unmatch` unlinks a healthy transfer and keeps both rows as ordinary transactions with no payee, since a transfer payee would relink them on the next edit; delete an unwanted leg with `transactions delete`. `transfers inspect` reports `missing-counterpart`, `not-reciprocal`, `amount-mismatch`, `payee-mismatch`, `same-account` and `unlinked-transfer-payee`, plus the repair that applies: `unlink` removes a broken link from this row only, `resync` makes the counterpart follow this row through the engine's linked transfer update, and `relink` recreates a missing counterpart through the engine's transfer creation (this adds one transaction, disclosed in the preview).
 
+### Imports
+
+```bash
+# Inspect or parse an import file without importing (read-only)
+actual imports inspect statement.csv [--account <id>] [--no-saved] [--settings '{"fields":{"date":"Posted","payee":"Who","outflow":"Debit","inflow":"Credit"},"dateFormat":"dd mm yyyy","delimiter":";"}'] [--limit 20]
+actual imports parse statement.ofx [--account <id>] [--limit 1000]
+
+# Saved per-account import settings (guarded writes require --operation-id)
+actual imports mappings get --account <id> [--format csv]
+actual imports mappings set --account <id> [--format csv] --settings '{"fields":{...},"dateFormat":"dd mm yyyy","flipAmount":true}'
+actual imports mappings reset --account <id> [--format csv]
+```
+
+Import inspection runs the same parser as the import dialog (CSV and TSV, QIF, OFX and QFX, and CAMT.053 XML) and the same shared field-mapping, date and amount rules, so a candidate here is what the dialog would import. The result reports the format, size and SHA-256 of the file, the settings used with the source of each (`request`, `saved`, `detected` or `default`), CSV columns, the date range of valid rows, and each row with its normalized transaction (date, integer amount, payee, notes, category name and the OFX/QFX transaction ID as `imported_id`) or its errors. Rows with unparseable dates, malformed amounts or missing mapped columns are reported, never dropped. When several date formats parse every row (for example `03/04/2026`), nothing is normalized until you pass `settings.dateFormat`. Files over 10 MiB and unsupported types are rejected. Inspection never writes to the budget.
+
+CSV settings are `fields` (map `date`, `amount` or `outflow`/`inflow`, `payee`, `notes`, `inOut`, `category` to column names), `dateFormat` (`yyyy mm dd`, `yy mm dd`, `mm dd yyyy`, `mm dd yy`, `dd mm yyyy`, `dd mm yy`), `delimiter`, `encoding`, `hasHeaderRow`, `skipStartLines`, `skipEndLines`, `inOutMode` with `outValue`, and `flipAmount` (for card exports with positive charges). QIF uses `dateFormat`, `flipAmount` and `swapPayeeAndMemo`; OFX/QFX uses `swapPayeeAndMemo` and `fallbackMissingPayeeToMemo`. `multiplier` applies to one inspection only. `imports mappings set` stores settings in the same synced preferences, with the same serialization, that the import dialog reads and writes, so a mapping saved from the CLI is the dialog's next default and the reverse. Supported formats are those of the parser; no institution-specific export is claimed.
+
 ### Rules
 
 ```bash
