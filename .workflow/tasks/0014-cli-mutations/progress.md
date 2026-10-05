@@ -1,7 +1,7 @@
 # Task Progress: Preview, apply, receipts, and safe retry protocol
 
 Current status: partial; active
-Current phase: guarded transaction/split/transfer, allocation/carryover/hold/reset, budget lifecycle/publication, account, category and category-group checkpoints are verified locally on Windows; payee and tag catalog adapters are verified locally on Linux. The remaining existing adapters are transactions.add and transactions.import, plus the D57 transaction update exclusions, and complete task acceptance remain required.
+Current phase: every existing write adapter in remaining-adapters.md now has a guarded path. Transaction/split/transfer, allocation/carryover/hold/reset, budget lifecycle/publication, account, category and category-group adapters are verified locally on Windows; payee, tag, rule, schedule and transaction add/import/delete adapters are verified locally on Linux only. Open before completion: a Windows packaged rerun of the Linux-only adapters, one uninterrupted full changes.test.mjs regression (the overnight host stops runs near 50 minutes; 13 of its cases plus all 66 guarded-* cases passed in verification-guarded-regression-linux.txt, and the transfer/split/preview cases passed separately), and Michael's review of scope limits D57-D59.
 
 ## Dependencies
 
@@ -299,3 +299,5 @@ Checkpoint 2026-10-04 23:19 PT: committed rules, schedules, transactions.delete,
 Checkpoint 2026-10-04 23:29 PT: guarded transactions.add packaged suite passes 5/5 after two fixes found by tests: changes preview now accepts a transactions array payload, and the add projection stores unset flags as false so preview and acknowledgement compare equal. API addition cases 2/2. The transfer, split and transaction preview cases in changes.test.mjs pass again after guarded add became opt-in.
 
 Checkpoint 2026-10-04 23:34 PT: guarded transactions.import (D59) passes: API import cases 2/2 (full API 115/115), packaged suite 5/5, typecheck pass, lint clean on touched paths. planReconciledTransactions was extracted from reconcileTransactions without behavior change. The loot-core src/server/accounts suite has 7 bank-sync failures that reproduce identically on the base commit 7ca3ba01e (download mocks), so they are pre-existing and unrelated.
+
+Checkpoint 2026-10-04 23:50 PT: status review. Every adapter row in remaining-adapters.md is guarded; the task stays partial only for the Windows rerun, one uninterrupted changes.test.mjs regression and review of D57-D59. 0017 (query) does not depend on 0014 and proceeded in parallel.

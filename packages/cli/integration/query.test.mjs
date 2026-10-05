@@ -55,6 +55,7 @@ void test(
         ['--filter', '{"amount":{"$between":[1,2]}}'],
         ['--select', 'amount,missing_field'],
         ['--filter', '{"payee.nope":"x"}'],
+        ['--filter', '{"date":{"$gte":"2026-01-01","$lte":"2026-01-31"}}'],
       ]) {
         const rejected = await f.cli([
           'query',

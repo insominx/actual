@@ -4978,6 +4978,18 @@ describe('query metadata', () => {
   });
 });
 
+describe('query snapshot marker', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('changes after a write and stays equal across reads', async () => {
+    const first = await api.getQuerySnapshot();
+    expect(await api.getQuerySnapshot()).toEqual(first);
+    await api.createAccount({ name: 'Marker' }, 0);
+    expect((await api.getQuerySnapshot()).marker).not.toBe(first.marker);
+  });
+});
+
 describe('guarded transaction addition', () => {
   beforeEach(async () => {
     await api.loadBudget(budgetName);

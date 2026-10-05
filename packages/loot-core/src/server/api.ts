@@ -134,7 +134,7 @@ import * as cloudStorage from './cloud-storage';
 import type { RemoteFile } from './cloud-storage';
 import * as db from './db';
 import { APIError, withErrorCode } from './errors';
-import { guardedApply } from './guarded-proposal';
+import { guardedApply, guardedSourceHash } from './guarded-proposal';
 import { importActual } from './importers/actual';
 import { runMutator } from './mutators';
 import {
@@ -1565,14 +1565,12 @@ handlers['api/query'] = async function ({ query }) {
   return aqlQuery(query);
 };
 
-// Read-only marker of the local CRDT history. Any local or synchronized change
-// adds messages, so a different marker means the budget changed.
+// Read-only fingerprint of the persistent budget tables (the same source
+// fingerprint guarded previews bind). Any committed change, local-only or
+// synchronized, changes it.
 handlers['api/query-snapshot'] = async function () {
   checkFileOpen();
-  const row = await db.first<{ total: number; latest: string | null }>(
-    'SELECT COUNT(*) AS total, MAX(timestamp) AS latest FROM messages_crdt',
-  );
-  return { marker: `${row?.total ?? 0}:${row?.latest ?? ''}` };
+  return { marker: await guardedSourceHash() };
 };
 
 handlers['api/budget-months'] = async function () {
