@@ -3,8 +3,8 @@
     "default": {
       "commands": [
         {
-          "id": "acceptance-fixture",
-          "command": "yarn workspace @actual-app/cli exec node --test integration/acceptance.test.mjs"
+          "id": "personal-setup-fixture",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/personal-setup.test.mjs"
         }
       ]
     }
