@@ -1,0 +1,12 @@
+✔ six personal workflows on synthetic Chase, Capital One and Robinhood exports, traced to receipts (A1) (28544.629473ms)
+{"transactions":6000,"metrics":[{"label":"accounts list","ms":533,"maxRssMiB":187,"outputBytes":1061},{"label":"query page (100 rows)","ms":1001,"maxRssMiB":381,"outputBytes":13510},{"label":"reports cash-flow (24 months)","ms":578,"maxRssMiB":207,"outputBytes":51511},{"label":"checkup data-quality (24 months, limit 50)","ms":587,"maxRssMiB":200,"outputBytes":25984},{"label":"workflow weekly-checkup","ms":717,"maxRssMiB":195,"outputBytes":6101}],"contention":[0,4]}
+✔ large synthetic history: timings, peak memory, bounded output, paging and two-client contention (A3) (22023.665598ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 50626.309822
+ALLDONE
