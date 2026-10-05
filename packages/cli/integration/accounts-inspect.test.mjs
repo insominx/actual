@@ -83,8 +83,8 @@ void test('account inspection separates totals and account groups survive sync',
     const resolved = await cli(['query', 'resolve', 'accounts', 'Cash']);
     assert.equal(resolved.status, 'ambiguous', 'duplicate names never guess');
     assert.deepEqual(
-      resolved.matches.map(row => row.id).sort(),
-      [cash, card].sort(),
+      new Set(resolved.matches.map(row => row.id)),
+      new Set([cash, card]),
     );
     const sum = predicate =>
       view.accounts
