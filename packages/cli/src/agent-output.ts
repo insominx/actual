@@ -65,6 +65,10 @@ export function updateAgentContext(context: Partial<AgentContext>) {
   if (invocation) Object.assign(invocation.context, context);
 }
 
+export function addAgentWarning(message: string) {
+  if (invocation) invocation.warnings.push(message);
+}
+
 export function bufferAgentOutput(data: unknown): boolean {
   if (!invocation) return false;
   if (invocation.hasOutput) {

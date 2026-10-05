@@ -1,7 +1,9 @@
+import { createHash } from 'node:crypto';
+
 import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
-import { AgentError } from '#agent-output';
+import { addAgentWarning, AgentError } from '#agent-output';
 import { withConnection } from '#connection';
 import { readJsonInput } from '#input';
 import { printOutput } from '#output';
@@ -131,6 +133,112 @@ function parseFilter(input: string) {
       field: 'filter',
     });
   }
+}
+
+// Version 2 paging. Results are bounded, non-aggregate rows get a final id
+// tie-breaker, and a cursor binds the next offset to the query and to the
+// budget's change marker so a concurrent change is disclosed.
+export const DEFAULT_PAGE_LIMIT = 1000;
+export const MAX_PAGE_LIMIT = 10000;
+
+type QueryObj = ReturnType<typeof api.q>;
+type PageCursor = { v: 1; q: string; o: number; s: string };
+
+function queryHash(queryObj: QueryObj) {
+  const { limit: _limit, offset: _offset, ...rest } = queryObj.serialize();
+  return createHash('sha256')
+    .update(JSON.stringify(rest))
+    .digest('hex')
+    .slice(0, 16);
+}
+
+export function encodeCursor(cursor: PageCursor) {
+  return Buffer.from(JSON.stringify(cursor)).toString('base64url');
+}
+
+export function decodeCursor(token: string): PageCursor {
+  try {
+    const value = JSON.parse(Buffer.from(token, 'base64url').toString('utf8'));
+    if (
+      value?.v === 1 &&
+      typeof value.q === 'string' &&
+      Number.isSafeInteger(value.o) &&
+      value.o >= 0 &&
+      typeof value.s === 'string'
+    ) {
+      return value;
+    }
+  } catch {
+    // Reported below.
+  }
+  throw new AgentError('INVALID_INPUT', 'The cursor is not valid.', false, {
+    field: 'cursor',
+  });
+}
+
+function referencesId(expr: unknown) {
+  return typeof expr === 'string'
+    ? expr === 'id'
+    : isRecord(expr) && Object.keys(expr).includes('id');
+}
+
+export function planPage(
+  queryObj: QueryObj,
+  options: { aggregate: boolean; cursor?: string; hasIdField: boolean },
+) {
+  const state = queryObj.serialize();
+  const hash = queryHash(queryObj);
+  let offset = state.offset ?? 0;
+  let cursor: PageCursor | undefined;
+  if (options.cursor) {
+    if (state.offset != null) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        '--cursor cannot be combined with an offset.',
+        false,
+        { field: 'cursor' },
+      );
+    }
+    cursor = decodeCursor(options.cursor);
+    if (cursor.q !== hash) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'The cursor belongs to a different query; repeat the original query options with --cursor.',
+        false,
+        { field: 'cursor' },
+      );
+    }
+    offset = cursor.o;
+  }
+  const limit = state.limit ?? DEFAULT_PAGE_LIMIT;
+  if (limit < 1 || limit > MAX_PAGE_LIMIT) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      `The page limit must be between 1 and ${MAX_PAGE_LIMIT}.`,
+      false,
+      { field: 'limit' },
+    );
+  }
+  let ordered = queryObj;
+  let tieBreaker: 'id' | null = null;
+  if (
+    !options.aggregate &&
+    options.hasIdField &&
+    !state.orderExpressions.some(referencesId)
+  ) {
+    ordered = ordered.orderBy({ id: 'asc' });
+    tieBreaker = 'id';
+  }
+  return {
+    // One extra row detects truncation without a second count query.
+    query: ordered.limit(limit + 1).offset(offset),
+    orderBy: ordered.serialize().orderExpressions,
+    tieBreaker,
+    limit,
+    offset,
+    hash,
+    cursor,
+  };
 }
 
 const LAST_DEFAULT_SELECT = [
@@ -310,6 +418,10 @@ export function registerQueryCommand(program: Command) {
     .option('--limit <n>', 'Limit number of results')
     .option('--offset <n>', 'Skip first N results (for pagination)')
     .option(
+      '--cursor <token>',
+      'Version 2: continue from the nextCursor of a previous page of the same query',
+    )
+    .option(
       '--last <n>',
       'Show last N transactions (implies --table transactions, --order-by date:desc)',
     )
@@ -341,6 +453,75 @@ export function registerQueryCommand(program: Command) {
             table: check.table,
           });
         }
+        const state = queryObj.serialize();
+        if (!state.calculation) {
+          const table = api
+            .getQuerySchema()
+            .tables.find(candidate => candidate.name === state.table);
+          const page = planPage(queryObj, {
+            aggregate: check.aggregate,
+            cursor: cmdOpts.cursor,
+            hasIdField: Boolean(
+              table?.fields.some(field => field.name === 'id'),
+            ),
+          });
+          await withConnection(
+            opts,
+            async () => {
+              const { marker } = await api.getQuerySnapshot();
+              const result = await api.aqlQuery(page.query);
+              if (!isRecord(result) || !Array.isArray(result.data)) {
+                throw new Error('Query result missing data');
+              }
+              const truncated = result.data.length > page.limit;
+              const rows = result.data.slice(0, page.limit);
+              const nextOffset = truncated ? page.offset + rows.length : null;
+              const changed = page.cursor ? page.cursor.s !== marker : null;
+              if (changed) {
+                addAgentWarning(
+                  'The budget changed since the previous page; rows may be repeated or skipped. Restart without --cursor for a consistent read.',
+                );
+              }
+              printOutput(
+                {
+                  rows,
+                  page: {
+                    limit: page.limit,
+                    offset: page.offset,
+                    returned: rows.length,
+                    truncated,
+                    nextOffset,
+                    nextCursor:
+                      nextOffset === null
+                        ? null
+                        : encodeCursor({
+                            v: 1,
+                            q: page.hash,
+                            o: nextOffset,
+                            s: marker,
+                          }),
+                    orderBy: page.orderBy,
+                    tieBreaker: page.tieBreaker,
+                  },
+                  snapshot: {
+                    marker,
+                    changedSinceCursor: changed,
+                  },
+                },
+                opts.format,
+              );
+            },
+            { mutates: false },
+          );
+          return;
+        }
+      } else if (cmdOpts.cursor) {
+        throw new AgentError(
+          'INVALID_INPUT',
+          '--cursor requires output version 2.',
+          false,
+          { field: 'cursor' },
+        );
       }
       await withConnection(
         opts,
