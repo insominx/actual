@@ -1,0 +1,4 @@
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/change-journal.test.ts > expires payee creation only with a complete generated payee and mapping acknowledgement
+Error: The change receipt has an unsupported schema.
+      Tests  1 failed | 17 passed (18)

@@ -106,8 +106,9 @@ Known baseline: prior cash-planning verification recorded repository-wide format
 
 2026-10-04 checkpoint: guarded category-group creation passes final nine-case local Windows acceptance. Task 0014 remains partial with 19 existing write adapters outstanding.
 
-
 2026-10-04 checkpoint: guarded category-group updates pass final nine-case local Windows acceptance. Task 0014 remains partial with 18 existing write adapters outstanding.
 
-
 2026-10-04 checkpoint: guarded category-group deletion passes final nine-case local Windows acceptance. Task 0014 remains partial with 17 existing write adapters outstanding.
+
+2026-10-05 checkpoint: guarded payee creation passes five-case local Linux acceptance. Task 0014 remains partial with 16 existing write adapters outstanding.
+2026-10-05 checkpoint: guarded payee update/delete/merge and tag create/update/delete pass local Linux packaged acceptance. Task 0014 remains partial with 10 existing write adapters outstanding.

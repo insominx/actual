@@ -171,6 +171,21 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
             }),
           },
           object({ name: string }, ['name']),
+          object({ name: string, transfer_acct: string }, ['name']),
+          object({ mergeIds: { type: 'array', items: string } }, ['mergeIds']),
+          object(
+            {
+              tag: string,
+              color: { anyOf: [string, { type: 'null' }] },
+              description: { anyOf: [string, { type: 'null' }] },
+            },
+            ['tag'],
+          ),
+          object({
+            tag: string,
+            color: { anyOf: [string, { type: 'null' }] },
+            description: { anyOf: [string, { type: 'null' }] },
+          }),
           object({ name: string, path: string, timeout: money }, [
             'name',
             'path',

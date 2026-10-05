@@ -59,9 +59,6 @@ import type {
   CategoryCreationRequest,
   CategoryDeletionProposal,
   CategoryDeletionRequest,
-  PayeeCreationOutcome,
-  PayeeCreationProposal,
-  PayeeCreationRequest,
   CategoryGroupCreationOutcome,
   CategoryGroupCreationProposal,
   CategoryGroupCreationRequest,
@@ -71,6 +68,10 @@ import type {
   CategoryGroupUpdateRequest,
   CategoryUpdateProposal,
   CategoryUpdateRequest,
+  ChangeProposal,
+  PayeeCreationOutcome,
+  PayeeCreationProposal,
+  PayeeCreationRequest,
   TransactionUpdateOutcome,
   TransactionUpdateProposal,
   TransactionUpdateRequest,
@@ -137,16 +138,33 @@ import * as cloudStorage from './cloud-storage';
 import type { RemoteFile } from './cloud-storage';
 import * as db from './db';
 import { APIError, withErrorCode } from './errors';
+import { guardedApply } from './guarded-proposal';
 import { importActual } from './importers/actual';
 import { runMutator } from './mutators';
 import {
   inspectPayeeCreation,
   createPayee as performPayeeCreation,
 } from './payees/app';
+import {
+  performPayeeDeletion,
+  performPayeeMerge,
+  performPayeeUpdate,
+  preparePayeeDeletion,
+  preparePayeeMerge,
+  preparePayeeUpdate,
+} from './payees/guarded';
 import * as prefs from './prefs';
 import { getServer } from './server-config';
 import * as sheet from './sheet';
 import { batchMessages, getSyncStatus, setSyncingMode } from './sync';
+import {
+  performTagCreation,
+  performTagDeletion,
+  performTagUpdate,
+  prepareTagCreation,
+  prepareTagDeletion,
+  prepareTagUpdate,
+} from './tags/guarded';
 import { planLinkedTransferUpdate } from './transactions/linked-transfer-plan';
 import {
   getTransferredAccount,
@@ -3065,6 +3083,96 @@ handlers['api/payee-apply-creation'] = withMutation(
     };
   },
 );
+
+// Guarded payee and tag catalog adapters. Owners provide read-only plans and
+// canonical writers; guardedApply owns identity, staleness and receipts.
+function guardedCatalogHandlers<
+  Request,
+  Proposal extends ChangeProposal,
+  Outcome,
+>(
+  prepare: (request: Request) => Promise<Proposal>,
+  apply: (proposal: Proposal) => Promise<Outcome>,
+) {
+  return {
+    preview: withMutation(async (request: Request) => {
+      checkFileOpen();
+      return prepare(request);
+    }),
+    apply: withMutation(async (proposal: Proposal) => {
+      checkFileOpen();
+      return apply(proposal);
+    }),
+  };
+}
+{
+  const payeeUpdate = guardedCatalogHandlers(
+    preparePayeeUpdate,
+    guardedApply({
+      operation: 'payees.update',
+      noun: 'Payee update',
+      prepare: preparePayeeUpdate,
+      perform: performPayeeUpdate,
+    }),
+  );
+  handlers['api/payee-preview-update'] = payeeUpdate.preview;
+  handlers['api/payee-apply-update'] = payeeUpdate.apply;
+  const payeeDeletion = guardedCatalogHandlers(
+    preparePayeeDeletion,
+    guardedApply({
+      operation: 'payees.delete',
+      noun: 'Payee deletion',
+      prepare: preparePayeeDeletion,
+      perform: performPayeeDeletion,
+    }),
+  );
+  handlers['api/payee-preview-deletion'] = payeeDeletion.preview;
+  handlers['api/payee-apply-deletion'] = payeeDeletion.apply;
+  const payeeMerge = guardedCatalogHandlers(
+    preparePayeeMerge,
+    guardedApply({
+      operation: 'payees.merge',
+      noun: 'Payee merge',
+      prepare: preparePayeeMerge,
+      perform: performPayeeMerge,
+    }),
+  );
+  handlers['api/payee-preview-merge'] = payeeMerge.preview;
+  handlers['api/payee-apply-merge'] = payeeMerge.apply;
+  const tagCreation = guardedCatalogHandlers(
+    prepareTagCreation,
+    guardedApply({
+      operation: 'tags.create',
+      noun: 'Tag creation',
+      prepare: prepareTagCreation,
+      perform: performTagCreation,
+    }),
+  );
+  handlers['api/tag-preview-creation'] = tagCreation.preview;
+  handlers['api/tag-apply-creation'] = tagCreation.apply;
+  const tagUpdate = guardedCatalogHandlers(
+    prepareTagUpdate,
+    guardedApply({
+      operation: 'tags.update',
+      noun: 'Tag update',
+      prepare: prepareTagUpdate,
+      perform: performTagUpdate,
+    }),
+  );
+  handlers['api/tag-preview-update'] = tagUpdate.preview;
+  handlers['api/tag-apply-update'] = tagUpdate.apply;
+  const tagDeletion = guardedCatalogHandlers(
+    prepareTagDeletion,
+    guardedApply({
+      operation: 'tags.delete',
+      noun: 'Tag deletion',
+      prepare: prepareTagDeletion,
+      perform: performTagDeletion,
+    }),
+  );
+  handlers['api/tag-preview-deletion'] = tagDeletion.preview;
+  handlers['api/tag-apply-deletion'] = tagDeletion.apply;
+}
 
 async function prepareGuardedCategoryGroupCreation(
   request: CategoryGroupCreationRequest,

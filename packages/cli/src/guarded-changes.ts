@@ -15,6 +15,11 @@ import type { ChangeReceipt } from './change-journal';
 import { resolveConfig } from './config';
 import type { CliConfig, CliGlobalOpts } from './config';
 import { withConnection } from './connection';
+import {
+  GUARDED_OPERATIONS,
+  isGuardedOperation,
+  PAYLOAD_SCOPED_OPERATIONS,
+} from './guarded-operations';
 import { readJsonInput } from './input';
 import { acquireExclusive } from './lock';
 import { isRecord, stableJson } from './utils';
@@ -534,6 +539,108 @@ export async function executeCategoryCreation(
   return { id: receipt.outcome.categoryCreation.categoryId, receipt };
 }
 
+export async function executePayeeCreation(
+  opts: CliGlobalOpts,
+  operationId: string | undefined,
+  request: api.PayeeCreationRequest,
+) {
+  if (!operationId) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      'Version 2 payee creation requires --operation-id for durable retry.',
+      false,
+      { field: 'operationId' },
+    );
+  }
+  const prepared = await previewGuardedChange(
+    opts,
+    'payees.create',
+    undefined,
+    { operationId, data: JSON.stringify(request) },
+  );
+  const receipt = await applyGuardedChange(opts, operationId, {
+    token: prepared.token,
+  });
+  if (
+    receipt.outcome?.status !== 'committed-local' ||
+    !('payeeCreation' in receipt.outcome)
+  ) {
+    throw new AgentError(
+      'PARTIAL_COMPLETION',
+      'Payee creation has no acknowledged engine identity.',
+      false,
+      { operationId },
+    );
+  }
+  return { id: receipt.outcome.payeeCreation.payeeId, receipt };
+}
+
+// Shared direct version 2 path for payee and tag catalog writes. The command
+// supplies the exact change ID and payload the changes command would accept.
+export async function executeCatalogChange(
+  opts: CliGlobalOpts,
+  operationId: string | undefined,
+  operation:
+    | 'payees.update'
+    | 'payees.delete'
+    | 'payees.merge'
+    | 'tags.update'
+    | 'tags.delete',
+  id: string,
+  payload: Record<string, unknown>,
+) {
+  if (!operationId) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      `Version 2 ${operation} requires --operation-id for durable retry.`,
+      false,
+      { field: 'operationId' },
+    );
+  }
+  const prepared = await previewGuardedChange(opts, operation, id, {
+    operationId,
+    data: JSON.stringify(payload),
+  });
+  const receipt = await applyGuardedChange(opts, operationId, {
+    token: prepared.token,
+  });
+  return { success: true, id, receipt };
+}
+
+export async function executeTagCreation(
+  opts: CliGlobalOpts,
+  operationId: string | undefined,
+  request: api.TagCreationRequest,
+) {
+  if (!operationId) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      'Version 2 tag creation requires --operation-id for durable retry.',
+      false,
+      { field: 'operationId' },
+    );
+  }
+  const prepared = await previewGuardedChange(opts, 'tags.create', undefined, {
+    operationId,
+    data: JSON.stringify(request),
+  });
+  const receipt = await applyGuardedChange(opts, operationId, {
+    token: prepared.token,
+  });
+  if (
+    receipt.outcome?.status !== 'committed-local' ||
+    !('tagCreation' in receipt.outcome)
+  ) {
+    throw new AgentError(
+      'PARTIAL_COMPLETION',
+      'Tag creation has no acknowledged engine identity.',
+      false,
+      { operationId },
+    );
+  }
+  return { id: receipt.outcome.tagCreation.tagId, receipt };
+}
+
 export async function executeCategoryDeletion(
   opts: CliGlobalOpts,
   operationId: string | undefined,
@@ -908,6 +1015,142 @@ export async function resolveGuardConfig(
   return resolved;
 }
 
+type DomainAdapter = {
+  preview: (request: unknown) => Promise<api.ChangeProposal>;
+  apply: (
+    proposal: api.ChangeProposal,
+  ) => Promise<NonNullable<ChangeReceipt['outcome']>>;
+};
+
+// Explicit per-operation public API methods. Each entry names its canonical
+// preview and apply endpoints; there is no universal execute operation.
+const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
+  'transactions.update': {
+    preview: r =>
+      api.previewTransactionUpdate(r as api.TransactionUpdateRequest),
+    apply: p => api.applyTransactionUpdate(p as api.TransactionUpdateProposal),
+  },
+  'category-groups.delete': {
+    preview: r =>
+      api.previewCategoryGroupDeletion(r as api.CategoryGroupDeletionRequest),
+    apply: p =>
+      api.applyCategoryGroupDeletion(p as api.CategoryGroupDeletionProposal),
+  },
+  'category-groups.update': {
+    preview: r =>
+      api.previewCategoryGroupUpdate(r as api.CategoryGroupUpdateRequest),
+    apply: p =>
+      api.applyCategoryGroupUpdate(p as api.CategoryGroupUpdateProposal),
+  },
+  'category-groups.create': {
+    preview: r =>
+      api.previewCategoryGroupCreation(r as api.CategoryGroupCreationRequest),
+    apply: p =>
+      api.applyCategoryGroupCreation(p as api.CategoryGroupCreationProposal),
+  },
+  'categories.create': {
+    preview: r => api.previewCategoryCreation(r as api.CategoryCreationRequest),
+    apply: p => api.applyCategoryCreation(p as api.CategoryCreationProposal),
+  },
+  'categories.delete': {
+    preview: r => api.previewCategoryDeletion(r as api.CategoryDeletionRequest),
+    apply: p => api.applyCategoryDeletion(p as api.CategoryDeletionProposal),
+  },
+  'categories.update': {
+    preview: r => api.previewCategoryUpdate(r as api.CategoryUpdateRequest),
+    apply: p => api.applyCategoryUpdate(p as api.CategoryUpdateProposal),
+  },
+  'payees.create': {
+    preview: r => api.previewPayeeCreation(r as api.PayeeCreationRequest),
+    apply: p => api.applyPayeeCreation(p as api.PayeeCreationProposal),
+  },
+  'payees.update': {
+    preview: r => api.previewPayeeUpdate(r as api.PayeeUpdateRequest),
+    apply: p => api.applyPayeeUpdate(p as api.PayeeUpdateProposal),
+  },
+  'payees.delete': {
+    preview: r => api.previewPayeeDeletion(r as api.PayeeDeletionRequest),
+    apply: p => api.applyPayeeDeletion(p as api.PayeeDeletionProposal),
+  },
+  'payees.merge': {
+    preview: r => api.previewPayeeMerge(r as api.PayeeMergeRequest),
+    apply: p => api.applyPayeeMerge(p as api.PayeeMergeProposal),
+  },
+  'tags.create': {
+    preview: r => api.previewTagCreation(r as api.TagCreationRequest),
+    apply: p => api.applyTagCreation(p as api.TagCreationProposal),
+  },
+  'tags.update': {
+    preview: r => api.previewTagUpdate(r as api.TagUpdateRequest),
+    apply: p => api.applyTagUpdate(p as api.TagUpdateProposal),
+  },
+  'tags.delete': {
+    preview: r => api.previewTagDeletion(r as api.TagDeletionRequest),
+    apply: p => api.applyTagDeletion(p as api.TagDeletionProposal),
+  },
+  'accounts.close': {
+    preview: r => api.previewAccountClosure(r as api.AccountCloseRequest),
+    apply: p => api.applyAccountClosure(p as api.AccountCloseProposal),
+  },
+  'accounts.delete': {
+    preview: r => api.previewAccountDeletion(r as api.AccountDeletionRequest),
+    apply: p => api.applyAccountDeletion(p as api.AccountDeletionProposal),
+  },
+  'accounts.reopen': {
+    preview: r => api.previewAccountReopen(r as api.AccountReopenRequest),
+    apply: p => api.applyAccountReopen(p as api.AccountReopenProposal),
+  },
+  'accounts.update': {
+    preview: r => api.previewAccountUpdate(r as api.AccountUpdateRequest),
+    apply: p => api.applyAccountUpdate(p as api.AccountUpdateProposal),
+  },
+  'accounts.create': {
+    preview: r => api.previewAccountCreation(r as api.AccountCreationRequest),
+    apply: p => api.applyAccountCreation(p as api.AccountCreationProposal),
+  },
+  'budgets.set-amount': {
+    preview: r => api.previewBudgetAmount(r as api.BudgetAmountRequest),
+    apply: p => api.applyBudgetAmount(p as api.BudgetAmountProposal),
+  },
+  'budgets.set-carryover': {
+    preview: r => api.previewBudgetCarryover(r as api.BudgetCarryoverRequest),
+    apply: p => api.applyBudgetCarryover(p as api.BudgetCarryoverProposal),
+  },
+  'budgets.hold-next-month': {
+    preview: r => api.previewBudgetHold(r as api.BudgetHoldRequest),
+    apply: p => api.applyBudgetHold(p as api.BudgetHoldProposal),
+  },
+  'budgets.reset-hold': {
+    preview: r => api.previewBudgetHold(r as api.BudgetHoldRequest),
+    apply: p => api.applyBudgetHold(p as api.BudgetHoldProposal),
+  },
+  'budgets.rename': {
+    preview: r => api.previewBudgetMetadata(r as api.BudgetMetadataRequest),
+    apply: p => api.applyBudgetMetadata(p as api.BudgetMetadataProposal),
+  },
+  'budgets.archive': {
+    preview: r => api.previewBudgetMetadata(r as api.BudgetMetadataRequest),
+    apply: p => api.applyBudgetMetadata(p as api.BudgetMetadataProposal),
+  },
+  'budgets.clone': {
+    preview: r => api.previewBudgetClone(r as api.BudgetCloneRequest),
+    apply: p => api.applyBudgetClone(p as api.BudgetCloneProposal),
+  },
+};
+
+function domainAdapter(operation: string): DomainAdapter {
+  const adapter = Object.prototype.hasOwnProperty.call(
+    DOMAIN_ADAPTERS,
+    operation,
+  )
+    ? DOMAIN_ADAPTERS[operation]
+    : undefined;
+  if (!adapter) {
+    throw new AgentError('INVALID_INPUT', 'Unsupported guarded operation.');
+  }
+  return adapter;
+}
+
 function changeRequest(
   operation: string,
   id: string,
@@ -916,6 +1159,13 @@ function changeRequest(
   | api.CategoryGroupUpdateRequest
   | api.CategoryGroupCreationRequest
   | api.CategoryCreationRequest
+  | api.PayeeCreationRequest
+  | api.PayeeUpdateRequest
+  | api.PayeeDeletionRequest
+  | api.PayeeMergeRequest
+  | api.TagCreationRequest
+  | api.TagUpdateRequest
+  | api.TagDeletionRequest
   | api.CategoryGroupDeletionRequest
   | api.CategoryDeletionRequest
   | api.CategoryUpdateRequest
@@ -949,6 +1199,63 @@ function changeRequest(
   }
   if (operation === 'categories.create') {
     return payload as api.CategoryCreationRequest;
+  }
+  if (operation === 'payees.create') {
+    return payload as api.PayeeCreationRequest;
+  }
+  if (operation === 'payees.update') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(key => key !== 'name') ||
+      typeof payload.name !== 'string'
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Payee update accepts only a name.',
+      );
+    }
+    return { id, fields: { name: payload.name } };
+  }
+  if (operation === 'payees.merge') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(key => key !== 'mergeIds') ||
+      !Array.isArray(payload.mergeIds) ||
+      !payload.mergeIds.every(value => typeof value === 'string')
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Payee merge requires only a mergeIds array; the target is the change ID.',
+      );
+    }
+    return { targetId: id, mergeIds: payload.mergeIds as string[] };
+  }
+  if (operation === 'payees.delete' || operation === 'tags.delete') {
+    if (isRecord(payload) && Object.keys(payload).length) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Deletion takes only the target ID and no payload.',
+      );
+    }
+    return { id };
+  }
+  if (operation === 'tags.create') {
+    return payload as api.TagCreationRequest;
+  }
+  if (operation === 'tags.update') {
+    if (
+      !isRecord(payload) ||
+      !Object.keys(payload).length ||
+      Object.keys(payload).some(
+        key => !['tag', 'color', 'description'].includes(key),
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Tag update requires tag, color or description.',
+      );
+    }
+    return { id, fields: payload as api.TagUpdateRequest['fields'] };
   }
   if (
     operation === 'categories.delete' ||
@@ -1080,48 +1387,14 @@ export async function previewGuardedChange(
   input: { operationId: string; data?: string; file?: string },
 ): Promise<ChangeReceipt> {
   validateOperationId(input.operationId);
-  if (
-    ![
-      'budgets.create',
-      'budgets.clone',
-      'backups.restore',
-      'budgets.publish',
-      'transactions.update',
-      'category-groups.delete',
-      'categories.delete',
-      'category-groups.update',
-      'categories.update',
-      'category-groups.create',
-      'categories.create',
-      'accounts.update',
-      'accounts.reopen',
-      'accounts.delete',
-      'accounts.close',
-      'accounts.create',
-      'budgets.set-amount',
-      'budgets.set-carryover',
-      'budgets.hold-next-month',
-      'budgets.reset-hold',
-      'budgets.rename',
-      'budgets.archive',
-    ].includes(operation)
-  ) {
+  if (!isGuardedOperation(operation)) {
     throw new AgentError(
       'INVALID_INPUT',
-      'Supported operations: category-groups.delete, category-groups.update, category-groups.create, categories.create, categories.update, categories.delete, accounts.close, accounts.delete, accounts.reopen, accounts.update, accounts.create, budgets.create, budgets.clone, budgets.publish, backups.restore, transactions.update, budgets.set-amount, budgets.set-carryover, budgets.hold-next-month, budgets.reset-hold, budgets.rename, and budgets.archive.',
+      `Supported operations: ${GUARDED_OPERATIONS.join(', ')}.`,
     );
   }
   const restores = operation === 'backups.restore';
-  if (
-    [
-      'accounts.create',
-      'category-groups.create',
-      'categories.create',
-      'budgets.hold-next-month',
-      'budgets.reset-hold',
-    ].includes(operation) &&
-    id !== undefined
-  ) {
+  if (PAYLOAD_SCOPED_OPERATIONS.includes(operation) && id !== undefined) {
     throw new AgentError(
       'INVALID_INPUT',
       'This operation selects its scope through the payload. Omit the ID argument.',
@@ -1199,78 +1472,7 @@ export async function previewGuardedChange(
                     ? await api.previewBudgetPublication(
                         request as api.BudgetPublicationRequest,
                       )
-                    : operation === 'budgets.clone'
-                      ? await api.previewBudgetClone(
-                          request as api.BudgetCloneRequest,
-                        )
-                      : operation === 'transactions.update'
-                        ? await api.previewTransactionUpdate(
-                            request as api.TransactionUpdateRequest,
-                          )
-                        : operation === 'category-groups.delete'
-                          ? await api.previewCategoryGroupDeletion(
-                              request as api.CategoryGroupDeletionRequest,
-                            )
-                          : operation === 'category-groups.update'
-                            ? await api.previewCategoryGroupUpdate(
-                                request as api.CategoryGroupUpdateRequest,
-                              )
-                            : operation === 'category-groups.create'
-                              ? await api.previewCategoryGroupCreation(
-                                  request as api.CategoryGroupCreationRequest,
-                                )
-                              : operation === 'categories.create'
-                                ? await api.previewCategoryCreation(
-                                    request as api.CategoryCreationRequest,
-                                  )
-                                : operation === 'categories.delete'
-                                  ? await api.previewCategoryDeletion(
-                                      request as api.CategoryDeletionRequest,
-                                    )
-                                  : operation === 'categories.update'
-                                    ? await api.previewCategoryUpdate(
-                                        request as api.CategoryUpdateRequest,
-                                      )
-                                    : operation === 'accounts.close'
-                                      ? await api.previewAccountClosure(
-                                          request as api.AccountCloseRequest,
-                                        )
-                                      : operation === 'accounts.delete'
-                                        ? await api.previewAccountDeletion(
-                                            request as api.AccountDeletionRequest,
-                                          )
-                                        : operation === 'accounts.reopen'
-                                          ? await api.previewAccountReopen(
-                                              request as api.AccountReopenRequest,
-                                            )
-                                          : operation === 'accounts.update'
-                                            ? await api.previewAccountUpdate(
-                                                request as api.AccountUpdateRequest,
-                                              )
-                                            : operation === 'accounts.create'
-                                              ? await api.previewAccountCreation(
-                                                  request as api.AccountCreationRequest,
-                                                )
-                                              : operation ===
-                                                  'budgets.set-amount'
-                                                ? await api.previewBudgetAmount(
-                                                    request as api.BudgetAmountRequest,
-                                                  )
-                                                : operation ===
-                                                    'budgets.set-carryover'
-                                                  ? await api.previewBudgetCarryover(
-                                                      request as api.BudgetCarryoverRequest,
-                                                    )
-                                                  : operation ===
-                                                        'budgets.hold-next-month' ||
-                                                      operation ===
-                                                        'budgets.reset-hold'
-                                                    ? await api.previewBudgetHold(
-                                                        request as api.BudgetHoldRequest,
-                                                      )
-                                                    : await api.previewBudgetMetadata(
-                                                        request as api.BudgetMetadataRequest,
-                                                      );
+                    : await domainAdapter(operation).preview(request);
           } catch {
             throw new AgentError(
               'INVALID_INPUT',
@@ -1492,6 +1694,15 @@ export async function applyGuardedChange(
               );
             }
           }
+          if (
+            !['budgets.publish', 'budgets.create', 'backups.restore'].includes(
+              receipt.proposal.operation,
+            )
+          ) {
+            // Resolve the adapter before recording intent, so an unsupported
+            // operation can never become an uncertain receipt.
+            domainAdapter(receipt.proposal.operation);
+          }
           await persist('uncertain');
           let outcome: NonNullable<ChangeReceipt['outcome']>;
           try {
@@ -1512,87 +1723,9 @@ export async function applyGuardedChange(
                     })
                   : receipt.proposal.operation === 'budgets.create'
                     ? await api.applyBudgetCreation(receipt.proposal)
-                    : receipt.proposal.operation === 'budgets.clone'
-                      ? await api.applyBudgetClone(receipt.proposal)
-                      : receipt.proposal.operation === 'transactions.update'
-                        ? await api.applyTransactionUpdate(receipt.proposal)
-                        : receipt.proposal.operation ===
-                            'category-groups.delete'
-                          ? await api.applyCategoryGroupDeletion(
-                              receipt.proposal,
-                            )
-                          : receipt.proposal.operation ===
-                              'category-groups.update'
-                            ? await api.applyCategoryGroupUpdate(
-                                receipt.proposal,
-                              )
-                            : receipt.proposal.operation ===
-                                'category-groups.create'
-                              ? await api.applyCategoryGroupCreation(
-                                  receipt.proposal,
-                                )
-                              : receipt.proposal.operation ===
-                                  'categories.create'
-                                ? await api.applyCategoryCreation(
-                                    receipt.proposal,
-                                  )
-                                : receipt.proposal.operation ===
-                                    'categories.delete'
-                                  ? await api.applyCategoryDeletion(
-                                      receipt.proposal,
-                                    )
-                                  : receipt.proposal.operation ===
-                                      'categories.update'
-                                    ? await api.applyCategoryUpdate(
-                                        receipt.proposal,
-                                      )
-                                    : receipt.proposal.operation ===
-                                        'accounts.close'
-                                      ? await api.applyAccountClosure(
-                                          receipt.proposal,
-                                        )
-                                      : receipt.proposal.operation ===
-                                          'accounts.delete'
-                                        ? await api.applyAccountDeletion(
-                                            receipt.proposal,
-                                          )
-                                        : receipt.proposal.operation ===
-                                            'accounts.reopen'
-                                          ? await api.applyAccountReopen(
-                                              receipt.proposal,
-                                            )
-                                          : receipt.proposal.operation ===
-                                              'accounts.update'
-                                            ? await api.applyAccountUpdate(
-                                                receipt.proposal,
-                                              )
-                                            : receipt.proposal.operation ===
-                                                'accounts.create'
-                                              ? await api.applyAccountCreation(
-                                                  receipt.proposal,
-                                                )
-                                              : receipt.proposal.operation ===
-                                                  'budgets.set-amount'
-                                                ? await api.applyBudgetAmount(
-                                                    receipt.proposal,
-                                                  )
-                                                : receipt.proposal.operation ===
-                                                    'budgets.set-carryover'
-                                                  ? await api.applyBudgetCarryover(
-                                                      receipt.proposal,
-                                                    )
-                                                  : receipt.proposal
-                                                        .operation ===
-                                                        'budgets.hold-next-month' ||
-                                                      receipt.proposal
-                                                        .operation ===
-                                                        'budgets.reset-hold'
-                                                    ? await api.applyBudgetHold(
-                                                        receipt.proposal,
-                                                      )
-                                                    : await api.applyBudgetMetadata(
-                                                        receipt.proposal,
-                                                      );
+                    : await domainAdapter(receipt.proposal.operation).apply(
+                        receipt.proposal,
+                      );
             }
           } catch {
             updateAgentContext({ commit: 'uncertain' });

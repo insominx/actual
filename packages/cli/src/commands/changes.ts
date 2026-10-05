@@ -7,6 +7,10 @@ import {
   previewGuardedChange,
   resolveGuardConfig,
 } from '#guarded-changes';
+import {
+  BUDGET_CREATING_OPERATIONS,
+  PAYLOAD_SCOPED_OPERATIONS,
+} from '#guarded-operations';
 import { printOutput } from '#output';
 
 export function registerChangesCommand(program: Command) {
@@ -29,15 +33,8 @@ export function registerChangesCommand(program: Command) {
         input: { operationId: string; data?: string; file?: string },
       ) => {
         if (
-          ![
-            'budgets.create',
-            'accounts.create',
-            'category-groups.create',
-            'categories.create',
-            'backups.restore',
-            'budgets.hold-next-month',
-            'budgets.reset-hold',
-          ].includes(operation) &&
+          !PAYLOAD_SCOPED_OPERATIONS.includes(operation) &&
+          !BUDGET_CREATING_OPERATIONS.includes(operation) &&
           !id
         ) {
           throw new AgentError(

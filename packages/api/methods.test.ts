@@ -4315,12 +4315,13 @@ describe('guarded payee creation', () => {
     const empty = await api.createPayee({ name: '' });
     expect(second).not.toBe(first);
     const payees = await api.getPayees();
-    for (const id of [first, second])
+    for (const id of [first, second]) {
       expect(payees.find(row => row.id === id)).toEqual({
         id,
         name,
         transfer_acct: null,
       });
+    }
     expect(payees.find(row => row.id === empty)).toEqual({
       id: empty,
       name: '',
@@ -4348,8 +4349,9 @@ describe('guarded payee creation', () => {
         mappingId: expect.any(String),
       },
     });
-    if (applied.status !== 'committed-local')
+    if (applied.status !== 'committed-local') {
       throw new Error('Expected committed creation');
+    }
     expect(applied.payeeCreation.mappingId).toBe(applied.payeeCreation.payeeId);
     expect(applied.affectedIds).toEqual([applied.payeeCreation.payeeId]);
     expect(
@@ -4368,10 +4370,11 @@ describe('guarded payee creation', () => {
       await api.previewPayeeCreation(request),
     );
     expect(duplicate.status).toBe('committed-local');
-    if (duplicate.status === 'committed-local')
+    if (duplicate.status === 'committed-local') {
       expect(duplicate.payeeCreation.payeeId).not.toBe(
         applied.payeeCreation.payeeId,
       );
+    }
     const empty = await api.previewPayeeCreation({ name: '' });
     expect((await api.applyPayeeCreation(empty)).status).toBe(
       'committed-local',
@@ -4399,12 +4402,321 @@ describe('guarded payee creation', () => {
       {},
       { name: 'Payee', extra: true },
       { name: 'Payee', transfer_acct: 42 },
-    ])
-      await expect(api.previewPayeeCreation(request)).rejects.toThrow();
+    ]) {
+      await expect(
+        api.previewPayeeCreation(
+          request as unknown as Parameters<typeof api.previewPayeeCreation>[0],
+        ),
+      ).rejects.toThrow();
+    }
     expect(await api.getPayees()).toEqual(before);
     await api.createPayee({ name: 'Changed source payee' });
     expect(await api.applyPayeeCreation(proposal)).toMatchObject({
       code: 'STALE_PREVIEW',
     });
+  });
+});
+
+describe('guarded payee updates, deletions and merges', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('previews a rename without writes and acknowledges the raw payee row', async () => {
+    const id = await api.createPayee({ name: 'Old name' });
+    const before = await api.getPayees();
+    const proposal = await api.previewPayeeUpdate({
+      id,
+      fields: { name: 'New name' },
+    });
+    expect(proposal.after.payee).toMatchObject({ id, name: 'New name' });
+    expect(await api.getPayees()).toEqual(before);
+    const applied = await api.applyPayeeUpdate(proposal);
+    expect(applied).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+      affectedIds: [id],
+    });
+    expect((await api.getPayees()).find(row => row.id === id)?.name).toBe(
+      'New name',
+    );
+    expect(await api.applyPayeeUpdate(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+  });
+  test('rejects malformed, transfer, missing and tampered payee updates', async () => {
+    const account = await api.createAccount({ name: 'Checking' }, 0);
+    const transfer = (await api.getPayees()).find(
+      row => row.transfer_acct === account,
+    );
+    const id = await api.createPayee({ name: 'Target' });
+    for (const request of [
+      { id, fields: {} },
+      { id, fields: { name: '' } },
+      { id, fields: { name: 'x', transfer_acct: account } },
+      { id: 'missing', fields: { name: 'x' } },
+      { id: transfer?.id, fields: { name: 'x' } },
+    ]) {
+      await expect(
+        api.previewPayeeUpdate(
+          request as unknown as Parameters<typeof api.previewPayeeUpdate>[0],
+        ),
+      ).rejects.toThrow();
+    }
+    const proposal = await api.previewPayeeUpdate({
+      id,
+      fields: { name: 'Renamed' },
+    });
+    expect(
+      await api.applyPayeeUpdate({
+        ...proposal,
+        budget: { ...proposal.budget, id: 'wrong' },
+      }),
+    ).toMatchObject({ code: 'MISSING_CONTEXT' });
+    expect(
+      await api.applyPayeeUpdate({
+        ...proposal,
+        request: { id, fields: { name: 'Other' } },
+      }),
+    ).toMatchObject({ code: 'STALE_PREVIEW' });
+    expect((await api.getPayees()).find(row => row.id === id)?.name).toBe(
+      'Target',
+    );
+  });
+  test('deletes a regular payee and preserves the transfer payee no-op', async () => {
+    const id = await api.createPayee({ name: 'Doomed' });
+    const proposal = await api.previewPayeeDeletion({ id });
+    expect(proposal.after).toEqual({ action: 'tombstone' });
+    expect(await api.applyPayeeDeletion(proposal)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+      affectedIds: [id],
+    });
+    expect((await api.getPayees()).some(row => row.id === id)).toBe(false);
+    await expect(api.previewPayeeDeletion({ id })).rejects.toThrow();
+    const account = await api.createAccount({ name: 'Savings' }, 0);
+    const transfer = (await api.getPayees()).find(
+      row => row.transfer_acct === account,
+    );
+    if (!transfer) {
+      throw new Error('Expected transfer payee');
+    }
+    const transferProposal = await api.previewPayeeDeletion({
+      id: transfer.id,
+    });
+    expect(transferProposal.after).toEqual({
+      action: 'unchanged-transfer-payee',
+    });
+    expect(await api.applyPayeeDeletion(transferProposal)).toMatchObject({
+      status: 'committed-local',
+      changed: false,
+      affectedIds: [],
+    });
+    expect((await api.getPayees()).some(row => row.id === transfer.id)).toBe(
+      true,
+    );
+  });
+  test('merges payees, remaps mappings and skips transfer sources', async () => {
+    const target = await api.createPayee({ name: 'Keep' });
+    const first = await api.createPayee({ name: 'Dup 1' });
+    const second = await api.createPayee({ name: 'Dup 2' });
+    const account = await api.createAccount({ name: 'Wallet' }, 0);
+    const transfer = (await api.getPayees()).find(
+      row => row.transfer_acct === account,
+    );
+    if (!transfer) {
+      throw new Error('Expected transfer payee');
+    }
+    const request = {
+      targetId: target,
+      mergeIds: [first, second, transfer.id],
+    };
+    const before = await api.getPayees();
+    const proposal = await api.previewPayeeMerge(request);
+    expect(await api.getPayees()).toEqual(before);
+    expect(proposal.after.mergedIds).toEqual([first, second]);
+    expect(proposal.after.skippedTransferIds).toEqual([transfer.id]);
+    expect(proposal.after.mappings).toEqual(
+      expect.arrayContaining([
+        { id: first, targetId: target },
+        { id: second, targetId: target },
+      ]),
+    );
+    const applied = await api.applyPayeeMerge(proposal);
+    expect(applied).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+      affectedIds: [target, first, second],
+      payeeMerge: { targetId: target, mergedIds: [first, second] },
+    });
+    const after = await api.getPayees();
+    expect(after.some(row => row.id === first || row.id === second)).toBe(
+      false,
+    );
+    expect(after.some(row => row.id === target)).toBe(true);
+    expect(after.some(row => row.id === transfer.id)).toBe(true);
+    expect(await api.applyPayeeMerge(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+  });
+  test('rejects merges that include the target, repeat sources or name missing payees', async () => {
+    const target = await api.createPayee({ name: 'Keep' });
+    const source = await api.createPayee({ name: 'Dup' });
+    for (const request of [
+      { targetId: target, mergeIds: [] },
+      { targetId: target, mergeIds: [target] },
+      { targetId: target, mergeIds: [source, target] },
+      { targetId: target, mergeIds: [source, source] },
+      { targetId: target, mergeIds: ['missing'] },
+      { targetId: 'missing', mergeIds: [source] },
+      { targetId: target, mergeIds: [source], extra: true },
+    ]) {
+      await expect(
+        api.previewPayeeMerge(
+          request as unknown as Parameters<typeof api.previewPayeeMerge>[0],
+        ),
+      ).rejects.toThrow();
+    }
+    const before = await api.getPayees();
+    const proposal = await api.previewPayeeMerge({
+      targetId: target,
+      mergeIds: [source],
+    });
+    await api.updatePayee(source, { name: 'Changed after preview' });
+    expect(await api.applyPayeeMerge(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    expect((await api.getPayees()).length).toBe(before.length);
+  });
+});
+
+describe('guarded tag creation, updates and deletions', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('creates, updates and deletes tags with raw row acknowledgements', async () => {
+    const before = await api.getTags();
+    const proposal = await api.previewTagCreation({
+      tag: 'groceries',
+      color: ' #ff0000 ',
+      description: 'Food',
+    });
+    expect(proposal.after).toEqual({
+      action: 'insert',
+      tag: {
+        tag: 'groceries',
+        color: '#ff0000',
+        description: 'Food',
+        tombstone: 0,
+      },
+    });
+    expect(await api.getTags()).toEqual(before);
+    const created = await api.applyTagCreation(proposal);
+    if (created.status !== 'committed-local') {
+      throw new Error('Expected committed tag creation');
+    }
+    const id = created.tagCreation.tagId;
+    expect(created).toMatchObject({
+      changed: true,
+      affectedIds: [id],
+      tagCreation: { action: 'insert' },
+    });
+    expect(await api.getTags()).toContainEqual({
+      id,
+      tag: 'groceries',
+      color: '#ff0000',
+      description: 'Food',
+    });
+    expect(await api.applyTagCreation(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    await expect(
+      api.previewTagCreation({ tag: 'groceries' }),
+    ).rejects.toThrow();
+
+    const update = await api.previewTagUpdate({
+      id,
+      fields: { tag: 'food', description: null },
+    });
+    expect(await api.applyTagUpdate(update)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+      affectedIds: [id],
+    });
+    expect((await api.getTags()).find(row => row.id === id)).toEqual({
+      id,
+      tag: 'food',
+      color: '#ff0000',
+      description: null,
+    });
+
+    const deletion = await api.previewTagDeletion({ id });
+    expect(await api.applyTagDeletion(deletion)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+      affectedIds: [id],
+    });
+    expect((await api.getTags()).some(row => row.id === id)).toBe(false);
+    await expect(api.previewTagDeletion({ id })).rejects.toThrow();
+
+    const revive = await api.previewTagCreation({ tag: 'food' });
+    expect(revive.after.action).toBe('revive');
+    const revived = await api.applyTagCreation(revive);
+    expect(revived).toMatchObject({
+      status: 'committed-local',
+      tagCreation: { tagId: id, action: 'revive' },
+    });
+    expect((await api.getTags()).find(row => row.id === id)).toEqual({
+      id,
+      tag: 'food',
+      color: null,
+      description: null,
+    });
+  });
+  test('rejects malformed, duplicate and tampered tag requests', async () => {
+    const first = await api.createTag({ tag: 'one' });
+    await api.createTag({ tag: 'two' });
+    for (const request of [
+      {},
+      { tag: '' },
+      { tag: 'has space' },
+      { tag: '#hash' },
+      { tag: 'ok', color: 1 },
+      { tag: 'ok', extra: true },
+    ]) {
+      await expect(
+        api.previewTagCreation(
+          request as unknown as Parameters<typeof api.previewTagCreation>[0],
+        ),
+      ).rejects.toThrow();
+    }
+    for (const request of [
+      { id: first, fields: {} },
+      { id: first, fields: { tag: 'two' } },
+      { id: first, fields: { hidden: true } },
+      { id: 'missing', fields: { color: null } },
+    ]) {
+      await expect(
+        api.previewTagUpdate(
+          request as unknown as Parameters<typeof api.previewTagUpdate>[0],
+        ),
+      ).rejects.toThrow();
+    }
+    const proposal = await api.previewTagUpdate({
+      id: first,
+      fields: { color: 'blue' },
+    });
+    expect(
+      await api.applyTagUpdate({
+        ...proposal,
+        budget: { ...proposal.budget, id: 'wrong' },
+      }),
+    ).toMatchObject({ code: 'MISSING_CONTEXT' });
+    await api.updateTag(first, { description: 'changed' });
+    expect(await api.applyTagUpdate(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    expect((await api.getTags()).find(row => row.id === first)?.color).toBe(
+      null,
+    );
   });
 });

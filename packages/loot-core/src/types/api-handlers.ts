@@ -52,9 +52,6 @@ import type {
   CategoryCreationRequest,
   CategoryDeletionProposal,
   CategoryDeletionRequest,
-  PayeeCreationOutcome,
-  PayeeCreationProposal,
-  PayeeCreationRequest,
   CategoryGroupCreationOutcome,
   CategoryGroupCreationProposal,
   CategoryGroupCreationRequest,
@@ -64,6 +61,23 @@ import type {
   CategoryGroupUpdateRequest,
   CategoryUpdateProposal,
   CategoryUpdateRequest,
+  PayeeCreationOutcome,
+  PayeeCreationProposal,
+  PayeeCreationRequest,
+  PayeeDeletionProposal,
+  PayeeDeletionRequest,
+  PayeeMergeOutcome,
+  PayeeMergeProposal,
+  PayeeMergeRequest,
+  PayeeUpdateProposal,
+  PayeeUpdateRequest,
+  TagCreationOutcome,
+  TagCreationProposal,
+  TagCreationRequest,
+  TagDeletionProposal,
+  TagDeletionRequest,
+  TagUpdateProposal,
+  TagUpdateRequest,
   TransactionUpdateOutcome,
   TransactionUpdateProposal,
   TransactionUpdateRequest,
@@ -169,6 +183,42 @@ export type ApiHandlers = {
   'api/payee-apply-creation': (
     arg: PayeeCreationProposal,
   ) => Promise<PayeeCreationOutcome>;
+  'api/payee-preview-update': (
+    arg: PayeeUpdateRequest,
+  ) => Promise<PayeeUpdateProposal>;
+  'api/payee-apply-update': (
+    arg: PayeeUpdateProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/payee-preview-deletion': (
+    arg: PayeeDeletionRequest,
+  ) => Promise<PayeeDeletionProposal>;
+  'api/payee-apply-deletion': (
+    arg: PayeeDeletionProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/payee-preview-merge': (
+    arg: PayeeMergeRequest,
+  ) => Promise<PayeeMergeProposal>;
+  'api/payee-apply-merge': (
+    arg: PayeeMergeProposal,
+  ) => Promise<PayeeMergeOutcome>;
+  'api/tag-preview-creation': (
+    arg: TagCreationRequest,
+  ) => Promise<TagCreationProposal>;
+  'api/tag-apply-creation': (
+    arg: TagCreationProposal,
+  ) => Promise<TagCreationOutcome>;
+  'api/tag-preview-update': (
+    arg: TagUpdateRequest,
+  ) => Promise<TagUpdateProposal>;
+  'api/tag-apply-update': (
+    arg: TagUpdateProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/tag-preview-deletion': (
+    arg: TagDeletionRequest,
+  ) => Promise<TagDeletionProposal>;
+  'api/tag-apply-deletion': (
+    arg: TagDeletionProposal,
+  ) => Promise<TransactionUpdateOutcome>;
   'api/category-group-preview-creation': (
     arg: CategoryGroupCreationRequest,
   ) => Promise<CategoryGroupCreationProposal>;

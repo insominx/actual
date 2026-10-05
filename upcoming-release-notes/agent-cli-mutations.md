@@ -29,8 +29,9 @@ Version 2 category deletion now previews canonical mappings and expense allocati
 
 Version 2 category-group creation now uses guarded previews and durable receipts with actual generated group IDs. Income flags and exact names are preserved. Acknowledged retries retain later edits and never recreate the group.
 
-
 Version 2 category-group updates now use guarded previews and durable receipts. Exact names and omitted fields are preserved. Nested category metadata never changes children. Acknowledged retries preserve later edits, and uncertain updates never replay.
 
-
 Version 2 category-group deletion now previews child tombstones, forwarding mappings and live child allocation transfers through shared durable receipts. Raw ledger rows and source allocations remain preserved. Acknowledged retries retain later destination edits and allocations, and uncertain outcomes never replay.
+
+Version 2 payee creation now uses guarded previews and durable receipts with actual generated payee and mapping IDs. Exact names and existing duplicate behavior are preserved, and uncertain creations never replay.
+Version 2 payee updates, deletions and merges and tag creation, updates and deletions now use guarded previews and durable receipts through their existing owners.

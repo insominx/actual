@@ -54,6 +54,20 @@ import type {
   CategoryGroupUpdateRequest,
   CategoryUpdateProposal,
   CategoryUpdateRequest,
+  PayeeCreationProposal,
+  PayeeCreationRequest,
+  PayeeDeletionProposal,
+  PayeeDeletionRequest,
+  PayeeMergeProposal,
+  PayeeMergeRequest,
+  PayeeUpdateProposal,
+  PayeeUpdateRequest,
+  TagCreationProposal,
+  TagCreationRequest,
+  TagDeletionProposal,
+  TagDeletionRequest,
+  TagUpdateProposal,
+  TagUpdateRequest,
   TransactionUpdateProposal,
   TransactionUpdateRequest,
 } from '@actual-app/core/types/change-proposals';
@@ -68,6 +82,20 @@ import type { SyncedPrefs } from '@actual-app/core/types/prefs';
 export { q } from './app/query';
 export type {
   CategoryCreationOutcome,
+  PayeeUpdateRequest,
+  PayeeUpdateProposal,
+  PayeeDeletionRequest,
+  PayeeDeletionProposal,
+  PayeeMergeRequest,
+  PayeeMergeProposal,
+  TagCreationRequest,
+  TagCreationProposal,
+  TagUpdateRequest,
+  TagUpdateProposal,
+  TagDeletionRequest,
+  TagDeletionProposal,
+  PayeeMergeOutcome,
+  TagCreationOutcome,
   PayeeCreationOutcome,
   PayeeCreationProposal,
   PayeeCreationRequest,
@@ -213,6 +241,42 @@ export function previewPayeeCreation(request: PayeeCreationRequest) {
 }
 export function applyPayeeCreation(proposal: PayeeCreationProposal) {
   return send('api/payee-apply-creation', proposal);
+}
+export function previewPayeeUpdate(request: PayeeUpdateRequest) {
+  return send('api/payee-preview-update', request);
+}
+export function applyPayeeUpdate(proposal: PayeeUpdateProposal) {
+  return send('api/payee-apply-update', proposal);
+}
+export function previewPayeeDeletion(request: PayeeDeletionRequest) {
+  return send('api/payee-preview-deletion', request);
+}
+export function applyPayeeDeletion(proposal: PayeeDeletionProposal) {
+  return send('api/payee-apply-deletion', proposal);
+}
+export function previewPayeeMerge(request: PayeeMergeRequest) {
+  return send('api/payee-preview-merge', request);
+}
+export function applyPayeeMerge(proposal: PayeeMergeProposal) {
+  return send('api/payee-apply-merge', proposal);
+}
+export function previewTagCreation(request: TagCreationRequest) {
+  return send('api/tag-preview-creation', request);
+}
+export function applyTagCreation(proposal: TagCreationProposal) {
+  return send('api/tag-apply-creation', proposal);
+}
+export function previewTagUpdate(request: TagUpdateRequest) {
+  return send('api/tag-preview-update', request);
+}
+export function applyTagUpdate(proposal: TagUpdateProposal) {
+  return send('api/tag-apply-update', proposal);
+}
+export function previewTagDeletion(request: TagDeletionRequest) {
+  return send('api/tag-preview-deletion', request);
+}
+export function applyTagDeletion(proposal: TagDeletionProposal) {
+  return send('api/tag-apply-deletion', proposal);
 }
 export function previewCategoryGroupCreation(
   request: CategoryGroupCreationRequest,

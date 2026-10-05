@@ -48,6 +48,92 @@ export type PayeeCreationOutcome =
       payeeCreation: { payeeId: string; mappingId: string };
     });
 
+type CatalogProposal<Operation extends string, Request, Before, After> = {
+  schemaVersion: 1;
+  operation: Operation;
+  budget: TransactionUpdateProposal['budget'];
+  request: Request;
+  before: { sourceHash: string } & Before;
+  after: After;
+  references: unknown;
+  sideEffects: string[];
+};
+type CatalogCommit<Extra> =
+  | Extract<TransactionUpdateOutcome, { status: 'rejected' }>
+  | (Extract<TransactionUpdateOutcome, { status: 'committed-local' }> & Extra);
+
+export type PayeeUpdateRequest = { id: string; fields: { name: string } };
+export type PayeeUpdateProposal = CatalogProposal<
+  'payees.update',
+  PayeeUpdateRequest,
+  { payee: Record<string, unknown> },
+  { payee: Record<string, unknown> }
+>;
+
+export type PayeeDeletionRequest = { id: string };
+export type PayeeDeletionProposal = CatalogProposal<
+  'payees.delete',
+  PayeeDeletionRequest,
+  { payee: Record<string, unknown> },
+  { action: 'tombstone' | 'unchanged-transfer-payee' }
+>;
+
+export type PayeeMergeRequest = { targetId: string; mergeIds: string[] };
+export type PayeeMergeProposal = CatalogProposal<
+  'payees.merge',
+  PayeeMergeRequest,
+  {
+    target: Record<string, unknown>;
+    sources: Array<Record<string, unknown>>;
+  },
+  {
+    action: 'merge' | 'unchanged-transfer-target';
+    mergedIds: string[];
+    skippedTransferIds: string[];
+    mappings: Array<{ id: string; targetId: string }>;
+  }
+>;
+export type PayeeMergeOutcome = CatalogCommit<{
+  payeeMerge: { targetId: string; mergedIds: string[] };
+}>;
+
+export type TagCreationRequest = {
+  tag: string;
+  color?: string | null;
+  description?: string | null;
+};
+export type TagCreationProposal = CatalogProposal<
+  'tags.create',
+  TagCreationRequest,
+  { existing: Record<string, unknown> | null },
+  {
+    action: 'insert' | 'revive';
+    tag: Record<string, unknown>;
+  }
+>;
+export type TagCreationOutcome = CatalogCommit<{
+  tagCreation: { tagId: string; action: 'insert' | 'revive' };
+}>;
+
+export type TagUpdateRequest = {
+  id: string;
+  fields: { tag?: string; color?: string | null; description?: string | null };
+};
+export type TagUpdateProposal = CatalogProposal<
+  'tags.update',
+  TagUpdateRequest,
+  { tag: Record<string, unknown> },
+  { tag: Record<string, unknown> }
+>;
+
+export type TagDeletionRequest = { id: string };
+export type TagDeletionProposal = CatalogProposal<
+  'tags.delete',
+  TagDeletionRequest,
+  { tag: Record<string, unknown> },
+  { action: 'tombstone' }
+>;
+
 export type CategoryGroupUpdateRequest = {
   id: string;
   fields: {
@@ -432,6 +518,12 @@ export type BudgetMetadataProposal = {
 export type ChangeProposal =
   | CategoryGroupUpdateProposal
   | PayeeCreationProposal
+  | PayeeUpdateProposal
+  | PayeeDeletionProposal
+  | PayeeMergeProposal
+  | TagCreationProposal
+  | TagUpdateProposal
+  | TagDeletionProposal
   | CategoryGroupCreationProposal
   | CategoryCreationProposal
   | CategoryGroupDeletionProposal

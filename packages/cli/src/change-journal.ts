@@ -19,10 +19,14 @@ import type {
   CategoryCreationOutcome,
   CategoryGroupCreationOutcome,
   ChangeProposal,
+  PayeeCreationOutcome,
+  PayeeMergeOutcome,
+  TagCreationOutcome,
   TransactionUpdateOutcome,
 } from '@actual-app/api';
 
 import { AgentError } from './agent-output';
+import { GUARDED_OPERATIONS } from './guarded-operations';
 import { acquireExclusive } from './lock';
 import { isRecord, stableJson } from './utils';
 
@@ -44,6 +48,9 @@ export type ChangeReceipt = {
     | BudgetPublicationOutcome
     | CategoryGroupCreationOutcome
     | CategoryCreationOutcome
+    | PayeeCreationOutcome
+    | PayeeMergeOutcome
+    | TagCreationOutcome
     | AccountCreationOutcome
     | AccountDeletionOutcome
     | AccountCloseOutcome;
@@ -181,6 +188,35 @@ function canExpireGroupCreation(receipt: ChangeReceipt) {
   );
 }
 
+function canExpireTagCreation(receipt: ChangeReceipt) {
+  if (receipt.proposal.operation !== 'tags.create') return true;
+  const outcome = receipt.outcome;
+  return (
+    outcome?.status === 'committed-local' &&
+    'tagCreation' in outcome &&
+    isRecord(outcome.tagCreation) &&
+    typeof outcome.tagCreation.tagId === 'string' &&
+    Boolean(outcome.tagCreation.tagId) &&
+    outcome.affectedIds.length === 1 &&
+    outcome.affectedIds[0] === outcome.tagCreation.tagId
+  );
+}
+
+function canExpirePayeeCreation(receipt: ChangeReceipt) {
+  if (receipt.proposal.operation !== 'payees.create') return true;
+  const outcome = receipt.outcome;
+  return (
+    outcome?.status === 'committed-local' &&
+    'payeeCreation' in outcome &&
+    isRecord(outcome.payeeCreation) &&
+    typeof outcome.payeeCreation.payeeId === 'string' &&
+    Boolean(outcome.payeeCreation.payeeId) &&
+    outcome.payeeCreation.mappingId === outcome.payeeCreation.payeeId &&
+    outcome.affectedIds.length === 1 &&
+    outcome.affectedIds[0] === outcome.payeeCreation.payeeId
+  );
+}
+
 export function validateOperationId(id: string) {
   if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(id)) {
     throw new AgentError(
@@ -273,30 +309,7 @@ export class ChangeJournal {
         ].includes(String(value.state)) ||
         !isRecord(value.proposal) ||
         value.proposal.schemaVersion !== 1 ||
-        ![
-          'transactions.update',
-          'category-groups.delete',
-          'categories.delete',
-          'category-groups.update',
-          'categories.update',
-          'category-groups.create',
-          'categories.create',
-          'accounts.create',
-          'accounts.update',
-          'accounts.reopen',
-          'accounts.delete',
-          'accounts.close',
-          'budgets.set-amount',
-          'budgets.set-carryover',
-          'budgets.hold-next-month',
-          'budgets.reset-hold',
-          'budgets.rename',
-          'budgets.archive',
-          'budgets.create',
-          'budgets.clone',
-          'backups.restore',
-          'budgets.publish',
-        ].includes(String(value.proposal.operation))
+        !GUARDED_OPERATIONS.includes(String(value.proposal.operation))
       ) {
         throw new AgentError(
           'INVALID_INPUT',
@@ -465,6 +478,8 @@ export class ChangeJournal {
             canExpireDeletion(row) &&
             canExpireClosure(row) &&
             canExpireGroupCreation(row) &&
+            canExpirePayeeCreation(row) &&
+            canExpireTagCreation(row) &&
             canExpireCategoryCreation(row) &&
             (row.proposal.operation !== 'accounts.create' ||
               (row.outcome?.status === 'committed-local' &&

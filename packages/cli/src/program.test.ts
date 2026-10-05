@@ -62,6 +62,26 @@ describe('registered agent commands', () => {
     const schema = await run(['schema', 'budgets.set-amount']);
     expect(schema.data.inputSchema.required).toContain('operationId');
   });
+  it.each([
+    ['payees.update', ['payees', 'update', 'payee-id', '--name', 'Renamed']],
+    ['payees.delete', ['payees', 'delete', 'payee-id']],
+    [
+      'payees.merge',
+      ['payees', 'merge', '--target', 'payee-id', '--ids', 'other-id'],
+    ],
+    ['tags.create', ['tags', 'create', '--tag', 'groceries']],
+    ['tags.update', ['tags', 'update', 'tag-id', '--color', 'red']],
+    ['tags.delete', ['tags', 'delete', 'tag-id']],
+  ])(
+    'requires a %s operation ID before connecting and advertises it',
+    async (command, args) => {
+      const missing = await run(['--output-version', '2', ...args]);
+      expect(missing.error.code).toBe('INVALID_INPUT');
+      expect(missing.error.details.field).toBe('operationId');
+      const schema = await run(['schema', command]);
+      expect(schema.data.inputSchema.required).toContain('operationId');
+    },
+  );
   it('requires a category creation operation ID before connecting and advertises it', async () => {
     const missing = await run([
       '--output-version',
@@ -77,14 +97,15 @@ describe('registered agent commands', () => {
     expect(missing.error.details.field).toBe('operationId');
     const schema = await run(['schema', 'categories.create']);
     expect(schema.data.inputSchema.required).toContain('operationId');
-  });  it('requires a payee creation operation ID before connecting and advertises it', async () => {
+  });
+  it('requires a payee creation operation ID before connecting and advertises it', async () => {
     const missing = await run([
       '--output-version',
       '2',
       'payees',
       'create',
       '--name',
-      'New category',
+      'New payee',
     ]);
     expect(missing.error.code).toBe('INVALID_INPUT');
     expect(missing.error.details.field).toBe('operationId');

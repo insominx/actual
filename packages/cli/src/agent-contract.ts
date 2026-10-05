@@ -1,6 +1,7 @@
 import type { Command, Option } from 'commander';
 
 import { AgentError } from './agent-output';
+import { DIRECT_GUARDED_COMMANDS } from './guarded-operations';
 import { operationPayloadSchema } from './json-schema';
 import type { JsonSchema } from './json-schema';
 
@@ -170,31 +171,7 @@ export function discoverOperations(root: Command) {
           ...command.options
             .filter(o => o.mandatory)
             .map(o => o.attributeName()),
-          ...([
-            'budgets.create',
-            'accounts.create',
-            'accounts.update',
-            'accounts.reopen',
-            'accounts.delete',
-            'accounts.close',
-            'category-groups.delete',
-            'categories.delete',
-            'category-groups.update',
-            'categories.update',
-            'category-groups.create',
-            'categories.create',
-            'budgets.clone',
-            'budgets.publish',
-            'backups.restore',
-            'budgets.rename',
-            'budgets.archive',
-            'budgets.set-amount',
-            'budgets.set-carryover',
-            'budgets.hold-next-month',
-            'budgets.reset-hold',
-          ].includes(name)
-            ? ['operationId']
-            : []),
+          ...(DIRECT_GUARDED_COMMANDS.includes(name) ? ['operationId'] : []),
         ],
       },
       arguments: command.registeredArguments.map(a => ({

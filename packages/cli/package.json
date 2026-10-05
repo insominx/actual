@@ -18,6 +18,7 @@
   "type": "module",
   "imports": {
     "#guarded-changes": "./src/guarded-changes.ts",
+    "#guarded-operations": "./src/guarded-operations.ts",
     "#change-journal": "./src/change-journal.ts",
     "#agent-output": "./src/agent-output.ts",
     "#backup-artifacts": "./src/backup-artifacts.ts",
@@ -41,7 +42,7 @@
   "scripts": {
     "build": "vite build",
     "test": "vitest --run",
-    "test:integration": "node --test integration/cli.test.mjs integration/runtime.test.mjs integration/lifecycle.test.mjs integration/publication.test.mjs integration/publication-crash.test.mjs integration/sync.test.mjs integration/backups.test.mjs integration/changes.test.mjs",
+    "test:integration": "node --test integration/cli.test.mjs integration/runtime.test.mjs integration/lifecycle.test.mjs integration/publication.test.mjs integration/publication-crash.test.mjs integration/sync.test.mjs integration/backups.test.mjs integration/changes.test.mjs integration/guarded-payees.test.mjs integration/guarded-catalog.test.mjs",
     "test:browser-integration": "node --test integration/browser-sync.test.mjs",
     "typecheck": "tsgo -b"
   },
