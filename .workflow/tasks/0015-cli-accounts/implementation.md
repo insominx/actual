@@ -20,6 +20,6 @@
 | Types    | `npx tsc -b packages/loot-core`, API and CLI `tsc`  | clean                                                                 |
 | Packaged | `node --test integration/accounts-inspect.test.mjs` | 1/1 (`verification-accounts-linux.txt`)                               |
 
-Limitations: Windows not run; no browser check of group display; opening-balance preview not separate.
+Limitations: Windows not run; no browser check of group display; opening-balance edits use transactions.update (D8).
 
 Decision audit: D1-D7 in execution-decisions.md.

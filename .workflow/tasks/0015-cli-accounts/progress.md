@@ -1,7 +1,7 @@
 # Task Progress: Account management, groups, and balance inspection
 
-Current status: partially implemented
-Current phase: inspect and account groups implemented locally on Linux; opening-balance preview and Windows rerun open
+Current status: completed locally on Linux (Windows rerun pending)
+Current phase: inspect, account groups and group moves implemented and proven on Linux; opening-balance edits reuse `transactions.update` (D8)
 
 ## Dependencies
 
@@ -15,7 +15,7 @@ None to review this planned contract. This request creates tasks only; implement
 
 - [x] Confirm prerequisite acceptance and reread produced APIs/schemas before review-plan. (0014 completed locally on Linux; ASSUMPTION for Michael to review: Linux acceptance is sufficient to start this task.)
 - [x] Review this contract, then implement its first complete operation path.
-- [ ] Add a dedicated opening-balance preview (today the opening balance is part of the guarded `accounts.create` proposal).
+- [x] Opening-balance preview: part of the guarded `accounts.create` proposal; later edits use guarded `transactions.update` on the starting-balance row (D8).
 - [ ] Rerun the packaged proofs on Windows.
 
 ## Implementation checklist
@@ -23,7 +23,7 @@ None to review this planned contract. This request creates tasks only; implement
 - [x] Extend account inspect/balance output with engine-owned balance definitions and groups commands. (`accounts inspect`, `account-groups list|create|update|delete`)
 - [x] Wrap create/opening-balance/update in changes protocol; reject invalid account references and ambiguous names. (create, update and opening balance were guarded in 0014; `accounts update --account-group-id` added; names resolve through `query resolve accounts`, which reports ambiguity)
 - [x] Add receipt-backed close/reopen/delete and off-budget changes; prove consequences in disposable budgets. (delivered and proven by 0014 `changes.test.mjs`)
-- [ ] Run section 12 checks, record limitations and evidence, and update dependent task readiness. (Linux done; Windows and browser checks open)
+- [x] Run section 12 checks, record limitations and evidence, and update dependent task readiness. (Linux done; Windows rerun open)
 
 ## Acceptance trace
 
