@@ -1052,3 +1052,29 @@ export function runSummary(run: WorkflowRun) {
   }
   return summary;
 }
+
+// Builds and persists a new run record (callers hold the run lock).
+export async function createRun(
+  dataDir: string,
+  runId: string,
+  workflow: WorkflowName,
+  input: Record<string, unknown>,
+  budget: WorkflowRun['budget'],
+) {
+  const now = new Date().toISOString();
+  const run: WorkflowRun = {
+    schemaVersion: 1,
+    runId,
+    workflow,
+    budget,
+    input,
+    status: 'running',
+    steps: planSteps(workflow, input),
+    unresolved: [],
+    artifacts: [],
+    createdAt: now,
+    updatedAt: now,
+  };
+  await writeRun(dataDir, run);
+  return run;
+}

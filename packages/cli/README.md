@@ -215,6 +215,7 @@ Example `.actualrc.json`:
 | `reports`         | Cash flow, category and net worth reports; CSV/HTML export             |
 | `checkup`         | Data-quality findings, month coverage and statement evidence           |
 | `bank-sync`       | Bank sync status, refresh of linked accounts and run results           |
+| `jobs`            | Saved intake automation; run, status, disable; scheduler recipes       |
 | `workflow`        | Setup, intake, weekly checkup, monthly close, goal review; run records |
 | `schedules`       | Manage schedules; list upcoming occurrences; post or skip the next     |
 | `query`           | Run an ActualQL query                                                  |

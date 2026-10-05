@@ -18,6 +18,7 @@ import { registerChangesCommand } from './commands/changes';
 import { registerCheckupCommand } from './commands/checkup';
 import { registerDiagnosticsCommand } from './commands/diagnostics';
 import { registerImportsCommand } from './commands/imports';
+import { registerJobsCommand } from './commands/jobs';
 import { registerNotesCommand } from './commands/notes';
 import { registerPayeesCommand } from './commands/payees';
 import { registerPreferencesCommand } from './commands/preferences';
@@ -179,6 +180,7 @@ export function createProgram(
   registerCheckupCommand(program);
   registerBankSyncCommand(program);
   registerWorkflowCommand(program);
+  registerJobsCommand(program);
   registerImportsCommand(program);
   registerRulesCommand(program);
   registerSchedulesCommand(program);

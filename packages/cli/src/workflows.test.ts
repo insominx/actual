@@ -1,5 +1,3 @@
-vi.mock('@actual-app/api', () => ({}));
-
 import type { WorkflowRun, WorkflowStep } from './workflow-runs';
 import {
   cancelRun,
@@ -8,6 +6,9 @@ import {
   validateClose,
   validateSetup,
 } from './workflows';
+
+// vitest hoists this mock; it keeps the engine out of these pure tests.
+vi.mock('@actual-app/api', () => ({}));
 
 function run(overrides: Partial<WorkflowRun>): WorkflowRun {
   return {

@@ -523,6 +523,25 @@ actual workflow run list | inspect <run-id> | resume <run-id> | cancel <run-id>
 
 Workflows are fixed sequences of the same reads and guarded changes the other commands use; they never run shell commands or contain their own finance logic. Each run is a device-local record in `workflow-runs/` in the CLI data directory with the budget, the validated input, every step's status (`committed`, `completed`, `unresolved`, `failed`, `not-run`), operation IDs and unresolved items. A mutation step fixes its operation ID (`<run-id>-<step>`) and payload before it runs, so `workflow run resume` never repeats a committed change: an interrupted step replays its receipt from the change journal. Intake binds each file to the SHA-256 observed when the run started. `--stop-after <step>` pauses a run; `cancel` keeps committed steps and marks the rest `not-run`. Running a workflow authorizes the mutations it lists (one run, not one prompt per operation); `monthly-close` finishes a reconciliation only with `--finish` and a zero difference, and `summary.closeComplete` is true only when every statement reconciled. Invalid or ambiguous import rows, unmatched statements, transfer candidates and months without statement evidence stay in `unresolved` and the run ends `needs-review`. Goal review never saves; save a reviewed plan with `actual cash-planning save`.
 
+### Automation jobs
+
+```bash
+# Save a job bound to the selected budget (routes are file-name regexes, first match wins)
+actual jobs create nightly --inbox ~/bank/inbox --processed ~/bank/done --error ~/bank/error \
+  --routes '[{"match":"^checking-.*\\.csv$","account":"<id>","settings":{...}}]' \
+  --allow imports.file [--allow-cross-account] [--stable-seconds 30]
+
+actual jobs run nightly [--dry-run]
+actual jobs status nightly
+actual jobs list
+actual jobs disable nightly | enable nightly
+
+# Print cron, systemd timer and Windows Task Scheduler recipes (installs nothing)
+actual jobs schedule nightly [--every 15] [--executable actual]
+```
+
+A job runs the `intake` workflow with only the mutations it lists (`imports.file`). Each `jobs run` first resumes an interrupted run, then scans the inbox: files named like downloads in progress (`.part`, `.tmp`, `.crdownload`) or modified within `--stable-seconds` stay pending, files without a route stay in the inbox, and content already imported with the same account and settings moves to processed as a duplicate without importing. The same content routed to another account waits for `--allow-cross-account`. Imported files move to processed, failed ones to error; the three directories must be separate. Only one run of a job is active at a time; an overlapping invocation fails with a retryable `job-active` error. Every run writes a local JSON result under `jobs/<name>/results/` in the CLI data directory; external alerts are yours to configure. Job records contain no credentials.
+
 ### Checkup
 
 ```bash

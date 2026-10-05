@@ -94,6 +94,8 @@ const READ_OPERATIONS = new Set([
   'workflow.goal-review',
   'workflow.run.list',
   'workflow.run.inspect',
+  'jobs.status',
+  'jobs.schedule',
   'server.version',
   'server.get-id',
   'rules.payee-rules',

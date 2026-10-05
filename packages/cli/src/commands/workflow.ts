@@ -20,7 +20,7 @@ import type { WorkflowName, WorkflowRun } from '#workflow-runs';
 import {
   advanceRun,
   cancelRun,
-  planSteps,
+  createRun,
   runSummary,
   validateClose,
   validateIntake,
@@ -83,21 +83,13 @@ async function start(
         { field: 'runId' },
       );
     }
-    const now = new Date().toISOString();
-    const run: WorkflowRun = {
-      schemaVersion: 1,
+    const run = await createRun(
+      resolved.dataDir,
       runId,
       workflow,
-      budget,
       input,
-      status: 'running',
-      steps: planSteps(workflow, input),
-      unresolved: [],
-      artifacts: [],
-      createdAt: now,
-      updatedAt: now,
-    };
-    await writeRun(resolved.dataDir, run);
+      budget,
+    );
     printOutput(
       output(await advanceRun(opts, resolved.dataDir, run, cmdOpts.stopAfter)),
       opts.format,
