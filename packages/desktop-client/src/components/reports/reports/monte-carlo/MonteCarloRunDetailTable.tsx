@@ -11,6 +11,7 @@ import { ModeButton } from '@actual-app/components/mode-button';
 import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import { spacing } from '@actual-app/components/tokens';
 import { View } from '@actual-app/components/view';
 
 import { FinancialText } from '#components/FinancialText';
@@ -449,7 +450,7 @@ export function MonteCarloRunDetailTable({
         ? potBalancesGraph
         : (cashflowGraph ?? potBalancesGraph)}
 
-      <Text style={{ fontSize: 13, color: theme.pageText, marginBottom: 10 }}>
+      <Text size="medium" style={{ color: theme.pageText, marginBottom: 10 }}>
         <PrivacyFilter>
           <FinancialText as="span">{getTotalsSentence()}</FinancialText>
         </PrivacyFilter>
@@ -685,10 +686,10 @@ export function MonteCarloRunDetailTable({
                     style={{
                       borderBottom: `1px solid ${theme.tableBorder}`,
                       padding: '10px 12px 12px 46px',
-                      gap: 4,
+                      gap: spacing.xs,
                     }}
                   >
-                    <Text style={{ fontSize: 13, color: theme.pageText }}>
+                    <Text size="medium" style={{ color: theme.pageText }}>
                       <PrivacyFilter>
                         <FinancialText as="span">
                           {buildMonteCarloYearStory({
@@ -719,9 +720,9 @@ export function MonteCarloRunDetailTable({
                       )}
                     </Button>
                     {showsWorking && (
-                      <View style={{ gap: 4, marginTop: 6 }}>
+                      <View style={{ gap: spacing.xs, marginTop: 6 }}>
                         {row.ruleExplanation != null && (
-                          <Text style={{ fontSize: 13, color: theme.pageText }}>
+                          <Text size="medium" style={{ color: theme.pageText }}>
                             <PrivacyFilter>
                               <FinancialText as="span">
                                 {getRuleExplanationSentence(
@@ -732,7 +733,7 @@ export function MonteCarloRunDetailTable({
                           </Text>
                         )}
                         {row.minimumApplied && (
-                          <Text style={{ fontSize: 13, color: theme.pageText }}>
+                          <Text size="medium" style={{ color: theme.pageText }}>
                             <PrivacyFilter>
                               <FinancialText as="span">
                                 {t(
@@ -749,7 +750,7 @@ export function MonteCarloRunDetailTable({
                           </Text>
                         )}
                         {row.income > 0 && (
-                          <Text style={{ fontSize: 13, color: theme.pageText }}>
+                          <Text size="medium" style={{ color: theme.pageText }}>
                             <PrivacyFilter>
                               <FinancialText as="span">
                                 {row.incomeTax > 0
@@ -783,7 +784,7 @@ export function MonteCarloRunDetailTable({
                             </PrivacyFilter>
                           </Text>
                         )}
-                        <Text style={{ fontSize: 13, color: theme.pageText }}>
+                        <Text size="medium" style={{ color: theme.pageText }}>
                           <PrivacyFilter>
                             <FinancialText as="span">
                               {row.taxPaid > 0
@@ -804,7 +805,7 @@ export function MonteCarloRunDetailTable({
                             </FinancialText>
                           </PrivacyFilter>
                         </Text>
-                        <Text style={{ fontSize: 13, color: theme.pageText }}>
+                        <Text size="medium" style={{ color: theme.pageText }}>
                           <PrivacyFilter>
                             <FinancialText as="span">
                               {getSpentSentence(row)}
@@ -812,7 +813,7 @@ export function MonteCarloRunDetailTable({
                           </PrivacyFilter>
                         </Text>
                         {row.surplusSaved > 0 && (
-                          <Text style={{ fontSize: 13, color: theme.pageText }}>
+                          <Text size="medium" style={{ color: theme.pageText }}>
                             <PrivacyFilter>
                               <FinancialText as="span">
                                 {getSavedSentence(row)}
@@ -821,7 +822,7 @@ export function MonteCarloRunDetailTable({
                           </Text>
                         )}
                         {row.unspentIncome > 0 && row.surplusSaved === 0 && (
-                          <Text style={{ fontSize: 13, color: theme.pageText }}>
+                          <Text size="medium" style={{ color: theme.pageText }}>
                             <PrivacyFilter>
                               <FinancialText as="span">
                                 {t(
@@ -838,7 +839,7 @@ export function MonteCarloRunDetailTable({
                           </Text>
                         )}
                         {row.contributions > 0 && (
-                          <Text style={{ fontSize: 13, color: theme.pageText }}>
+                          <Text size="medium" style={{ color: theme.pageText }}>
                             <PrivacyFilter>
                               <FinancialText as="span">
                                 {t(
@@ -855,7 +856,7 @@ export function MonteCarloRunDetailTable({
                           </Text>
                         )}
                         {row.feesPaid > 0 && (
-                          <Text style={{ fontSize: 13, color: theme.pageText }}>
+                          <Text size="medium" style={{ color: theme.pageText }}>
                             <PrivacyFilter>
                               <FinancialText as="span">
                                 {t(
@@ -869,7 +870,7 @@ export function MonteCarloRunDetailTable({
                           </Text>
                         )}
                         {row.inaccessibleBalance != null && (
-                          <Text style={{ fontSize: 13, color: theme.pageText }}>
+                          <Text size="medium" style={{ color: theme.pageText }}>
                             <PrivacyFilter>
                               <FinancialText as="span">
                                 {t(

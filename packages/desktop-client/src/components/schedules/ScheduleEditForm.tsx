@@ -402,11 +402,8 @@ export function ScheduleEditForm({
               );
             })()}
             <Text
-              style={{
-                color: theme.pageTextLight,
-                fontSize: 12,
-                marginTop: 3,
-              }}
+              size="small"
+              style={{ color: theme.pageTextLight, marginTop: 3 }}
             >
               <Trans>
                 How far in advance this schedule appears as upcoming
@@ -443,11 +440,8 @@ export function ScheduleEditForm({
               </label>
             </View>
             <Text
-              style={{
-                color: theme.pageTextLight,
-                fontSize: 12,
-                marginTop: 3,
-              }}
+              size="small"
+              style={{ color: theme.pageTextLight, marginTop: 3 }}
             >
               <Trans>
                 Automatically create transactions in the specified account
@@ -466,9 +460,9 @@ export function ScheduleEditForm({
             <SpaceBetween style={{ marginTop: 10, alignItems: 'center' }}>
               {isCustom && (
                 <Text
+                  size="medium"
                   style={{
                     color: theme.pageTextLight,
-                    fontSize: 13,
                     textAlign: 'right',
                     width: 350,
                   }}

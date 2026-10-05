@@ -248,8 +248,8 @@ function AccountHeader({ account }: { readonly account: AccountEntity }) {
       )}
       <Button variant="bare" onPress={onClick}>
         <Text
+          size="extra-large"
           style={{
-            fontSize: 17,
             fontWeight: 500,
             ...styles.underlinedText,
             ...(styles.lineClamp(2) as CSSProperties),

@@ -564,7 +564,7 @@ export function KeyboardShortcutModal() {
                     padding: 20,
                   }}
                 >
-                  <Text style={{ fontSize: 15 }}>
+                  <Text size="large">
                     {isInCategory && !isSearching
                       ? t('No shortcuts in this category')
                       : t('No matching shortcuts')}
