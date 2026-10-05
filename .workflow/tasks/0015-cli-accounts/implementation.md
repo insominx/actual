@@ -13,11 +13,12 @@
 
 ## Verification (Linux)
 
-| Check    | Command                                             | Result                                  |
-| -------- | --------------------------------------------------- | --------------------------------------- |
-| CLI unit | `yarn workspace @actual-app/cli test`               | 292/292                                 |
-| Types    | `npx tsc -b packages/loot-core`, API and CLI `tsc`  | clean                                   |
-| Packaged | `node --test integration/accounts-inspect.test.mjs` | 1/1 (`verification-accounts-linux.txt`) |
+| Check    | Command                                             | Result                                                                |
+| -------- | --------------------------------------------------- | --------------------------------------------------------------------- |
+| CLI unit | `yarn workspace @actual-app/cli test`               | 292/292                                                               |
+| API unit | `yarn workspace @actual-app/api test`               | 125/125 (account inspection and guarded account group cases included) |
+| Types    | `npx tsc -b packages/loot-core`, API and CLI `tsc`  | clean                                                                 |
+| Packaged | `node --test integration/accounts-inspect.test.mjs` | 1/1 (`verification-accounts-linux.txt`)                               |
 
 Limitations: Windows not run; no browser check of group display; opening-balance preview not separate.
 
