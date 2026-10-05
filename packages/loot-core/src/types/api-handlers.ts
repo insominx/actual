@@ -20,6 +20,11 @@ import type {
 } from '#server/catalog-inspect';
 import type { batchUpdateTransactions } from '#server/transactions';
 import type {
+  ImportFileInspection,
+  ImportFileInspectRequest,
+  ImportMappingSettings,
+} from '#server/transactions/import/inspect-file';
+import type {
   TransferCandidates,
   TransferInspection,
 } from '#server/transfers/inspect';
@@ -83,6 +88,8 @@ import type {
   CategoryGroupUpdateRequest,
   CategoryUpdateProposal,
   CategoryUpdateRequest,
+  ImportMappingSaveProposal,
+  ImportMappingSaveRequest,
   NoteSetProposal,
   NoteSetRequest,
   NoteTarget,
@@ -320,6 +327,24 @@ export type ApiHandlers = {
     cutoff?: string;
     includeClosed?: boolean;
   }) => Promise<AccountInspection>;
+  'api/import-file-inspect': (
+    arg: ImportFileInspectRequest,
+  ) => Promise<ImportFileInspection>;
+  'api/import-mapping-get': (arg: {
+    account: string;
+    format: string;
+  }) => Promise<{
+    account: string;
+    format: string;
+    keys: Record<string, string>;
+    settings: Partial<ImportMappingSettings>;
+  }>;
+  'api/import-mapping-preview-save': (
+    arg: ImportMappingSaveRequest,
+  ) => Promise<ImportMappingSaveProposal>;
+  'api/import-mapping-apply-save': (
+    arg: ImportMappingSaveProposal,
+  ) => Promise<TransactionUpdateOutcome>;
   'api/transfers-candidates': (arg: {
     account?: string;
     start?: string;

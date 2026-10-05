@@ -332,6 +332,19 @@ export type TransactionClearingProposal = CatalogProposal<
   }
 >;
 
+export type ImportMappingSaveRequest = {
+  account: string;
+  format: string;
+  settings?: Record<string, unknown>;
+  reset?: boolean;
+};
+export type ImportMappingSaveProposal = CatalogProposal<
+  'imports.mapping-save',
+  ImportMappingSaveRequest,
+  { preferences: Array<{ id: string; value: string | null }> },
+  { preferences: Array<{ id: string; value: string | null }> }
+>;
+
 export type TransferLegSnapshot = {
   id: string;
   account: string;
@@ -887,6 +900,7 @@ export type ChangeProposal =
   | TransactionCategorizationProposal
   | TransactionClearingProposal
   | TransferMatchProposal
+  | ImportMappingSaveProposal
   | TransferUnmatchProposal
   | TransferRepairProposal
   | TransactionMergeProposal

@@ -70,6 +70,8 @@ import type {
   CategoryGroupUpdateRequest,
   CategoryUpdateProposal,
   CategoryUpdateRequest,
+  ImportMappingSaveProposal,
+  ImportMappingSaveRequest,
   NoteSetProposal,
   NoteSetRequest,
   PayeeCreationProposal,
@@ -147,6 +149,8 @@ export type {
   TransactionCategorizationProposal,
   TransactionClearingRequest,
   TransactionClearingProposal,
+  ImportMappingSaveRequest,
+  ImportMappingSaveProposal,
   TransferMatchRequest,
   TransferMatchProposal,
   TransferUnmatchRequest,
@@ -477,6 +481,30 @@ export function applyTransactionClearing(
   proposal: TransactionClearingProposal,
 ) {
   return send('api/transactions-apply-clearing', proposal);
+}
+/**
+ * Inspect an import file with the import dialog's parser and mapping rules:
+ * format, hash, columns, normalized candidates and row-level errors. Saved
+ * settings of `account` apply unless `useSaved` is false. Read-only.
+ */
+export function inspectImportFile(request: {
+  path: string;
+  account?: string;
+  useSaved?: boolean;
+  settings?: Record<string, unknown>;
+  limit?: number;
+}) {
+  return send('api/import-file-inspect', request as never);
+}
+/** Read one account's saved import settings for a file format. Read-only. */
+export function getImportMapping(account: string, format: string) {
+  return send('api/import-mapping-get', { account, format });
+}
+export function previewImportMappingSave(request: ImportMappingSaveRequest) {
+  return send('api/import-mapping-preview-save', request);
+}
+export function applyImportMappingSave(proposal: ImportMappingSaveProposal) {
+  return send('api/import-mapping-apply-save', proposal);
 }
 export function previewTransferMatch(request: TransferMatchRequest) {
   return send('api/transfers-preview-match', request);

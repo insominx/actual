@@ -6,6 +6,10 @@ import {
   parseDate,
 } from './import-mapping';
 
+// CSV cells arrive as strings even where the dialog's type says number.
+const row = (value: Record<string, string>) =>
+  value as unknown as Parameters<typeof parseAmountFields>[0];
+
 describe('import mapping', () => {
   it('detects mapping fields and the first parseable date format', () => {
     const rows = [
@@ -24,7 +28,7 @@ describe('import mapping', () => {
   it('parses debit/credit columns, card signs, in/out, flip and multiplier', () => {
     expect(
       parseAmountFields(
-        { outflow: '12.50', inflow: '' },
+        row({ outflow: '12.50', inflow: '' }),
         true,
         false,
         '',
@@ -34,7 +38,7 @@ describe('import mapping', () => {
     ).toEqual({ amount: -12.5, outflow: -12.5, inflow: 0 });
     expect(
       parseAmountFields(
-        { outflow: '', inflow: '3' },
+        row({ outflow: '', inflow: '3' }),
         true,
         false,
         '',
@@ -44,11 +48,12 @@ describe('import mapping', () => {
     ).toEqual({ amount: 3, outflow: 0, inflow: 3 });
     // A card export with charges as positive numbers is flipped.
     expect(
-      parseAmountFields({ amount: '40.00' }, false, false, '', true, '').amount,
+      parseAmountFields(row({ amount: '40.00' }), false, false, '', true, '')
+        .amount,
     ).toBe(-40);
     expect(
       parseAmountFields(
-        { amount: '7', inOut: 'DR' },
+        row({ amount: '7', inOut: 'DR' }),
         false,
         true,
         'DR',
@@ -57,7 +62,7 @@ describe('import mapping', () => {
       ).amount,
     ).toBe(-7);
     expect(
-      parseAmountFields({ amount: '1.5' }, false, false, '', false, '100')
+      parseAmountFields(row({ amount: '1.5' }), false, false, '', false, '100')
         .amount,
     ).toBe(150);
   });

@@ -232,6 +232,15 @@ import {
   performTransactionSplit,
   prepareTransactionSplit,
 } from './transactions/guarded-split';
+import {
+  importPreferenceKeys,
+  inspectImportFile,
+  savedImportSettings,
+} from './transactions/import/inspect-file';
+import {
+  performImportMappingSave,
+  prepareImportMappingSave,
+} from './transactions/import/mapping-save';
 import { planLinkedTransferUpdate } from './transactions/linked-transfer-plan';
 import {
   getTransferredAccount,
@@ -3425,6 +3434,17 @@ function guardedCatalogHandlers<
   );
   handlers['api/transactions-preview-clearing'] = transactionClearing.preview;
   handlers['api/transactions-apply-clearing'] = transactionClearing.apply;
+  const importMappingSave = guardedCatalogHandlers(
+    prepareImportMappingSave,
+    guardedApply({
+      operation: 'imports.mapping-save',
+      noun: 'Import mapping save',
+      prepare: prepareImportMappingSave,
+      perform: performImportMappingSave,
+    }),
+  );
+  handlers['api/import-mapping-preview-save'] = importMappingSave.preview;
+  handlers['api/import-mapping-apply-save'] = importMappingSave.apply;
   const transferMatch = guardedCatalogHandlers(
     prepareTransferMatch,
     guardedApply({
@@ -4920,6 +4940,30 @@ handlers['api/accounts-inspect'] = async function (arg) {
 // Read-only transfer review: unlinked candidate pairs with evidence and
 // ambiguity, one transaction's link checked from both sides, and a
 // budget-wide audit of broken links.
+// Read-only import file inspection through the dialog's parser and shared
+// mapping rules, and the account's saved import settings.
+handlers['api/import-file-inspect'] = async function (arg) {
+  checkFileOpen();
+  return inspectImportFile(arg);
+};
+handlers['api/import-mapping-get'] = async function (arg) {
+  checkFileOpen();
+  const account = arg?.account;
+  const format = arg?.format === 'qfx' ? 'ofx' : arg?.format;
+  if (typeof account !== 'string' || !account) {
+    throw APIError('account is required');
+  }
+  if (!['csv', 'qif', 'ofx', 'xml'].includes(format)) {
+    throw APIError('format must be csv, qif, ofx, qfx or xml');
+  }
+  return {
+    account,
+    format,
+    keys: importPreferenceKeys(account, format),
+    settings: await savedImportSettings(account, format),
+  };
+};
+
 handlers['api/transfers-candidates'] = async function (arg) {
   checkFileOpen();
   return findTransferCandidates(arg ?? {});

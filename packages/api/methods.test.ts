@@ -6532,3 +6532,160 @@ describe('guarded transfer match, unmatch and repair', () => {
     ).toEqual([out.id]);
   });
 });
+
+describe('import file inspection and saved mappings', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('normalizes CSV, OFX and encodings without writes, flags bad rows and round-trips saved mappings', async () => {
+    const mocks = path.join(
+      __dirname,
+      '..',
+      'loot-core',
+      'src',
+      'mocks',
+      'files',
+    );
+    const dir = await fs.mkdtemp(path.join(__dirname, 'mocks', 'import-'));
+    try {
+      const account = await api.createAccount({ name: 'Import inspect' }, 0);
+      const ledgerBefore = await api.getTransactions(
+        account,
+        '2000-01-01',
+        '2100-01-01',
+      );
+      const debitCredit = path.join(dir, 'bank.csv');
+      await fs.writeFile(
+        debitCredit,
+        'Date,Description,Debit,Credit,Memo\n24/12/2026,Grocer,12.50,,weekly\n25/12/2026,Employer,,1000.00,pay\n26/12/2026,Broken,abc,,\n',
+      );
+      const fields = {
+        date: 'Date',
+        payee: 'Description',
+        notes: 'Memo',
+        outflow: 'Debit',
+        inflow: 'Credit',
+      };
+      const result = await api.inspectImportFile({
+        path: debitCredit,
+        settings: { fields },
+      });
+      expect(result.file).toMatchObject({ format: 'csv', name: 'bank.csv' });
+      expect(result.file.sha256).toMatch(/^[0-9a-f]{64}$/);
+      expect(result.settings.dateFormat).toBe('dd mm yyyy');
+      expect(result.rowCount).toBe(3);
+      expect(result.validCount).toBe(2);
+      expect(result.rows[0].transaction).toMatchObject({
+        date: '2026-12-24',
+        amount: -1250,
+        payee_name: 'Grocer',
+        notes: 'weekly',
+      });
+      expect(result.rows[1].transaction?.amount).toBe(100000);
+      expect(result.rows[2].errors.join(' ')).toMatch(/amount/);
+      expect(result.dateRange).toEqual({
+        start: '2026-12-24',
+        end: '2026-12-25',
+      });
+
+      // Ambiguous day/month order is reported, never guessed.
+      const ambiguous = path.join(dir, 'ambiguous.csv');
+      await fs.writeFile(
+        ambiguous,
+        'Date,Payee,Amount\n03/04/2026,A,-1.00\n05/06/2026,B,2.00\n',
+      );
+      const unsure = await api.inspectImportFile({ path: ambiguous });
+      expect(unsure.dateFormatCandidates).toEqual(
+        expect.arrayContaining(['mm dd yyyy', 'dd mm yyyy']),
+      );
+      expect(unsure.validCount).toBe(0);
+      expect(unsure.warnings.join(' ')).toMatch(/Ambiguous date format/);
+      const chosen = await api.inspectImportFile({
+        path: ambiguous,
+        settings: { dateFormat: 'dd mm yyyy' },
+      });
+      expect(chosen.rows[0].transaction?.date).toBe('2026-04-03');
+
+      // A card export with positive charges is flipped.
+      const flipped = await api.inspectImportFile({
+        path: ambiguous,
+        settings: { dateFormat: 'mm dd yyyy', flipAmount: true },
+      });
+      expect(flipped.rows.map(r => r.transaction?.amount)).toEqual([100, -200]);
+
+      // OFX keeps its transaction IDs; encodings decode like the dialog.
+      const ofx = await api.inspectImportFile({
+        path: path.join(mocks, 'credit-card.ofx'),
+      });
+      expect(ofx.file.format).toBe('ofx');
+      expect(ofx.validCount).toBeGreaterThan(0);
+      expect(ofx.rows[0].transaction?.imported_id).toBeTruthy();
+      expect(ofx.rows[0].transaction?.amount).toBe(-600);
+      const utf16 = await api.inspectImportFile({
+        path: path.join(mocks, 'utf-16le.csv'),
+        settings: { dateFormat: 'yyyy mm dd' },
+      });
+      expect(utf16.columns).toContain('Könyvelés dátuma');
+      const latin = await api.inspectImportFile({
+        path: path.join(mocks, 'windows-1252.csv'),
+        settings: { encoding: 'windows-1252', dateFormat: 'yyyy mm dd' },
+      });
+      expect(latin.rows[0].transaction?.payee_name).toBe('Café Rémy');
+
+      await expect(
+        api.inspectImportFile({ path: path.join(dir, 'x.pdf') }),
+      ).rejects.toThrow(/Unsupported import file type/);
+      await expect(
+        api.inspectImportFile({ path: debitCredit, settings: { bogus: 1 } }),
+      ).rejects.toThrow(/unknown setting/);
+
+      // Saved mappings are the dialog's synced preferences.
+      const save = await api.previewImportMappingSave({
+        account,
+        format: 'csv',
+        settings: { fields, dateFormat: 'dd mm yyyy', flipAmount: false },
+      });
+      expect(save.after.preferences.map(p => p.id)).toEqual([
+        `csv-mappings-${account}`,
+        `parse-date-${account}-csv`,
+        `flip-amount-${account}-csv`,
+      ]);
+      await api.applyImportMappingSave(save);
+      const stored = await api.getImportMapping(account, 'csv');
+      expect(stored.settings).toMatchObject({
+        fields: { ...fields, amount: null, inOut: null, category: null },
+        dateFormat: 'dd mm yyyy',
+        flipAmount: false,
+      });
+      const viaSaved = await api.inspectImportFile({
+        path: debitCredit,
+        account,
+      });
+      expect(viaSaved.sources).toMatchObject({
+        fields: 'saved',
+        dateFormat: 'saved',
+      });
+      expect(viaSaved.validCount).toBe(2);
+      await expect(
+        api.previewImportMappingSave({
+          account,
+          format: 'ofx',
+          settings: { delimiter: ';' },
+        }),
+      ).rejects.toThrow(/does not apply/);
+      await api.applyImportMappingSave(
+        await api.previewImportMappingSave({
+          account,
+          format: 'csv',
+          reset: true,
+        }),
+      );
+      expect((await api.getImportMapping(account, 'csv')).settings).toEqual({});
+      expect(
+        await api.getTransactions(account, '2000-01-01', '2100-01-01'),
+      ).toEqual(ledgerBefore);
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true });
+    }
+  });
+});
