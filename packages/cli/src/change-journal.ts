@@ -25,6 +25,7 @@ import type {
   ScheduleCreationOutcome,
   TagCreationOutcome,
   TransactionAdditionOutcome,
+  TransactionImportOutcome,
   TransactionUpdateOutcome,
 } from '@actual-app/api';
 
@@ -57,6 +58,7 @@ export type ChangeReceipt = {
     | RuleCreationOutcome
     | ScheduleCreationOutcome
     | TransactionAdditionOutcome
+    | TransactionImportOutcome
     | AccountCreationOutcome
     | AccountDeletionOutcome
     | AccountCloseOutcome;
@@ -252,6 +254,27 @@ function canExpireTransactionAddition(receipt: ChangeReceipt) {
     ) &&
     stableJson(outcome.affectedIds) ===
       stableJson(outcome.transactionAddition.transactionIds)
+  );
+}
+
+function canExpireTransactionImport(receipt: ChangeReceipt) {
+  if (receipt.proposal.operation !== 'transactions.import') return true;
+  const outcome = receipt.outcome;
+  if (
+    outcome?.status !== 'committed-local' ||
+    !('transactionImport' in outcome) ||
+    !isRecord(outcome.transactionImport)
+  ) {
+    return false;
+  }
+  const { addedIds, updatedIds } = outcome.transactionImport;
+  return (
+    Array.isArray(addedIds) &&
+    Array.isArray(updatedIds) &&
+    [...addedIds, ...updatedIds].every(
+      id => typeof id === 'string' && Boolean(id),
+    ) &&
+    stableJson(outcome.affectedIds) === stableJson([...addedIds, ...updatedIds])
   );
 }
 
@@ -536,6 +559,7 @@ export class ChangeJournal {
             canExpireRuleCreation(row) &&
             canExpireScheduleCreation(row) &&
             canExpireTransactionAddition(row) &&
+            canExpireTransactionImport(row) &&
             canExpireCategoryCreation(row) &&
             (row.proposal.operation !== 'accounts.create' ||
               (row.outcome?.status === 'committed-local' &&

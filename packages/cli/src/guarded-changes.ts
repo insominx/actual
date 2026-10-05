@@ -674,6 +674,34 @@ export async function executeTransactionAddition(
   return { ids: receipt.outcome.transactionAddition.transactionIds, receipt };
 }
 
+export async function executeTransactionImport(
+  opts: CliGlobalOpts,
+  operationId: string,
+  request: api.TransactionImportRequest,
+) {
+  const prepared = await previewGuardedChange(
+    opts,
+    'transactions.import',
+    request.accountId,
+    { operationId, data: JSON.stringify(request.transactions) },
+  );
+  const receipt = await applyGuardedChange(opts, operationId, {
+    token: prepared.token,
+  });
+  if (
+    receipt.outcome?.status !== 'committed-local' ||
+    !('transactionImport' in receipt.outcome)
+  ) {
+    throw new AgentError(
+      'PARTIAL_COMPLETION',
+      'Transaction import has no acknowledged engine identities.',
+      false,
+      { operationId },
+    );
+  }
+  return { ...receipt.outcome.transactionImport, receipt };
+}
+
 export async function executeScheduleCreation(
   opts: CliGlobalOpts,
   operationId: string | undefined,
@@ -1227,6 +1255,11 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
     apply: p =>
       api.applyTransactionAddition(p as api.TransactionAdditionProposal),
   },
+  'transactions.import': {
+    preview: r =>
+      api.previewTransactionImport(r as api.TransactionImportRequest),
+    apply: p => api.applyTransactionImport(p as api.TransactionImportProposal),
+  },
   'accounts.close': {
     preview: r => api.previewAccountClosure(r as api.AccountCloseRequest),
     apply: p => api.applyAccountClosure(p as api.AccountCloseProposal),
@@ -1313,6 +1346,7 @@ function changeRequest(
   | api.ScheduleDeletionRequest
   | api.TransactionDeletionRequest
   | api.TransactionAdditionRequest
+  | api.TransactionImportRequest
   | api.CategoryGroupDeletionRequest
   | api.CategoryDeletionRequest
   | api.CategoryUpdateRequest
@@ -1377,11 +1411,11 @@ function changeRequest(
     }
     return { targetId: id, mergeIds: payload.mergeIds as string[] };
   }
-  if (operation === 'transactions.add') {
+  if (operation === 'transactions.add' || operation === 'transactions.import') {
     if (!Array.isArray(payload)) {
       throw new AgentError(
         'INVALID_INPUT',
-        'Transaction addition takes a transactions array; the account is the change ID.',
+        'Transaction addition and import take a transactions array; the account is the change ID.',
       );
     }
     return {

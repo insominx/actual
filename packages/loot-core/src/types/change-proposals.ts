@@ -235,6 +235,28 @@ export type TransactionAdditionOutcome = CatalogCommit<{
   transactionAddition: { transactionIds: string[] };
 }>;
 
+export type TransactionImportRequest = {
+  accountId: string;
+  transactions: Array<Record<string, unknown>>;
+  opts?: {
+    defaultCleared?: boolean;
+    reimportDeleted?: boolean;
+    payeeNameNormalization?: 'original' | 'title-case';
+  };
+};
+export type TransactionImportProposal = CatalogProposal<
+  'transactions.import',
+  TransactionImportRequest,
+  object,
+  {
+    added: Array<Record<string, unknown>>;
+    updated: Array<Record<string, unknown>>;
+  }
+>;
+export type TransactionImportOutcome = CatalogCommit<{
+  transactionImport: { addedIds: string[]; updatedIds: string[] };
+}>;
+
 export type CategoryGroupUpdateRequest = {
   id: string;
   fields: {
@@ -633,6 +655,7 @@ export type ChangeProposal =
   | ScheduleDeletionProposal
   | TransactionDeletionProposal
   | TransactionAdditionProposal
+  | TransactionImportProposal
   | CategoryGroupCreationProposal
   | CategoryCreationProposal
   | CategoryGroupDeletionProposal

@@ -4986,7 +4986,11 @@ describe('guarded transaction addition', () => {
     }
     expect(outcome.transactionAddition.transactionIds).toHaveLength(4);
     const rows = await api.getTransactions(account, '2026-10-01', '2026-10-31');
-    expect(rows.map(row => row.notes).sort()).toEqual(['one', 'split']);
+    expect(
+      rows
+        .map(row => row.notes)
+        .sort((a, b) => String(a).localeCompare(String(b))),
+    ).toEqual(['one', 'split']);
     expect(await api.applyTransactionAddition(proposal)).toMatchObject({
       code: 'STALE_PREVIEW',
     });
@@ -5008,6 +5012,80 @@ describe('guarded transaction addition', () => {
         accountId: account,
         transactions: [{ date: '2026-10-01', amount: 1 }],
       }),
+    ).rejects.toThrow();
+  });
+});
+
+describe('guarded transaction import', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('previews matched updates and new rows, then applies them exactly', async () => {
+    const account = await api.createAccount({ name: 'Imports' }, 0);
+    await api.addTransactions(account, [
+      { date: '2026-10-01', amount: -100, imported_id: 'bank-1' },
+    ]);
+    const request = {
+      accountId: account,
+      transactions: [
+        {
+          date: '2026-10-01',
+          amount: -100,
+          imported_id: 'bank-1',
+          notes: 'matched',
+        },
+        {
+          date: '2026-10-03',
+          amount: -250,
+          imported_id: 'bank-2',
+          payee_name: 'brand new shop',
+        },
+      ],
+    };
+    const proposal = await api.previewTransactionImport(request);
+    expect(proposal.after.updated).toHaveLength(1);
+    expect(proposal.after.updated[0]).toMatchObject({ notes: 'matched' });
+    expect(proposal.after.added).toHaveLength(1);
+    expect(proposal.after.added[0]).toMatchObject({
+      payee: { newPayee: 'Brand New Shop' },
+      amount: -250,
+    });
+    expect(
+      await api.getTransactions(account, '2026-10-01', '2026-10-31'),
+    ).toHaveLength(1);
+    const outcome = await api.applyTransactionImport(proposal);
+    expect(outcome).toMatchObject({ status: 'committed-local' });
+    if (!('transactionImport' in outcome)) {
+      throw new Error('Expected import outcome');
+    }
+    expect(outcome.transactionImport.addedIds).toHaveLength(1);
+    expect(outcome.transactionImport.updatedIds).toHaveLength(1);
+    const rows = await api.getTransactions(account, '2026-10-01', '2026-10-31');
+    expect(
+      rows
+        .map(row => row.notes ?? null)
+        .sort((a, b) => String(a).localeCompare(String(b))),
+    ).toEqual(['matched', null]);
+    expect(await api.applyTransactionImport(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+  });
+  test('rejects malformed options and closed accounts', async () => {
+    const account = await api.createAccount({ name: 'Import closing' }, 0);
+    const transactions = [{ date: '2026-10-01', amount: 1 }];
+    await expect(
+      api.previewTransactionImport({
+        accountId: account,
+        transactions,
+        opts: { payeeNameNormalization: 'upper' as 'original' },
+      }),
+    ).rejects.toThrow();
+    await expect(
+      api.previewTransactionImport({ accountId: account, transactions: [] }),
+    ).rejects.toThrow();
+    await api.closeAccount(account);
+    await expect(
+      api.previewTransactionImport({ accountId: account, transactions }),
     ).rejects.toThrow();
   });
 });

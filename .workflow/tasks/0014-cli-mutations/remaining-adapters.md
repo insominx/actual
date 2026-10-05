@@ -15,8 +15,8 @@ Sources: current command modules under `packages/cli/src/commands`, `packages/ap
 | `tags.create`         | `createTag` -> `api/tag-create`                   | Guarded; verified locally on Linux (2026-10-05).                                                |
 | `tags.update`         | `updateTag` -> `api/tag-update`                   | Guarded; verified locally on Linux (2026-10-05).                                                |
 | `tags.delete`         | `deleteTag` -> `api/tag-delete`                   | Guarded; verified locally on Linux (2026-10-05).                                                |
-| `transactions.add`    | `addTransactions` -> `api/transactions-add`       | No domain proposal/receipt adapter yet.                                                         |
-| `transactions.import` | `importTransactions` -> `api/transactions-import` | No domain proposal/receipt adapter yet.                                                         |
+| `transactions.add`    | `addTransactions` -> `api/transactions-add`       | Guarded (D58), opt-in on direct version 2 with --operation-id. |
+| `transactions.import` | `importTransactions` -> `api/transactions-import` | Guarded (D59), opt-in on direct version 2 with --operation-id. |
 | `transactions.update` | `updateTransaction` -> `api/transaction-update`   | Guarded notes/amount/date/cleared/category/payee (D57); account and transfer edits stay legacy. |
 | `transactions.delete` | `deleteTransaction` -> `api/transaction-delete`   | Guarded; verified locally on Linux (2026-10-05).                                                |
 | `rules.create`        | `createRule` -> `api/rule-create`                 | Guarded; verified locally on Linux (2026-10-05).                                                |
@@ -115,3 +115,5 @@ schedules.create, schedules.update and schedules.delete are guarded (D55). Packa
 transactions.delete is guarded (D56) and the guarded transactions.update scope now includes category and payee (D57). Packaged proof: verification-transaction-delete-linux-integration.txt; the existing changes.test.mjs transaction update suite was rerun. Inventory is now 2 open (transactions.add, transactions.import) plus the documented D57 exclusions.
 
 transactions.add is guarded (D58). Packaged proof: verification-transaction-add-linux-integration.txt (5/5, online, offline and three crash boundaries). Inventory: transactions.import remains open, plus the D57 and D58 exclusions.
+
+transactions.import is guarded (D59). Packaged proof: verification-transaction-import-linux-integration.txt (5/5). Every existing write adapter in the inventory now has a guarded path; the remaining gaps are the documented scope limits: transactions.update account, imported_payee, subtransaction and transfer edits (D57) and the opt-in (not mandatory) operation ID on direct version 2 add/import (D58, D59).

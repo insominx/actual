@@ -84,6 +84,8 @@ import type {
   TransactionAdditionRequest,
   TransactionDeletionProposal,
   TransactionDeletionRequest,
+  TransactionImportProposal,
+  TransactionImportRequest,
   TransactionUpdateProposal,
   TransactionUpdateRequest,
 } from '@actual-app/core/types/change-proposals';
@@ -98,6 +100,9 @@ import type { SyncedPrefs } from '@actual-app/core/types/prefs';
 export { q } from './app/query';
 export type {
   CategoryCreationOutcome,
+  TransactionImportRequest,
+  TransactionImportProposal,
+  TransactionImportOutcome,
   TransactionAdditionRequest,
   TransactionAdditionProposal,
   TransactionAdditionOutcome,
@@ -368,6 +373,12 @@ export function applyTransactionAddition(
   proposal: TransactionAdditionProposal,
 ) {
   return send('api/transactions-apply-addition', proposal);
+}
+export function previewTransactionImport(request: TransactionImportRequest) {
+  return send('api/transactions-preview-import', request);
+}
+export function applyTransactionImport(proposal: TransactionImportProposal) {
+  return send('api/transactions-apply-import', proposal);
 }
 export function previewCategoryGroupCreation(
   request: CategoryGroupCreationRequest,

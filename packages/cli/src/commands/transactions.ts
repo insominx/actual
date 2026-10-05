@@ -6,6 +6,7 @@ import { withConnection } from '#connection';
 import {
   executeCatalogChange,
   executeTransactionAddition,
+  executeTransactionImport,
 } from '#guarded-changes';
 import { readJsonInput } from '#input';
 import { printOutput } from '#output';
@@ -102,8 +103,30 @@ export function registerTransactionsCommand(program: Command) {
       'Read transaction data from JSON file (use - for stdin)',
     )
     .option('--dry-run', 'Preview without importing', false)
+    .option(
+      '--operation-id <id>',
+      'Version 2 only: run the guarded import with this durable retry ID',
+    )
     .action(async cmdOpts => {
       const opts = program.opts();
+      if (opts.outputVersion === '2' && cmdOpts.operationId) {
+        if (cmdOpts.dryRun) {
+          throw new AgentError(
+            'INVALID_INPUT',
+            'Use changes preview transactions.import for a guarded dry run; --dry-run cannot be combined with --operation-id.',
+          );
+        }
+        printOutput(
+          await executeTransactionImport(opts, cmdOpts.operationId, {
+            accountId: cmdOpts.account,
+            transactions: readJsonInput(cmdOpts) as Array<
+              Record<string, unknown>
+            >,
+          }),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {

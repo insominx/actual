@@ -186,6 +186,10 @@ import {
   performTransactionDeletion,
   prepareTransactionDeletion,
 } from './transactions/guarded-delete';
+import {
+  performTransactionImport,
+  prepareTransactionImport,
+} from './transactions/guarded-import';
 import { planLinkedTransferUpdate } from './transactions/linked-transfer-plan';
 import {
   getTransferredAccount,
@@ -3246,6 +3250,17 @@ function guardedCatalogHandlers<
   );
   handlers['api/tag-preview-deletion'] = tagDeletion.preview;
   handlers['api/tag-apply-deletion'] = tagDeletion.apply;
+  const transactionImport = guardedCatalogHandlers(
+    prepareTransactionImport,
+    guardedApply({
+      operation: 'transactions.import',
+      noun: 'Transaction import',
+      prepare: prepareTransactionImport,
+      perform: performTransactionImport,
+    }),
+  );
+  handlers['api/transactions-preview-import'] = transactionImport.preview;
+  handlers['api/transactions-apply-import'] = transactionImport.apply;
   const transactionAddition = guardedCatalogHandlers(
     prepareTransactionAddition,
     guardedApply({

@@ -97,6 +97,9 @@ import type {
   TransactionAdditionRequest,
   TransactionDeletionProposal,
   TransactionDeletionRequest,
+  TransactionImportOutcome,
+  TransactionImportProposal,
+  TransactionImportRequest,
   TransactionUpdateOutcome,
   TransactionUpdateProposal,
   TransactionUpdateRequest,
@@ -286,6 +289,12 @@ export type ApiHandlers = {
   'api/transactions-apply-addition': (
     arg: TransactionAdditionProposal,
   ) => Promise<TransactionAdditionOutcome>;
+  'api/transactions-preview-import': (
+    arg: TransactionImportRequest,
+  ) => Promise<TransactionImportProposal>;
+  'api/transactions-apply-import': (
+    arg: TransactionImportProposal,
+  ) => Promise<TransactionImportOutcome>;
   'api/category-group-preview-creation': (
     arg: CategoryGroupCreationRequest,
   ) => Promise<CategoryGroupCreationProposal>;

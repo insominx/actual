@@ -632,7 +632,9 @@ export type ReconcileTransactionsResult = {
   }>;
 };
 
-export async function reconcileTransactions(
+// Plans a reconciliation without writing. reconcileTransactions commits the
+// returned rows; guarded imports compare this plan with the committed result.
+export async function planReconciledTransactions(
   acctId,
   transactions,
   {
@@ -644,9 +646,7 @@ export async function reconcileTransactions(
     reimportDeleted,
     payeeNameNormalization,
   }: ReconcileTransactionsOptions = {},
-): Promise<ReconcileTransactionsResult> {
-  logger.log('Performing transaction reconciliation');
-
+) {
   const updated = [];
   const added = [];
   const updatedPreview = [];
@@ -773,11 +773,6 @@ export async function reconcileTransactions(
     t.sort_order ??= now - index * TRANSACTION_SORT_INCREMENT;
   });
 
-  if (!isPreview) {
-    await createNewPayees(payeesToCreate, [...added, ...updated]);
-    await batchUpdateTransactions({ added, updated });
-  }
-
   logger.log('Debug data for the operations:', {
     transactionsStep1,
     transactionsStep2,
@@ -786,6 +781,24 @@ export async function reconcileTransactions(
     updated,
     updatedPreview,
   });
+
+  return { added, updated, updatedPreview, payeesToCreate };
+}
+
+export async function reconcileTransactions(
+  acctId,
+  transactions,
+  options: ReconcileTransactionsOptions = {},
+): Promise<ReconcileTransactionsResult> {
+  logger.log('Performing transaction reconciliation');
+
+  const { added, updated, updatedPreview, payeesToCreate } =
+    await planReconciledTransactions(acctId, transactions, options);
+
+  if (!options.isPreview) {
+    await createNewPayees(payeesToCreate, [...added, ...updated]);
+    await batchUpdateTransactions({ added, updated });
+  }
 
   return {
     added: added.map(trans => trans.id),

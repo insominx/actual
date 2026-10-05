@@ -38,3 +38,4 @@ Version 2 payee updates, deletions and merges and tag creation, updates and dele
 Version 2 rule creation, updates and deletions now use guarded previews and durable receipts; schedule-owned rules stay with their schedule.
 Version 2 schedule creation, updates and deletions now use guarded previews and durable receipts that bind the linked rule.
 Version 2 transaction deletion is guarded with exact split and transfer cascades, and guarded transaction updates now cover category and payee.
+Version 2 transaction additions and imports can opt into guarded previews and durable receipts with `--operation-id`.
