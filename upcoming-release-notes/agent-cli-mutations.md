@@ -39,3 +39,4 @@ Version 2 rule creation, updates and deletions now use guarded previews and dura
 Version 2 schedule creation, updates and deletions now use guarded previews and durable receipts that bind the linked rule.
 Version 2 transaction deletion is guarded with exact split and transfer cascades, and guarded transaction updates now cover category and payee.
 Version 2 transaction additions and imports can opt into guarded previews and durable receipts with `--operation-id`.
+Version 2 query discovery now reads the core query schema, invalid queries fail before connecting, results are paged with cursors that disclose concurrent changes, and new `query resolve` and `query aggregate` commands support entity lookup and split-aware totals.

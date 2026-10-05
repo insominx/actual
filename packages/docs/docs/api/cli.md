@@ -351,11 +351,19 @@ Run queries using [ActualQL](./actual-ql/index.md).
 
 #### Subcommands
 
-| Subcommand             | Description                       |
-| ---------------------- | --------------------------------- |
-| `query run`            | Execute an AQL query              |
-| `query tables`         | List available tables             |
-| `query fields <table>` | List fields and types for a table |
+| Subcommand                     | Description                                    |
+| ------------------------------ | ---------------------------------------------- |
+| `query run`                    | Execute an AQL query                           |
+| `query tables`                 | List available tables                          |
+| `query fields <table>`         | List fields and types for a table              |
+| `query resolve <table> <text>` | Find entities by id or name; reports ambiguity |
+| `query aggregate`              | Split-aware totals by category                 |
+
+With `--output-version 2`, `query tables` and `query fields` read table, field, operator and function metadata from the core query schema, and `query run` compiles the query against that schema before connecting; an unknown table, field, path, operator or function, or a condition with several operators (only the first would apply; use `$and`), returns `INVALID_INPUT`. Version 2 results are `{ rows, page, snapshot }`: pages default to 1000 rows (maximum 10000), `page.truncated` and `page.nextCursor` describe continuation, non-aggregate queries get a final `id` tie-breaker, and repeating the same query with `--cursor <nextCursor>` continues it. If the budget changed since the previous page, `snapshot.changedSinceCursor` is true and a warning is added; use `--require-fresh` when another client may be writing.
+
+`query resolve accounts "checking"` matches an exact id, then a case-insensitive exact name, then a substring, and returns `status` `unique`, `ambiguous` or `none` with the matches. Supported tables: accounts, payees, categories, category_groups, schedules, tags.
+
+`query aggregate --start 2026-08-01 --end 2026-08-31 [--account <id>] [--splits leaves|parents]` returns engine totals by category with inflow and outflow. Transfers, starting balances and uncategorized rows are separate groups; deleted categories are marked `deleted` and missing ones `unavailable`. The grouped total always equals the engine total for the same scope.
 
 #### `query run` Options
 

@@ -57,6 +57,45 @@ export function describeQuerySchema(): QuerySchemaMetadata {
   };
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    !(value instanceof Date)
+  );
+}
+
+// The compiler applies only the first operator of a condition object, so
+// `{ date: { $gte: a, $lte: b } }` would silently drop the second bound.
+function findMultiOperatorCondition(expr: unknown): string | null {
+  if (Array.isArray(expr)) {
+    for (const item of expr) {
+      const found = findMultiOperatorCondition(item);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (!isPlainObject(expr)) return null;
+  for (const [field, cond] of Object.entries(expr)) {
+    if (field === '$and' || field === '$or') {
+      const found = findMultiOperatorCondition(cond);
+      if (found) return found;
+      continue;
+    }
+    const ops = Array.isArray(cond) ? cond : [cond];
+    for (const op of ops) {
+      if (
+        isPlainObject(op) &&
+        Object.keys(op).filter(key => key !== '$transform').length > 1
+      ) {
+        return field;
+      }
+    }
+  }
+  return null;
+}
+
 // Compiles without executing, so unknown tables, fields, paths, operators and
 // functions are reported before any database access.
 export function validateQuery(queryState: QueryState): QueryValidation {
@@ -71,6 +110,14 @@ export function validateQuery(queryState: QueryState): QueryValidation {
       message: table
         ? `Table "${table}" does not exist in the schema`
         : 'Query must name a table',
+    };
+  }
+  const multi = findMultiOperatorCondition(queryState.filterExpressions);
+  if (multi) {
+    return {
+      valid: false,
+      table,
+      message: `The condition for "${multi}" has several operators, but only the first would apply. Use $and with one operator per condition.`,
     };
   }
   try {

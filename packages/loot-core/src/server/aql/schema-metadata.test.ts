@@ -113,6 +113,38 @@ describe('query schema metadata', () => {
     ).toMatchObject({ valid: false });
   });
 
+  test('rejects condition objects whose extra operators would be ignored', () => {
+    expect(
+      validateQuery(
+        q('transactions')
+          .filter({ date: { $gte: '2026-01-01', $lte: '2026-01-31' } })
+          .serialize(),
+      ),
+    ).toMatchObject({ valid: false, message: expect.stringMatching(/\$and/) });
+    expect(
+      validateQuery(
+        q('transactions')
+          .filter({
+            $or: [{ amount: [{ $gt: 1 }, { $lt: 5, $gt: 2 }] }],
+          })
+          .serialize(),
+      ),
+    ).toMatchObject({ valid: false });
+    expect(
+      validateQuery(
+        q('transactions')
+          .filter({
+            $and: [
+              { date: { $gte: '2026-01-01' } },
+              { date: { $lte: '2026-01-31' } },
+            ],
+            notes: { $like: '%x%', $transform: '$lower' },
+          })
+          .serialize(),
+      ),
+    ).toMatchObject({ valid: true });
+  });
+
   test('flags aggregate queries', () => {
     expect(
       validateQuery(

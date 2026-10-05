@@ -15,3 +15,8 @@ Verification so far: core 4/4, CLI unit 273/273, API/core/CLI typecheck clean, o
 - Packaged proof: `integration/query.test.mjs` (2/2), evidence `verification-query-linux-integration.txt`.
 
 Decision audit: D1-D5 in execution-decisions.md.
+
+## Slice 3: aggregate recipe (A3)
+
+- `packages/cli/src/commands/query-aggregate.ts` (`combineAggregate`, `registerQueryAggregate`); unit proof `query-aggregate.test.ts` (2). Packaged proof: third case of `integration/query.test.mjs`.
+- Core validateQuery multi-operator rejection with tests in `schema-metadata.test.ts` (5 total).

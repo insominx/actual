@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
+import { readRaw } from './guarded-kit.mjs';
 import { createFixture } from './harness.mjs';
 
 // Packaged proof for read-only query metadata and validation (task 0017).
@@ -200,6 +201,100 @@ void test(
       ]);
       assert.equal(otherQuery.code, 2, otherQuery.stdout);
       assert.equal(parse(otherQuery).error.details.field, 'cursor');
+    } finally {
+      await f.dispose();
+    }
+  },
+);
+
+void test(
+  'split-aware aggregates match engine rows and write nothing',
+  { timeout: 180000 },
+  async () => {
+    const f = await createFixture();
+    try {
+      const aggregate = async args => {
+        const result = await f.cli(['query', 'aggregate', ...args]);
+        assert.equal(result.code, 0, result.stdout + result.stderr);
+        return parse(result).data;
+      };
+      const august = ['--start', '2026-08-01', '--end', '2026-08-31'];
+      // Prime the local cache so the raw comparison sees only aggregate effects.
+      await aggregate(august);
+      const before = await readRaw(f);
+      const before2 = parse(
+        await f.cli(['query', 'run', '--table', 'transactions', '--count']),
+      );
+      const byKind = data => kind =>
+        data.groups.filter(group => group.kind === kind);
+      const leaves = await aggregate([
+        ...august,
+        '--account',
+        f.fixture.checking,
+      ]);
+      const leaf = byKind(leaves);
+      const category = id =>
+        leaves.groups.find(group => group.categoryId === id);
+      assert.deepEqual(
+        {
+          total: category(f.fixture.groceries).total,
+          inflow: category(f.fixture.groceries).inflow,
+          outflow: category(f.fixture.groceries).outflow,
+          count: category(f.fixture.groceries).count,
+        },
+        { total: -8000, inflow: 2000, outflow: -10000, count: 2 },
+      );
+      assert.equal(category(f.fixture.dining).total, -5000);
+      assert.equal(leaf('uncategorized')[0].total, -1000);
+      assert.equal(leaf('transfer')[0].total, -10000);
+      assert.equal(leaves.total, -24000);
+      assert.equal(leaves.count, 5);
+
+      const parents = await aggregate([
+        ...august,
+        '--account',
+        f.fixture.checking,
+        '--splits',
+        'parents',
+      ]);
+      assert.equal(parents.total, -24000, 'split mode never changes the total');
+      assert.equal(byKind(parents)('uncategorized')[0].total, -16000);
+      assert.equal(parents.count, 4);
+
+      const all = await aggregate(august);
+      const transfer = byKind(all)('transfer')[0];
+      assert.deepEqual(
+        {
+          total: transfer.total,
+          inflow: transfer.inflow,
+          count: transfer.count,
+        },
+        { total: 0, inflow: 10000, count: 2 },
+      );
+
+      const everything = await aggregate([]);
+      const starting = parse(
+        await f.cli([
+          'query',
+          'run',
+          '--table',
+          'transactions',
+          '--select',
+          'amount',
+          '--filter',
+          '{"starting_balance_flag":true}',
+        ]),
+      ).data.rows.reduce((sum, row) => sum + row.amount, 0);
+      assert.equal(byKind(everything)('starting-balance')[0].total, starting);
+      assert.notEqual(starting, 0);
+
+      assert.deepEqual(await readRaw(f), before, 'aggregates wrote state');
+      assert.deepEqual(
+        parse(
+          await f.cli(['query', 'run', '--table', 'transactions', '--count']),
+        ),
+        before2,
+      );
     } finally {
       await f.dispose();
     }

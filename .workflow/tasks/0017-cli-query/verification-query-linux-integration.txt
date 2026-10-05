@@ -1,10 +1,11 @@
-✔ query metadata comes from the core schema and invalid expressions fail before connecting (5197.25539ms)
-✔ version 2 query pages tie-break equal dates by id and disclose concurrent changes (6615.846256ms)
-ℹ tests 2
+✔ query metadata comes from the core schema and invalid expressions fail before connecting (5278.176161ms)
+✔ version 2 query pages tie-break equal dates by id and disclose concurrent changes (6604.074433ms)
+✔ split-aware aggregates match engine rows and write nothing (6418.327123ms)
+ℹ tests 3
 ℹ suites 0
-ℹ pass 2
+ℹ pass 3
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 11868.649598
+ℹ duration_ms 18360.21783

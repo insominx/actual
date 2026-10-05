@@ -235,6 +235,12 @@ actual budgets set-amount --month 2026-03 --category <id> --amount 50000
 # Run an ActualQL query
 actual query run --table transactions \
   --select "date,amount,payee" --filter '{"amount":{"$lt":0}}' --limit 10
+
+# Find an entity by name (reports ambiguous matches)
+actual query resolve payees "grocery"
+
+# Split-aware totals by category for a month
+actual query aggregate --start 2026-08-01 --end 2026-08-31
 ```
 
 ### Amount Convention

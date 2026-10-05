@@ -202,14 +202,13 @@ export function registerQueryAggregate(query: Command, program: Command) {
           { field: 'splits' },
         );
       }
-      const filter: Record<string, unknown> = {};
-      if (start || end) {
-        filter.date = {
-          ...(start ? { $gte: start } : {}),
-          ...(end ? { $lte: end } : {}),
-        };
-      }
-      if (cmdOpts.account) filter.account = cmdOpts.account;
+      // AQL applies only the first operator of a condition object, so each
+      // bound is its own condition.
+      const conditions: Array<Record<string, unknown>> = [];
+      if (start) conditions.push({ date: { $gte: start } });
+      if (end) conditions.push({ date: { $lte: end } });
+      if (cmdOpts.account) conditions.push({ account: cmdOpts.account });
+      const filter = conditions.length ? { $and: conditions } : {};
       await withConnection(
         opts,
         async () => {
