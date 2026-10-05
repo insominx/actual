@@ -193,6 +193,11 @@ import {
   preparePreferenceSet,
 } from './preferences/catalog';
 import * as prefs from './prefs';
+import {
+  cashFlowReport,
+  categoryReport,
+  netWorthReport,
+} from './reports/ledger-reports';
 import { findRuleMatches, testRules } from './rules/evaluate';
 import {
   performRuleCreation,
@@ -5093,6 +5098,18 @@ handlers['api/import-mapping-get'] = async function (arg) {
 handlers['api/rules-matches'] = async function (arg) {
   checkFileOpen();
   return findRuleMatches(arg);
+};
+handlers['api/reports-cash-flow'] = async function (arg) {
+  checkFileOpen();
+  return cashFlowReport(arg);
+};
+handlers['api/reports-categories'] = async function (arg) {
+  checkFileOpen();
+  return categoryReport(arg);
+};
+handlers['api/reports-net-worth'] = async function (arg) {
+  checkFileOpen();
+  return netWorthReport(arg);
 };
 handlers['api/reconcile-status'] = async function (arg) {
   checkFileOpen();

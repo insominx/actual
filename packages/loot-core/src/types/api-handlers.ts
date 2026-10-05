@@ -24,6 +24,12 @@ import type {
   CatalogInspectRow,
 } from '#server/catalog-inspect';
 import type {
+  cashFlowReport,
+  categoryReport,
+  netWorthReport,
+  ReportRequest,
+} from '#server/reports/ledger-reports';
+import type {
   RuleMatches,
   RuleTestRequest,
   RuleTestResult,
@@ -383,6 +389,15 @@ export type ApiHandlers = {
   'api/import-mapping-apply-save': (
     arg: ImportMappingSaveProposal,
   ) => Promise<TransactionUpdateOutcome>;
+  'api/reports-cash-flow': (
+    arg: ReportRequest,
+  ) => ReturnType<typeof cashFlowReport>;
+  'api/reports-categories': (
+    arg: ReportRequest,
+  ) => ReturnType<typeof categoryReport>;
+  'api/reports-net-worth': (
+    arg: ReportRequest,
+  ) => ReturnType<typeof netWorthReport>;
   'api/reconcile-status': (
     arg: ReconciliationStatusRequest,
   ) => Promise<ReconciliationStatus>;

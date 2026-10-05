@@ -20,6 +20,7 @@ import type {
   QueryValidation,
 } from '@actual-app/core/server/aql/schema-metadata';
 import type { ImportableBudgetType } from '@actual-app/core/server/importers/index';
+import type { ReportRequest } from '@actual-app/core/server/reports/ledger-reports';
 import type { RuleTestRequest } from '@actual-app/core/server/rules/evaluate';
 import type { ScheduleInspectionRequest } from '@actual-app/core/server/schedules/inspect';
 import type { Query } from '@actual-app/core/shared/query';
@@ -578,6 +579,21 @@ export function inspectSchedules(request: ScheduleInspectionRequest = {}) {
   return send('api/schedules-inspect', request);
 }
 /**
+ * Monthly cash flow of on-budget accounts (income, expense, net and
+ * transfers to off-budget accounts) with declared scope. Read-only.
+ */
+export function getCashFlowReport(request: ReportRequest) {
+  return send('api/reports-cash-flow', request);
+}
+/** Income and spending by category per month with declared scope. Read-only. */
+export function getCategoryReport(request: ReportRequest) {
+  return send('api/reports-categories', request);
+}
+/** Net worth, net cash and tracking balances at each month end. Read-only. */
+export function getNetWorthReport(request: ReportRequest) {
+  return send('api/reports-net-worth', request);
+}
+/**
  * Reconciliation status for an account: cleared balance (optionally cut off
  * at a statement date), difference from a statement balance and the
  * cleared, unreconciled candidates a finish would lock. Read-only.
@@ -1013,6 +1029,12 @@ export type {
   RuleTestResult,
 } from '@actual-app/core/server/rules/evaluate';
 export type { TemplateInspection } from '@actual-app/core/server/budget/guarded-allocation';
+export type {
+  ReportCompleteness,
+  ReportDetailRow,
+  ReportRequest,
+  ReportScope,
+} from '@actual-app/core/server/reports/ledger-reports';
 export type {
   ReconciliationStatus,
   ReconciliationStatusRequest,
