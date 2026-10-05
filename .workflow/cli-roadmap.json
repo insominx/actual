@@ -174,7 +174,7 @@
       "stage": "Domain tools",
       "mode": "AFK",
       "dependencies": ["0018-cli-transactions", "0021-cli-imports"],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-schedules",

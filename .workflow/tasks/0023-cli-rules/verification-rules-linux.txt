@@ -1,0 +1,14 @@
+# 0023 packaged rule proofs (Linux, 2026-10-05 02:02 PDT)
+# Build: yarn exec lage build --scope=@actual-app/cli --no-cache; yarn workspace @actual-app/sync-server build
+# Command: (packages/cli) node --test integration/rules-apply.test.mjs
+✔ rules test matches import execution without writing and reports rule order (9801.596658ms)
+✔ historical rules apply previews splits and deletes exactly and rejects stale or reconciled scope (15359.604847ms)
+✔ guarded rule application preserves raw domains and acknowledgements (online) (6994.299142ms)
+✔ guarded rule application preserves raw domains and acknowledgements (offline) (7104.609497ms)
+✔ killed guarded rule application at before-engine retains its exact outcome without replay (37953.927973ms)
+✔ killed guarded rule application at after-engine retains its exact outcome without replay (38229.16493ms)
+✔ killed guarded rule application at before-sync retains its exact outcome without replay (38496.724609ms)
+ℹ tests 7
+ℹ pass 7
+ℹ fail 0
+# API: yarn workspace @actual-app/api exec vitest run -t "historical rule application" -> 1 passed

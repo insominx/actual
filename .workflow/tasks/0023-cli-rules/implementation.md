@@ -19,13 +19,13 @@
 
 ## Verification (Linux)
 
-| Check    | Command                                                                                                              | Result  |
-| -------- | -------------------------------------------------------------------------------------------------------------------- | ------- |
-| Core     | `yarn workspace @actual-app/core exec vitest run src/server/transactions/transaction-rules.test.ts src/server/rules` | 240/240 |
-| API      | `yarn workspace @actual-app/api exec vitest run -t "historical rule application"`                                    | pending |
-| CLI unit | `yarn workspace @actual-app/cli test`                                                                                | 305/305 |
-| Types    | loot-core, API and CLI `tsc`                                                                                         | clean   |
-| Packaged | `node --test integration/rules-apply.test.mjs`                                                                       | pending |
+| Check    | Command                                                                                                              | Result                               |
+| -------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| Core     | `yarn workspace @actual-app/core exec vitest run src/server/transactions/transaction-rules.test.ts src/server/rules` | 240/240                              |
+| API      | `yarn workspace @actual-app/api exec vitest run -t "historical rule application"`                                    | 1/1                                  |
+| CLI unit | `yarn workspace @actual-app/cli test`                                                                                | 305/305                              |
+| Types    | loot-core, API and CLI `tsc`                                                                                         | clean                                |
+| Packaged | `node --test integration/rules-apply.test.mjs`                                                                       | 7/7 (`verification-rules-linux.txt`) |
 
 Acceptance mapping:
 

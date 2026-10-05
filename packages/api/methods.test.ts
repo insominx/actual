@@ -6784,6 +6784,10 @@ describe('rule tests and historical rule application', () => {
       name: 'Rule category',
       group_id: group,
     });
+    await api.addTransactions(account, [
+      { date: '2026-10-05', amount: -100, imported_payee: 'Bar One' },
+      { date: '2026-10-06', amount: -200, imported_payee: 'Elsewhere' },
+    ]);
     const rule = await api.createRule({
       stage: null,
       conditionsOp: 'and',
@@ -6804,10 +6808,6 @@ describe('rule tests and historical rule application', () => {
     expect(tested.newPayees).toEqual(['Coffee Bar']);
     expect(await api.getPayees()).toEqual(payeesBefore);
 
-    await api.addTransactions(account, [
-      { date: '2026-10-05', amount: -100, imported_payee: 'Bar One' },
-      { date: '2026-10-06', amount: -200, imported_payee: 'Elsewhere' },
-    ]);
     const matches = await api.findRuleMatches(rule.id);
     expect(matches.ids).toHaveLength(1);
     const proposal = await api.previewRuleApply({
