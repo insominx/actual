@@ -6049,3 +6049,85 @@ describe('guarded split edits', () => {
     ).rejects.toThrow(/reconciled/);
   });
 });
+
+describe('cash plan inspection and guarded saves', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('scenarios are transient, saves change only cashPlanning, and invalid plans fail', async () => {
+    const group = await api.createCategoryGroup({ name: 'Plan group' });
+    const rent = await api.createCategory({
+      name: 'Plan rent',
+      group_id: group,
+    });
+    const account = await api.createAccount({ name: 'Plan cash' }, 0);
+    await api.addTransactions(account, [
+      { date: '2016-10-10', amount: -300000, category: rent },
+      { date: '2016-11-10', amount: -300000, category: rent },
+    ]);
+    const range = { startDate: '2016-10-01', endDate: '2016-11-30' };
+    const prefsBefore = await api.inspectPreferences();
+    const base = await api.inspectCashPlan(range);
+    expect(base.summary.months).toBe(2);
+    const rentRow = base.summary.categories.find(row => row.id === rent)!;
+    expect(rentRow.monthlyOutflow).toBe(300000);
+    expect(base.projections).not.toBeNull();
+
+    const scenario = await api.inspectCashPlan({
+      ...range,
+      scenario: { categoryTargets: { [rent]: 100000 } },
+    });
+    expect(scenario.scenarioApplied).toBe(true);
+    expect(scenario.projections!.historical).toEqual(
+      base.projections!.historical,
+    );
+    expect(scenario.projections!.targets.monthlyOutflow).toBe(
+      base.projections!.targets.monthlyOutflow - 200000,
+    );
+    expect(await api.inspectPreferences()).toEqual(prefsBefore);
+
+    const config = {
+      ...range,
+      categoryTargets: { [rent]: 100000 },
+      goal: { balance: 5000000, deadline: '2018-12-31' },
+      forecastEndDate: '2018-12-31',
+    };
+    const proposal = await api.previewCashPlanSave({ config });
+    expect(proposal.after.preference.value).toBe(JSON.stringify(config));
+    expect(await api.inspectPreferences()).toEqual(prefsBefore);
+    expect(await api.applyCashPlanSave(proposal)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+    });
+    const saved = await api.inspectCashPlan();
+    expect(saved.saved).toEqual({ stored: true, config });
+    expect(saved.config).toEqual(config);
+
+    const reset = await api.previewCashPlanSave({ config: null });
+    expect(await api.applyCashPlanSave(reset)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+    });
+    expect((await api.inspectCashPlan()).saved.stored).toBe(false);
+
+    for (const bad of [
+      { ...config, endDate: '2999-01-01' },
+      { ...config, categoryTargets: { [rent]: -1 } },
+      { ...config, goal: { balance: 1.5 } },
+      { ...config, forecastEndDate: '2016-06-01' },
+      { ...config, extra: true },
+    ]) {
+      await expect(
+        api.previewCashPlanSave({
+          config: bad as unknown as typeof config,
+        }),
+      ).rejects.toThrow();
+    }
+    await expect(
+      api.inspectCashPlan({
+        ...range,
+        scenario: { categoryTargets: { [rent]: -5 } },
+      }),
+    ).rejects.toThrow();
+  });
+});

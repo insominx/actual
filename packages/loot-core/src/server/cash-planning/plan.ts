@@ -163,7 +163,7 @@ export async function inspectCashPlan(
   const hasHistory = summary.transactionCount > 0;
   return {
     asOf,
-    saved: { stored: stored !== null, config: saved },
+    saved: { stored: (stored?.value ?? null) !== null, config: saved },
     config,
     scenarioApplied:
       scenario !== undefined ||
@@ -220,10 +220,11 @@ export async function prepareCashPlanSave(
 
 export async function performCashPlanSave(current: CashPlanSaveProposal) {
   const value = current.after.preference.value;
-  if (current.before.preference === null && value === null) {
+  if ((current.before.preference?.value ?? null) === null && value === null) {
+    // Resetting a plan that is not stored is a no-op.
     return { changed: false, affectedIds: [KEY] };
   }
-  await saveSyncedPrefs({ id: KEY, value: value ?? undefined });
+  await saveSyncedPrefs({ id: KEY, value: value as string | undefined });
   const actual = await storedPreference(KEY);
   if (!rowMatches(actual, current.after.preference)) {
     throw new Error('Cash plan acknowledgement is incomplete');
