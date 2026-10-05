@@ -1,0 +1,34 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api exec vitest run -t \"data quality checkup\""
+        },
+        { "id": "cli-unit", "command": "yarn workspace @actual-app/cli test" },
+        { "id": "root-types", "command": "yarn typecheck" },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "data-quality-integration",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/data-quality.test.mjs"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/loot-core/src/server/checkup/data-quality.ts packages/cli/src/commands/checkup.ts packages/cli/src/statement-evidence.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/loot-core/src/server/checkup/data-quality.ts packages/cli/src/commands/checkup.ts packages/cli/src/statement-evidence.ts packages/cli/integration/data-quality.test.mjs"
+        }
+      ]
+    }
+  }
+}

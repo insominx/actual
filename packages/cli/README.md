@@ -213,6 +213,7 @@ Example `.actualrc.json`:
 | `rules`           | Manage transaction rules                                             |
 | `reconcile`       | Reconcile an account against a statement; finish; adjust             |
 | `reports`         | Cash flow, category and net worth reports; CSV/HTML export           |
+| `checkup`         | Data-quality findings, month coverage and statement evidence         |
 | `schedules`       | Manage schedules; list upcoming occurrences; post or skip the next   |
 | `query`           | Run an ActualQL query                                                |
 | `server`          | Server utilities and lookups                                         |

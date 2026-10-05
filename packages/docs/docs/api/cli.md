@@ -472,6 +472,21 @@ actual reports cash-flow --from-month 2026-01 --to-month 2026-09 --details --exp
 
 Every report returns `scope` (range, cutoff, accounts, transfer, split and opening-balance treatment, future-dated handling, currency and integer cents) and `completeness`; when no transaction exists before the range start, `completeness.note` says that earlier periods are unknown, not zero. Ranges are at most 60 months. Future-dated transactions are excluded (the cutoff is today) unless `--include-future` is passed. `cash-flow` and `categories` use on-budget accounts and count split children instead of their parent; transfers between accounts are excluded, and `cash-flow` lists transfers to off-budget accounts separately as `transfersOffBudget`. `categories` nets refunds against their category, keeps deleted categories (flagged `deleted`) and reports uncategorized amounts separately. Both list `contributingIds` (at most 1000, with `contributingTruncated`) and, with `--details`, the contributing rows. `net-worth` reports every account at each month end: `netCash` covers on-budget accounts, `tracking` covers off-budget accounts and `netWorth` is their sum. To compare periods, run a report twice. CSV exports keep cents next to a decimal column, quote every field that needs it and prefix text starting with `=`, `+`, `-`, `@`, a tab or a carriage return with `'` so spreadsheets do not evaluate it; HTML exports escape all text and load nothing external. PDF is not produced; print the HTML instead.
 
+### Checkup
+
+```bash
+# Read-only findings and month coverage (never repairs anything)
+actual checkup data-quality --from-month 2026-01 --to-month 2026-09 [--accounts <id,id>] [--duplicate-window 3] [--limit 200]
+
+# Device-local statement evidence used for coverage (not bank verification)
+actual checkup statement add --account <id> --month 2026-08 --ending-balance 123456 [--source "paper statement"] [--import-operation <operation-id>] [--replace]
+actual checkup statement add --account <id> --month 2026-07 --no-activity
+actual checkup statement list
+actual checkup statement remove --account <id> --month 2026-07
+```
+
+Each finding has a stable `code` (`uncategorized`, `deleted-category`, `duplicate-candidate`, `transfer-issue`, `statement-discrepancy`, `coverage-unknown`), a `severity` (errors first), up to 100 record `ids` (`idsTruncated`, `count`), the `evidence` behind it, an `uncertainty` statement and `suggested` supported operations with example commands; the checkup itself never applies them. Duplicate candidates are a heuristic (same account and amount within the window, split children and transfers left out, rows with two different bank import IDs never paired). Transfer findings come from `transfers inspect`. Coverage lists every account and month: `observed` (rows exist, not verified), `statement-verified` (recorded evidence matches the ledger balance at month end, or a no-activity month really has no rows), `discrepancy`, or `unknown`; a month with no rows is never reported complete without evidence. Statement evidence is stored per budget in `statement-evidence.json` in the CLI data directory, and is a user declaration, not a bank check. Closed accounts are checked only when named in `--accounts`.
+
 ### Imports
 
 ```bash
