@@ -60,3 +60,13 @@ export function parseBoolEnv(
     `Invalid ${source}: "${raw}". Expected "true", "false", "1", or "0".`,
   );
 }
+
+// Case-insensitive name filter for catalog inspection output.
+export function filterByName<T extends { name: string | null }>(
+  rows: T[],
+  text: string | undefined,
+) {
+  if (text === undefined) return rows;
+  const needle = text.trim().toLowerCase();
+  return rows.filter(row => (row.name ?? '').toLowerCase().includes(needle));
+}

@@ -1034,6 +1034,18 @@ export function inspectPreferences(key?: string) {
   return send('api/preferences-inspect', key === undefined ? {} : { key });
 }
 
+/**
+ * Inspect categories or payees with stable IDs, hidden/deleted status, the
+ * row a deleted entry now resolves to, live transaction counts through the
+ * canonical mappings, and other rows sharing the same name. Read-only.
+ */
+export function inspectCatalog(
+  kind: 'categories' | 'payees',
+  options: { includeDeleted?: boolean } = {},
+) {
+  return send('api/catalog-inspect', { kind, ...options });
+}
+
 export function setPreference<T extends keyof SyncedPrefs>(
   id: T,
   value: SyncedPrefs[T] | undefined,

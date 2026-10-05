@@ -4917,6 +4917,73 @@ describe('typed synced preferences', () => {
   });
 });
 
+describe('catalog inspection', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('reports duplicates, hidden and deleted rows, merge targets and resolved counts', async () => {
+    const accountId = await api.createAccount({
+      name: 'Inspect',
+      offbudget: false,
+    });
+    const groupA = await api.createCategoryGroup({ name: 'Inspect A' });
+    const groupB = await api.createCategoryGroup({ name: 'Inspect B' });
+    const keep = await api.createCategory({ name: 'Dup', group_id: groupA });
+    const retire = await api.createCategory({ name: 'dup ', group_id: groupB });
+    const hidden = await api.createCategory({
+      name: 'Hidden one',
+      group_id: groupA,
+      hidden: true,
+    });
+    const payeeKeep = await api.createPayee({ name: 'Shop' });
+    const payeeMerge = await api.createPayee({ name: 'Shop' });
+    await api.addTransactions(accountId, [
+      { date: '2026-10-01', amount: -100, category: keep, payee: payeeKeep },
+      { date: '2026-10-02', amount: -200, category: retire, payee: payeeMerge },
+      { date: '2026-10-03', amount: -300, category: retire, payee: payeeMerge },
+    ]);
+
+    let categories = await api.inspectCatalog('categories');
+    const byId = (rows: typeof categories, id: string) =>
+      rows.find(row => row.id === id);
+    expect(byId(categories, keep)).toMatchObject({
+      transactionCount: 1,
+      sameNameIds: [retire],
+      group: { id: groupA, name: 'Inspect A' },
+    });
+    expect(byId(categories, retire)?.transactionCount).toBe(2);
+    expect(byId(categories, hidden)).toMatchObject({
+      hidden: true,
+      deleted: false,
+    });
+
+    await api.deleteCategory(retire, keep);
+    categories = await api.inspectCatalog('categories');
+    expect(byId(categories, retire)).toBeUndefined();
+    expect(byId(categories, keep)).toMatchObject({ transactionCount: 3 });
+    const withDeleted = await api.inspectCatalog('categories', {
+      includeDeleted: true,
+    });
+    expect(byId(withDeleted, retire)).toMatchObject({
+      deleted: true,
+      mappedTo: keep,
+      transactionCount: 0,
+    });
+
+    let payees = await api.inspectCatalog('payees');
+    expect(payees.find(row => row.id === payeeKeep)?.sameNameIds).toEqual([
+      payeeMerge,
+    ]);
+    await api.mergePayees(payeeKeep, [payeeMerge]);
+    payees = await api.inspectCatalog('payees', { includeDeleted: true });
+    expect(payees.find(row => row.id === payeeKeep)?.transactionCount).toBe(3);
+    expect(payees.find(row => row.id === payeeMerge)).toMatchObject({
+      deleted: true,
+      mappedTo: payeeKeep,
+    });
+  });
+});
+
 describe('guarded rule creation, updates and deletions', () => {
   const ruleFields = {
     stage: 'pre' as const,

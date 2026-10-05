@@ -130,6 +130,7 @@ import {
   copySourceIgnoredTables,
   inspectCopySource,
 } from './budgetfiles/copy-source';
+import { inspectCatalog } from './catalog-inspect';
 import * as cloudStorage from './cloud-storage';
 import type { RemoteFile } from './cloud-storage';
 import * as db from './db';
@@ -4730,6 +4731,13 @@ handlers['api/note-target'] = async function ({ id }) {
 handlers['api/preferences-inspect'] = async function ({ key } = {}) {
   checkFileOpen();
   return inspectPreferences(key);
+};
+
+// Read-only catalog inspection with hidden/deleted status, mapping targets,
+// resolved transaction counts and same-name duplicates.
+handlers['api/catalog-inspect'] = async function (arg) {
+  checkFileOpen();
+  return inspectCatalog(arg);
 };
 
 handlers['api/note-update'] = withMutation(async function ({ id, note }) {

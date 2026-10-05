@@ -8,7 +8,7 @@ import {
   executeCategoryUpdate,
 } from '#guarded-changes';
 import { printOutput } from '#output';
-import { parseBoolFlag } from '#utils';
+import { filterByName, parseBoolFlag } from '#utils';
 
 export function registerCategoriesCommand(program: Command) {
   const categories = program
@@ -28,6 +28,39 @@ export function registerCategoriesCommand(program: Command) {
             cmdOpts.includeHidden ? {} : { hidden: false },
           );
           printOutput(result, opts.format);
+        },
+        { mutates: false },
+      );
+    });
+
+  categories
+    .command('inspect')
+    .description(
+      'Inspect categories with IDs, hidden/deleted status, merge targets, transaction counts and same-name duplicates',
+    )
+    .option(
+      '--include-deleted',
+      'Include deleted rows and where they now resolve',
+      false,
+    )
+    .option(
+      '--name <text>',
+      'Only rows whose name contains this text (case-insensitive)',
+    )
+    .action(async (cmdOpts: { includeDeleted: boolean; name?: string }) => {
+      const opts = program.opts();
+      await withConnection(
+        opts,
+        async () => {
+          printOutput(
+            filterByName(
+              await api.inspectCatalog('categories', {
+                includeDeleted: cmdOpts.includeDeleted,
+              }),
+              cmdOpts.name,
+            ),
+            opts.format,
+          );
         },
         { mutates: false },
       );

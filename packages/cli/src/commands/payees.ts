@@ -4,6 +4,7 @@ import type { Command } from 'commander';
 import { withConnection } from '#connection';
 import { executeCatalogChange, executePayeeCreation } from '#guarded-changes';
 import { printOutput } from '#output';
+import { filterByName } from '#utils';
 
 export function registerPayeesCommand(program: Command) {
   const payees = program.command('payees').description('Manage payees');
@@ -33,6 +34,39 @@ export function registerPayeesCommand(program: Command) {
         async () => {
           const result = await api.getCommonPayees();
           printOutput(result, opts.format);
+        },
+        { mutates: false },
+      );
+    });
+
+  payees
+    .command('inspect')
+    .description(
+      'Inspect payees with IDs, hidden/deleted status, merge targets, transaction counts and same-name duplicates',
+    )
+    .option(
+      '--include-deleted',
+      'Include deleted rows and where they now resolve',
+      false,
+    )
+    .option(
+      '--name <text>',
+      'Only rows whose name contains this text (case-insensitive)',
+    )
+    .action(async (cmdOpts: { includeDeleted: boolean; name?: string }) => {
+      const opts = program.opts();
+      await withConnection(
+        opts,
+        async () => {
+          printOutput(
+            filterByName(
+              await api.inspectCatalog('payees', {
+                includeDeleted: cmdOpts.includeDeleted,
+              }),
+              cmdOpts.name,
+            ),
+            opts.format,
+          );
         },
         { mutates: false },
       );

@@ -1,4 +1,3 @@
-// @ts-strict-ignore
 import type { ImportTransactionsResult } from '#server/accounts/app';
 import type { PayeeNameNormalization } from '#server/accounts/sync';
 import type {
@@ -13,6 +12,11 @@ import type {
   APITagEntity,
 } from '#server/api-models';
 import type { BudgetFileHandlers } from '#server/budgetfiles/app';
+// @ts-strict-ignore
+import type {
+  CatalogInspectKind,
+  CatalogInspectRow,
+} from '#server/catalog-inspect';
 import type { batchUpdateTransactions } from '#server/transactions';
 import type { QueryState } from '#shared/query';
 
@@ -259,6 +263,10 @@ export type ApiHandlers = {
   'api/preference-apply-set': (
     arg: PreferenceSetProposal,
   ) => Promise<TransactionUpdateOutcome>;
+  'api/catalog-inspect': (arg: {
+    kind: CatalogInspectKind;
+    includeDeleted?: boolean;
+  }) => Promise<CatalogInspectRow[]>;
   'api/preferences-inspect': (arg: {
     key?: string;
   }) => Promise<Array<Record<string, unknown> & { key: string }>>;
