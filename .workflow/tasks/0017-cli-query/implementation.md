@@ -27,8 +27,8 @@ Decision audit: D1-D5 in execution-decisions.md.
 | ----------- | ------------------------------------------------------------------- | ------------------------------------------------ |
 | API unit    | `yarn workspace @actual-app/api test`                               | 117/117                                          |
 | CLI unit    | `yarn workspace @actual-app/cli test`                               | 284/284                                          |
-| Core AQL    | `yarn workspace @actual-app/core exec vitest run src/server/aql`    | see progress.md                                  |
-| Types       | `yarn typecheck`                                                    | see progress.md                                  |
+| Core AQL    | `yarn workspace @actual-app/core exec vitest run src/server/aql`    | 66/66 (8 files)                                  |
+| Types       | `yarn typecheck`                                                    | exit 0                                           |
 | Packaged    | `node --test integration/query.test.mjs` after CLI and server build | 3/3 (`verification-query-linux-integration.txt`) |
 | Lint/format | verify.json lint and format entries                                 | clean                                            |
 
