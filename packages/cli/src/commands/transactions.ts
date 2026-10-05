@@ -169,6 +169,22 @@ export function registerTransactionsCommand(program: Command) {
     });
 
   transactions
+    .command('get <id>')
+    .description(
+      'Show one transaction with its split children, split balance and transfer counterpart',
+    )
+    .action(async (id: string) => {
+      const opts = program.opts();
+      await withConnection(
+        opts,
+        async () => {
+          printOutput(await inspectTransaction(id), opts.format);
+        },
+        { mutates: false },
+      );
+    });
+
+  transactions
     .command('categorize')
     .description(
       'Set one category on a frozen list of transactions through a guarded change',
@@ -355,4 +371,96 @@ export function registerTransactionsCommand(program: Command) {
         { mutates: true },
       );
     });
+}
+
+type TransactionRow = {
+  id: string;
+  account: string;
+  date: string;
+  amount: number;
+  payee: string | null;
+  category: string | null;
+  notes: string | null;
+  cleared: boolean;
+  reconciled: boolean;
+  is_parent: boolean;
+  is_child: boolean;
+  parent_id: string | null;
+  transfer_id: string | null;
+  imported_id: string | null;
+  schedule: string | null;
+};
+
+async function selectRows(filter: Record<string, unknown>) {
+  const { data } = (await api.aqlQuery(
+    api
+      .q('transactions')
+      .filter(filter)
+      .select([
+        'id',
+        'account',
+        'date',
+        'amount',
+        'payee',
+        'category',
+        'notes',
+        'cleared',
+        'reconciled',
+        'is_parent',
+        'is_child',
+        'parent_id',
+        'transfer_id',
+        'imported_id',
+        'schedule',
+      ])
+      .options({ splits: 'all' }),
+  )) as { data: TransactionRow[] };
+  return data;
+}
+
+// Read-only view of one transaction. A split child resolves to its parent so
+// the caller always sees the whole split and whether it balances.
+export async function inspectTransaction(id: string) {
+  const [requested] = await selectRows({ id });
+  if (!requested) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      `Transaction not found: ${id}`,
+      false,
+      {
+        field: 'id',
+      },
+    );
+  }
+  const rootId = requested.is_child ? requested.parent_id : requested.id;
+  const [root] = rootId ? await selectRows({ id: rootId }) : [requested];
+  const parent = root ?? requested;
+  const children = parent.is_parent
+    ? await selectRows({ parent_id: parent.id })
+    : [];
+  const childTotal = children.reduce((sum, row) => sum + row.amount, 0);
+  const transferIds = [parent, ...children]
+    .map(row => row.transfer_id)
+    .filter((value): value is string => !!value);
+  const transfers = transferIds.length
+    ? await selectRows({ id: { $oneof: transferIds } })
+    : [];
+  return {
+    requestedId: id,
+    transaction: parent,
+    children,
+    split: parent.is_parent
+      ? {
+          childCount: children.length,
+          childTotal,
+          balanced: childTotal === parent.amount,
+        }
+      : null,
+    transfers: transfers.map(row => ({
+      id: row.id,
+      account: row.account,
+      amount: row.amount,
+      parentId: row.parent_id,
+    })),
+  };
 }

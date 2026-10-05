@@ -14,6 +14,13 @@
 - CLI `transactions merge --ids a,b [--allow-reconciled] --operation-id`; journal outcome union includes `TransactionMergeOutcome`.
 - API `guarded duplicate merge` 1/1; packaged `guarded-transaction-merge.test.mjs` 6/6.
 
+## Slice 3: guarded split edits (A1) and transaction get
+
+- Core `packages/loot-core/src/server/transactions/guarded-split.ts` (`prepareTransactionSplit`, `performTransactionSplit`) writes through `shared/transactions.ts` `updateTransaction` and `batchUpdateTransactions`, then verifies the live children against the plan.
+- Types `TransactionSplitRequest|Proposal|Outcome`; handlers `api/transactions-preview-split` and `api/transactions-apply-split`; public `previewTransactionSplit`, `applyTransactionSplit`.
+- CLI `transactions split <id> --data|--file [--allow-reconciled] --operation-id`; read-only `transactions get <id>` (split children, balance, transfer counterparts) via public `aqlQuery`.
+- API `guarded split edits` 1/1; packaged `guarded-transaction-split.test.mjs` 6/6.
+
 ## Verification (Linux)
 
 | Check    | Command                                                                            | Result                                      |

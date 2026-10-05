@@ -291,14 +291,22 @@ actual transactions update <id> --data '{"notes":"Updated note"}'
 # Delete a transaction
 actual transactions delete <id>
 
+# Show one transaction with split children, split balance and transfer counterparts
+actual transactions get <id>
+
 # Set one category on a frozen list of transactions (guarded; "none" clears it)
 actual transactions categorize --ids <id>,<id> --category <id> --operation-id <unique-id> [--allow-reconciled]
 
 # Merge two duplicate transactions (guarded; the engine keeps the imported or earlier one)
 actual transactions merge --ids <id>,<id> --operation-id <unique-id> [--allow-reconciled]
+
+# Split a transaction, or replace its split children (guarded; children must sum to the amount)
+actual transactions split <id> --data '[{"amount":-400,"category":"<id>"},{"amount":-600,"category":"<id>"}]' --operation-id <unique-id> [--allow-reconciled]
 ```
 
 `transactions categorize` freezes the selected IDs and their current categories in the preview. Apply rejects the batch with `STALE_PREVIEW` if any record changed after preview, instead of widening or narrowing it. Split parents are rejected (categorize their children), transfers between two on-budget accounts and off-budget transactions cannot take a category, and reconciled transactions need `--allow-reconciled`; the proposal lists them in `reconciledIds`. Rules are not rerun. Preview the same batch with `actual changes preview transactions.categorize --operation-id <unique-id> --data '{"ids":["<id>"],"category":"<id>"}'`.
+
+`transactions split` writes through the shared split helpers. Children take `amount` and optional `category`, `notes` and `payee` (inheriting the parent payee). Their amounts must sum to the parent amount, so an invalid split fails before any write. Re-splitting a parent lists the replaced children in `removedChildIds`; the parent amount, date, account and cleared flag stay unchanged and the parent category is cleared. Split children, transfers and, without `--allow-reconciled`, reconciled transactions are rejected. The receipt outcome lists the new child IDs.
 
 `transactions merge` uses the engine's merge owner. The preview names `keepId` (imported over manual, then the earlier date) and `dropId`, split children that move or are deleted, and transfer counterparts merged by the same rule. Both rows must be in the same account with the same amount, split children cannot be merged, and reconciled rows need `--allow-reconciled`. The kept row fills its empty payee, category, notes and schedule from the dropped row; the dropped row is tombstoned.
 

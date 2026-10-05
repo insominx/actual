@@ -27,3 +27,13 @@
 ℹ fail 1
 # The rejection case first failed on message matching (the CLI returns a generic INVALID_INPUT message); after asserting the code it passed on rerun:
 ✔ merge rejects reconciled, mismatched and stale duplicates without writes
+
+# Split (Linux, 2026-10-05 00:56 PDT): node --test integration/guarded-transaction-split.test.mjs after CLI and server build
+✔ guarded transaction split preserves raw domains and acknowledgements (online) (11001.37161ms)
+✔ guarded transaction split preserves raw domains and acknowledgements (offline) (10478.11781ms)
+✔ killed guarded transaction split at before-engine retains its exact outcome without replay (39357.211911ms)
+✔ killed guarded transaction split at after-engine retains its exact outcome without replay (38909.617771ms)
+✔ killed guarded transaction split at before-sync retains its exact outcome without replay (40156.060027ms)
+✔ split rejects invalid sums, children and stale previews without writes (9631.340989ms)
+ℹ pass 6
+ℹ fail 0
