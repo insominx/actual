@@ -311,7 +311,7 @@
       "stage": "Workflows and delivery",
       "mode": "AFK",
       "dependencies": ["0031-cli-workflows", "0010-cli-runtime"],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-acceptance",

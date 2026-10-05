@@ -96,6 +96,7 @@ const READ_OPERATIONS = new Set([
   'workflow.run.inspect',
   'jobs.status',
   'jobs.schedule',
+  'upgrade.check',
   'server.version',
   'server.get-id',
   'rules.payee-rules',

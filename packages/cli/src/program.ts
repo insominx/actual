@@ -34,6 +34,7 @@ import { registerSyncCommand } from './commands/sync';
 import { registerTagsCommand } from './commands/tags';
 import { registerTransactionsCommand } from './commands/transactions';
 import { registerTransfersCommand } from './commands/transfers';
+import { registerUpgradeCommand } from './commands/upgrade';
 import { registerWorkflowCommand } from './commands/workflow';
 import { withConnection } from './connection';
 import { readJsonInput } from './input';
@@ -183,6 +184,7 @@ export function createProgram(
   registerWorkflowCommand(program);
   registerJobsCommand(program);
   registerMcpCommand(program, version);
+  registerUpgradeCommand(program, version);
   registerImportsCommand(program);
   registerRulesCommand(program);
   registerSchedulesCommand(program);

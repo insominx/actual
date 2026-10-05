@@ -565,6 +565,21 @@ Example host configuration:
 
 Every registered CLI operation is one tool (`accounts list` is `accounts_list`, `cash-planning inspect` is `cash-planning_inspect`) with the same input schema as `actual schema <operation>`, positional arguments as properties, and read-only and destructive annotations. There is no generic execute tool, and `server init/start/stop/logs/bootstrap`, `sync watch` and `profiles set/use` stay CLI-only. Each call runs the CLI with version 2 output and returns its envelope as `structuredContent`, so results, guarded changes, receipts and workflow runs are exactly the CLI's. Unknown tools and invalid inputs fail before anything runs. Resources: `actual://domains`, `actual://operations`, `actual://schema/{tool}`. Cancelling a call stops its process; guarded changes and workflow runs keep their recorded state. Budget selection and credentials come from the serve command's options or environment (prefer `ACTUAL_PASSWORD` or a profile over arguments); tools never take credentials. MCP is optional: nothing in the CLI depends on it.
 
+### Installation, upgrades and tutorials
+
+The CLI needs Node.js 22 or later. It depends on `@actual-app/api`, which uses the native `better-sqlite3` module: npm downloads a prebuilt binary for common platforms (Windows x64, Linux x64/arm64 with glibc, macOS); elsewhere npm builds it, which needs Python and a C++ toolchain. Install with `npm install -g @actual-app/cli` and keep the CLI on the same release line as your server.
+
+Keep secrets out of command lines: set `ACTUAL_SERVER_URL` and `ACTUAL_PASSWORD` (or a session token) in the environment, or save a profile with password and token files (`actual profiles set`). First run against a new server is `actual server bootstrap`, then `actual workflow setup` (see Workflows) or `actual budgets create`.
+
+```bash
+# Before and after upgrading: read-only report of device-local state
+actual upgrade check [--server]
+```
+
+`upgrade check` lists the schema versions of profiles, change receipts, workflow runs, jobs, bank sync runs and statement evidence, and which versions this CLI reads; it also lists prepared or uncertain receipts and unfinished workflow runs to settle before upgrading, and with `--server` compares the server release line. It never rewrites or deletes a file. Every device-local store is at schema version 1; a record written by a newer CLI is reported with the action to install that version, and commands that meet such a record fail with `INVALID_INPUT` instead of reinterpreting it. Budget IDs, sync IDs, import mappings and cash planning live in the budget and are preserved by the engine.
+
+Tutorials: [`examples/first-run.sh`](https://github.com/actualbudget/actual/blob/master/packages/cli/examples/first-run.sh) (bash) and [`examples/first-run.ps1`](https://github.com/actualbudget/actual/blob/master/packages/cli/examples/first-run.ps1) (PowerShell 7.3 or later) create a budget, import a CSV, add a transaction from stdin JSON and make a backup, with paths containing spaces.
+
 ### Checkup
 
 ```bash

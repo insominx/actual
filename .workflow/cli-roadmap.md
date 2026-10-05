@@ -152,3 +152,5 @@ Checkpoint 2026-10-05 03:50 PT: 0031 workflows completed locally on Linux. `work
 Checkpoint 2026-10-05 03:54 PT: 0032 automation completed locally on Linux. `jobs create|list|status|run|disable|enable|schedule` import stable routed inbox files through resumable intake runs with dedupe, overlap locking, local results and printed scheduler recipes; packaged 1/1, unit 327. Windows Task Scheduler execution pending. Decisions D3, D4 and D10 are for Michael.
 
 Checkpoint 2026-10-05 03:58 PT: 0033 MCP completed locally on Linux. `actual mcp serve` exposes registry-generated domain tools and resources over stdio and runs each call through the CLI; packaged 2/2 including the official SDK client, unit 331. Live MCP host E2E blocked (no host app or credentials). Decisions D2 and D4 are for Michael.
+
+Checkpoint 2026-10-05 04:03 PT: 0034 distribution completed locally on Linux. Packed API/CLI tarballs install into a clean directory and run first-run workflows; `actual upgrade check` diagnoses device-local schema versions without writing; bash tutorial executed, PowerShell tutorial pending Windows. Packaged 3/3, unit 333. Decisions D2, D3 and D5 are for Michael.

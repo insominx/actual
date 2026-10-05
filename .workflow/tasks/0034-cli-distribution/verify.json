@@ -1,0 +1,40 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "distribution-integration",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/distribution.test.mjs"
+        },
+        {
+          "id": "packed-smoke",
+          "command": "ACTUAL_TEST_PACKED=1 yarn workspace @actual-app/cli exec node --test integration/distribution.test.mjs"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src/upgrade-check.ts packages/cli/src/commands/upgrade.ts packages/cli/src/upgrade-check.test.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src/upgrade-check.ts packages/cli/src/commands/upgrade.ts packages/cli/src/upgrade-check.test.ts packages/cli/integration/distribution.test.mjs"
+        }
+      ]
+    }
+  }
+}
