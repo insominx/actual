@@ -10,6 +10,7 @@ import { registerAccountGroupsCommand } from './commands/account-groups';
 import { registerAccountsCommand } from './commands/accounts';
 import { registerBackupsCommand } from './commands/backups';
 import { registerBudgetsCommand } from './commands/budgets';
+import { registerCashPlanningCommand } from './commands/cash-planning';
 import { registerCategoriesCommand } from './commands/categories';
 import { registerCategoryGroupsCommand } from './commands/category-groups';
 import { registerChangesCommand } from './commands/changes';
@@ -164,6 +165,7 @@ export function createProgram(
   registerTagsCommand(program);
   registerNotesCommand(program);
   registerPreferencesCommand(program);
+  registerCashPlanningCommand(program);
   registerRulesCommand(program);
   registerSchedulesCommand(program);
   registerQueryCommand(program);

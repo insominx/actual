@@ -221,7 +221,7 @@ export function describePreference(key: unknown): PreferenceDescription {
   throw APIError(`Unknown synced preference: ${key}`);
 }
 
-async function storedPreference(id: string) {
+export async function storedPreference(id: string) {
   const row = await db.first<{ id: string; value: string | null }>(
     'SELECT id, value FROM preferences WHERE id = ?',
     [id],

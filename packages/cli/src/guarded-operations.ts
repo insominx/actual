@@ -44,6 +44,7 @@ export const DOMAIN_OPERATIONS = [
   'budgets.set-carryover',
   'budgets.hold-next-month',
   'budgets.reset-hold',
+  'cash-planning.save',
 ] as const;
 
 // Budget lifecycle operations with dedicated connection and lock handling.
@@ -72,6 +73,7 @@ export const PAYLOAD_SCOPED_OPERATIONS: readonly string[] = [
   'rules.create',
   'schedules.create',
   'transactions.categorize',
+  'cash-planning.save',
   'transactions.merge',
   'budgets.hold-next-month',
   'budgets.reset-hold',
@@ -131,6 +133,11 @@ export const DIRECT_GUARDED_COMMANDS: readonly string[] = [
   'budgets.set-carryover',
   'budgets.hold-next-month',
   'budgets.reset-hold',
+  'cash-planning.save',
+  'cash-planning.reset',
+  'cash-planning.set-target',
+  'cash-planning.reset-target',
+  'cash-planning.set-goal',
 ];
 
 export function isGuardedOperation(operation: string) {

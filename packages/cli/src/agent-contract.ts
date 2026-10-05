@@ -66,6 +66,7 @@ const READ_OPERATIONS = new Set([
   'accounts.inspect',
   'payees.inspect',
   'transactions.get',
+  'cash-planning.inspect',
   'server.version',
   'server.get-id',
   'rules.payee-rules',

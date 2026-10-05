@@ -37,3 +37,14 @@
 ✔ split rejects invalid sums, children and stale previews without writes (9631.340989ms)
 ℹ pass 6
 ℹ fail 0
+
+# Split with transactions get, plus existing browser-sync on Linux (2026-10-05 00:59 PDT): node --test integration/browser-sync.test.mjs integration/guarded-transaction-split.test.mjs
+✔ browser and two CLI caches converge after import, edit, preference change, and undo (13149.06502ms)
+✔ guarded transaction split preserves raw domains and acknowledgements (online) (11444.357051ms)
+✔ guarded transaction split preserves raw domains and acknowledgements (offline) (10802.475669ms)
+✔ killed guarded transaction split at before-engine retains its exact outcome without replay (38301.03775ms)
+✔ killed guarded transaction split at after-engine retains its exact outcome without replay (38964.429572ms)
+✔ killed guarded transaction split at before-sync retains its exact outcome without replay (40531.881421ms)
+✔ split rejects invalid sums, children and stale previews without writes; get reads the whole split (11633.958236ms)
+ℹ pass 7
+ℹ fail 0

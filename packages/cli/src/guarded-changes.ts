@@ -622,7 +622,10 @@ export async function executeCatalogChange(
 export async function executeScopedChange(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  operation: 'transactions.categorize' | 'transactions.merge',
+  operation:
+    | 'transactions.categorize'
+    | 'transactions.merge'
+    | 'cash-planning.save',
   payload: Record<string, unknown>,
 ) {
   if (!operationId) {
@@ -1360,6 +1363,10 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
     preview: r => api.previewTransactionSplit(r as api.TransactionSplitRequest),
     apply: p => api.applyTransactionSplit(p as api.TransactionSplitProposal),
   },
+  'cash-planning.save': {
+    preview: r => api.previewCashPlanSave(r as api.CashPlanSaveRequest),
+    apply: p => api.applyCashPlanSave(p as api.CashPlanSaveProposal),
+  },
   'transactions.add': {
     preview: r =>
       api.previewTransactionAddition(r as api.TransactionAdditionRequest),
@@ -1464,6 +1471,7 @@ function changeRequest(
   | api.TransactionCategorizationRequest
   | api.TransactionMergeRequest
   | api.TransactionSplitRequest
+  | api.CashPlanSaveRequest
   | api.TransactionAdditionRequest
   | api.TransactionImportRequest
   | api.CategoryGroupDeletionRequest
@@ -1529,6 +1537,20 @@ function changeRequest(
       );
     }
     return { targetId: id, mergeIds: payload.mergeIds as string[] };
+  }
+  if (operation === 'cash-planning.save') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(key => key !== 'config') ||
+      !('config' in payload) ||
+      !(payload.config === null || isRecord(payload.config))
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Cash plan save takes only a config object, or null to reset.',
+      );
+    }
+    return payload as api.CashPlanSaveRequest;
   }
   if (operation === 'transactions.split') {
     if (

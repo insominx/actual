@@ -20,6 +20,10 @@ import type {
 } from '#server/catalog-inspect';
 import type { batchUpdateTransactions } from '#server/transactions';
 import type { QueryState } from '#shared/query';
+import type {
+  CashPlanInspection,
+  CashPlanInspectRequest,
+} from '#types/models/cash-planning';
 
 import type {
   AccountCloseOutcome,
@@ -59,6 +63,8 @@ import type {
   BudgetPublicationRequest,
   BudgetRestoreProposal,
   BudgetRestoreRequest,
+  CashPlanSaveProposal,
+  CashPlanSaveRequest,
   CategoryCreationOutcome,
   CategoryCreationProposal,
   CategoryCreationRequest,
@@ -368,6 +374,15 @@ export type ApiHandlers = {
   'api/transactions-apply-split': (
     arg: TransactionSplitProposal,
   ) => Promise<TransactionSplitOutcome>;
+  'api/cash-planning-inspect': (
+    arg: CashPlanInspectRequest,
+  ) => Promise<CashPlanInspection>;
+  'api/cash-planning-preview-save': (
+    arg: CashPlanSaveRequest,
+  ) => Promise<CashPlanSaveProposal>;
+  'api/cash-planning-apply-save': (
+    arg: CashPlanSaveProposal,
+  ) => Promise<TransactionUpdateOutcome>;
   'api/transactions-preview-addition': (
     arg: TransactionAdditionRequest,
   ) => Promise<TransactionAdditionProposal>;

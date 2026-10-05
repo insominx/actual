@@ -222,6 +222,10 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
             },
             ['subtransactions'],
           ),
+          object(
+            { config: { anyOf: [{ type: 'object' }, { type: 'null' }] } },
+            ['config'],
+          ),
           object(ruleFields, [
             'stage',
             'conditionsOp',

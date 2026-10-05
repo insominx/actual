@@ -162,7 +162,7 @@ const split = {
 guardedRegularCases(split);
 guardedInterruptionCases(split);
 
-void test('split rejects invalid sums, children and stale previews without writes', async () => {
+void test('split rejects invalid sums, children and stale previews without writes; get reads the whole split', async () => {
   const f = await createFixture({ encrypted: true });
   try {
     const cli = async args => {
@@ -222,6 +222,34 @@ void test('split rejects invalid sums, children and stale previews without write
     assert.notEqual(stale.code, 0, 'stale split must not apply');
     assert.match(stale.stdout + stale.stderr, /STALE_PREVIEW/);
     assert.deepEqual(await readRaw(f), edited, 'stale split wrote state');
+
+    // Read-only get resolves a split child to its balanced parent.
+    const applied = await cli([
+      'transactions',
+      'split',
+      ctx.two,
+      '--data',
+      JSON.stringify([
+        { amount: -1000, category: ctx.food },
+        { amount: -2000, category: ctx.home },
+      ]),
+      '--operation-id',
+      'split-for-get',
+    ]);
+    const childId = applied.receipt.outcome.transactionSplit.childIds[0];
+    const afterSplit = await readRaw(f);
+    const view = await cli(['transactions', 'get', childId]);
+    assert.equal(view.transaction.id, ctx.two);
+    assert.equal(view.children.length, 2);
+    assert.deepEqual(view.split, {
+      childCount: 2,
+      childTotal: -3000,
+      balanced: true,
+    });
+    assert.deepEqual(view.transfers, []);
+    assert.deepEqual(await readRaw(f), afterSplit, 'get wrote state');
+    const missing = await f.cli(['transactions', 'get', 'missing-id']);
+    assert.notEqual(missing.code, 0);
   } finally {
     await f.dispose();
   }

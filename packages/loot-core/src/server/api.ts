@@ -139,6 +139,11 @@ import {
   copySourceIgnoredTables,
   inspectCopySource,
 } from './budgetfiles/copy-source';
+import {
+  inspectCashPlan,
+  performCashPlanSave,
+  prepareCashPlanSave,
+} from './cash-planning/plan';
 import { inspectCatalog } from './catalog-inspect';
 import * as cloudStorage from './cloud-storage';
 import type { RemoteFile } from './cloud-storage';
@@ -3414,6 +3419,21 @@ function guardedCatalogHandlers<
   );
   handlers['api/transactions-preview-split'] = transactionSplit.preview;
   handlers['api/transactions-apply-split'] = transactionSplit.apply;
+  const cashPlanSave = guardedCatalogHandlers(
+    prepareCashPlanSave,
+    guardedApply({
+      operation: 'cash-planning.save',
+      noun: 'Cash plan save',
+      prepare: prepareCashPlanSave,
+      perform: performCashPlanSave,
+    }),
+  );
+  handlers['api/cash-planning-preview-save'] = cashPlanSave.preview;
+  handlers['api/cash-planning-apply-save'] = cashPlanSave.apply;
+  handlers['api/cash-planning-inspect'] = async request => {
+    checkFileOpen();
+    return inspectCashPlan(request);
+  };
   const scheduleCreation = guardedCatalogHandlers(
     prepareScheduleCreation,
     guardedApply({

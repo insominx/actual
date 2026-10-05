@@ -56,6 +56,8 @@ import type {
   BudgetPublicationRequest,
   BudgetRestoreProposal,
   BudgetRestoreRequest,
+  CashPlanSaveProposal,
+  CashPlanSaveRequest,
   CategoryCreationProposal,
   CategoryCreationRequest,
   CategoryDeletionProposal,
@@ -119,6 +121,7 @@ import type {
   RuleEntity,
   TransactionEntity,
 } from '@actual-app/core/types/models';
+import type { CashPlanInspectRequest } from '@actual-app/core/types/models/cash-planning';
 import type { SyncedPrefs } from '@actual-app/core/types/prefs';
 
 export { q } from './app/query';
@@ -140,6 +143,8 @@ export type {
   TransactionSplitRequest,
   TransactionSplitProposal,
   TransactionSplitOutcome,
+  CashPlanSaveRequest,
+  CashPlanSaveProposal,
   ScheduleCreationRequest,
   ScheduleUpdateRequest,
   ScheduleDeletionRequest,
@@ -457,6 +462,15 @@ export function previewTransactionSplit(request: TransactionSplitRequest) {
 }
 export function applyTransactionSplit(proposal: TransactionSplitProposal) {
   return send('api/transactions-apply-split', proposal);
+}
+export function inspectCashPlan(request: CashPlanInspectRequest = {}) {
+  return send('api/cash-planning-inspect', request);
+}
+export function previewCashPlanSave(request: CashPlanSaveRequest) {
+  return send('api/cash-planning-preview-save', request);
+}
+export function applyCashPlanSave(proposal: CashPlanSaveProposal) {
+  return send('api/cash-planning-apply-save', proposal);
 }
 export function previewTransactionDeletion(
   request: TransactionDeletionRequest,

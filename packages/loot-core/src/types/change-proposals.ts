@@ -1,4 +1,5 @@
 import type { NewRuleEntity, TransactionEntity } from './models';
+import type { CashPlanningConfig } from './models/cash-planning';
 
 export type TransactionUpdateRequest = {
   id: string;
@@ -355,6 +356,16 @@ export type TransactionSplitProposal = CatalogProposal<
 export type TransactionSplitOutcome = CatalogCommit<{
   transactionSplit: { childIds: string[] };
 }>;
+
+export type CashPlanSaveRequest = {
+  config: CashPlanningConfig | null;
+};
+export type CashPlanSaveProposal = CatalogProposal<
+  'cash-planning.save',
+  CashPlanSaveRequest,
+  { preference: { id: string; value: string | null } | null },
+  { preference: { id: string; value: string | null } }
+>;
 
 export type TransactionAdditionRequest = {
   accountId: string;
@@ -797,6 +808,7 @@ export type ChangeProposal =
   | TransactionCategorizationProposal
   | TransactionMergeProposal
   | TransactionSplitProposal
+  | CashPlanSaveProposal
   | TransactionAdditionProposal
   | TransactionImportProposal
   | CategoryGroupCreationProposal
