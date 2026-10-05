@@ -46,3 +46,10 @@ Windows rerun pending.
 - Command: `E2E_USE_BUILD=1 E2E_WORKERS=2 yarn vrt`.
 - Result: 122 passed / 28 failed / 17 did not run (~8.0m). No `--update-snapshots`.
 - Evidence: `verification-playwright-vrt-linux.txt`, `evidence/playwright-vrt-linux.txt`, `evidence/vrt-samples/`.
+
+## Linux VRT baseline adoption (D12)
+
+- Rebuild: `REACT_APP_NETLIFY=true yarn build:browser --skip-translations`.
+- Update: `E2E_USE_BUILD=1 E2E_WORKERS=2 yarn vrt --update-snapshots` → 167 passed, 111 PNGs.
+- Confirm: `E2E_USE_BUILD=1 E2E_WORKERS=2 yarn vrt` → **167/167**.
+- Evidence: `verification-playwright-vrt-baselines-linux.txt`, `evidence/playwright-vrt-update*.txt`, `evidence/playwright-vrt-confirm*.txt`, `evidence/vrt-ci-parity-build.txt`.

@@ -53,7 +53,7 @@ Defect found and fixed: workflow findings with identical messages collapsed into
 | Packed CLI and API tarball install (`ACTUAL_TEST_PACKED=1`)                          | 3/3 (0034)                             |
 | CLI integration suites per task                                                      | See each task's verification file      |
 | Browser interop (`integration/browser-*.test.mjs`, built desktop client in Chromium) | 4/4 (`verification-browser-linux.txt`) |
-| Desktop/mobile Playwright suites (`packages/desktop-client/e2e`)                     | Functional **167/167** (D10); VRT **122/28/17** recorded, baselines unchanged (D11) |
+| Desktop/mobile Playwright suites (`packages/desktop-client/e2e`)                     | Functional **167/167** (D10); VRT D11 recorded; D12 baselines adopted + confirm **167/167** |
 
 ## Performance baseline (A3)
 
@@ -74,5 +74,5 @@ The query page returns at most 100 rows with a truncation flag, data-quality hon
 - Windows: PowerShell tutorial, packed install, and Task Scheduler *dry-run* completed on liftoff; `schtasks /Create` was not executed.
 - Live bank sync and a live MCP host app not exercised (fake provider and official SDK client only).
 - Opening balances from `workflow setup` are dated on the setup day (D3); back-filled history needs them moved.
-- Functional Playwright completed on Linux 167/167 (D10). VRT run on Linux: 122 passed / 28 failed / 17 skipped; baselines not rewritten (D11).
+- Functional Playwright completed on Linux 167/167 (D10). VRT D11 recorded failures; D12 Michael-approved CI-parity rebuild + `--update-snapshots` + confirm 167/167.
 - Performance figures are single-host baselines, not claims.
