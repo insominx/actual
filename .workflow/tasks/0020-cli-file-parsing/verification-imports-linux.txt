@@ -1,0 +1,8 @@
+# 0020 packaged and browser import proofs (Linux, 2026-10-05 01:31 PDT)
+# Build: yarn exec lage build --scope=@actual-app/cli --no-cache; yarn workspace @actual-app/sync-server build
+# Command: (packages/cli) node --test integration/imports.test.mjs integration/browser-imports.test.mjs
+✔ saved import mappings round-trip between the CLI and the browser (6317.444683ms)
+✔ imports inspect and parse normalize files without writes and apply saved mappings (9909.353347ms)
+ℹ tests 2
+ℹ pass 2
+ℹ fail 0

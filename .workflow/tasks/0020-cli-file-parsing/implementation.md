@@ -15,14 +15,14 @@
 
 ## Verification (Linux)
 
-| Check    | Command                                                                                        | Result  |
-| -------- | ---------------------------------------------------------------------------------------------- | ------- |
-| Shared   | `yarn workspace @actual-app/core exec vitest run src/shared/import-mapping.test.ts`            | 3/3     |
-| Dialog   | `yarn workspace @actual-app/web exec vitest run src/components/modals/ImportTransactionsModal` | 113/113 |
-| API      | `yarn workspace @actual-app/api exec vitest run -t "import file inspection"`                   | 1/1     |
-| CLI unit | `yarn workspace @actual-app/cli test`                                                          | 303/303 |
-| Types    | loot-core, desktop-client, API and CLI `tsc`                                                   | clean   |
-| Packaged | `node --test integration/imports.test.mjs integration/browser-imports.test.mjs`                | pending |
+| Check    | Command                                                                                        | Result                                 |
+| -------- | ---------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Shared   | `yarn workspace @actual-app/core exec vitest run src/shared/import-mapping.test.ts`            | 3/3                                    |
+| Dialog   | `yarn workspace @actual-app/web exec vitest run src/components/modals/ImportTransactionsModal` | 113/113                                |
+| API      | `yarn workspace @actual-app/api exec vitest run -t "import file inspection"`                   | 1/1                                    |
+| CLI unit | `yarn workspace @actual-app/cli test`                                                          | 303/303                                |
+| Types    | loot-core, desktop-client, API and CLI `tsc`                                                   | clean                                  |
+| Packaged | `node --test integration/imports.test.mjs integration/browser-imports.test.mjs`                | 2/2 (`verification-imports-linux.txt`) |
 
 Limitations: Windows not run. The browser proof covers the shared preferences; it does not drive the file picker in the import dialog.
 

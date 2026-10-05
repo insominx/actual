@@ -142,7 +142,7 @@
         "0016-cli-catalog-settings",
         "0017-cli-query"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-imports",
