@@ -118,3 +118,5 @@ Known baseline: prior cash-planning verification recorded repository-wide format
 2026-10-04 checkpoint: 0017-cli-query started (its prerequisites 0009 and 0012 are complete; it does not wait on 0014). Slice 1, core schema metadata and pre-execution query validation, is implemented.
 
 2026-10-04 23:53 PT checkpoint: 0017-cli-query is completed locally on Linux (A1-A3 verified with unit and packaged evidence; Windows rerun pending). Dependents 0018, 0020, 0026 and 0027 no longer wait on 0017 but remain held on 0014 and their other prerequisites.
+
+2026-10-05 00:11 PT checkpoint: 0014-cli-mutations is completed locally on Linux. Every existing write adapter is guarded, the full changes.test.mjs regression passes 86/86 and all guarded-* packaged cases pass; the Windows rerun of the Linux-only adapters remains open. ASSUMPTION for Michael to review: dependents may start on this Linux acceptance. 0016-cli-catalog-settings started (notes, typed synced preferences and catalog inspection).

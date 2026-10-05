@@ -205,6 +205,7 @@ Example `.actualrc.json`:
 | `payees`          | Manage payees                  |
 | `tags`            | Manage tags                    |
 | `notes`           | Read and change notes          |
+| `preferences`     | Inspect and change preferences |
 | `rules`           | Manage transaction rules       |
 | `schedules`       | Manage scheduled transactions  |
 | `query`           | Run an ActualQL query          |

@@ -221,6 +221,9 @@ actual budgets reset-hold --month 2026-03
 # List all categories
 actual categories list
 
+# Inspect categories: duplicates, hidden/deleted rows, merge targets, transaction counts
+actual categories inspect [--include-deleted] [--name <text>]
+
 # Create a category
 actual categories create --name "Groceries" --group-id <id> [--is-income]
 
@@ -278,6 +281,9 @@ actual payees list
 # List common payees
 actual payees common
 
+# Inspect payees: duplicates, merged rows and transaction counts
+actual payees inspect [--include-deleted] [--name <text>]
+
 # Create a payee
 actual payees create --name "Grocery Store"
 
@@ -322,6 +328,19 @@ actual notes set --month 2026-10 --clear --operation-id <unique-id>
 ```
 
 Note IDs follow the app: `account-<id>`, a category or group ID, `budget-<YYYY-MM>` for a month and `<category-id>-<YYYY-MM>` for a category's month note; a raw ID can be passed instead of a flag. Targets must be live, so a typo or deleted entity is rejected instead of creating an orphan note. Reading a missing note returns `null` and writes nothing. `notes set` runs the guarded `notes.set` change (`actual changes preview notes.set <note-id> --data '{"note":"text"}'` works too), rejects stale previews and returns a receipt. Category notes can carry `#template` and `#goal` lines, so the preview warns that budget templates reading notes will use the new text.
+
+### Preferences
+
+```bash
+# List synced preferences with scope, authority, allowed values, app default and current value
+actual preferences inspect [key]
+
+# Change or reset an allowlisted preference (an operation ID is always required)
+actual preferences set dateFormat yyyy-MM-dd --operation-id <unique-id>
+actual preferences reset dateFormat --operation-id <unique-id>
+```
+
+Only synced budget preferences are covered; device-local settings never sync and budget metadata such as the name belongs to `budgets rename`. Settable keys are display settings (`dateFormat`, `numberFormat`, `hideFraction`, `isPrivacyEnabled`, `defaultCurrencyCode`, `currencySymbolPosition`, `currencySpaceBetweenAmountAndSymbol`, `firstDayOfWeekIdx`, `upcomingScheduledTransactionLength`, `show-hidden-tags`) and `flags.<feature>` experimental flags, each with validated values. Domain-owned keys are listed with their owner and rejected here: `budgetType`, `cashPlanning` (its typed tool), import mappings and bank sync options. Unknown keys fail. Inspection never writes, and an unset key reports `null` with the app default alongside. `reset` clears the stored value so the app falls back to its default. Changes run the guarded `preferences.set` change (`actual changes preview preferences.set <key> --data '{"value":"..."}'`, or `{"value":null}` to reset).
 
 ### Rules
 

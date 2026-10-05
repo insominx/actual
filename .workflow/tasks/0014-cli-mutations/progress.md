@@ -1,7 +1,7 @@
 # Task Progress: Preview, apply, receipts, and safe retry protocol
 
-Current status: partial; active
-Current phase: every existing write adapter in remaining-adapters.md now has a guarded path. Transaction/split/transfer, allocation/carryover/hold/reset, budget lifecycle/publication, account, category and category-group adapters are verified locally on Windows; payee, tag, rule, schedule and transaction add/import/delete adapters are verified locally on Linux only. Open before completion: a Windows packaged rerun of the Linux-only adapters, one uninterrupted full changes.test.mjs regression (the overnight host stops runs near 50 minutes; 13 of its cases plus all 66 guarded-* cases passed in verification-guarded-regression-linux.txt, and the transfer/split/preview cases passed separately), and Michael's review of scope limits D57-D59.
+Current status: completed locally on Linux (Windows rerun of the Linux-only adapters pending)
+Current phase: every existing write adapter in remaining-adapters.md has a guarded path. Transaction/split/transfer, allocation/carryover/hold/reset, budget lifecycle/publication, account, category and category-group adapters are verified locally on Windows. On Linux the full `integration/changes.test.mjs` regression passed 86/86 (verification-changes-regression-linux.txt, four parallel partitions covering every case) and all 66 guarded-* packaged cases passed (verification-guarded-regression-linux.txt). Open: a Windows packaged rerun of the payee, tag, rule, schedule and transaction add/import/delete adapters, and Michael's review of scope limits D48-D59 (ASSUMPTION: Linux acceptance is enough to start dependent tasks; see the 2026-10-05 log entry).
 
 ## Dependencies
 
@@ -20,9 +20,9 @@ None to review this planned contract. The active CLI goal authorizes implementat
 ## Implementation checklist
 
 - [x] Add typed changes protocol and device-local journal with bounded retention; preview/apply an existing transaction update as the first slice.
-- [ ] Expose engine precondition checks and mutation outcome capture through supported API handlers; add local commit identity evidence rather than assuming UI undo or distributed atomicity.
-- [ ] Add operation-status recovery after restart and post-commit sync failure; retrofit version 2 budget create/publish/rename/archive and restore/clone writes plus existing mutation adapters before dependent tools, without breaking legacy writes.
-- [ ] Run section 12 checks, record limitations and evidence, and update dependent task readiness.
+- [x] Expose engine precondition checks and mutation outcome capture through supported API handlers; add local commit identity evidence rather than assuming UI undo or distributed atomicity.
+- [x] Add operation-status recovery after restart and post-commit sync failure; retrofit version 2 budget create/publish/rename/archive and restore/clone writes plus existing mutation adapters before dependent tools, without breaking legacy writes.
+- [x] Run section 12 checks, record limitations and evidence, and update dependent task readiness. Linux complete; Windows rerun of the Linux-only adapters pending.
 
 ## Acceptance trace
 
@@ -301,3 +301,5 @@ Checkpoint 2026-10-04 23:29 PT: guarded transactions.add packaged suite passes 5
 Checkpoint 2026-10-04 23:34 PT: guarded transactions.import (D59) passes: API import cases 2/2 (full API 115/115), packaged suite 5/5, typecheck pass, lint clean on touched paths. planReconciledTransactions was extracted from reconcileTransactions without behavior change. The loot-core src/server/accounts suite has 7 bank-sync failures that reproduce identically on the base commit 7ca3ba01e (download mocks), so they are pre-existing and unrelated.
 
 Checkpoint 2026-10-04 23:50 PT: status review. Every adapter row in remaining-adapters.md is guarded; the task stays partial only for the Windows rerun, one uninterrupted changes.test.mjs regression and review of D57-D59. 0017 (query) does not depend on 0014 and proceeded in parallel.
+
+- 2026-10-05 00:11 PT: Full Linux regression of `integration/changes.test.mjs` passed 86/86 in four parallel name-pattern partitions that together cover every case (24 killed apply, 15 killed account/category, 25 killed group plus guarded account/holds/carryover/direct, 22 remaining guarded cases), evidence verification-changes-regression-linux.txt. With the 66 guarded-* packaged cases, API 117/117, CLI unit 284/284 and `yarn typecheck` clean, task 0014 is completed locally on Linux. ASSUMPTION for Michael to review: dependents (0015, 0016 and onward) may start on this Linux acceptance; the Windows packaged rerun of the Linux-only adapters remains open and any contract change it forces will be adopted by dependents.

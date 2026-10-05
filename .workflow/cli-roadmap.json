@@ -79,7 +79,7 @@
         "0012-cli-sync",
         "0013-cli-backups"
       ],
-      "status": "partially-implemented"
+      "status": "completed-locally"
     },
     {
       "key": "cli-accounts",
@@ -97,7 +97,7 @@
       "stage": "Domain tools",
       "mode": "AFK",
       "dependencies": ["0014-cli-mutations"],
-      "status": "planned-prerequisite-hold"
+      "status": "partially-implemented"
     },
     {
       "key": "cli-query",
