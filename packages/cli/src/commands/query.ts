@@ -9,6 +9,8 @@ import { readJsonInput } from '#input';
 import { printOutput } from '#output';
 import { isRecord, parseIntFlag } from '#utils';
 
+import { registerQueryAggregate } from './query-aggregate';
+
 /**
  * Parse order-by strings like "date:desc,amount:asc,id" into
  * AQL orderBy format: [{ date: 'desc' }, { amount: 'asc' }, 'id']
@@ -465,6 +467,8 @@ export function registerQueryCommand(program: Command) {
   const query = program
     .command('query')
     .description('Run AQL (Actual Query Language) queries');
+
+  registerQueryAggregate(query, program);
 
   query
     .command('run')
