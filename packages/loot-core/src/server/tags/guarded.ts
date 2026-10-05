@@ -95,7 +95,8 @@ export async function prepareTagCreation(
           action: 'insert',
           tag: {
             tag: request.tag,
-            color: color === null ? null : color.trim(),
+            // Match createTag insert: falsy/empty color becomes null.
+            color: color ? color.trim() : null,
             description,
             tombstone: 0,
           },
