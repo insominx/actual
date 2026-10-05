@@ -1,4 +1,5 @@
 import { send } from '@actual-app/core/platform/client/connection';
+import type { ReconciliationStatusRequest } from '@actual-app/core/server/accounts/reconcile';
 import type {
   APIAccountEntity,
   APIAccountGroupEntity,
@@ -10,7 +11,19 @@ import type {
   APIScheduleEntity,
   APITagEntity,
 } from '@actual-app/core/server/api-models';
+import {
+  describeQuerySchema,
+  validateQuery as validateCoreQuery,
+} from '@actual-app/core/server/aql/schema-metadata';
+import type {
+  QuerySchemaMetadata,
+  QueryValidation,
+} from '@actual-app/core/server/aql/schema-metadata';
+import type { DataQualityRequest } from '@actual-app/core/server/checkup/data-quality';
 import type { ImportableBudgetType } from '@actual-app/core/server/importers/index';
+import type { ReportRequest } from '@actual-app/core/server/reports/ledger-reports';
+import type { RuleTestRequest } from '@actual-app/core/server/rules/evaluate';
+import type { ScheduleInspectionRequest } from '@actual-app/core/server/schedules/inspect';
 import type { Query } from '@actual-app/core/shared/query';
 import type { ImportTransactionsOpts } from '@actual-app/core/types/api-handlers';
 import type {
@@ -21,6 +34,12 @@ import type {
   AccountCreationRequest,
   AccountDeletionProposal,
   AccountDeletionRequest,
+  AccountGroupCreationProposal,
+  AccountGroupCreationRequest,
+  AccountGroupDeletionProposal,
+  AccountGroupDeletionRequest,
+  AccountGroupUpdateProposal,
+  AccountGroupUpdateRequest,
   AccountReopenProposal,
   AccountReopenRequest,
   AccountUpdateProposal,
@@ -37,11 +56,17 @@ import type {
   BudgetHoldRequest,
   BudgetMetadataProposal,
   BudgetMetadataRequest,
+  BudgetMoveProposal,
+  BudgetMoveRequest,
   BudgetPublicationOutcome,
   BudgetPublicationProposal,
   BudgetPublicationRequest,
   BudgetRestoreProposal,
   BudgetRestoreRequest,
+  BudgetTemplatesProposal,
+  BudgetTemplatesRequest,
+  CashPlanSaveProposal,
+  CashPlanSaveRequest,
   CategoryCreationProposal,
   CategoryCreationRequest,
   CategoryDeletionProposal,
@@ -54,8 +79,71 @@ import type {
   CategoryGroupUpdateRequest,
   CategoryUpdateProposal,
   CategoryUpdateRequest,
+  ImportFileProposal,
+  ImportFileRequest,
+  ImportMappingSaveProposal,
+  ImportMappingSaveRequest,
+  NoteSetProposal,
+  NoteSetRequest,
+  PayeeCreationProposal,
+  PayeeCreationRequest,
+  PayeeDeletionProposal,
+  PayeeDeletionRequest,
+  PayeeMergeProposal,
+  PayeeMergeRequest,
+  PayeeUpdateProposal,
+  PayeeUpdateRequest,
+  PreferenceSetProposal,
+  PreferenceSetRequest,
+  ReconcileAdjustProposal,
+  ReconcileAdjustRequest,
+  ReconcileFinishProposal,
+  ReconcileFinishRequest,
+  RuleApplyProposal,
+  RuleApplyRequest,
+  RuleCreationProposal,
+  RuleCreationRequest,
+  RuleDeletionProposal,
+  RuleDeletionRequest,
+  RuleUpdateProposal,
+  RuleUpdateRequest,
+  ScheduleCreationProposal,
+  ScheduleCreationRequest,
+  ScheduleDeletionProposal,
+  ScheduleDeletionRequest,
+  ScheduleOccurrenceRequest,
+  SchedulePostProposal,
+  ScheduleSkipProposal,
+  ScheduleUpdateProposal,
+  ScheduleUpdateRequest,
+  TagCreationProposal,
+  TagCreationRequest,
+  TagDeletionProposal,
+  TagDeletionRequest,
+  TagUpdateProposal,
+  TagUpdateRequest,
+  TransactionAdditionProposal,
+  TransactionAdditionRequest,
+  TransactionCategorizationProposal,
+  TransactionCategorizationRequest,
+  TransactionClearingProposal,
+  TransactionClearingRequest,
+  TransactionDeletionProposal,
+  TransactionDeletionRequest,
+  TransactionImportProposal,
+  TransactionImportRequest,
+  TransactionMergeProposal,
+  TransactionMergeRequest,
+  TransactionSplitProposal,
+  TransactionSplitRequest,
   TransactionUpdateProposal,
   TransactionUpdateRequest,
+  TransferMatchProposal,
+  TransferMatchRequest,
+  TransferRepairProposal,
+  TransferRepairRequest,
+  TransferUnmatchProposal,
+  TransferUnmatchRequest,
 } from '@actual-app/core/types/change-proposals';
 import type {
   ImportTransactionEntity,
@@ -63,11 +151,108 @@ import type {
   RuleEntity,
   TransactionEntity,
 } from '@actual-app/core/types/models';
+import type { CashPlanInspectRequest } from '@actual-app/core/types/models/cash-planning';
 import type { SyncedPrefs } from '@actual-app/core/types/prefs';
 
 export { q } from './app/query';
 export type {
   CategoryCreationOutcome,
+  TransactionImportRequest,
+  TransactionImportProposal,
+  TransactionImportOutcome,
+  TransactionAdditionRequest,
+  TransactionAdditionProposal,
+  TransactionAdditionOutcome,
+  TransactionDeletionRequest,
+  TransactionDeletionProposal,
+  TransactionCategorizationRequest,
+  TransactionCategorizationProposal,
+  TransactionClearingRequest,
+  TransactionClearingProposal,
+  ImportMappingSaveRequest,
+  ImportMappingSaveProposal,
+  ImportFileRequest,
+  ImportFileProposal,
+  ImportFileOutcome,
+  ImportFileRowOutcome,
+  RuleApplyRequest,
+  RuleApplyProposal,
+  RuleApplyOutcome,
+  ScheduleOccurrenceRequest,
+  ScheduleSnapshot,
+  SchedulePostProposal,
+  SchedulePostOutcome,
+  ScheduleSkipProposal,
+  ScheduleSkipOutcome,
+  BudgetMoveRequest,
+  BudgetMoveCell,
+  BudgetMoveProposal,
+  BudgetMoveOutcome,
+  BudgetTemplatesRequest,
+  BudgetTemplateRow,
+  BudgetTemplatesProposal,
+  BudgetTemplatesOutcome,
+  ReconcileFinishRequest,
+  ReconcileFinishProposal,
+  ReconcileFinishOutcome,
+  ReconcileAdjustRequest,
+  ReconcileAdjustProposal,
+  ReconcileAdjustOutcome,
+  TransferMatchRequest,
+  TransferMatchProposal,
+  TransferUnmatchRequest,
+  TransferUnmatchProposal,
+  TransferRepairRequest,
+  TransferRepairProposal,
+  TransferRepairOutcome,
+  TransactionMergeRequest,
+  TransactionMergeProposal,
+  TransactionMergeOutcome,
+  TransactionSplitRequest,
+  TransactionSplitProposal,
+  TransactionSplitOutcome,
+  CashPlanSaveRequest,
+  CashPlanSaveProposal,
+  ScheduleCreationRequest,
+  ScheduleUpdateRequest,
+  ScheduleDeletionRequest,
+  ScheduleCreationProposal,
+  ScheduleUpdateProposal,
+  ScheduleDeletionProposal,
+  ScheduleCreationOutcome,
+  RuleCreationRequest,
+  RuleUpdateRequest,
+  RuleDeletionRequest,
+  RuleCreationProposal,
+  RuleUpdateProposal,
+  RuleDeletionProposal,
+  RuleCreationOutcome,
+  PayeeUpdateRequest,
+  PayeeUpdateProposal,
+  PayeeDeletionRequest,
+  PayeeDeletionProposal,
+  PayeeMergeRequest,
+  PayeeMergeProposal,
+  TagCreationRequest,
+  TagCreationProposal,
+  TagUpdateRequest,
+  TagUpdateProposal,
+  TagDeletionRequest,
+  TagDeletionProposal,
+  NoteSetRequest,
+  NoteSetProposal,
+  NoteTarget,
+  AccountGroupCreationRequest,
+  AccountGroupCreationProposal,
+  AccountGroupCreationOutcome,
+  AccountGroupUpdateRequest,
+  AccountGroupUpdateProposal,
+  AccountGroupDeletionRequest,
+  AccountGroupDeletionProposal,
+  PreferenceSetRequest,
+  PreferenceSetProposal,
+  PayeeMergeOutcome,
+  TagCreationOutcome,
   PayeeCreationOutcome,
   PayeeCreationProposal,
   PayeeCreationRequest,
@@ -213,6 +398,366 @@ export function previewPayeeCreation(request: PayeeCreationRequest) {
 }
 export function applyPayeeCreation(proposal: PayeeCreationProposal) {
   return send('api/payee-apply-creation', proposal);
+}
+export function previewPayeeUpdate(request: PayeeUpdateRequest) {
+  return send('api/payee-preview-update', request);
+}
+export function applyPayeeUpdate(proposal: PayeeUpdateProposal) {
+  return send('api/payee-apply-update', proposal);
+}
+export function previewPayeeDeletion(request: PayeeDeletionRequest) {
+  return send('api/payee-preview-deletion', request);
+}
+export function applyPayeeDeletion(proposal: PayeeDeletionProposal) {
+  return send('api/payee-apply-deletion', proposal);
+}
+export function previewPayeeMerge(request: PayeeMergeRequest) {
+  return send('api/payee-preview-merge', request);
+}
+export function applyPayeeMerge(proposal: PayeeMergeProposal) {
+  return send('api/payee-apply-merge', proposal);
+}
+export function previewTagCreation(request: TagCreationRequest) {
+  return send('api/tag-preview-creation', request);
+}
+export function applyTagCreation(proposal: TagCreationProposal) {
+  return send('api/tag-apply-creation', proposal);
+}
+export function previewTagUpdate(request: TagUpdateRequest) {
+  return send('api/tag-preview-update', request);
+}
+export function applyTagUpdate(proposal: TagUpdateProposal) {
+  return send('api/tag-apply-update', proposal);
+}
+export function previewTagDeletion(request: TagDeletionRequest) {
+  return send('api/tag-preview-deletion', request);
+}
+export function applyTagDeletion(proposal: TagDeletionProposal) {
+  return send('api/tag-apply-deletion', proposal);
+}
+export function previewNoteSet(request: NoteSetRequest) {
+  return send('api/note-preview-set', request);
+}
+export function applyNoteSet(proposal: NoteSetProposal) {
+  return send('api/note-apply-set', proposal);
+}
+export function previewAccountGroupCreation(
+  request: AccountGroupCreationRequest,
+) {
+  return send('api/account-group-preview-creation', request);
+}
+export function applyAccountGroupCreation(
+  proposal: AccountGroupCreationProposal,
+) {
+  return send('api/account-group-apply-creation', proposal);
+}
+export function previewAccountGroupUpdate(request: AccountGroupUpdateRequest) {
+  return send('api/account-group-preview-update', request);
+}
+export function applyAccountGroupUpdate(proposal: AccountGroupUpdateProposal) {
+  return send('api/account-group-apply-update', proposal);
+}
+export function previewAccountGroupDeletion(
+  request: AccountGroupDeletionRequest,
+) {
+  return send('api/account-group-preview-deletion', request);
+}
+export function applyAccountGroupDeletion(
+  proposal: AccountGroupDeletionProposal,
+) {
+  return send('api/account-group-apply-deletion', proposal);
+}
+export function previewPreferenceSet(request: PreferenceSetRequest) {
+  return send('api/preference-preview-set', request);
+}
+export function applyPreferenceSet(proposal: PreferenceSetProposal) {
+  return send('api/preference-apply-set', proposal);
+}
+export function previewRuleCreation(request: RuleCreationRequest) {
+  return send('api/rule-preview-creation', request);
+}
+export function applyRuleCreation(proposal: RuleCreationProposal) {
+  return send('api/rule-apply-creation', proposal);
+}
+export function previewRuleUpdate(request: RuleUpdateRequest) {
+  return send('api/rule-preview-update', request);
+}
+export function applyRuleUpdate(proposal: RuleUpdateProposal) {
+  return send('api/rule-apply-update', proposal);
+}
+export function previewRuleDeletion(request: RuleDeletionRequest) {
+  return send('api/rule-preview-deletion', request);
+}
+export function applyRuleDeletion(proposal: RuleDeletionProposal) {
+  return send('api/rule-apply-deletion', proposal);
+}
+export function previewScheduleCreation(request: ScheduleCreationRequest) {
+  return send('api/schedule-preview-creation', request);
+}
+export function applyScheduleCreation(proposal: ScheduleCreationProposal) {
+  return send('api/schedule-apply-creation', proposal);
+}
+export function previewScheduleUpdate(request: ScheduleUpdateRequest) {
+  return send('api/schedule-preview-update', request);
+}
+export function applyScheduleUpdate(proposal: ScheduleUpdateProposal) {
+  return send('api/schedule-apply-update', proposal);
+}
+export function previewScheduleDeletion(request: ScheduleDeletionRequest) {
+  return send('api/schedule-preview-deletion', request);
+}
+export function applyScheduleDeletion(proposal: ScheduleDeletionProposal) {
+  return send('api/schedule-apply-deletion', proposal);
+}
+export function previewTransactionCategorization(
+  request: TransactionCategorizationRequest,
+) {
+  return send('api/transactions-preview-categorization', request);
+}
+export function applyTransactionCategorization(
+  proposal: TransactionCategorizationProposal,
+) {
+  return send('api/transactions-apply-categorization', proposal);
+}
+export function previewTransactionClearing(
+  request: TransactionClearingRequest,
+) {
+  return send('api/transactions-preview-clearing', request);
+}
+export function applyTransactionClearing(
+  proposal: TransactionClearingProposal,
+) {
+  return send('api/transactions-apply-clearing', proposal);
+}
+/**
+ * Inspect an import file with the import dialog's parser and mapping rules:
+ * format, hash, columns, normalized candidates and row-level errors. Saved
+ * settings of `account` apply unless `useSaved` is false. Read-only.
+ */
+export function inspectImportFile(request: {
+  path: string;
+  account?: string;
+  useSaved?: boolean;
+  settings?: Record<string, unknown>;
+  limit?: number;
+}) {
+  return send('api/import-file-inspect', request as never);
+}
+/** Read one account's saved import settings for a file format. Read-only. */
+export function getImportMapping(account: string, format: string) {
+  return send('api/import-mapping-get', { account, format });
+}
+export function previewImportMappingSave(request: ImportMappingSaveRequest) {
+  return send('api/import-mapping-preview-save', request);
+}
+export function applyImportMappingSave(proposal: ImportMappingSaveProposal) {
+  return send('api/import-mapping-apply-save', proposal);
+}
+/**
+ * Prepare a guarded import of one statement file into one account: parse it
+ * with the import dialog's rules, then plan the canonical import (rules,
+ * duplicate matching). Read-only.
+ */
+export function previewFileImport(request: ImportFileRequest) {
+  return send('api/import-file-preview', request);
+}
+export function applyFileImport(proposal: ImportFileProposal) {
+  return send('api/import-file-apply', proposal);
+}
+/**
+ * Run the rules on one sample transaction the way an import would, without
+ * writing: the result, the rules that ran in order, and payees an import
+ * would create. Read-only.
+ */
+export function testRules(request: RuleTestRequest) {
+  return send('api/rules-test', request);
+}
+/**
+ * Schedules with their status and the occurrences that fall in a date
+ * window (default today through 30 days). Read-only.
+ */
+export function inspectSchedules(request: ScheduleInspectionRequest = {}) {
+  return send('api/schedules-inspect', request);
+}
+/**
+ * Bank sync status: linked accounts, last sync, persisted sync status and
+ * provider configuration, without secrets. Read-only.
+ */
+export function getBankSyncStatus() {
+  return send('api/bank-sync-status');
+}
+/**
+ * Run bank sync for already-linked accounts and return one outcome per
+ * account. Never creates a provider connection.
+ */
+export function refreshBankSync(request?: { accountIds?: string[] }) {
+  return send('api/bank-sync-refresh', request);
+}
+/**
+ * Read-only data-quality checkup: uncategorized rows, deleted categories,
+ * duplicate candidates, transfer link problems, statement discrepancies and
+ * month coverage. Never repairs anything.
+ */
+export function getDataQualityCheckup(request: DataQualityRequest) {
+  return send('api/checkup-data-quality', request);
+}
+/**
+ * Monthly cash flow of on-budget accounts (income, expense, net and
+ * transfers to off-budget accounts) with declared scope. Read-only.
+ */
+export function getCashFlowReport(request: ReportRequest) {
+  return send('api/reports-cash-flow', request);
+}
+/** Income and spending by category per month with declared scope. Read-only. */
+export function getCategoryReport(request: ReportRequest) {
+  return send('api/reports-categories', request);
+}
+/** Net worth, net cash and tracking balances at each month end. Read-only. */
+export function getNetWorthReport(request: ReportRequest) {
+  return send('api/reports-net-worth', request);
+}
+/**
+ * Reconciliation status for an account: cleared balance (optionally cut off
+ * at a statement date), difference from a statement balance and the
+ * cleared, unreconciled candidates a finish would lock. Read-only.
+ */
+export function getReconciliationStatus(request: ReconciliationStatusRequest) {
+  return send('api/reconcile-status', request);
+}
+/** Prepare locking the frozen cleared set when the difference is zero. */
+export function previewReconcileFinish(request: ReconcileFinishRequest) {
+  return send('api/reconcile-preview-finish', request);
+}
+export function applyReconcileFinish(proposal: ReconcileFinishProposal) {
+  return send('api/reconcile-finish', proposal);
+}
+/** Prepare an explicit reconciliation balance adjustment. Read-only. */
+export function previewReconcileAdjust(request: ReconcileAdjustRequest) {
+  return send('api/reconcile-preview-adjust', request);
+}
+export function applyReconcileAdjust(proposal: ReconcileAdjustProposal) {
+  return send('api/reconcile-adjust', proposal);
+}
+/**
+ * Prepare moving an allocation between two categories, or between To
+ * Budget and a category, in one month. Read-only.
+ */
+export function previewBudgetMove(request: BudgetMoveRequest) {
+  return send('api/budget-preview-move', request);
+}
+export function applyBudgetMove(proposal: BudgetMoveProposal) {
+  return send('api/budget-move', proposal);
+}
+/** Prepare applying budget templates for a month. Read-only. */
+export function previewTemplateApplication(request: BudgetTemplatesRequest) {
+  return send('api/budget-preview-templates', request);
+}
+export function applyTemplateApplication(proposal: BudgetTemplatesProposal) {
+  return send('api/budget-apply-templates', proposal);
+}
+/** The templates the engine would apply, with validation errors. Read-only. */
+export function inspectBudgetTemplates() {
+  return send('api/budget-templates', undefined);
+}
+/**
+ * Reservation breakdown for the current month (experimental; requires the
+ * budgetReservations feature flag). Read-only.
+ */
+export function getBudgetReservations(month?: string) {
+  return send('api/budget-reservations', month === undefined ? {} : { month });
+}
+/** Prepare posting a schedule's next occurrence. Read-only. */
+export function previewSchedulePost(request: ScheduleOccurrenceRequest) {
+  return send('api/schedules-preview-post', request);
+}
+export function applySchedulePost(proposal: SchedulePostProposal) {
+  return send('api/schedules-post', proposal);
+}
+/** Prepare skipping a schedule's next occurrence. Read-only. */
+export function previewScheduleSkip(request: ScheduleOccurrenceRequest) {
+  return send('api/schedules-preview-skip', request);
+}
+export function applyScheduleSkip(proposal: ScheduleSkipProposal) {
+  return send('api/schedules-skip', proposal);
+}
+/** Transactions a rule's conditions select now (newest first). Read-only. */
+export function findRuleMatches(ruleId: string, limit?: number) {
+  return send('api/rules-matches', {
+    ruleId,
+    ...(limit === undefined ? {} : { limit }),
+  });
+}
+/** Prepare applying one rule's actions to frozen transactions. Read-only. */
+export function previewRuleApply(request: RuleApplyRequest) {
+  return send('api/rules-preview-apply', request);
+}
+export function applyRuleApply(proposal: RuleApplyProposal) {
+  return send('api/rules-apply', proposal);
+}
+export function previewTransferMatch(request: TransferMatchRequest) {
+  return send('api/transfers-preview-match', request);
+}
+export function applyTransferMatch(proposal: TransferMatchProposal) {
+  return send('api/transfers-apply-match', proposal);
+}
+export function previewTransferUnmatch(request: TransferUnmatchRequest) {
+  return send('api/transfers-preview-unmatch', request);
+}
+export function applyTransferUnmatch(proposal: TransferUnmatchProposal) {
+  return send('api/transfers-apply-unmatch', proposal);
+}
+export function previewTransferRepair(request: TransferRepairRequest) {
+  return send('api/transfers-preview-repair', request);
+}
+export function applyTransferRepair(proposal: TransferRepairProposal) {
+  return send('api/transfers-apply-repair', proposal);
+}
+export function previewTransactionMerge(request: TransactionMergeRequest) {
+  return send('api/transactions-preview-merge', request);
+}
+export function applyTransactionMerge(proposal: TransactionMergeProposal) {
+  return send('api/transactions-apply-merge', proposal);
+}
+export function previewTransactionSplit(request: TransactionSplitRequest) {
+  return send('api/transactions-preview-split', request);
+}
+export function applyTransactionSplit(proposal: TransactionSplitProposal) {
+  return send('api/transactions-apply-split', proposal);
+}
+export function inspectCashPlan(request: CashPlanInspectRequest = {}) {
+  return send('api/cash-planning-inspect', request);
+}
+export function previewCashPlanSave(request: CashPlanSaveRequest) {
+  return send('api/cash-planning-preview-save', request);
+}
+export function applyCashPlanSave(proposal: CashPlanSaveProposal) {
+  return send('api/cash-planning-apply-save', proposal);
+}
+export function previewTransactionDeletion(
+  request: TransactionDeletionRequest,
+) {
+  return send('api/transaction-preview-deletion', request);
+}
+export function applyTransactionDeletion(
+  proposal: TransactionDeletionProposal,
+) {
+  return send('api/transaction-apply-deletion', proposal);
+}
+export function previewTransactionAddition(
+  request: TransactionAdditionRequest,
+) {
+  return send('api/transactions-preview-addition', request);
+}
+export function applyTransactionAddition(
+  proposal: TransactionAdditionProposal,
+) {
+  return send('api/transactions-apply-addition', proposal);
+}
+export function previewTransactionImport(request: TransactionImportRequest) {
+  return send('api/transactions-preview-import', request);
+}
+export function applyTransactionImport(proposal: TransactionImportProposal) {
+  return send('api/transactions-apply-import', proposal);
 }
 export function previewCategoryGroupCreation(
   request: CategoryGroupCreationRequest,
@@ -484,6 +1029,69 @@ export function aqlQuery(query: Query) {
   return send('api/query', { query: query.serialize() });
 }
 
+/**
+ * Read-only table, field, operator and function metadata from the core AQL
+ * schema. Does not require a loaded budget.
+ */
+export function getQuerySchema(): QuerySchemaMetadata {
+  return describeQuerySchema();
+}
+
+/**
+ * Compiles a query against the core schema without executing it and reports
+ * unsupported tables, fields, operators or functions.
+ */
+export function validateQuery(query: Query): QueryValidation {
+  return validateCoreQuery(query.serialize());
+}
+
+export type { QuerySchemaMetadata, QueryValidation };
+export type {
+  RuleMatches,
+  RuleTestRequest,
+  RuleTestResult,
+} from '@actual-app/core/server/rules/evaluate';
+export type { TemplateInspection } from '@actual-app/core/server/budget/guarded-allocation';
+export type {
+  BankSyncAccountOutcome,
+  BankSyncAccountStatus,
+  BankSyncOutcomeStatus,
+  BankSyncProviderState,
+} from '@actual-app/core/server/accounts/bank-sync-status';
+export type {
+  AccountCoverage,
+  CoverageMonth,
+  CoverageStatus,
+  DataQualityFinding,
+  DataQualityRequest,
+  FindingCode,
+  FindingSeverity,
+  StatementEvidence,
+} from '@actual-app/core/server/checkup/data-quality';
+export type {
+  ReportCompleteness,
+  ReportDetailRow,
+  ReportRequest,
+  ReportScope,
+} from '@actual-app/core/server/reports/ledger-reports';
+export type {
+  ReconciliationStatus,
+  ReconciliationStatusRequest,
+} from '@actual-app/core/server/accounts/reconcile';
+export type {
+  ScheduleInspection,
+  ScheduleInspectionRequest,
+  ScheduleInspectionResult,
+} from '@actual-app/core/server/schedules/inspect';
+
+/**
+ * Read-only marker of the loaded budget's change history. Two equal markers
+ * mean no local or synchronized change happened between the reads.
+ */
+export function getQuerySnapshot() {
+  return send('api/query-snapshot');
+}
+
 export function getBudgetMonths() {
   return send('api/budget-months');
 }
@@ -674,6 +1282,15 @@ export function getNote(id: NoteEntity['id']) {
   return send('api/note-get', { id });
 }
 
+/**
+ * Resolve a note ID (`account-<id>`, a category or group ID, `budget-<YYYY-MM>`
+ * or `<categoryId>-<YYYY-MM>`) to its live target and read the stored text.
+ * Returns `note: null` when no note exists; nothing is written.
+ */
+export function getNoteTarget(id: NoteEntity['id']) {
+  return send('api/note-target', { id });
+}
+
 export function updateNote(id: NoteEntity['id'], note: NoteEntity['note']) {
   return send('api/note-update', { id, note });
 }
@@ -793,6 +1410,66 @@ export function getServerVersion() {
 /** Read the budget's synced preferences (number format, currency, etc.). */
 export function getPreferences(): Promise<SyncedPrefs> {
   return send('preferences/get');
+}
+
+/**
+ * Typed synced-preference catalog: scope, authority, whether the key is
+ * settable here, allowed values, app default and current value (null when
+ * unset). Pass a key to inspect one preference. Read-only.
+ */
+export function inspectPreferences(key?: string) {
+  return send('api/preferences-inspect', key === undefined ? {} : { key });
+}
+
+/**
+ * List unlinked transaction pairs in different accounts whose amounts cancel
+ * within a date window (default 3 days), with evidence, classification and
+ * ambiguity. Read-only.
+ */
+export function findTransferCandidates(
+  options: {
+    account?: string;
+    start?: string;
+    end?: string;
+    days?: number;
+    limit?: number;
+  } = {},
+) {
+  return send('api/transfers-candidates', options);
+}
+
+/** Check one transaction's transfer link from both sides. Read-only. */
+export function inspectTransfer(id: string) {
+  return send('api/transfers-inspect', { id });
+}
+
+/** List transfer links with issues across the budget. Read-only. */
+export function auditTransfers(options: { account?: string } = {}) {
+  return send('api/transfers-audit', options);
+}
+
+/**
+ * Inspect accounts as of a cutoff day (default today): engine balances split
+ * into cleared, uncleared, reconciled and future activity, on-budget and
+ * off-budget totals, groups, duplicate names, and closed accounts with a
+ * balance that were not listed. Read-only.
+ */
+export function inspectAccounts(
+  options: { cutoff?: string; includeClosed?: boolean } = {},
+) {
+  return send('api/accounts-inspect', options);
+}
+
+/**
+ * Inspect categories or payees with stable IDs, hidden/deleted status, the
+ * row a deleted entry now resolves to, live transaction counts through the
+ * canonical mappings, and other rows sharing the same name. Read-only.
+ */
+export function inspectCatalog(
+  kind: 'categories' | 'payees',
+  options: { includeDeleted?: boolean } = {},
+) {
+  return send('api/catalog-inspect', { kind, ...options });
 }
 
 export function setPreference<T extends keyof SyncedPrefs>(

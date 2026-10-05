@@ -1,0 +1,34 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api exec vitest run -t \"allocation moves\""
+        },
+        { "id": "cli-unit", "command": "yarn workspace @actual-app/cli test" },
+        { "id": "root-types", "command": "yarn typecheck" },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "budgeting-integration",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/budgeting.test.mjs"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/loot-core/src/server/budget/guarded-allocation.ts packages/cli/src/commands/budgets.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/loot-core/src/server/budget/guarded-allocation.ts packages/cli/src/commands/budgets.ts packages/cli/integration/budgeting.test.mjs"
+        }
+      ]
+    }
+  }
+}

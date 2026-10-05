@@ -1,0 +1,44 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        {
+          "id": "core-unit",
+          "command": "yarn workspace @actual-app/core exec vitest run src/server/transactions/transaction-rules.test.ts src/server/rules"
+        },
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api exec vitest run -t \"historical rule application\""
+        },
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "rules-integration",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/rules-apply.test.mjs"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/loot-core/src/server/rules/evaluate.ts packages/loot-core/src/server/rules/guarded-apply.ts packages/loot-core/src/server/transactions/transaction-rules.ts packages/cli/src/commands/rules.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/loot-core/src/server/rules/evaluate.ts packages/loot-core/src/server/rules/guarded-apply.ts packages/cli/src/commands/rules.ts packages/cli/integration/rules-apply.test.mjs"
+        }
+      ]
+    }
+  }
+}

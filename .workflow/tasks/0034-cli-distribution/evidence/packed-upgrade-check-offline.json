@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 2,
+  "operation": "upgrade.check",
+  "context": {
+    "budgetId": null,
+    "syncId": null,
+    "serverUrl": null,
+    "mode": "no-budget",
+    "currency": null,
+    "scale": 100,
+    "lastSyncedAt": null,
+    "freshness": "unknown",
+    "commit": "none"
+  },
+  "data": {
+    "cli": {
+      "version": "26.9.0",
+      "supportedSchemaVersions": {
+        "profiles": [
+          1
+        ],
+        "receipts": [
+          1
+        ],
+        "workflowRuns": [
+          1
+        ],
+        "jobs": [
+          1
+        ],
+        "bankSyncRuns": [
+          1
+        ],
+        "statementEvidence": [
+          1
+        ]
+      }
+    },
+    "dataDir": "D:\\Projects\\personal\\Budget\\actual-windows-evidence\\actual packed clean install\\packed data",
+    "compatible": true,
+    "stores": [
+      {
+        "store": "profiles",
+        "path": "C:\\Users\\mlinh\\.actual-cli\\profiles.json",
+        "status": "absent",
+        "records": 0,
+        "versions": {},
+        "unsupported": [],
+        "unreadable": []
+      },
+      {
+        "store": "receipts",
+        "path": "D:\\Projects\\personal\\Budget\\actual-windows-evidence\\actual packed clean install\\packed data\\.actual-cli\\changes",
+        "status": "compatible",
+        "records": 5,
+        "versions": {
+          "1": 5
+        },
+        "unsupported": [],
+        "unreadable": []
+      },
+      {
+        "store": "workflowRuns",
+        "path": "D:\\Projects\\personal\\Budget\\actual-windows-evidence\\actual packed clean install\\packed data\\workflow-runs",
+        "status": "compatible",
+        "records": 2,
+        "versions": {
+          "1": 2
+        },
+        "unsupported": [],
+        "unreadable": []
+      },
+      {
+        "store": "jobs",
+        "path": "D:\\Projects\\personal\\Budget\\actual-windows-evidence\\actual packed clean install\\packed data\\jobs",
+        "status": "absent",
+        "records": 0,
+        "versions": {},
+        "unsupported": [],
+        "unreadable": []
+      },
+      {
+        "store": "bankSyncRuns",
+        "path": "D:\\Projects\\personal\\Budget\\actual-windows-evidence\\actual packed clean install\\packed data\\bank-sync-runs",
+        "status": "absent",
+        "records": 0,
+        "versions": {},
+        "unsupported": [],
+        "unreadable": []
+      },
+      {
+        "store": "statementEvidence",
+        "path": "D:\\Projects\\personal\\Budget\\actual-windows-evidence\\actual packed clean install\\packed data\\statement-evidence.json",
+        "status": "absent",
+        "records": 0,
+        "versions": {},
+        "unsupported": [],
+        "unreadable": []
+      }
+    ],
+    "pendingReceipts": [],
+    "unfinishedRuns": [],
+    "preservedByEngine": [
+      "budget IDs and sync IDs",
+      "import mappings (synced budget preferences)",
+      "cash planning (synced budget preferences)"
+    ],
+    "actions": []
+  },
+  "warnings": []
+}

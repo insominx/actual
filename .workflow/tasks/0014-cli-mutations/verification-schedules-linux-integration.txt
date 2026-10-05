@@ -1,0 +1,17 @@
+✔ guarded schedule creation preserves raw domains and acknowledgements (online) (8769.213565ms)
+✔ guarded schedule creation preserves raw domains and acknowledgements (offline) (8232.617394ms)
+✔ guarded schedule update preserves raw domains and acknowledgements (online) (9956.184889ms)
+✔ guarded schedule update preserves raw domains and acknowledgements (offline) (9237.008688ms)
+✔ guarded schedule deletion preserves raw domains and acknowledgements (online) (8678.288422ms)
+✔ guarded schedule deletion preserves raw domains and acknowledgements (offline) (8381.046555ms)
+✔ killed guarded schedule creation at before-engine retains its exact outcome without replay (36631.779562ms)
+✔ killed guarded schedule creation at after-engine retains its exact outcome without replay (36028.950805ms)
+✔ killed guarded schedule creation at before-sync retains its exact outcome without replay (38355.808659ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 164332.097771

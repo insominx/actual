@@ -44,3 +44,27 @@ export type CashPlanningProjection = {
     balanceGap: number;
   } | null;
 };
+
+export type CashPlanInspectRequest = {
+  startDate?: string;
+  endDate?: string;
+  scenario?: {
+    categoryTargets?: Record<string, number>;
+    goal?: { balance: number; deadline?: string } | null;
+    forecastEndDate?: string | null;
+  };
+};
+
+export type CashPlanInspection = {
+  asOf: string;
+  saved: { stored: boolean; config: CashPlanningConfig };
+  config: CashPlanningConfig;
+  scenarioApplied: boolean;
+  summary: CashPlanningSummary;
+  projections: {
+    historical: CashPlanningProjection;
+    targets: CashPlanningProjection;
+  } | null;
+  chart: Array<{ date: string; historical: number; targets: number }>;
+  warnings: string[];
+};

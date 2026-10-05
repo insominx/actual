@@ -1,0 +1,44 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api test"
+        },
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "catalog-integration",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/catalog-inspect.test.mjs integration/guarded-notes.test.mjs integration/guarded-preferences.test.mjs"
+        },
+        {
+          "id": "browser-integration",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/browser-catalog.test.mjs"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/loot-core/src/server/notes/guarded.ts packages/loot-core/src/server/preferences/catalog.ts packages/loot-core/src/server/catalog-inspect.ts packages/cli/src/commands/notes.ts packages/cli/src/commands/preferences.ts packages/cli/src/commands/categories.ts packages/cli/src/commands/payees.ts packages/cli/integration/catalog-inspect.test.mjs packages/cli/integration/guarded-notes.test.mjs packages/cli/integration/guarded-preferences.test.mjs"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/loot-core/src/server/notes/guarded.ts packages/loot-core/src/server/preferences/catalog.ts packages/loot-core/src/server/catalog-inspect.ts packages/cli/src/commands/notes.ts packages/cli/src/commands/preferences.ts packages/cli/src/commands/categories.ts packages/cli/src/commands/payees.ts packages/cli/integration/catalog-inspect.test.mjs packages/cli/integration/guarded-notes.test.mjs packages/cli/integration/guarded-preferences.test.mjs packages/docs/docs/api/cli.md packages/cli/README.md"
+        }
+      ]
+    }
+  }
+}

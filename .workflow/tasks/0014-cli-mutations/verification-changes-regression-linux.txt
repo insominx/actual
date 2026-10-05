@@ -1,0 +1,129 @@
+Full integration/changes.test.mjs regression on Linux, cf322e13e build (CLI + sync-server rebuilt at start), run 2026-10-04 23:54 to 2026-10-05 00:10 PT.
+Run as four parallel name-pattern partitions that together cover every test in the file:
+A ^killed apply | B ^killed (account|category) | C ^killed group|^guarded (account|holds|carryover)|^direct | D remaining guarded/orphan/rejected cases
+
+== Partition A
+✔ killed apply at before-engine (transactions.update) preserves its durable outcome and never replays (36438.486718ms)
+✔ killed apply at after-engine (transactions.update) preserves its durable outcome and never replays (37295.383743ms)
+✔ killed apply at before-sync (transactions.update) preserves its durable outcome and never replays (38170.797331ms)
+✔ killed apply at before-engine (accounts.create) preserves its durable outcome and never replays (37792.296344ms)
+✔ killed apply at after-engine (accounts.create) preserves its durable outcome and never replays (38435.850097ms)
+✔ killed apply at before-sync (accounts.create) preserves its durable outcome and never replays (41838.885898ms)
+✔ killed apply at before-engine (accounts.update) preserves its durable outcome and never replays (37547.537964ms)
+✔ killed apply at after-engine (accounts.update) preserves its durable outcome and never replays (37979.135868ms)
+✔ killed apply at before-sync (accounts.update) preserves its durable outcome and never replays (40025.145601ms)
+✔ killed apply at before-engine (accounts.reopen) preserves its durable outcome and never replays (40279.355422ms)
+✔ killed apply at after-engine (accounts.reopen) preserves its durable outcome and never replays (38929.28814ms)
+✔ killed apply at before-sync (accounts.reopen) preserves its durable outcome and never replays (41090.615712ms)
+✔ killed apply at before-engine (budgets.archive) preserves its durable outcome and never replays (37758.312866ms)
+✔ killed apply at after-engine (budgets.archive) preserves its durable outcome and never replays (38084.319642ms)
+✔ killed apply at before-engine (budgets.create) preserves its durable outcome and never replays (38233.872751ms)
+✔ killed apply at after-engine (budgets.create) preserves its durable outcome and never replays (38432.423049ms)
+✔ killed apply at before-engine (budgets.clone) preserves its durable outcome and never replays (39506.552696ms)
+✔ killed apply at after-engine (budgets.clone) preserves its durable outcome and never replays (40726.087308ms)
+✔ killed apply at before-engine (backups.restore) preserves its durable outcome and never replays (40595.54758ms)
+✔ killed apply at after-engine (backups.restore) preserves its durable outcome and never replays (41253.5484ms)
+✔ killed apply at before-engine (budgets.hold-next-month) preserves its durable outcome and never replays (40903.755443ms)
+✔ killed apply at after-engine (budgets.hold-next-month) preserves its durable outcome and never replays (41269.496215ms)
+✔ killed apply at before-engine (budgets.reset-hold) preserves its durable outcome and never replays (42161.573684ms)
+✔ killed apply at after-engine (budgets.reset-hold) preserves its durable outcome and never replays (42512.519156ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 947455.325975
+
+== Partition B
+✔ killed account deletion at before-engine retains its exact outcome without replay (35704.795696ms)
+✔ killed account deletion at after-engine retains its exact outcome without replay (36330.965654ms)
+✔ killed account deletion at before-sync retains its exact outcome without replay (37513.181987ms)
+✔ killed account closure at before-engine retains its exact outcome without replay (35116.336263ms)
+✔ killed account closure at after-engine retains its exact outcome without replay (35227.651083ms)
+✔ killed account closure at before-sync retains its exact outcome without replay (37698.149895ms)
+✔ killed category update at before-engine retains its exact outcome without replay (35184.543978ms)
+✔ killed category update at after-engine retains its exact outcome without replay (35087.102373ms)
+✔ killed category update at before-sync retains its exact outcome without replay (37363.812059ms)
+✔ killed category creation at before-engine retains its exact outcome without replay (35517.155803ms)
+✔ killed category creation at after-engine retains its exact outcome without replay (35096.909143ms)
+✔ killed category creation at before-sync retains its exact outcome without replay (36694.708245ms)
+✔ killed category deletion at before-engine retains its exact outcome without replay (36447.129388ms)
+✔ killed category deletion at after-engine retains its exact outcome without replay (36900.563326ms)
+✔ killed category deletion at before-sync retains its exact outcome without replay (37608.1112ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 543577.906382
+
+== Partition C
+✔ guarded account reopening preserves provider fields and retries retain later closure (online) (14592.630771ms)
+✔ guarded account reopening preserves provider fields and retries retain later closure (offline) (13469.206962ms)
+✔ guarded account updates preserve ledger and retries retain later account edits (online) (13978.078134ms)
+✔ guarded account updates preserve ledger and retries retain later account edits (offline) (12556.637674ms)
+✔ guarded account creation acknowledges actual identities and retries one account (online) (12751.48965ms)
+✔ guarded account creation acknowledges actual identities and retries one account (offline) (12401.193739ms)
+✔ guarded holds clamp funds and receipts preserve later hold and reset writes (online) (18159.54254ms)
+✔ guarded holds clamp funds and receipts preserve later hold and reset writes (offline) (16338.877378ms)
+✔ guarded carryover preserves preview domains and acknowledged retries (online) (11652.73412ms)
+✔ guarded carryover preserves preview domains and acknowledged retries (offline) (11025.799097ms)
+✔ direct allocation receipts prevent replay after another allocation (online) (8117.298899ms)
+✔ direct allocation receipts prevent replay after another allocation (offline) (7758.957846ms)
+✔ guarded account deletion preserves other domains and retries its exact outcome (online) (7052.586184ms)
+✔ guarded account deletion preserves other domains and retries its exact outcome (offline) (6866.972408ms)
+✔ guarded account closure preserves its planned transfers and acknowledged retries (online) (11060.462522ms)
+✔ guarded account closure preserves its planned transfers and acknowledged retries (offline) (10383.38051ms)
+✔ killed group creation at before-engine retains its exact outcome without replay (35795.039144ms)
+✔ killed group creation at after-engine retains its exact outcome without replay (36067.280526ms)
+✔ killed group creation at before-sync retains its exact outcome without replay (37378.836053ms)
+✔ killed group update at before-engine retains its exact outcome without replay (36521.527652ms)
+✔ killed group update at after-engine retains its exact outcome without replay (36043.612914ms)
+✔ killed group update at before-sync retains its exact outcome without replay (37269.571181ms)
+✔ killed group deletion at before-engine retains its exact outcome without replay (41512.158509ms)
+✔ killed group deletion at after-engine retains its exact outcome without replay (40970.172165ms)
+✔ killed group deletion at before-sync retains its exact outcome without replay (42847.958689ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 532662.313192
+
+== Partition D
+✔ guarded restore preserves the rich source and retries one destination without needing the retained archive (13602.911677ms)
+✔ guarded clone preserves the rich source and receipts prevent another destination on retries (13278.867174ms)
+✔ guarded creation preserves inventory and receipts return one destination across restarts (11167.384394ms)
+✔ guarded budget metadata preserves preview data and receipts protect rename and local archive retries (14513.45274ms)
+✔ guarded transfers preserve preview data, synchronize both sides, and protect counterpart splits (16072.477244ms)
+✔ guarded split edits preserve preview data, inherit parent fields, and reject sibling edits (10837.092998ms)
+✔ guarded transaction preview preserves domains and receipts prevent repeat writes (12063.216054ms)
+✔ a rejected post-commit push retains a receipt and later sync never replays the update (6359.041143ms)
+✔ guarded allocation preview preserves all domains and applies only its selected amount (11847.232833ms)
+✔ orphan staging is disclosed and blocks new proposals and apply intent without ledger writes (6179.067301ms)
+✔ guarded category updates preserve raw domains and acknowledged retries (online) (7821.271493ms)
+✔ guarded category updates preserve raw domains and acknowledged retries (offline) (7327.56869ms)
+✔ guarded category creation acknowledges mapping and sibling shoves without replay (online) (9304.363219ms)
+✔ guarded category creation acknowledges mapping and sibling shoves without replay (offline) (8554.794127ms)
+✔ guarded category deletion preserves raw domains and never replays acknowledged transfers (online) (12333.04735ms)
+✔ guarded category deletion preserves raw domains and never replays acknowledged transfers (offline) (10925.796086ms)
+✔ guarded group creation preserves raw domains and acknowledged identities (online) (8835.730324ms)
+✔ guarded group creation preserves raw domains and acknowledged identities (offline) (8202.554475ms)
+✔ guarded group updates preserve raw domains and acknowledged retries (online) (7868.782026ms)
+✔ guarded group updates preserve raw domains and acknowledged retries (offline) (7197.368515ms)
+✔ guarded group deletion preserves raw domains and acknowledged transfers (online) (19396.031986ms)
+✔ guarded group deletion preserves raw domains and acknowledged transfers (offline) (16080.063538ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 239859.398307

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 2,
+  "operation": "jobs.schedule",
+  "context": {
+    "budgetId": null,
+    "syncId": null,
+    "serverUrl": null,
+    "mode": "no-budget",
+    "currency": null,
+    "scale": 100,
+    "lastSyncedAt": null,
+    "freshness": "unknown",
+    "commit": "none"
+  },
+  "data": {
+    "command": {
+      "executable": "actual",
+      "args": [
+        "--data-dir",
+        "D:\\Projects\\personal\\Budget\\actual-windows-evidence\\jobs-schedule-dryrun\\cli-data",
+        "--offline",
+        "--budget-id",
+        "Schedule-dryrun-b751a29",
+        "jobs",
+        "run",
+        "win-schedule-dryrun"
+      ]
+    },
+    "cron": "*/15 * * * * 'actual' '--data-dir' 'D:\\Projects\\personal\\Budget\\actual-windows-evidence\\jobs-schedule-dryrun\\cli-data' '--offline' '--budget-id' 'Schedule-dryrun-b751a29' 'jobs' 'run' 'win-schedule-dryrun' >> 'D:\\Projects\\personal\\Budget\\actual-windows-evidence\\jobs-schedule-dryrun\\cli-data\\jobs\\win-schedule-dryrun\\cron.log' 2>&1",
+    "systemdTimer": {
+      "OnCalendar": "*:0/15",
+      "ExecStart": "'actual' '--data-dir' 'D:\\Projects\\personal\\Budget\\actual-windows-evidence\\jobs-schedule-dryrun\\cli-data' '--offline' '--budget-id' 'Schedule-dryrun-b751a29' 'jobs' 'run' 'win-schedule-dryrun'"
+    },
+    "windowsTaskScheduler": "schtasks /Create /SC MINUTE /MO 15 /TN \"Actual win-schedule-dryrun\" /TR \"actual --data-dir D:\\Projects\\personal\\Budget\\actual-windows-evidence\\jobs-schedule-dryrun\\cli-data --offline --budget-id Schedule-dryrun-b751a29 jobs run win-schedule-dryrun\"",
+    "notes": [
+      "Credentials come from the environment or a profile, never from the recipe.",
+      "Overlapping invocations are safe: only one job run is active at a time.",
+      "Results are local JSON files under the job results directory; configure any external alert delivery yourself."
+    ]
+  },
+  "warnings": []
+}

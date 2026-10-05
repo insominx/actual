@@ -1,0 +1,13 @@
+✔ cash plan saves round-trip between the CLI and the browser (11119.203262ms)
+✔ browser sees CLI category retirement and payee merge with totals preserved (14926.560811ms)
+✔ saved import mappings round-trip between the CLI and the browser (11022.055163ms)
+✔ browser and two CLI caches converge after import, edit, preference change, and undo (17724.963438ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 18293.557572
+ALLDONE

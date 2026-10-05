@@ -195,20 +195,34 @@ Example `.actualrc.json`:
 
 ## Commands
 
-| Command           | Description                    |
-| ----------------- | ------------------------------ |
-| `accounts`        | Manage accounts                |
-| `budgets`         | Manage budgets and allocations |
-| `categories`      | Manage categories              |
-| `category-groups` | Manage category groups         |
-| `transactions`    | Manage transactions            |
-| `payees`          | Manage payees                  |
-| `tags`            | Manage tags                    |
-| `rules`           | Manage transaction rules       |
-| `schedules`       | Manage scheduled transactions  |
-| `query`           | Run an ActualQL query          |
-| `server`          | Server utilities and lookups   |
-| `sync`            | Refresh or inspect local cache |
+| Command           | Description                                                            |
+| ----------------- | ---------------------------------------------------------------------- |
+| `accounts`        | Manage accounts                                                        |
+| `account-groups`  | Manage account groups                                                  |
+| `budgets`         | Manage budgets, allocations, moves, templates and reservations         |
+| `categories`      | Manage categories                                                      |
+| `category-groups` | Manage category groups                                                 |
+| `transactions`    | Manage transactions                                                    |
+| `payees`          | Manage payees                                                          |
+| `tags`            | Manage tags                                                            |
+| `notes`           | Read and change notes                                                  |
+| `preferences`     | Inspect and change preferences                                         |
+| `cash-planning`   | Inspect and save cash plans                                            |
+| `transfers`       | Review, match and repair transfers                                     |
+| `imports`         | Inspect, preview and import files; saved mappings and import history   |
+| `rules`           | Manage transaction rules                                               |
+| `reconcile`       | Reconcile an account against a statement; finish; adjust               |
+| `reports`         | Cash flow, category and net worth reports; CSV/HTML export             |
+| `checkup`         | Data-quality findings, month coverage and statement evidence           |
+| `bank-sync`       | Bank sync status, refresh of linked accounts and run results           |
+| `jobs`            | Saved intake automation; run, status, disable; scheduler recipes       |
+| `upgrade`         | Read-only upgrade diagnosis of device-local state and server version   |
+| `mcp`             | Optional MCP stdio server exposing the operations as tools             |
+| `workflow`        | Setup, intake, weekly checkup, monthly close, goal review; run records |
+| `schedules`       | Manage schedules; list upcoming occurrences; post or skip the next     |
+| `query`           | Run an ActualQL query                                                  |
+| `server`          | Server utilities and lookups                                           |
+| `sync`            | Refresh or inspect local cache                                         |
 
 Run `actual <command> --help` for subcommands and options.
 
@@ -235,6 +249,12 @@ actual budgets set-amount --month 2026-03 --category <id> --amount 50000
 # Run an ActualQL query
 actual query run --table transactions \
   --select "date,amount,payee" --filter '{"amount":{"$lt":0}}' --limit 10
+
+# Find an entity by name (reports ambiguous matches)
+actual query resolve payees "grocery"
+
+# Split-aware totals by category for a month
+actual query aggregate --start 2026-08-01 --end 2026-08-31
 ```
 
 ### Amount Convention
@@ -450,6 +470,12 @@ Guarded category updates use `actual changes preview categories.update <category
 Direct version 2 `categories update` requires `--operation-id` and returns `success`, `id` and `receipt`. Its existing name and hidden options retain their meaning. Acknowledged retries preserve later edits rather than repeating the old update. Unknown outcomes never replay. Legacy output remains unchanged.
 
 Guarded category creation uses `actual changes preview categories.create --operation-id <unique-id> --data '{"name":"Groceries","group_id":"group-id","is_income":false,"hidden":false}'`. Omit the target ID argument. Name and group ID are required; both flags default to false. Preview binds the destination group, canonical sibling ordering and source state without creating rows. Apply creates the category and self mapping through the core owner and returns their actual IDs plus reordered sibling IDs.
+
+Guarded payee creation uses `actual changes preview payees.create --operation-id <unique-id> --data '{"name":"Corner Grocer"}'`. Omit the target ID argument. The name keeps its exact spelling, and duplicate or empty names follow the existing API behavior. A supplied `transfer_acct` retains the existing ignored creation semantics and never creates a transfer payee. Preview binds the full source state without writing. Apply creates the payee and its self mapping through the core owner and returns their actual generated IDs. Direct version 2 `payees create` requires `--operation-id` and returns `id` and `receipt`. Acknowledged retries do not recreate the payee; unknown outcomes never replay; receipts without a complete payee and mapping acknowledgement remain retained. Legacy output remains `{ id }`.
+
+Guarded payee updates use `actual changes preview payees.update <payee-id> --operation-id <unique-id> --data '{"name":"New name"}'`; only a non-empty name is accepted, and transfer, missing or deleted payees are rejected. Guarded payee deletion uses `changes preview payees.delete <payee-id> --data '{}'`; transfer payees stay unchanged and the preview says so. Guarded merges use `changes preview payees.merge <target-id> --data '{"mergeIds":["id-1","id-2"]}'`; sources must be unique, live and exclude the target, transfer sources are skipped and listed, and the preview lists every mapping that will point at the target. Guarded tags use `tags.create` (payload `{"tag":"name","color":null,"description":null}`, no target ID), `tags.update <tag-id>` (any of `tag`, `color`, `description`) and `tags.delete <tag-id> --data '{}'`. Tag names cannot contain whitespace or `#`; creating a name held by a live tag is rejected, while a deleted tag with that name is revived. Tag changes never rewrite transaction notes. Direct version 2 `payees update|delete|merge` and `tags create|update|delete` require `--operation-id` and return a receipt; `tags create` also returns the actual tag `id`. Legacy outputs are unchanged. Guarded rules use `changes preview rules.create --data '<rule>'` (all of `stage`, `conditionsOp`, `conditions`, `actions`; no target ID), `rules.update <rule-id> --data '<fields>'` (any subset, merged over the stored rule) and `rules.delete <rule-id> --data '{}'`. Rules are validated like the legacy API, rules that belong to a schedule cannot be edited or deleted this way, and existing transactions are never re-run. Direct version 2 `rules create|update|delete` require `--operation-id`; `rules create` returns the actual rule `id`. Guarded schedules use `changes preview schedules.create --data '<schedule>'` (explicit live `payee` and `account`, `posts_transaction`, `amountOp`, `date`; no target ID), `schedules.update <schedule-id> --data '{"fields":{...},"resetNextDate":false}'` and `schedules.delete <schedule-id> --data '{}'`. The preview binds the exact linked rule conditions and actions; the next date is recomputed by the owner at apply. Direct version 2 `schedules create|update|delete` require `--operation-id`; `schedules create` returns the actual schedule `id`. Guarded transaction deletion uses `changes preview transactions.delete <transaction-id> --data '{}'`; it deletes a top-level transaction or a whole split (never a single split child), and the preview lists every transfer counterpart that will be deleted or unlinked. Direct version 2 `transactions delete` requires `--operation-id`. Guarded `transactions.update` also accepts `category` (live category or null) and `payee` (live non-transfer payee); edits that would link or unlink a transfer, or set a category on a split parent, transfer or off-budget row, are rejected.
+
+Guarded transaction additions use `actual changes preview transactions.add <account-id> --operation-id <unique-id> --data '[{"date":"2026-10-01","amount":-1250}]'`. The account must be live and open. Preview shows the planned rows after rules and split expansion; transfers are not run and categories are not learned. Guarded imports use `changes preview transactions.import <account-id>` with the same array payload; preview lists matched updates and new rows, and apply verifies the committed result against that plan. Direct version 2 `transactions add` and `transactions import` use the guarded path only when `--operation-id` is supplied and then return the acknowledged ids and `receipt`; without it they keep their existing behavior.
 
 Direct version 2 `categories create` requires `--operation-id` and returns `id` and `receipt`. Acknowledged retries preserve later category edits and do not create another category. Unknown creation outcomes never replay. Receipts with missing or incomplete generated identities remain retained. Legacy output remains `{ id }`.
 

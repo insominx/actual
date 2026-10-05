@@ -1,0 +1,142 @@
+=== Windows packed install smoke 2026-10-05T09:54:48.3975968-07:00 ===
+packing api...
+Γ₧ñ YN0000: @types/app/query.d.ts
+Γ₧ñ YN0000: @types/app/query.d.ts.map
+Γ₧ñ YN0000: @types/browser-worker.d.ts
+Γ₧ñ YN0000: @types/browser-worker.d.ts.map
+Γ₧ñ YN0000: @types/index.browser.d.ts
+Γ₧ñ YN0000: @types/index.browser.d.ts.map
+Γ₧ñ YN0000: @types/index.d.ts
+Γ₧ñ YN0000: @types/index.d.ts.map
+Γ₧ñ YN0000: @types/methods.d.ts
+Γ₧ñ YN0000: @types/methods.d.ts.map
+Γ₧ñ YN0000: @types/models.d.ts
+Γ₧ñ YN0000: @types/models.d.ts.map
+Γ₧ñ YN0000: @types/typings.d.ts
+Γ₧ñ YN0000: @types/typings.d.ts.map
+Γ₧ñ YN0000: @types/utils.d.ts
+Γ₧ñ YN0000: @types/utils.d.ts.map
+Γ₧ñ YN0000: @types/validateNodeVersion.d.ts
+Γ₧ñ YN0000: @types/validateNodeVersion.d.ts.map
+Γ₧ñ YN0000: README.md
+Γ₧ñ YN0000: dist/.tsbuildinfo
+Γ₧ñ YN0000: dist/default-db.sqlite
+Γ₧ñ YN0000: dist/index.js
+Γ₧ñ YN0000: dist/index.js.map
+Γ₧ñ YN0000: dist/migrations/1548957970627_remove-db-version.sql
+Γ₧ñ YN0000: dist/migrations/1550601598648_payees.sql
+Γ₧ñ YN0000: dist/migrations/1555786194328_remove_category_group_unique.sql
+Γ₧ñ YN0000: dist/migrations/1561751833510_indexes.sql
+Γ₧ñ YN0000: dist/migrations/1567699552727_budget.sql
+Γ₧ñ YN0000: dist/migrations/1582384163573_cleared.sql
+Γ₧ñ YN0000: dist/migrations/1597756566448_rules.sql
+Γ₧ñ YN0000: dist/migrations/1608652596043_parent_field.sql
+Γ₧ñ YN0000: dist/migrations/1608652596044_trans_views.sql
+Γ₧ñ YN0000: dist/migrations/1612625548236_optimize.sql
+Γ₧ñ YN0000: dist/migrations/1614782639336_trans_views2.sql
+Γ₧ñ YN0000: dist/migrations/1615745967948_meta.sql
+Γ₧ñ YN0000: dist/migrations/1616167010796_accounts_order.sql
+Γ₧ñ YN0000: dist/migrations/1618975177358_schedules.sql
+Γ₧ñ YN0000: dist/migrations/1632571489012_remove_cache.js
+Γ₧ñ YN0000: dist/migrations/1679728867040_rules_conditions.sql
+Γ₧ñ YN0000: dist/migrations/1681115033845_add_schedule_name.sql
+Γ₧ñ YN0000: dist/migrations/1682974838138_remove_payee_rules.sql
+Γ₧ñ YN0000: dist/migrations/1685007876842_add_category_hidden.sql
+Γ₧ñ YN0000: dist/migrations/1686139660866_remove_account_type.sql
+Γ₧ñ YN0000: dist/migrations/1688749527273_transaction_filters.sql
+Γ₧ñ YN0000: dist/migrations/1688841238000_add_account_type.sql
+Γ₧ñ YN0000: dist/migrations/1691233396000_add_schedule_next_date_tombstone.sql
+Γ₧ñ YN0000: dist/migrations/1694438752000_add_goal_targets.sql
+Γ₧ñ YN0000: dist/migrations/1697046240000_add_reconciled.sql
+Γ₧ñ YN0000: dist/migrations/1704572023730_add_account_sync_source.sql
+Γ₧ñ YN0000: dist/migrations/1704572023731_add_missing_goCardless_sync_source.sql
+Γ₧ñ YN0000: dist/migrations/1707267033000_reports.sql
+Γ₧ñ YN0000: dist/migrations/1712784523000_unhide_input_group.sql
+Γ₧ñ YN0000: dist/migrations/1716359441000_include_current.sql
+Γ₧ñ YN0000: dist/migrations/1720310586000_link_transfer_schedules.sql
+Γ₧ñ YN0000: dist/migrations/1720664867241_add_payee_favorite.sql
+Γ₧ñ YN0000: dist/migrations/1720665000000_goal_context.sql
+Γ₧ñ YN0000: dist/migrations/1722717601000_reports_move_selected_categories.js
+Γ₧ñ YN0000: dist/migrations/1722804019000_create_dashboard_table.js
+Γ₧ñ YN0000: dist/migrations/1723665565000_prefs.js
+Γ₧ñ YN0000: dist/migrations/1730744182000_fix_dashboard_table.sql
+Γ₧ñ YN0000: dist/migrations/1736640000000_custom_report_sorting.sql
+Γ₧ñ YN0000: dist/migrations/1737158400000_add_learn_categories_to_payees.sql
+Γ₧ñ YN0000: dist/migrations/1738491452000_sorting_rename.sql
+Γ₧ñ YN0000: dist/migrations/1739139550000_bank_sync_page.sql
+Γ₧ñ YN0000: dist/migrations/1740506588539_add_last_reconciled_at.sql
+Γ₧ñ YN0000: dist/migrations/1745425408000_update_budgetType_pref.sql
+Γ₧ñ YN0000: dist/migrations/1749799110000_add_tags.sql
+Γ₧ñ YN0000: dist/migrations/1749799110001_tags_tombstone.sql
+Γ₧ñ YN0000: dist/migrations/1754611200000_add_category_template_settings.sql
+Γ₧ñ YN0000: dist/migrations/1759260219000_add_trim_interval_report_setting.sql
+Γ₧ñ YN0000: dist/migrations/1759842823172_add_isGlobal_to_preferences.sql
+Γ₧ñ YN0000: dist/migrations/1762178745667_rename_csv_skip_lines_pref.sql
+Γ₧ñ YN0000: dist/migrations/1765518577215_multiple_dashboards.js
+Γ₧ñ YN0000: dist/migrations/1768872504000_add_payee_locations.sql
+Γ₧ñ YN0000: dist/migrations/1769000000000_add_custom_upcoming_length.sql
+Γ₧ñ YN0000: dist/migrations/1778510362740_add_cleanup_groups_and_def.sql
+Γ₧ñ YN0000: dist/migrations/1780099200000_add_show_trend_lines_report_setting.sql
+Γ₧ñ YN0000: dist/migrations/1780327681000_add_tags_hidden.sql
+Γ₧ñ YN0000: dist/migrations/1780606215000_add_bank_sync_status.sql
+Γ₧ñ YN0000: dist/migrations/1780606215001_add_performance_indexes.sql
+Γ₧ñ YN0000: dist/migrations/1783004650757_schedule_sort_order.sql
+Γ₧ñ YN0000: dist/migrations/1787013118115_add_account_groups.sql
+Γ₧ñ YN0000: dist/migrations/1788468782000_add_messages_pending.js
+Γ₧ñ YN0000: dist/migrations/README.md
+Γ₧ñ YN0000: dist/models.js
+Γ₧ñ YN0000: package.json
+Γ₧ñ YN0000: Package archive generated in D:\Projects\personal\Budget\actual-windows-evidence\actual packed clean install\api.tgz
+Γ₧ñ YN0000: Done in 0s 249ms
+packing cli...
+Γ₧ñ YN0000: README.md
+Γ₧ñ YN0000: dist/agent-output-BrReJ-eA.js
+Γ₧ñ YN0000: dist/backup-worker.js
+Γ₧ñ YN0000: dist/budget-snapshot-BaKWdD5U.js
+Γ₧ñ YN0000: dist/budget-snapshot.js
+Γ₧ñ YN0000: dist/cli.js
+Γ₧ñ YN0000: dist/connection-B2fRXZp2.js
+Γ₧ñ YN0000: dist/runtime-state-CYBKHrEF.js
+Γ₧ñ YN0000: dist/server-runner.js
+Γ₧ñ YN0000: dist/stats.json
+Γ₧ñ YN0000: dist/sync-worker.js
+Γ₧ñ YN0000: dist/typescript-C1S9wxku.js
+Γ₧ñ YN0000: dist/typescript-vwzWOg5G.js
+Γ₧ñ YN0000: dist/utils-Ci_9PDGG.js
+Γ₧ñ YN0000: package.json
+Γ₧ñ YN0000: Package archive generated in D:\Projects\personal\Budget\actual-windows-evidence\actual packed clean install\cli.tgz
+Γ₧ñ YN0000: Done in 0s 195ms
+pack=api.tgz size=2509201
+pack=cli.tgz size=1683169
+npm init...
+Wrote to D:\Projects\personal\Budget\actual-windows-evidence\actual packed clean install\node install\package.json:
+
+{
+  "name": "node-install",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
+
+
+npm install tarballs...
+npm error code EOVERRIDE
+npm error Override for @actual-app/api@file:../api.tgz conflicts with direct dependency
+npm error A complete log of this run can be found in: C:\Users\mlinh\AppData\Local\npm-cache\_logs\2026-10-05T16_54_56_482Z-debug-0.log
+
+=== npm install via package.json 2026-10-05T09:55:09.7437684-07:00 ===
+npm warn deprecated prebuild-install@7.1.3: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
+
+added 101 packages in 15s
+npm warn allow-scripts 1 package has install scripts not yet covered by allowScripts:
+npm warn allow-scripts   better-sqlite3@12.11.1 (install: prebuild-install || node-gyp rebuild --release)
+npm warn allow-scripts
+npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
+PACKED_SMOKE_OK ops=172

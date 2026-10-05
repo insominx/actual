@@ -62,6 +62,110 @@ describe('registered agent commands', () => {
     const schema = await run(['schema', 'budgets.set-amount']);
     expect(schema.data.inputSchema.required).toContain('operationId');
   });
+  it.each([
+    ['payees.update', ['payees', 'update', 'payee-id', '--name', 'Renamed']],
+    ['payees.delete', ['payees', 'delete', 'payee-id']],
+    [
+      'payees.merge',
+      ['payees', 'merge', '--target', 'payee-id', '--ids', 'other-id'],
+    ],
+    ['tags.create', ['tags', 'create', '--tag', 'groceries']],
+    ['tags.update', ['tags', 'update', 'tag-id', '--color', 'red']],
+    ['tags.delete', ['tags', 'delete', 'tag-id']],
+    ['notes.set', ['notes', 'set', '--account', 'a1', '--note', 'x']],
+    ['preferences.set', ['preferences', 'set', 'dateFormat', 'yyyy-MM-dd']],
+    ['preferences.reset', ['preferences', 'reset', 'dateFormat']],
+    ['account-groups.create', ['account-groups', 'create', '--name', 'Cash']],
+    [
+      'account-groups.update',
+      ['account-groups', 'update', 'g1', '--name', 'Cards'],
+    ],
+    ['account-groups.delete', ['account-groups', 'delete', 'g1']],
+    [
+      'rules.create',
+      [
+        'rules',
+        'create',
+        '--data',
+        '{"stage":"pre","conditionsOp":"and","conditions":[],"actions":[]}',
+      ],
+    ],
+    [
+      'rules.update',
+      [
+        'rules',
+        'update',
+        '--data',
+        '{"id":"rule-id","stage":"pre","conditionsOp":"and","conditions":[],"actions":[]}',
+      ],
+    ],
+    ['rules.delete', ['rules', 'delete', 'rule-id']],
+    ['schedules.delete', ['schedules', 'delete', 'schedule-id']],
+    ['transactions.delete', ['transactions', 'delete', 'transaction-id']],
+    [
+      'transactions.categorize',
+      ['transactions', 'categorize', '--ids', 'a,b', '--category', 'none'],
+    ],
+    ['transactions.merge', ['transactions', 'merge', '--ids', 'a,b']],
+    ['transactions.clear', ['transactions', 'clear', '--ids', 'a,b']],
+    ['transfers.match', ['transfers', 'match', '--ids', 'a,b']],
+    ['transfers.unmatch', ['transfers', 'unmatch', 'a']],
+    ['transfers.repair', ['transfers', 'repair', 'a']],
+    [
+      'imports.mappings.set',
+      ['imports', 'mappings', 'set', '--account', 'a', '--settings', '{}'],
+    ],
+    [
+      'imports.mappings.reset',
+      ['imports', 'mappings', 'reset', '--account', 'a'],
+    ],
+    ['imports.apply', ['imports', 'apply', 'f.csv', '--account', 'a']],
+    ['rules.apply', ['rules', 'apply', 'r', '--ids', 'a']],
+    ['schedules.post', ['schedules', 'post', 's', '--date', '2026-01-01']],
+    ['schedules.skip', ['schedules', 'skip', 's', '--date', '2026-01-01']],
+    [
+      'budgets.move',
+      [
+        'budgets',
+        'move',
+        '--month',
+        '2026-01',
+        '--from',
+        'a',
+        '--to',
+        'b',
+        '--amount',
+        '1',
+      ],
+    ],
+    [
+      'budgets.apply-templates',
+      ['budgets', 'apply-templates', '--month', '2026-01'],
+    ],
+    [
+      'reconcile.finish',
+      ['reconcile', 'finish', 'a', '--balance', '1', '--ids', 'x'],
+    ],
+    ['reconcile.adjust', ['reconcile', 'adjust', 'a', '--amount', '1']],
+    ['cash-planning.reset', ['cash-planning', 'reset']],
+    [
+      'cash-planning.set-target',
+      ['cash-planning', 'set-target', '--category', 'c', '--amount', '1'],
+    ],
+    [
+      'transactions.split',
+      ['transactions', 'split', 'transaction-id', '--data', '[{"amount":-1}]'],
+    ],
+  ])(
+    'requires a %s operation ID before connecting and advertises it',
+    async (command, args) => {
+      const missing = await run(['--output-version', '2', ...args]);
+      expect(missing.error.code).toBe('INVALID_INPUT');
+      expect(missing.error.details.field).toBe('operationId');
+      const schema = await run(['schema', command]);
+      expect(schema.data.inputSchema.required).toContain('operationId');
+    },
+  );
   it('requires a category creation operation ID before connecting and advertises it', async () => {
     const missing = await run([
       '--output-version',
@@ -77,14 +181,15 @@ describe('registered agent commands', () => {
     expect(missing.error.details.field).toBe('operationId');
     const schema = await run(['schema', 'categories.create']);
     expect(schema.data.inputSchema.required).toContain('operationId');
-  });  it('requires a payee creation operation ID before connecting and advertises it', async () => {
+  });
+  it('requires a payee creation operation ID before connecting and advertises it', async () => {
     const missing = await run([
       '--output-version',
       '2',
       'payees',
       'create',
       '--name',
-      'New category',
+      'New payee',
     ]);
     expect(missing.error.code).toBe('INVALID_INPUT');
     expect(missing.error.details.field).toBe('operationId');
@@ -287,7 +392,7 @@ describe('registered agent commands', () => {
     expect(preview.data.capabilities.mutates).toBe(false);
     expect(preview.data.capabilities.preview).toBe(false);
     expect(Object.keys(preview.data.payloadSchema.anyOf[0].properties)).toEqual(
-      ['notes', 'amount', 'date', 'cleared'],
+      ['notes', 'amount', 'date', 'cleared', 'category', 'payee'],
     );
     const inventory = await run(['schema', 'changes.list']);
     expect(inventory.data.inputSchema.properties.limit).toMatchObject({
@@ -544,5 +649,7 @@ describe('registered agent commands', () => {
     expect(result.data.payloadSchema.type).toBe('array');
     expect(result.data.capabilities.preview).toBe(false);
     expect(result.data.capabilities.reversal).toBe(false);
+    const reversible = await run(['schema', 'transactions.categorize']);
+    expect(reversible.data.capabilities.reversal).toBe(true);
   });
 });

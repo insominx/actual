@@ -1,0 +1,12 @@
+# 0019 packaged transfer proofs (Linux, 2026-10-05 01:24 PDT)
+# Build: yarn exec lage build --scope=@actual-app/cli --no-cache; yarn workspace @actual-app/sync-server build
+# Command: (packages/cli) node --test integration/transfers.test.mjs
+✔ guarded transfer match preserves raw domains and acknowledgements (online) (12197.356098ms)
+✔ guarded transfer match preserves raw domains and acknowledgements (offline) (11598.569835ms)
+✔ killed guarded transfer match at before-engine retains its exact outcome without replay (39768.804989ms)
+✔ killed guarded transfer match at after-engine retains its exact outcome without replay (39259.244512ms)
+✔ killed guarded transfer match at before-sync retains its exact outcome without replay (41176.599785ms)
+✔ transfer review keeps net cash and category spending, flags ambiguity and repairs links (20839.550676ms)
+ℹ tests 6
+ℹ pass 6
+ℹ fail 0

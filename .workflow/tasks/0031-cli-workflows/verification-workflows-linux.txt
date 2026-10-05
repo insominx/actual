@@ -1,0 +1,10 @@
+✔ fresh headless setup, multi-file intake and monthly close (A1, A3) (6266.366394ms)
+✔ intake resumes after a crash without reimporting, cancellation keeps partial outcomes, goal review saves nothing (A2, A3) (11563.381938ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17884.834596

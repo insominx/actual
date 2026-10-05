@@ -2,6 +2,7 @@ import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { withConnection } from '#connection';
+import { executeCatalogChange, executeTagCreation } from '#guarded-changes';
 import { printOutput } from '#output';
 
 export function registerTagsCommand(program: Command) {
@@ -25,11 +26,30 @@ export function registerTagsCommand(program: Command) {
   tags
     .command('create')
     .description('Create a new tag')
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
     .requiredOption('--tag <tag>', 'Tag name')
     .option('--color <color>', 'Tag color')
     .option('--description <description>', 'Tag description')
     .action(async cmdOpts => {
       const opts = program.opts();
+      if (opts.outputVersion === '2') {
+        const request: Record<string, string> = { tag: cmdOpts.tag };
+        if (cmdOpts.color !== undefined) request.color = cmdOpts.color;
+        if (cmdOpts.description !== undefined) {
+          request.description = cmdOpts.description;
+        }
+        printOutput(
+          await executeTagCreation(
+            opts,
+            cmdOpts.operationId,
+            request as {
+              tag: string;
+            },
+          ),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {
@@ -47,6 +67,7 @@ export function registerTagsCommand(program: Command) {
   tags
     .command('update <id>')
     .description('Update a tag')
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
     .option('--tag <tag>', 'New tag name')
     .option('--color <color>', 'New tag color')
     .option('--description <description>', 'New tag description')
@@ -63,6 +84,19 @@ export function registerTagsCommand(program: Command) {
         );
       }
       const opts = program.opts();
+      if (opts.outputVersion === '2') {
+        printOutput(
+          await executeCatalogChange(
+            opts,
+            cmdOpts.operationId,
+            'tags.update',
+            id,
+            fields,
+          ),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {
@@ -76,8 +110,22 @@ export function registerTagsCommand(program: Command) {
   tags
     .command('delete <id>')
     .description('Delete a tag')
-    .action(async (id: string) => {
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
+    .action(async (id: string, cmdOpts: { operationId?: string }) => {
       const opts = program.opts();
+      if (opts.outputVersion === '2') {
+        printOutput(
+          await executeCatalogChange(
+            opts,
+            cmdOpts.operationId,
+            'tags.delete',
+            id,
+            {},
+          ),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {

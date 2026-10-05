@@ -1,0 +1,1 @@
+RECIPE=schtasks /Create /SC MINUTE /MO 15 /TN "Actual win-schedule-dryrun" /TR "actual --data-dir D:\Projects\personal\Budget\actual-windows-evidence\jobs-schedule-dryrun\cli-data --offline --budget-id Schedule-dryrun-b751a29 jobs run win-schedule-dryrun"

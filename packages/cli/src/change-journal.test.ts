@@ -23,6 +23,8 @@ import type {
   CategoryCreationProposal,
   CategoryDeletionProposal,
   CategoryGroupCreationProposal,
+  PayeeCreationProposal,
+  TagCreationProposal,
   TransactionUpdateProposal,
 } from '@actual-app/api';
 
@@ -877,6 +879,106 @@ it('expires group creation only with a complete generated identity acknowledgeme
       expect((await journal.read('group-missing'))?.state).toBe('synced');
       expect((await journal.read('group-incomplete'))?.state).toBe('synced');
       expect((await journal.read('group-uncertain'))?.state).toBe('uncertain');
+    });
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+it('expires payee creation only with a complete generated payee and mapping acknowledgement', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'actual-payee-creation-journal-'));
+  const creation: PayeeCreationProposal = {
+    schemaVersion: 1,
+    operation: 'payees.create',
+    budget: proposal.budget,
+    request: { name: 'Payee' },
+    before: { sourceHash: 'b'.repeat(64) },
+    after: { payee: { name: 'Payee' }, mapping: { creates: true } },
+    references: {},
+    sideEffects: ['create'],
+  };
+  try {
+    await withChangeJournal(root, 1, async journal => {
+      for (const id of [
+        'payee-ack',
+        'payee-missing',
+        'payee-mapping-mismatch',
+        'payee-uncertain',
+      ]) {
+        const receipt = await journal.prepare(id, creation);
+        receipt.state = id === 'payee-uncertain' ? 'uncertain' : 'synced';
+        receipt.updatedAt = '2000-01-01T00:00:00.000Z';
+        if (id === 'payee-ack' || id === 'payee-mapping-mismatch') {
+          receipt.outcome = {
+            status: 'committed-local',
+            changed: true,
+            checkpoint: 'observed',
+            affectedIds: ['created-payee'],
+            payeeCreation: {
+              payeeId: 'created-payee',
+              mappingId:
+                id === 'payee-ack' ? 'created-payee' : 'another-mapping',
+            },
+          };
+        }
+        await journal.write(receipt);
+      }
+      // A reopened journal must decode the payee creation receipt schema.
+      expect((await journal.read('payee-missing'))?.proposal.operation).toBe(
+        'payees.create',
+      );
+      await journal.prepare('payee-next', proposal);
+      expect(await journal.read('payee-ack')).toBeNull();
+      expect((await journal.read('payee-missing'))?.state).toBe('synced');
+      expect((await journal.read('payee-mapping-mismatch'))?.state).toBe(
+        'synced',
+      );
+      expect((await journal.read('payee-uncertain'))?.state).toBe('uncertain');
+    });
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+it('expires tag creation only with a complete generated tag acknowledgement', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'actual-tag-creation-journal-'));
+  const creation: TagCreationProposal = {
+    schemaVersion: 1,
+    operation: 'tags.create',
+    budget: proposal.budget,
+    request: { tag: 'groceries' },
+    before: { sourceHash: 'b'.repeat(64), existing: null },
+    after: {
+      action: 'insert',
+      tag: { tag: 'groceries', color: null, description: null, tombstone: 0 },
+    },
+    references: {},
+    sideEffects: ['create'],
+  };
+  try {
+    await withChangeJournal(root, 1, async journal => {
+      for (const id of ['tag-ack', 'tag-missing', 'tag-mismatch']) {
+        const receipt = await journal.prepare(id, creation);
+        receipt.state = 'synced';
+        receipt.updatedAt = '2000-01-01T00:00:00.000Z';
+        if (id !== 'tag-missing') {
+          receipt.outcome = {
+            status: 'committed-local',
+            changed: true,
+            checkpoint: 'observed',
+            affectedIds: [id === 'tag-ack' ? 'created-tag' : 'other-tag'],
+            tagCreation: { tagId: 'created-tag', action: 'insert' },
+          };
+        }
+        await journal.write(receipt);
+      }
+      expect((await journal.read('tag-missing'))?.proposal.operation).toBe(
+        'tags.create',
+      );
+      await journal.prepare('tag-next', proposal);
+      expect(await journal.read('tag-ack')).toBeNull();
+      expect((await journal.read('tag-missing'))?.state).toBe('synced');
+      expect((await journal.read('tag-mismatch'))?.state).toBe('synced');
     });
   } finally {
     await rm(root, { recursive: true, force: true });

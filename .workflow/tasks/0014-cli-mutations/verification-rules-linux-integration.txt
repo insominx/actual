@@ -1,0 +1,17 @@
+✔ guarded rule creation preserves raw domains and acknowledgements (online) (7668.799378ms)
+✔ guarded rule creation preserves raw domains and acknowledgements (offline) (7090.86737ms)
+✔ guarded rule update preserves raw domains and acknowledgements (online) (8747.865952ms)
+✔ guarded rule update preserves raw domains and acknowledgements (offline) (8173.384482ms)
+✔ guarded rule deletion preserves raw domains and acknowledgements (online) (7558.923957ms)
+✔ guarded rule deletion preserves raw domains and acknowledgements (offline) (7540.233035ms)
+✔ killed guarded rule creation at before-engine retains its exact outcome without replay (34930.750979ms)
+✔ killed guarded rule creation at after-engine retains its exact outcome without replay (35183.684847ms)
+✔ killed guarded rule creation at before-sync retains its exact outcome without replay (36857.274634ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 153818.639026

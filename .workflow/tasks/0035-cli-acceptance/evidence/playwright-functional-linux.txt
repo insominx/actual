@@ -1,0 +1,275 @@
+
+Running 167 tests using 2 workers
+
+
+(node:1499840) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:1499841) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/167] [chromium] › e2e/accounts.mobile.test.ts:29:7 › Mobile Accounts › opens the accounts page and asserts on balances
+[2/167] [chromium] › e2e/accounts.mobile.test.ts:40:7 › Mobile Accounts › opens individual account page and checks that filtering is working
+[3/167] [chromium] › e2e/accounts.mobile.test.ts:69:7 › Mobile Accounts › reconciles an account
+[4/167] [chromium] › e2e/accounts.test.ts:29:7 › Accounts › creates a new account and views the initial balance transaction
+[5/167] [chromium] › e2e/accounts.test.ts:45:7 › Accounts › account register widens amount columns for large balances
+[6/167] [chromium] › e2e/accounts.test.ts:61:7 › Accounts › closes an account
+[7/167] [chromium] › e2e/accounts.test.ts:75:7 › Accounts › right clicking an account in sidebar opens context menu
+[8/167] [chromium] › e2e/accounts.test.ts:82:7 › Accounts › right clicking a transaction row opens context menu
+[9/167] [chromium] › e2e/accounts.test.ts:95:7 › Accounts › updates the running balance after editing a transaction amount
+[10/167] [chromium] › e2e/accounts.test.ts:122:7 › Accounts › bulk editing the date shows a properly formatted date picker
+[11/167] [chromium] › e2e/accounts.test.ts:175:7 › Accounts › shift-click range selection skips hidden reconciled transactions
+[12/167] [chromium] › e2e/accounts.test.ts:242:9 › Accounts › On Budget Accounts › creates a transfer from two existing transactions
+[13/167] [chromium] › e2e/accounts.test.ts:323:9 › Accounts › Import Transactions › imports transactions from a CSV file
+[14/167] [chromium] › e2e/accounts.test.ts:327:9 › Accounts › Import Transactions › import csv file twice
+[15/167] [chromium] › e2e/accounts.test.ts:352:9 › Accounts › Import Transactions › import notes checkbox is not shown for CSV files
+[16/167] [chromium] › e2e/bank-sync.mobile.test.ts:34:7 › Mobile Bank Sync › checks the page visuals
+[17/167] [chromium] › e2e/bank-sync.mobile.test.ts:50:7 › Mobile Bank Sync › searches for accounts
+[18/167] [chromium] › e2e/bank-sync.mobile.test.ts:56:7 › Mobile Bank Sync › page handles empty state gracefully
+[19/167] [chromium] › e2e/bank-sync.test.ts:29:7 › Bank Sync › checks the page visuals
+[20/167] [chromium] › e2e/budget-automations.mobile.test.ts:36:7 › Mobile budget automations › opens automations from the category menu and drills into the editor
+[21/167] [chromium] › e2e/budget.mobile.test.ts:178:9 › Mobile Budget [Envelope] › loads the budget page with budgeted amounts
+[22/167] [chromium] › e2e/budget.mobile.test.ts:178:9 › Mobile Budget [Tracking] › loads the budget page with budgeted amounts
+[23/167] [chromium] › e2e/budget.mobile.test.ts:204:9 › Mobile Budget [Envelope] › checks that clicking the Actual logo in the page header opens the budget page menu
+[24/167] [chromium] › e2e/budget.mobile.test.ts:204:9 › Mobile Budget [Tracking] › checks that clicking the Actual logo in the page header opens the budget page menu
+[25/167] [chromium] › e2e/budget.mobile.test.ts:215:9 › Mobile Budget [Envelope] › checks that clicking the left arrow in the page header shows the previous month's budget
+[26/167] [chromium] › e2e/budget.mobile.test.ts:236:9 › Mobile Budget [Envelope] › checks that clicking the month in the page header opens the month menu modal
+[27/167] [chromium] › e2e/budget.mobile.test.ts:215:9 › Mobile Budget [Tracking] › checks that clicking the left arrow in the page header shows the previous month's budget
+[28/167] [chromium] › e2e/budget.mobile.test.ts:254:9 › Mobile Budget [Envelope] › checks that clicking the right arrow in the page header shows the next month's budget
+[29/167] [chromium] › e2e/budget.mobile.test.ts:236:9 › Mobile Budget [Tracking] › checks that clicking the month in the page header opens the month menu modal
+[30/167] [chromium] › e2e/budget.mobile.test.ts:277:9 › Mobile Budget [Envelope] › checks that clicking the category group name opens the category group menu modal
+[31/167] [chromium] › e2e/budget.mobile.test.ts:254:9 › Mobile Budget [Tracking] › checks that clicking the right arrow in the page header shows the next month's budget
+[32/167] [chromium] › e2e/budget.mobile.test.ts:290:9 › Mobile Budget [Envelope] › checks that clicking the category name opens the category menu modal
+[33/167] [chromium] › e2e/budget.mobile.test.ts:277:9 › Mobile Budget [Tracking] › checks that clicking the category group name opens the category group menu modal
+[34/167] [chromium] › e2e/budget.mobile.test.ts:300:9 › Mobile Budget [Envelope] › opens the transfer confirmation when deleting a category group with transactions
+[35/167] [chromium] › e2e/budget.mobile.test.ts:290:9 › Mobile Budget [Tracking] › checks that clicking the category name opens the category menu modal
+[36/167] [chromium] › e2e/budget.mobile.test.ts:318:9 › Mobile Budget [Envelope] › opens the transfer confirmation when deleting a category with transactions
+[37/167] [chromium] › e2e/budget.mobile.test.ts:300:9 › Mobile Budget [Tracking] › opens the transfer confirmation when deleting a category group with transactions
+[38/167] [chromium] › e2e/budget.mobile.test.ts:337:9 › Mobile Budget [Envelope] › checks that clicking the budgeted cell opens the budget menu modal
+[39/167] [chromium] › e2e/budget.mobile.test.ts:347:9 › Mobile Budget [Envelope] › updates the budgeted amount
+[40/167] [chromium] › e2e/budget.mobile.test.ts:318:9 › Mobile Budget [Tracking] › opens the transfer confirmation when deleting a category with transactions
+[41/167] [chromium] › e2e/budget.mobile.test.ts:365:9 › Mobile Budget [Envelope] › copies last month's budget
+[42/167] [chromium] › e2e/budget.mobile.test.ts:337:9 › Mobile Budget [Tracking] › checks that clicking the budgeted cell opens the budget menu modal
+[43/167] [chromium] › e2e/budget.mobile.test.ts:395:11 › Mobile Budget [Envelope] › set budget to 3 month average
+[44/167] [chromium] › e2e/budget.mobile.test.ts:347:9 › Mobile Budget [Tracking] › updates the budgeted amount
+[45/167] [chromium] › e2e/budget.mobile.test.ts:365:9 › Mobile Budget [Tracking] › copies last month's budget
+[46/167] [chromium] › e2e/budget.mobile.test.ts:395:11 › Mobile Budget [Envelope] › set budget to 6 month average
+[47/167] [chromium] › e2e/budget.mobile.test.ts:395:11 › Mobile Budget [Tracking] › set budget to 3 month average
+[48/167] [chromium] › e2e/budget.mobile.test.ts:395:11 › Mobile Budget [Envelope] › set budget to 12 month average
+[49/167] [chromium] › e2e/budget.mobile.test.ts:395:11 › Mobile Budget [Tracking] › set budget to 6 month average
+[50/167] [chromium] › e2e/budget.mobile.test.ts:417:9 › Mobile Budget [Envelope] › applies budget template
+[51/167] [chromium] › e2e/budget.mobile.test.ts:395:11 › Mobile Budget [Tracking] › set budget to 12 month average
+[52/167] [chromium] › e2e/budget.mobile.test.ts:468:9 › Mobile Budget [Envelope] › checks that clicking spent cell redirects to the category transactions page
+[53/167] [chromium] › e2e/budget.mobile.test.ts:481:9 › Mobile Budget [Envelope] › checks that clicking the balance cell opens the balance menu modal
+[54/167] [chromium] › e2e/budget.mobile.test.ts:492:11 › Mobile Budget [Envelope] › checks that clicking the To Budget/Overbudgeted amount opens the budget summary menu modal
+[55/167] [chromium] › e2e/budget.mobile.test.ts:417:9 › Mobile Budget [Tracking] › applies budget template
+[56/167] [chromium] › e2e/budget.test.ts:29:7 › Budget › renders the summary information: available funds, overspent, budgeted and for next month
+[57/167] [chromium] › e2e/budget.mobile.test.ts:468:9 › Mobile Budget [Tracking] › checks that clicking spent cell redirects to the category transactions page
+[58/167] [chromium] › e2e/budget.test.ts:41:7 › Budget › transfer funds to another category
+[59/167] [chromium] › e2e/budget.mobile.test.ts:481:9 › Mobile Budget [Tracking] › checks that clicking the balance cell opens the balance menu modal
+[60/167] [chromium] › e2e/budget.test.ts:53:7 › Budget › budget table is rendered
+[61/167] [chromium] › e2e/budget.test.ts:62:7 › Budget › clicking on spent amounts opens a transaction page
+[62/167] [chromium] › e2e/budget.mobile.test.ts:506:11 › Mobile Budget [Tracking] › checks that clicking the Saved/Projected Savings/Overspent amount opens the budget summary menu modal
+[63/167] [chromium] › e2e/budget.test.ts:69:7 › Budget › right clicking a category opens context menu
+[64/167] [chromium] › e2e/budget.test.ts:76:7 › Budget › right clicking a category group opens context menu
+[65/167] [chromium] › e2e/budget.test.ts:83:7 › Budget › right clicking budget name opens context menu
+[66/167] [chromium] › e2e/budget.test.ts:136:7 › Budget scroll position › scroll position is restored when navigating back from spent transactions page
+[67/167] [chromium] › e2e/cash-planning.test.ts:54:7 › desktop cash planning saves separate targets and goals, reloads and masks figures
+[68/167] [chromium] › e2e/cash-planning.test.ts:54:7 › mobile cash planning saves separate targets and goals, reloads and masks figures
+[69/167] [chromium] › e2e/cash-planning.test.ts:216:5 › refreshes imports, reconciliation, category edits, undo, and shared budget tabs
+[70/167] [chromium] › e2e/command-bar.test.ts:33:7 › Command bar › Check the command bar visuals
+[71/167] [chromium] › e2e/command-bar.test.ts:48:7 › Command bar › Check the command bar search works correctly
+[72/167] [chromium] › e2e/expense-view.mobile.test.ts:5:5 › mobile expenses own their month controls and scroll without moving the budget month
+[73/167] [chromium] › e2e/expense-view.test.ts:11:5 › updates net spending after ledger edits and undo without remounting
+[74/167] [chromium] › e2e/expense-view.test.ts:74:5 › expense navigation leaves the budget month, engine and allocations unchanged
+[75/167] [chromium] › e2e/help-menu.test.ts:27:7 › Help menu › Check the help menu visuals
+[76/167] [chromium] › e2e/help-menu.test.ts:35:7 › Help menu › Check the keyboard shortcuts modal visuals
+[77/167] [chromium] › e2e/multi-tab-budget.test.ts:21:5 › new budget tabs share one backend for edits, undo and leader handover
+[78/167] [chromium] › e2e/onboarding.test.ts:26:7 › Onboarding › checks the page visuals
+[79/167] [chromium] › e2e/onboarding.test.ts:35:7 › Onboarding › creates a new budget file by importing YNAB4 budget
+[80/167] [chromium] › e2e/onboarding.test.ts:52:7 › Onboarding › creates a new budget file by importing nYNAB budget
+[81/167] [chromium] › e2e/onboarding.test.ts:93:7 › Onboarding › creates a new budget file by importing Actual budget
+[82/167] [chromium] › e2e/onboarding.test.ts:108:7 › Onboarding › creates a new empty budget file
+[83/167] [chromium] › e2e/onboarding.test.ts:119:7 › Onboarding › navigates back to start page by clicking on "no server" in an empty budget file
+[84/167] [chromium] › e2e/payees.mobile.test.ts:36:7 › Mobile Payees › checks the page visuals
+[85/167] [chromium] › e2e/payees.mobile.test.ts:54:7 › Mobile Payees › filters out unrelated payees
+[86/167] [chromium] › e2e/payees.mobile.test.ts:65:7 › Mobile Payees › clicking on a payee opens payee edit page
+[87/167] [chromium] › e2e/payees.mobile.test.ts:86:7 › Mobile Payees › page handles empty state gracefully
+[88/167] [chromium] › e2e/payees.mobile.test.ts:100:7 › Mobile Payees › search functionality works correctly
+[89/167] [chromium] › e2e/payees.test.ts:31:7 › Payees › checks the payees page visuals
+[90/167] [chromium] › e2e/payees.test.ts:41:7 › Payees › shows Fast Internet in the payee list
+[91/167] [chromium] › e2e/payees.test.ts:46:7 › Payees › shows "Create rule" text for a payee
+[92/167] [chromium] › e2e/payees.test.ts:51:7 › Payees › filters out unrelated payees
+[93/167] [chromium] › e2e/payees.test.ts:61:7 › Payees › right clicking a payee opens context menu
+[94/167] [chromium] › e2e/reports.test.ts:33:7 › Reports › loads net worth and cash flow reports
+[95/167] [chromium] › e2e/reports.test.ts:239:7 › Reports without transactions › creates a custom report in an empty budget
+[96/167] [chromium] › e2e/reports.test.ts:50:7 › Reports › right clicking a report card opens context menu
+[97/167] [chromium] › e2e/reservations.mobile.test.ts:45:7 › Mobile category reservations › shows the same breakdown in the balance modal
+[98/167] [chromium] › e2e/reports.test.ts:57:7 › Reports › loads net worth graph and checks visuals
+[99/167] [chromium] › e2e/reservations.mobile.test.ts:55:7 › Mobile category reservations › leaves the balance modal unchanged with the flag off
+[100/167] [chromium] › e2e/reports.test.ts:62:7 › Reports › loads cash flow graph and checks visuals
+[101/167] [chromium] › e2e/reservations.test.ts:64:7 › Category reservations › shows the reservation breakdown in the balance menu
+[102/167] [chromium] › e2e/reports.test.ts:67:7 › Reports › opens the date range picker and checks visuals
+[103/167] [chromium] › e2e/reports.test.ts:90:9 › Reports › balance forecast › loads balance forecast report with monthly granularity
+[104/167] [chromium] › e2e/reports.test.ts:94:9 › Reports › balance forecast › switches to daily granularity
+[105/167] [chromium] › e2e/reports.test.ts:100:9 › Reports › balance forecast › loads tracking budget forecast report
+[106/167] [chromium] › e2e/reports.test.ts:131:9 › Reports › custom reports › Switches to Data Table and checks the visuals
+[107/167] [chromium] › e2e/reports.test.ts:137:9 › Reports › custom reports › Switches to Bar Graph and checks the visuals
+[108/167] [chromium] › e2e/reports.test.ts:143:9 › Reports › custom reports › Switches to Line Graph and checks the visuals
+[109/167] [chromium] › e2e/reports.test.ts:149:9 › Reports › custom reports › Switches to Area Graph and checks the visuals
+[110/167] [chromium] › e2e/reports.test.ts:155:9 › Reports › custom reports › Switches to Donut Graph and checks the visuals
+[111/167] [chromium] › e2e/reports.test.ts:161:9 › Reports › custom reports › Validates that "show legend" button shows the legend side-bar
+[112/167] [chromium] › e2e/reports.test.ts:170:11 › Reports › custom reports › Bar Graph keeps its height when the legend needs scrolling
+[113/167] [chromium] › e2e/reports.test.ts:170:11 › Reports › custom reports › Line Graph keeps its height when the legend needs scrolling
+[114/167] [chromium] › e2e/reports.test.ts:210:9 › Reports › custom reports › Validates that "show summary" button shows the summary
+[115/167] [chromium] › e2e/reports.test.ts:218:9 › Reports › custom reports › Validates that "show labels" button shows the labels
+
+(node:1505145) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[116/167] (retries) [chromium] › e2e/reports.test.ts:33:7 › Reports › loads net worth and cash flow reports (retry #1)
+[117/167] [chromium] › e2e/reservations.test.ts:70:7 › Category reservations › removes the breakdown when the flag is turned off
+[118/167] (retries) [chromium] › e2e/reports.test.ts:50:7 › Reports › right clicking a report card opens context menu (retry #1)
+[119/167] (retries) [chromium] › e2e/reports.test.ts:57:7 › Reports › loads net worth graph and checks visuals (retry #1)
+[120/167] [chromium] › e2e/reservations.test.ts:88:7 › Category reservations › refreshes the open breakdown after a payment and undo
+[121/167] (retries) [chromium] › e2e/reports.test.ts:62:7 › Reports › loads cash flow graph and checks visuals (retry #1)
+[122/167] [chromium] › e2e/reservations.test.ts:100:5 › refreshes reservations across shared-budget tabs after payment and undo
+  1) [chromium] › e2e/reports.test.ts:62:7 › Reports › loads cash flow graph and checks visuals ────
+
+    Error: locator.click: Error: strict mode violation: getByTestId('reports-page').getByRole('button', { name: /^Cash/ }) resolved to 2 elements:
+        1) <button data-rac="" tabindex="0" type="button" class="css-3uywls" data-react-aria-pressable="true" id="react-aria5258925842-_r_9k_">Cash planning</button> aka getByRole('button', { name: 'Cash planning' })
+        2) <button data-rac="" tabindex="0" type="button" class="css-70zz4x" data-react-aria-pressable="true" id="react-aria5258925842-_r_a0_">…</button> aka getByRole('button', { name: 'Cash Flow January 2017 +' })
+
+    Call log:
+      - waiting for getByTestId('reports-page').getByRole('button', { name: /^Cash/ })
+
+
+       at page-models/reports-page.ts:24
+
+      22 |
+      23 |   async goToCashFlowPage() {
+    > 24 |     await this.pageContent.getByRole('button', { name: /^Cash/ }).click();
+         |                                                                   ^
+      25 |     return new ReportsPage(this.page);
+      26 |   }
+      27 |
+        at ReportsPage.goToCashFlowPage (/workspace/actual/packages/desktop-client/e2e/page-models/reports-page.ts:24:67)
+        at /workspace/actual/packages/desktop-client/e2e/reports.test.ts:63:23
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/reports-Reports-loads-cash-flow-graph-and-checks-visuals-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/reports-Reports-loads-cash-flow-graph-and-checks-visuals-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: locator.click: Error: strict mode violation: getByTestId('reports-page').getByRole('button', { name: /^Cash/ }) resolved to 2 elements:
+        1) <button data-rac="" tabindex="0" type="button" class="css-3uywls" id="react-aria214522042-_r_9s_" data-react-aria-pressable="true">Cash planning</button> aka getByRole('button', { name: 'Cash planning' })
+        2) <button data-rac="" tabindex="0" type="button" class="css-70zz4x" id="react-aria214522042-_r_a8_" data-react-aria-pressable="true">…</button> aka getByRole('button', { name: 'Cash Flow January 2017 +' })
+
+    Call log:
+      - waiting for getByTestId('reports-page').getByRole('button', { name: /^Cash/ })
+
+
+       at page-models/reports-page.ts:24
+
+      22 |
+      23 |   async goToCashFlowPage() {
+    > 24 |     await this.pageContent.getByRole('button', { name: /^Cash/ }).click();
+         |                                                                   ^
+      25 |     return new ReportsPage(this.page);
+      26 |   }
+      27 |
+        at ReportsPage.goToCashFlowPage (/workspace/actual/packages/desktop-client/e2e/page-models/reports-page.ts:24:67)
+        at /workspace/actual/packages/desktop-client/e2e/reports.test.ts:63:23
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/reports-Reports-loads-cash-flow-graph-and-checks-visuals-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/reports-Reports-loads-cash-flow-graph-and-checks-visuals-chromium-retry1/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/reports-Reports-loads-cash-flow-graph-and-checks-visuals-chromium-retry1/trace.zip
+    Usage:
+
+        yarn playwright show-trace test-results/reports-Reports-loads-cash-flow-graph-and-checks-visuals-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[123/167] (retries) [chromium] › e2e/reports.test.ts:67:7 › Reports › opens the date range picker and checks visuals (retry #1)
+[124/167] (retries) [chromium] › e2e/reports.test.ts:90:9 › Reports › balance forecast › loads balance forecast report with monthly granularity (retry #1)
+[125/167] (retries) [chromium] › e2e/reports.test.ts:94:9 › Reports › balance forecast › switches to daily granularity (retry #1)
+[126/167] (retries) [chromium] › e2e/reports.test.ts:100:9 › Reports › balance forecast › loads tracking budget forecast report (retry #1)
+[127/167] (retries) [chromium] › e2e/reports.test.ts:131:9 › Reports › custom reports › Switches to Data Table and checks the visuals (retry #1)
+[128/167] (retries) [chromium] › e2e/reports.test.ts:137:9 › Reports › custom reports › Switches to Bar Graph and checks the visuals (retry #1)
+[129/167] (retries) [chromium] › e2e/reports.test.ts:143:9 › Reports › custom reports › Switches to Line Graph and checks the visuals (retry #1)
+[130/167] (retries) [chromium] › e2e/reports.test.ts:149:9 › Reports › custom reports › Switches to Area Graph and checks the visuals (retry #1)
+[131/167] (retries) [chromium] › e2e/reports.test.ts:155:9 › Reports › custom reports › Switches to Donut Graph and checks the visuals (retry #1)
+[132/167] (retries) [chromium] › e2e/reports.test.ts:161:9 › Reports › custom reports › Validates that "show legend" button shows the legend side-bar (retry #1)
+[133/167] (retries) [chromium] › e2e/reports.test.ts:170:11 › Reports › custom reports › Bar Graph keeps its height when the legend needs scrolling (retry #1)
+[134/167] (retries) [chromium] › e2e/reports.test.ts:170:11 › Reports › custom reports › Line Graph keeps its height when the legend needs scrolling (retry #1)
+[135/167] (retries) [chromium] › e2e/reports.test.ts:210:9 › Reports › custom reports › Validates that "show summary" button shows the summary (retry #1)
+[136/167] (retries) [chromium] › e2e/reports.test.ts:218:9 › Reports › custom reports › Validates that "show labels" button shows the labels (retry #1)
+
+(node:1505651) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[137/167] [chromium] › e2e/rules.mobile.test.ts:36:7 › Mobile Rules › checks the page visuals
+[138/167] [chromium] › e2e/rules.mobile.test.ts:55:7 › Mobile Rules › clicking add button opens rule creation form
+[139/167] [chromium] › e2e/rules.mobile.test.ts:61:7 › Mobile Rules › clicking on a rule opens edit form
+[140/167] [chromium] › e2e/rules.mobile.test.ts:76:7 › Mobile Rules › page handles empty state gracefully
+[141/167] [chromium] › e2e/rules.test.ts:29:7 › Rules › checks the page visuals
+[142/167] [chromium] › e2e/rules.test.ts:34:7 › Rules › creates a rule and makes sure it is applied when creating a transaction
+[143/167] [chromium] › e2e/rules.test.ts:73:7 › Rules › creates a split transaction rule and makes sure it is applied when creating a transaction
+[144/167] [chromium] › e2e/rules.test.ts:141:7 › Rules › right clicking a rule opens context menu
+[145/167] [chromium] › e2e/schedules.mobile.test.ts:36:7 › Mobile Schedules › checks the page visuals
+[146/167] [chromium] › e2e/schedules.mobile.test.ts:57:7 › Mobile Schedules › page handles empty state gracefully
+[147/167] [chromium] › e2e/schedules.mobile.test.ts:67:7 › Mobile Schedules › clicking on a schedule opens edit form
+[148/167] [chromium] › e2e/schedules.mobile.test.ts:90:7 › Mobile Schedules › searches and filters schedules
+[149/167] [chromium] › e2e/schedules.mobile.test.ts:119:7 › Mobile Schedules › displays schedule details correctly in list
+[150/167] [chromium] › e2e/schedules.test.ts:29:7 › Schedules › checks the page visuals
+[151/167] [chromium] › e2e/schedules.test.ts:33:7 › Schedules › creates a new schedule, posts the transaction and later completes it
+[152/167] [chromium] › e2e/schedules.test.ts:88:7 › Schedules › shows a scheduled split transfer in its destination account
+[153/167] [chromium] › e2e/schedules.test.ts:181:7 › Schedules › creates two new schedules, posts both transactions and later completes one
+[154/167] [chromium] › e2e/schedules.test.ts:247:7 › Schedules › creates a "full" list of schedules
+[155/167] [chromium] › e2e/schedules.test.ts:261:7 › Schedules › right clicking a schedule opens context menu
+[156/167] [chromium] › e2e/settings.mobile.test.ts:29:7 › Mobile Settings › checks that settings page can be opened
+[157/167] [chromium] › e2e/settings.test.ts:29:7 › Settings › checks the page visuals
+[158/167] [chromium] › e2e/settings.test.ts:33:7 › Settings › downloads the export of the budget
+[159/167] [chromium] › e2e/tour.test.ts:28:7 › Tour › walks through every step of the tour
+[160/167] [chromium] › e2e/tour.test.ts:49:7 › Tour › skipping the tour dismisses it
+[161/167] [chromium] › e2e/transaction-column-resizing.test.ts:152:7 › Transaction column resizing › payee edges stay aligned at 240, 80 and 1200 (G1, G4)
+[162/167] [chromium] › e2e/transaction-column-resizing.test.ts:193:7 › Transaction column resizing › new transaction row matches the header (G2)
+[163/167] [chromium] › e2e/transaction-column-resizing.test.ts:203:7 › Transaction column resizing › other text columns stay aligned (G3)
+[164/167] [chromium] › e2e/transaction-column-resizing.test.ts:253:7 › Transaction column resizing › recycled rows keep the width after scrolling (G5)
+[165/167] [chromium] › e2e/transaction-column-resizing.test.ts:289:7 › Transaction column resizing › tabbing to an off-screen cell scrolls it into view
+[166/167] [chromium] › e2e/transaction-column-resizing.test.ts:312:7 › Transaction column resizing › dragging a handle does not sort, select, edit or move rows (G6)
+[167/167] [chromium] › e2e/transaction-column-resizing.test.ts:332:7 › Transaction column resizing › widths persist per view and column id (P1-P3)
+[168/167] [chromium] › e2e/transaction-column-resizing.test.ts:361:7 › Transaction column resizing › only a completed gesture or reset writes, and only the width key (P4)
+[169/167] [chromium] › e2e/transaction-column-resizing.test.ts:405:7 › Transaction column resizing › a narrow viewport scrolls without saving a smaller width (P5)
+[170/167] [chromium] › e2e/transactions.mobile.test.ts:29:7 › Mobile Transactions › creates a transaction via footer button
+[171/167] [chromium] › e2e/transactions.mobile.test.ts:57:7 › Mobile Transactions › prefills a new transaction with URL search params
+[172/167] [chromium] › e2e/transactions.mobile.test.ts:82:7 › Mobile Transactions › creates a transaction from `/accounts/:id` page
+[173/167] [chromium] › e2e/transactions.mobile.test.ts:109:7 › Mobile Transactions › creates an uncategorized transaction from `/categories/uncategorized` page
+[174/167] [chromium] › e2e/transactions.mobile.test.ts:142:7 › Mobile Transactions › creates a categorized transaction from `/categories/uncategorized` page
+[175/167] [chromium] › e2e/transactions.test.ts:29:7 › Transactions › checks the page visuals
+[176/167] [chromium] › e2e/transactions.test.ts:39:9 › Transactions › filters transactions › by date
+[177/167] [chromium] › e2e/transactions.test.ts:57:9 › Transactions › filters transactions › by category
+[178/167] [chromium] › e2e/transactions.test.ts:82:9 › Transactions › filters transactions › by category group
+[179/167] [chromium] › e2e/transactions.test.ts:118:9 › Transactions › filters transactions › by payee
+[180/167] [chromium] › e2e/transactions.test.ts:191:7 › Transactions › creates a test transaction
+[181/167] [chromium] › e2e/transactions.test.ts:208:7 › Transactions › creates a split test transaction
+[182/167] [chromium] › e2e/transactions.test.ts:247:7 › Transactions › creates a transfer test transaction
+[183/167] [chromium] › e2e/transactions.test.ts:294:9 › Transactions › notes tooltip › shows the full note and its tags only when the note is truncated
+[184/167] [chromium] › e2e/transactions.test.ts:329:9 › Transactions › column manager › hides and reorders columns
+[185/167] [chromium] › e2e/transactions.test.ts:373:9 › Transactions › column manager › applies columns to all transaction tables when enabled
+  1 failed
+    [chromium] › e2e/reports.test.ts:62:7 › Reports › loads cash flow graph and checks visuals ─────
+  14 did not run
+  152 passed (5.7m)
+EXIT:0
+2026-10-05T09:42:03-07:00

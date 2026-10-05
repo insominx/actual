@@ -2,7 +2,9 @@ import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { withConnection } from '#connection';
+import { executeCatalogChange, executePayeeCreation } from '#guarded-changes';
 import { printOutput } from '#output';
+import { filterByName } from '#utils';
 
 export function registerPayeesCommand(program: Command) {
   const payees = program.command('payees').description('Manage payees');
@@ -38,11 +40,54 @@ export function registerPayeesCommand(program: Command) {
     });
 
   payees
+    .command('inspect')
+    .description(
+      'Inspect payees with IDs, hidden/deleted status, merge targets, transaction counts and same-name duplicates',
+    )
+    .option(
+      '--include-deleted',
+      'Include deleted rows and where they now resolve',
+      false,
+    )
+    .option(
+      '--name <text>',
+      'Only rows whose name contains this text (case-insensitive)',
+    )
+    .action(async (cmdOpts: { includeDeleted: boolean; name?: string }) => {
+      const opts = program.opts();
+      await withConnection(
+        opts,
+        async () => {
+          printOutput(
+            filterByName(
+              await api.inspectCatalog('payees', {
+                includeDeleted: cmdOpts.includeDeleted,
+              }),
+              cmdOpts.name,
+            ),
+            opts.format,
+          );
+        },
+        { mutates: false },
+      );
+    });
+
+  payees
     .command('create')
     .description('Create a new payee')
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
     .requiredOption('--name <name>', 'Payee name')
     .action(async cmdOpts => {
       const opts = program.opts();
+      if (opts.outputVersion === '2') {
+        printOutput(
+          await executePayeeCreation(opts, cmdOpts.operationId, {
+            name: cmdOpts.name,
+          }),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {
@@ -56,6 +101,7 @@ export function registerPayeesCommand(program: Command) {
   payees
     .command('update <id>')
     .description('Update a payee')
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
     .option('--name <name>', 'New payee name')
     .action(async (id: string, cmdOpts) => {
       const fields: Record<string, unknown> = {};
@@ -66,6 +112,19 @@ export function registerPayeesCommand(program: Command) {
         );
       }
       const opts = program.opts();
+      if (opts.outputVersion === '2') {
+        printOutput(
+          await executeCatalogChange(
+            opts,
+            cmdOpts.operationId,
+            'payees.update',
+            id,
+            fields,
+          ),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {
@@ -79,8 +138,22 @@ export function registerPayeesCommand(program: Command) {
   payees
     .command('delete <id>')
     .description('Delete a payee')
-    .action(async (id: string) => {
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
+    .action(async (id: string, cmdOpts: { operationId?: string }) => {
       const opts = program.opts();
+      if (opts.outputVersion === '2') {
+        printOutput(
+          await executeCatalogChange(
+            opts,
+            cmdOpts.operationId,
+            'payees.delete',
+            id,
+            {},
+          ),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {
@@ -96,24 +169,44 @@ export function registerPayeesCommand(program: Command) {
     .description('Merge payees into a target payee')
     .requiredOption('--target <id>', 'Target payee ID')
     .requiredOption('--ids <ids>', 'Comma-separated payee IDs to merge')
-    .action(async (cmdOpts: { target: string; ids: string }) => {
-      const mergeIds = cmdOpts.ids
-        .split(',')
-        .map(id => id.trim())
-        .filter(id => id.length > 0);
-      if (mergeIds.length === 0) {
-        throw new Error(
-          'No valid payee IDs provided in --ids. Provide comma-separated IDs.',
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
+    .action(
+      async (cmdOpts: {
+        target: string;
+        ids: string;
+        operationId?: string;
+      }) => {
+        const mergeIds = cmdOpts.ids
+          .split(',')
+          .map(id => id.trim())
+          .filter(id => id.length > 0);
+        if (mergeIds.length === 0) {
+          throw new Error(
+            'No valid payee IDs provided in --ids. Provide comma-separated IDs.',
+          );
+        }
+        const opts = program.opts();
+        if (opts.outputVersion === '2') {
+          printOutput(
+            await executeCatalogChange(
+              opts,
+              cmdOpts.operationId,
+              'payees.merge',
+              cmdOpts.target,
+              { mergeIds },
+            ),
+            opts.format,
+          );
+          return;
+        }
+        await withConnection(
+          opts,
+          async () => {
+            await api.mergePayees(cmdOpts.target, mergeIds);
+            printOutput({ success: true }, opts.format);
+          },
+          { mutates: true },
         );
-      }
-      const opts = program.opts();
-      await withConnection(
-        opts,
-        async () => {
-          await api.mergePayees(cmdOpts.target, mergeIds);
-          printOutput({ success: true }, opts.format);
-        },
-        { mutates: true },
-      );
-    });
+      },
+    );
 }

@@ -1,0 +1,44 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        {
+          "id": "core-query",
+          "command": "yarn workspace @actual-app/core exec vitest run src/server/aql"
+        },
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api test"
+        },
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "query-integration",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/query.test.mjs"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src/commands/query.ts packages/cli/src/commands/query-aggregate.ts packages/cli/src/commands/query.test.ts packages/cli/src/commands/query-paging.test.ts packages/cli/src/commands/query-resolve.test.ts packages/cli/src/commands/query-aggregate.test.ts packages/cli/integration/query.test.mjs packages/loot-core/src/server/aql/schema-metadata.ts packages/loot-core/src/server/aql/schema-metadata.test.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/types/api-handlers.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src/commands/query.ts packages/cli/src/commands/query-aggregate.ts packages/cli/src/commands/query.test.ts packages/cli/src/commands/query-paging.test.ts packages/cli/src/commands/query-resolve.test.ts packages/cli/src/commands/query-aggregate.test.ts packages/cli/integration/query.test.mjs packages/loot-core/src/server/aql/schema-metadata.ts packages/loot-core/src/server/aql/schema-metadata.test.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/types/api-handlers.ts packages/docs/docs/api/cli.md packages/cli/README.md"
+        }
+      ]
+    }
+  }
+}

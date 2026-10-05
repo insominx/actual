@@ -1,0 +1,11 @@
+✔ bash first-run tutorial with spaces and JSON via arguments, files and stdin (A2) (5370.117573ms)
+✔ upgrade check reports versions and incompatibilities without writing (A3) (4124.7353ms)
+✔ packed CLI and API install into a clean directory and run first-run workflows (A1) (12175.344511ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 21741.395701

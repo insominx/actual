@@ -4315,12 +4315,13 @@ describe('guarded payee creation', () => {
     const empty = await api.createPayee({ name: '' });
     expect(second).not.toBe(first);
     const payees = await api.getPayees();
-    for (const id of [first, second])
+    for (const id of [first, second]) {
       expect(payees.find(row => row.id === id)).toEqual({
         id,
         name,
         transfer_acct: null,
       });
+    }
     expect(payees.find(row => row.id === empty)).toEqual({
       id: empty,
       name: '',
@@ -4348,8 +4349,9 @@ describe('guarded payee creation', () => {
         mappingId: expect.any(String),
       },
     });
-    if (applied.status !== 'committed-local')
+    if (applied.status !== 'committed-local') {
       throw new Error('Expected committed creation');
+    }
     expect(applied.payeeCreation.mappingId).toBe(applied.payeeCreation.payeeId);
     expect(applied.affectedIds).toEqual([applied.payeeCreation.payeeId]);
     expect(
@@ -4368,10 +4370,11 @@ describe('guarded payee creation', () => {
       await api.previewPayeeCreation(request),
     );
     expect(duplicate.status).toBe('committed-local');
-    if (duplicate.status === 'committed-local')
+    if (duplicate.status === 'committed-local') {
       expect(duplicate.payeeCreation.payeeId).not.toBe(
         applied.payeeCreation.payeeId,
       );
+    }
     const empty = await api.previewPayeeCreation({ name: '' });
     expect((await api.applyPayeeCreation(empty)).status).toBe(
       'committed-local',
@@ -4399,12 +4402,2655 @@ describe('guarded payee creation', () => {
       {},
       { name: 'Payee', extra: true },
       { name: 'Payee', transfer_acct: 42 },
-    ])
-      await expect(api.previewPayeeCreation(request)).rejects.toThrow();
+    ]) {
+      await expect(
+        api.previewPayeeCreation(
+          request as unknown as Parameters<typeof api.previewPayeeCreation>[0],
+        ),
+      ).rejects.toThrow();
+    }
     expect(await api.getPayees()).toEqual(before);
     await api.createPayee({ name: 'Changed source payee' });
     expect(await api.applyPayeeCreation(proposal)).toMatchObject({
       code: 'STALE_PREVIEW',
     });
+  });
+});
+
+describe('guarded payee updates, deletions and merges', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('previews a rename without writes and acknowledges the raw payee row', async () => {
+    const id = await api.createPayee({ name: 'Old name' });
+    const before = await api.getPayees();
+    const proposal = await api.previewPayeeUpdate({
+      id,
+      fields: { name: 'New name' },
+    });
+    expect(proposal.after.payee).toMatchObject({ id, name: 'New name' });
+    expect(await api.getPayees()).toEqual(before);
+    const applied = await api.applyPayeeUpdate(proposal);
+    expect(applied).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+      affectedIds: [id],
+    });
+    expect((await api.getPayees()).find(row => row.id === id)?.name).toBe(
+      'New name',
+    );
+    expect(await api.applyPayeeUpdate(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+  });
+  test('rejects malformed, transfer, missing and tampered payee updates', async () => {
+    const account = await api.createAccount({ name: 'Checking' }, 0);
+    const transfer = (await api.getPayees()).find(
+      row => row.transfer_acct === account,
+    );
+    const id = await api.createPayee({ name: 'Target' });
+    for (const request of [
+      { id, fields: {} },
+      { id, fields: { name: '' } },
+      { id, fields: { name: 'x', transfer_acct: account } },
+      { id: 'missing', fields: { name: 'x' } },
+      { id: transfer?.id, fields: { name: 'x' } },
+    ]) {
+      await expect(
+        api.previewPayeeUpdate(
+          request as unknown as Parameters<typeof api.previewPayeeUpdate>[0],
+        ),
+      ).rejects.toThrow();
+    }
+    const proposal = await api.previewPayeeUpdate({
+      id,
+      fields: { name: 'Renamed' },
+    });
+    expect(
+      await api.applyPayeeUpdate({
+        ...proposal,
+        budget: { ...proposal.budget, id: 'wrong' },
+      }),
+    ).toMatchObject({ code: 'MISSING_CONTEXT' });
+    expect(
+      await api.applyPayeeUpdate({
+        ...proposal,
+        request: { id, fields: { name: 'Other' } },
+      }),
+    ).toMatchObject({ code: 'STALE_PREVIEW' });
+    expect((await api.getPayees()).find(row => row.id === id)?.name).toBe(
+      'Target',
+    );
+  });
+  test('deletes a regular payee and preserves the transfer payee no-op', async () => {
+    const id = await api.createPayee({ name: 'Doomed' });
+    const proposal = await api.previewPayeeDeletion({ id });
+    expect(proposal.after).toEqual({ action: 'tombstone' });
+    expect(await api.applyPayeeDeletion(proposal)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+      affectedIds: [id],
+    });
+    expect((await api.getPayees()).some(row => row.id === id)).toBe(false);
+    await expect(api.previewPayeeDeletion({ id })).rejects.toThrow();
+    const account = await api.createAccount({ name: 'Savings' }, 0);
+    const transfer = (await api.getPayees()).find(
+      row => row.transfer_acct === account,
+    );
+    if (!transfer) {
+      throw new Error('Expected transfer payee');
+    }
+    const transferProposal = await api.previewPayeeDeletion({
+      id: transfer.id,
+    });
+    expect(transferProposal.after).toEqual({
+      action: 'unchanged-transfer-payee',
+    });
+    expect(await api.applyPayeeDeletion(transferProposal)).toMatchObject({
+      status: 'committed-local',
+      changed: false,
+      affectedIds: [],
+    });
+    expect((await api.getPayees()).some(row => row.id === transfer.id)).toBe(
+      true,
+    );
+  });
+  test('merges payees, remaps mappings and skips transfer sources', async () => {
+    const target = await api.createPayee({ name: 'Keep' });
+    const first = await api.createPayee({ name: 'Dup 1' });
+    const second = await api.createPayee({ name: 'Dup 2' });
+    const account = await api.createAccount({ name: 'Wallet' }, 0);
+    const transfer = (await api.getPayees()).find(
+      row => row.transfer_acct === account,
+    );
+    if (!transfer) {
+      throw new Error('Expected transfer payee');
+    }
+    const request = {
+      targetId: target,
+      mergeIds: [first, second, transfer.id],
+    };
+    const before = await api.getPayees();
+    const proposal = await api.previewPayeeMerge(request);
+    expect(await api.getPayees()).toEqual(before);
+    expect(proposal.after.mergedIds).toEqual([first, second]);
+    expect(proposal.after.skippedTransferIds).toEqual([transfer.id]);
+    expect(proposal.after.mappings).toEqual(
+      expect.arrayContaining([
+        { id: first, targetId: target },
+        { id: second, targetId: target },
+      ]),
+    );
+    const applied = await api.applyPayeeMerge(proposal);
+    expect(applied).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+      affectedIds: [target, first, second],
+      payeeMerge: { targetId: target, mergedIds: [first, second] },
+    });
+    const after = await api.getPayees();
+    expect(after.some(row => row.id === first || row.id === second)).toBe(
+      false,
+    );
+    expect(after.some(row => row.id === target)).toBe(true);
+    expect(after.some(row => row.id === transfer.id)).toBe(true);
+    expect(await api.applyPayeeMerge(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+  });
+  test('rejects merges that include the target, repeat sources or name missing payees', async () => {
+    const target = await api.createPayee({ name: 'Keep' });
+    const source = await api.createPayee({ name: 'Dup' });
+    for (const request of [
+      { targetId: target, mergeIds: [] },
+      { targetId: target, mergeIds: [target] },
+      { targetId: target, mergeIds: [source, target] },
+      { targetId: target, mergeIds: [source, source] },
+      { targetId: target, mergeIds: ['missing'] },
+      { targetId: 'missing', mergeIds: [source] },
+      { targetId: target, mergeIds: [source], extra: true },
+    ]) {
+      await expect(
+        api.previewPayeeMerge(
+          request as unknown as Parameters<typeof api.previewPayeeMerge>[0],
+        ),
+      ).rejects.toThrow();
+    }
+    const before = await api.getPayees();
+    const proposal = await api.previewPayeeMerge({
+      targetId: target,
+      mergeIds: [source],
+    });
+    await api.updatePayee(source, { name: 'Changed after preview' });
+    expect(await api.applyPayeeMerge(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    expect((await api.getPayees()).length).toBe(before.length);
+  });
+});
+
+describe('guarded tag creation, updates and deletions', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('creates, updates and deletes tags with raw row acknowledgements', async () => {
+    const before = await api.getTags();
+    const proposal = await api.previewTagCreation({
+      tag: 'groceries',
+      color: ' #ff0000 ',
+      description: 'Food',
+    });
+    expect(proposal.after).toEqual({
+      action: 'insert',
+      tag: {
+        tag: 'groceries',
+        color: '#ff0000',
+        description: 'Food',
+        tombstone: 0,
+      },
+    });
+    expect(await api.getTags()).toEqual(before);
+    const created = await api.applyTagCreation(proposal);
+    if (created.status !== 'committed-local') {
+      throw new Error('Expected committed tag creation');
+    }
+    const id = created.tagCreation.tagId;
+    expect(created).toMatchObject({
+      changed: true,
+      affectedIds: [id],
+      tagCreation: { action: 'insert' },
+    });
+    expect(await api.getTags()).toContainEqual({
+      id,
+      tag: 'groceries',
+      color: '#ff0000',
+      description: 'Food',
+    });
+    expect(await api.applyTagCreation(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    await expect(
+      api.previewTagCreation({ tag: 'groceries' }),
+    ).rejects.toThrow();
+
+    const update = await api.previewTagUpdate({
+      id,
+      fields: { tag: 'food', description: null },
+    });
+    expect(await api.applyTagUpdate(update)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+      affectedIds: [id],
+    });
+    expect((await api.getTags()).find(row => row.id === id)).toEqual({
+      id,
+      tag: 'food',
+      color: '#ff0000',
+      description: null,
+    });
+
+    const deletion = await api.previewTagDeletion({ id });
+    expect(await api.applyTagDeletion(deletion)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+      affectedIds: [id],
+    });
+    expect((await api.getTags()).some(row => row.id === id)).toBe(false);
+    await expect(api.previewTagDeletion({ id })).rejects.toThrow();
+
+    const revive = await api.previewTagCreation({ tag: 'food' });
+    expect(revive.after.action).toBe('revive');
+    const revived = await api.applyTagCreation(revive);
+    expect(revived).toMatchObject({
+      status: 'committed-local',
+      tagCreation: { tagId: id, action: 'revive' },
+    });
+    expect((await api.getTags()).find(row => row.id === id)).toEqual({
+      id,
+      tag: 'food',
+      color: null,
+      description: null,
+    });
+  });
+  test('rejects malformed, duplicate and tampered tag requests', async () => {
+    const first = await api.createTag({ tag: 'one' });
+    await api.createTag({ tag: 'two' });
+    for (const request of [
+      {},
+      { tag: '' },
+      { tag: 'has space' },
+      { tag: '#hash' },
+      { tag: 'ok', color: 1 },
+      { tag: 'ok', extra: true },
+    ]) {
+      await expect(
+        api.previewTagCreation(
+          request as unknown as Parameters<typeof api.previewTagCreation>[0],
+        ),
+      ).rejects.toThrow();
+    }
+    for (const request of [
+      { id: first, fields: {} },
+      { id: first, fields: { tag: 'two' } },
+      { id: first, fields: { hidden: true } },
+      { id: 'missing', fields: { color: null } },
+    ]) {
+      await expect(
+        api.previewTagUpdate(
+          request as unknown as Parameters<typeof api.previewTagUpdate>[0],
+        ),
+      ).rejects.toThrow();
+    }
+    const proposal = await api.previewTagUpdate({
+      id: first,
+      fields: { color: 'blue' },
+    });
+    expect(
+      await api.applyTagUpdate({
+        ...proposal,
+        budget: { ...proposal.budget, id: 'wrong' },
+      }),
+    ).toMatchObject({ code: 'MISSING_CONTEXT' });
+    await api.updateTag(first, { description: 'changed' });
+    expect(await api.applyTagUpdate(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    expect((await api.getTags()).find(row => row.id === first)?.color).toBe(
+      null,
+    );
+  });
+});
+
+describe('guarded note changes', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('resolves note targets, reads without writing and sets notes with acknowledgements', async () => {
+    const accountId = await api.createAccount({
+      name: 'Notes',
+      offbudget: false,
+    });
+    const groupId = await api.createCategoryGroup({ name: 'Note group' });
+    const categoryId = await api.createCategory({
+      name: 'Note cat',
+      group_id: groupId,
+    });
+
+    expect(await api.getNoteTarget(`account-${accountId}`)).toEqual({
+      target: { kind: 'account', id: accountId, name: 'Notes' },
+      note: null,
+    });
+    expect(await api.getNote(`account-${accountId}`)).toBeNull();
+    expect((await api.getNoteTarget(groupId)).target.kind).toBe(
+      'category-group',
+    );
+    expect((await api.getNoteTarget('budget-2026-10')).target).toEqual({
+      kind: 'month',
+      month: '2026-10',
+    });
+    expect((await api.getNoteTarget(`${categoryId}-2026-10`)).target).toEqual({
+      kind: 'category-month',
+      id: categoryId,
+      name: 'Note cat',
+      month: '2026-10',
+    });
+    for (const id of ['missing', 'account-missing', 'budget-2026-13', '']) {
+      await expect(api.getNoteTarget(id)).rejects.toThrow();
+    }
+
+    const proposal = await api.previewNoteSet({
+      id: categoryId,
+      note: 'first',
+    });
+    expect(proposal.before.note).toBeNull();
+    expect(proposal.after).toEqual({
+      target: { kind: 'category', id: categoryId, name: 'Note cat' },
+      note: { id: categoryId, note: 'first' },
+    });
+    expect(proposal.sideEffects.join(' ')).toContain('#template');
+    expect(await api.getNote(categoryId)).toBeNull();
+    expect(await api.applyNoteSet(proposal)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+      affectedIds: [categoryId],
+    });
+    expect((await api.getNoteTarget(categoryId)).note).toBe('first');
+    expect(await api.applyNoteSet(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+
+    const same = await api.previewNoteSet({ id: categoryId, note: 'first' });
+    expect(await api.applyNoteSet(same)).toMatchObject({ changed: false });
+    const cleared = await api.previewNoteSet({ id: categoryId, note: '' });
+    expect(await api.applyNoteSet(cleared)).toMatchObject({ changed: true });
+    expect((await api.getNoteTarget(categoryId)).note).toBe('');
+  });
+  test('rejects malformed, orphan and stale note requests', async () => {
+    const accountId = await api.createAccount({
+      name: 'Stale',
+      offbudget: false,
+    });
+    const id = `account-${accountId}`;
+    for (const request of [
+      {},
+      { id },
+      { id, note: 1 },
+      { id, note: 'x', extra: true },
+      { id: 'missing', note: 'x' },
+      { id: 'budget-26-01', note: 'x' },
+      { id, note: 'x'.repeat(100_001) },
+    ]) {
+      await expect(
+        api.previewNoteSet(
+          request as unknown as Parameters<typeof api.previewNoteSet>[0],
+        ),
+      ).rejects.toThrow();
+    }
+    const proposal = await api.previewNoteSet({ id, note: 'planned' });
+    expect(
+      await api.applyNoteSet({
+        ...proposal,
+        budget: { ...proposal.budget, id: 'wrong' },
+      }),
+    ).toMatchObject({ code: 'MISSING_CONTEXT' });
+    await api.updateNote(id, 'concurrent');
+    expect(await api.applyNoteSet(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    expect((await api.getNote(id))?.note).toBe('concurrent');
+    await api.deleteAccount(accountId);
+    await expect(api.previewNoteSet({ id, note: 'late' })).rejects.toThrow();
+  });
+});
+
+describe('typed synced preferences', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('inspects without writing and routes domain keys to their owners', async () => {
+    const before = await api.getPreferences();
+    const catalog = await api.inspectPreferences();
+    expect(await api.getPreferences()).toEqual(before);
+    const dateFormat = catalog.find(row => row.key === 'dateFormat');
+    expect(dateFormat).toMatchObject({
+      scope: 'synced',
+      authority: 'setting',
+      settable: true,
+      appDefault: 'MM/dd/yyyy',
+    });
+    expect(catalog.find(row => row.key === 'cashPlanning')).toMatchObject({
+      authority: 'cash-planning',
+      settable: false,
+      owner: '0026-cli-cash-planning',
+    });
+    expect(await api.inspectPreferences('csv-mappings-acct')).toEqual([
+      expect.objectContaining({
+        authority: 'import-mapping',
+        settable: false,
+        value: null,
+      }),
+    ]);
+    await expect(api.inspectPreferences('not-a-pref')).rejects.toThrow();
+  });
+  test('sets and resets allowlisted preferences with validated values', async () => {
+    const proposal = await api.previewPreferenceSet({
+      id: 'dateFormat',
+      value: 'yyyy-MM-dd',
+    });
+    expect((await api.getPreferences()).dateFormat).toBeUndefined();
+    expect(await api.applyPreferenceSet(proposal)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+      affectedIds: ['dateFormat'],
+    });
+    expect((await api.getPreferences()).dateFormat).toBe('yyyy-MM-dd');
+    expect(await api.applyPreferenceSet(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    const custom = await api.previewPreferenceSet({
+      id: 'upcomingScheduledTransactionLength',
+      value: '2-week',
+    });
+    expect(await api.applyPreferenceSet(custom)).toMatchObject({
+      changed: true,
+    });
+    const reset = await api.previewPreferenceSet({
+      id: 'dateFormat',
+      value: null,
+    });
+    expect(await api.applyPreferenceSet(reset)).toMatchObject({
+      changed: true,
+    });
+    expect(await api.inspectPreferences('dateFormat')).toEqual([
+      expect.objectContaining({ value: null }),
+    ]);
+    const unsetReset = await api.previewPreferenceSet({
+      id: 'firstDayOfWeekIdx',
+      value: null,
+    });
+    expect(await api.applyPreferenceSet(unsetReset)).toMatchObject({
+      changed: false,
+    });
+    expect('firstDayOfWeekIdx' in (await api.getPreferences())).toBe(false);
+  });
+  test('rejects unknown keys, domain-owned keys and invalid values', async () => {
+    for (const request of [
+      {},
+      { id: 'dateFormat' },
+      { id: 'dateFormat', value: 'dd/mm/yy' },
+      { id: 'dateFormat', value: 1 },
+      { id: 'dateFormat', value: 'yyyy-MM-dd', extra: true },
+      { id: 'hideFraction', value: 'yes' },
+      { id: 'upcomingScheduledTransactionLength', value: '0-day' },
+      { id: 'defaultCurrencyCode', value: 'XYZ' },
+      { id: 'cashPlanning', value: '{}' },
+      { id: 'budgetType', value: 'tracking' },
+      { id: 'csv-mappings-acct', value: '{}' },
+      { id: 'not-a-pref', value: 'x' },
+    ]) {
+      await expect(
+        api.previewPreferenceSet(
+          request as unknown as Parameters<typeof api.previewPreferenceSet>[0],
+        ),
+      ).rejects.toThrow();
+    }
+  });
+});
+
+describe('account inspection', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('signs totals, separates future and off-budget activity, and discloses closed balances', async () => {
+    const before = (await api.inspectAccounts({ cutoff: '2026-10-15' })).totals;
+    const cash = await api.createAccount(
+      { name: 'Cash', offbudget: false },
+      1000000,
+    );
+    const card = await api.createAccount(
+      { name: 'Card', offbudget: false },
+      -200000,
+    );
+    const equity = await api.createAccount(
+      { name: 'Equity', offbudget: true },
+      5000000,
+    );
+    const dup = await api.createAccount({ name: 'cash ', offbudget: false });
+    await api.addTransactions(cash, [
+      { date: '2026-10-01', amount: -1000, cleared: true },
+      { date: '2026-12-01', amount: -2500 },
+    ]);
+    const inspection = await api.inspectAccounts({ cutoff: '2026-10-15' });
+    const byId = (id: string) =>
+      inspection.accounts.find(account => account.id === id);
+    expect(byId(cash)?.balances).toMatchObject({
+      ledger: 999000,
+      future: -2500,
+      futureTransactionCount: 1,
+    });
+    expect(byId(cash)?.balances.cleared).toBe(
+      (byId(cash)?.balances.ledger ?? 0) -
+        (byId(cash)?.balances.uncleared ?? 0),
+    );
+    expect(byId(cash)?.sameNameIds).toEqual([dup]);
+    expect(byId(card)?.balances.ledger).toBe(-200000);
+    expect(byId(equity)?.offbudget).toBe(true);
+    expect(inspection.totals.onBudget - before.onBudget).toBe(799000);
+    expect(inspection.totals.offBudget - before.offBudget).toBe(5000000);
+
+    await api.closeAccount(card, cash);
+    const closed = await api.inspectAccounts({ cutoff: '2026-10-15' });
+    expect(closed.accounts.some(account => account.id === card)).toBe(false);
+    const withClosed = await api.inspectAccounts({
+      cutoff: '2026-12-31',
+      includeClosed: true,
+    });
+    expect(
+      withClosed.accounts.find(account => account.id === card)?.closed,
+    ).toBe(true);
+    await expect(
+      api.inspectAccounts({ cutoff: '2026-02-30' }),
+    ).rejects.toThrow();
+  });
+});
+
+describe('catalog inspection', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('reports duplicates, hidden and deleted rows, merge targets and resolved counts', async () => {
+    const accountId = await api.createAccount({
+      name: 'Inspect',
+      offbudget: false,
+    });
+    const groupA = await api.createCategoryGroup({ name: 'Inspect A' });
+    const groupB = await api.createCategoryGroup({ name: 'Inspect B' });
+    const keep = await api.createCategory({ name: 'Dup', group_id: groupA });
+    const retire = await api.createCategory({ name: 'dup ', group_id: groupB });
+    const hidden = await api.createCategory({
+      name: 'Hidden one',
+      group_id: groupA,
+      hidden: true,
+    });
+    const payeeKeep = await api.createPayee({ name: 'Shop' });
+    const payeeMerge = await api.createPayee({ name: 'Shop' });
+    await api.addTransactions(accountId, [
+      { date: '2026-10-01', amount: -100, category: keep, payee: payeeKeep },
+      { date: '2026-10-02', amount: -200, category: retire, payee: payeeMerge },
+      { date: '2026-10-03', amount: -300, category: retire, payee: payeeMerge },
+    ]);
+
+    let categories = await api.inspectCatalog('categories');
+    const byId = (rows: typeof categories, id: string) =>
+      rows.find(row => row.id === id);
+    expect(byId(categories, keep)).toMatchObject({
+      transactionCount: 1,
+      sameNameIds: [retire],
+      group: { id: groupA, name: 'Inspect A' },
+    });
+    expect(byId(categories, retire)?.transactionCount).toBe(2);
+    expect(byId(categories, hidden)).toMatchObject({
+      hidden: true,
+      deleted: false,
+    });
+
+    await api.deleteCategory(retire, keep);
+    categories = await api.inspectCatalog('categories');
+    expect(byId(categories, retire)).toBeUndefined();
+    expect(byId(categories, keep)).toMatchObject({ transactionCount: 3 });
+    const withDeleted = await api.inspectCatalog('categories', {
+      includeDeleted: true,
+    });
+    expect(byId(withDeleted, retire)).toMatchObject({
+      deleted: true,
+      mappedTo: keep,
+      transactionCount: 0,
+    });
+
+    let payees = await api.inspectCatalog('payees');
+    expect(payees.find(row => row.id === payeeKeep)?.sameNameIds).toEqual([
+      payeeMerge,
+    ]);
+    await api.mergePayees(payeeKeep, [payeeMerge]);
+    payees = await api.inspectCatalog('payees', { includeDeleted: true });
+    expect(payees.find(row => row.id === payeeKeep)?.transactionCount).toBe(3);
+    expect(payees.find(row => row.id === payeeMerge)).toMatchObject({
+      deleted: true,
+      mappedTo: payeeKeep,
+    });
+  });
+});
+
+describe('guarded rule creation, updates and deletions', () => {
+  const ruleFields = {
+    stage: 'pre' as const,
+    conditionsOp: 'and' as const,
+    conditions: [{ field: 'payee' as const, op: 'is' as const, value: 'p1' }],
+    actions: [
+      {
+        op: 'set' as const,
+        field: 'category' as const,
+        value: 'fc3825fd-b982-4b72-b768-5b30844cf832',
+      },
+    ],
+  };
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('creates, updates and deletes rules with raw row acknowledgements', async () => {
+    const before = await api.getRules();
+    const proposal = await api.previewRuleCreation({
+      ...ruleFields,
+      stage: 'default',
+    });
+    expect(proposal.after.rule).toMatchObject({
+      stage: null,
+      conditions_op: 'and',
+      tombstone: 0,
+    });
+    expect(await api.getRules()).toEqual(before);
+    const created = await api.applyRuleCreation(proposal);
+    if (created.status !== 'committed-local') {
+      throw new Error('Expected committed rule creation');
+    }
+    const id = created.ruleCreation.ruleId;
+    expect(created.affectedIds).toEqual([id]);
+    expect((await api.getRules()).find(rule => rule.id === id)).toMatchObject({
+      stage: null,
+      conditions: ruleFields.conditions,
+      actions: ruleFields.actions,
+    });
+    expect(await api.applyRuleCreation(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+
+    const update = await api.previewRuleUpdate({
+      id,
+      fields: { stage: 'post', conditionsOp: 'or' },
+    });
+    expect(await api.applyRuleUpdate(update)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+      affectedIds: [id],
+    });
+    expect((await api.getRules()).find(rule => rule.id === id)).toMatchObject({
+      stage: 'post',
+      conditionsOp: 'or',
+      conditions: ruleFields.conditions,
+    });
+
+    const deletion = await api.previewRuleDeletion({ id });
+    expect(await api.applyRuleDeletion(deletion)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+      affectedIds: [id],
+    });
+    expect((await api.getRules()).some(rule => rule.id === id)).toBe(false);
+    await expect(api.previewRuleDeletion({ id })).rejects.toThrow();
+  });
+  test('rejects malformed, invalid, schedule-owned and changed rule requests', async () => {
+    for (const request of [
+      {},
+      { ...ruleFields, stage: 'never' },
+      { ...ruleFields, conditionsOp: 'xor' },
+      { ...ruleFields, conditions: 'nope' },
+      { ...ruleFields, actions: [{ op: 'set', field: 'nope', value: 1 }] },
+      { ...ruleFields, id: 'chosen' },
+      { stage: 'pre', conditionsOp: 'and', conditions: [] },
+    ]) {
+      await expect(
+        api.previewRuleCreation(
+          request as unknown as Parameters<typeof api.previewRuleCreation>[0],
+        ),
+      ).rejects.toThrow();
+    }
+    const rule = await api.createRule(ruleFields);
+    for (const request of [
+      { id: rule.id, fields: {} },
+      { id: rule.id, fields: { tombstone: true } },
+      { id: 'missing', fields: { stage: 'post' } },
+    ]) {
+      await expect(
+        api.previewRuleUpdate(
+          request as unknown as Parameters<typeof api.previewRuleUpdate>[0],
+        ),
+      ).rejects.toThrow();
+    }
+    const proposal = await api.previewRuleUpdate({
+      id: rule.id,
+      fields: { stage: 'post' },
+    });
+    await api.updateRule({ ...rule, conditionsOp: 'or' });
+    expect(await api.applyRuleUpdate(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    const account = await api.createAccount({ name: 'Bills' }, 0);
+    const scheduleId = await api.createSchedule({
+      posts_transaction: false,
+      date: '2026-10-05',
+      amountOp: 'is',
+      amount: -1000,
+      account,
+    });
+    const schedule = (await api.getSchedules()).find(
+      row => row.id === scheduleId,
+    );
+    if (!schedule?.rule) {
+      throw new Error('Expected schedule');
+    }
+    await expect(
+      api.previewRuleDeletion({ id: schedule.rule }),
+    ).rejects.toThrow();
+    await expect(
+      api.previewRuleUpdate({ id: schedule.rule, fields: { stage: 'post' } }),
+    ).rejects.toThrow();
+  });
+});
+
+describe('guarded schedule creation, updates and deletions', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  async function scheduleRequest() {
+    const account = await api.createAccount({ name: 'Bills' }, 0);
+    const payee = await api.createPayee({ name: 'Utility' });
+    return {
+      name: 'Power',
+      posts_transaction: false,
+      payee,
+      account,
+      amount: -5000,
+      amountOp: 'is' as const,
+      date: '2026-11-01',
+    };
+  }
+  test('creates, updates and deletes schedules with linked rule acknowledgements', async () => {
+    const request = await scheduleRequest();
+    const before = await api.getSchedules();
+    const proposal = await api.previewScheduleCreation(request);
+    expect(await api.getSchedules()).toEqual(before);
+    const created = await api.applyScheduleCreation(proposal);
+    if (created.status !== 'committed-local') {
+      throw new Error('Expected committed schedule creation');
+    }
+    const id = created.scheduleCreation.scheduleId;
+    expect(created.affectedIds).toEqual([id]);
+    expect((await api.getSchedules()).find(row => row.id === id)).toMatchObject(
+      {
+        name: 'Power',
+        rule: created.scheduleCreation.ruleId,
+        payee: request.payee,
+        account: request.account,
+        amount: -5000,
+      },
+    );
+    expect(await api.applyScheduleCreation(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    await expect(api.previewScheduleCreation(request)).rejects.toThrow();
+
+    const update = await api.previewScheduleUpdate({
+      id,
+      fields: { name: 'Electric', amount: -6000 },
+    });
+    expect(await api.applyScheduleUpdate(update)).toMatchObject({
+      status: 'committed-local',
+      affectedIds: [id],
+    });
+    expect((await api.getSchedules()).find(row => row.id === id)).toMatchObject(
+      { name: 'Electric', amount: -6000 },
+    );
+
+    const deletion = await api.previewScheduleDeletion({ id });
+    expect(await api.applyScheduleDeletion(deletion)).toMatchObject({
+      status: 'committed-local',
+      affectedIds: [id, created.scheduleCreation.ruleId],
+    });
+    expect((await api.getSchedules()).some(row => row.id === id)).toBe(false);
+    expect(
+      (await api.getRules()).some(
+        rule => rule.id === created.scheduleCreation.ruleId,
+      ),
+    ).toBe(false);
+  });
+  test('rejects malformed, unknown-reference and changed schedule requests', async () => {
+    const request = await scheduleRequest();
+    for (const bad of [
+      {},
+      { ...request, payee: undefined },
+      { ...request, account: 'missing' },
+      { ...request, amountOp: 'nope' },
+      { ...request, extra: true },
+      { ...request, date: null },
+    ]) {
+      await expect(
+        api.previewScheduleCreation(
+          bad as unknown as Parameters<typeof api.previewScheduleCreation>[0],
+        ),
+      ).rejects.toThrow();
+    }
+    const id = await api.createSchedule(request);
+    for (const bad of [
+      { id, fields: {} },
+      { id, fields: { completed: true } },
+      { id, fields: { payee: 'missing' } },
+      { id: 'missing', fields: { name: 'x' } },
+    ]) {
+      await expect(
+        api.previewScheduleUpdate(
+          bad as unknown as Parameters<typeof api.previewScheduleUpdate>[0],
+        ),
+      ).rejects.toThrow();
+    }
+    const proposal = await api.previewScheduleUpdate({
+      id,
+      fields: { name: 'Renamed' },
+    });
+    await api.updateSchedule(id, { amount: -1 });
+    expect(await api.applyScheduleUpdate(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    expect((await api.getSchedules()).find(row => row.id === id)?.name).toBe(
+      'Power',
+    );
+  });
+});
+
+describe('query metadata', () => {
+  test('exposes core schema metadata and validates without executing', () => {
+    const metadata = api.getQuerySchema();
+    const transactions = metadata.tables.find(
+      table => table.name === 'transactions',
+    );
+    expect(transactions?.fields).toContainEqual({
+      name: 'payee',
+      type: 'id',
+      ref: 'payees',
+      required: false,
+    });
+    expect(metadata.filterOperators).toContain('$oneof');
+    expect(api.validateQuery(api.q('transactions').select(['amount']))).toEqual(
+      { valid: true, table: 'transactions', aggregate: false },
+    );
+    expect(
+      api.validateQuery(api.q('transactions').select(['missing_field'])),
+    ).toMatchObject({ valid: false, table: 'transactions' });
+  });
+});
+
+describe('query snapshot marker', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('changes after a write and stays equal across reads', async () => {
+    const first = await api.getQuerySnapshot();
+    expect(await api.getQuerySnapshot()).toEqual(first);
+    await api.createAccount({ name: 'Marker' }, 0);
+    expect((await api.getQuerySnapshot()).marker).not.toBe(first.marker);
+  });
+});
+
+describe('guarded transaction addition', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('previews planned rows and applies them with acknowledged ids', async () => {
+    const account = await api.createAccount({ name: 'Adds' }, 0);
+    const request = {
+      accountId: account,
+      transactions: [
+        { date: '2026-10-01', amount: -100, notes: 'one' },
+        {
+          date: '2026-10-02',
+          amount: -300,
+          notes: 'split',
+          subtransactions: [{ amount: -100 }, { amount: -200 }],
+        },
+      ],
+    };
+    const proposal = await api.previewTransactionAddition(request);
+    expect(proposal.after.rows).toHaveLength(4);
+    expect(
+      await api.getTransactions(account, '2026-10-01', '2026-10-31'),
+    ).toEqual([]);
+    const outcome = await api.applyTransactionAddition(proposal);
+    expect(outcome).toMatchObject({ status: 'committed-local' });
+    if (!('transactionAddition' in outcome)) {
+      throw new Error('Expected addition outcome');
+    }
+    expect(outcome.transactionAddition.transactionIds).toHaveLength(4);
+    const rows = await api.getTransactions(account, '2026-10-01', '2026-10-31');
+    expect(
+      rows
+        .map(row => row.notes)
+        .sort((a, b) => String(a).localeCompare(String(b))),
+    ).toEqual(['one', 'split']);
+    expect(await api.applyTransactionAddition(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+  });
+  test('rejects malformed requests and closed accounts', async () => {
+    const account = await api.createAccount({ name: 'Closing' }, 0);
+    await expect(
+      api.previewTransactionAddition({ accountId: account, transactions: [] }),
+    ).rejects.toThrow();
+    await expect(
+      api.previewTransactionAddition({
+        accountId: 'missing',
+        transactions: [{ date: '2026-10-01', amount: 1 }],
+      }),
+    ).rejects.toThrow();
+    await api.closeAccount(account);
+    await expect(
+      api.previewTransactionAddition({
+        accountId: account,
+        transactions: [{ date: '2026-10-01', amount: 1 }],
+      }),
+    ).rejects.toThrow();
+  });
+});
+
+describe('guarded transaction import', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('previews matched updates and new rows, then applies them exactly', async () => {
+    const account = await api.createAccount({ name: 'Imports' }, 0);
+    await api.addTransactions(account, [
+      { date: '2026-10-01', amount: -100, imported_id: 'bank-1' },
+    ]);
+    const request = {
+      accountId: account,
+      transactions: [
+        {
+          date: '2026-10-01',
+          amount: -100,
+          imported_id: 'bank-1',
+          notes: 'matched',
+        },
+        {
+          date: '2026-10-03',
+          amount: -250,
+          imported_id: 'bank-2',
+          payee_name: 'brand new shop',
+        },
+      ],
+    };
+    const proposal = await api.previewTransactionImport(request);
+    expect(proposal.after.updated).toHaveLength(1);
+    expect(proposal.after.updated[0]).toMatchObject({ notes: 'matched' });
+    expect(proposal.after.added).toHaveLength(1);
+    expect(proposal.after.added[0]).toMatchObject({
+      payee: { newPayee: 'Brand New Shop' },
+      amount: -250,
+    });
+    expect(
+      await api.getTransactions(account, '2026-10-01', '2026-10-31'),
+    ).toHaveLength(1);
+    const outcome = await api.applyTransactionImport(proposal);
+    expect(outcome).toMatchObject({ status: 'committed-local' });
+    if (!('transactionImport' in outcome)) {
+      throw new Error('Expected import outcome');
+    }
+    expect(outcome.transactionImport.addedIds).toHaveLength(1);
+    expect(outcome.transactionImport.updatedIds).toHaveLength(1);
+    const rows = await api.getTransactions(account, '2026-10-01', '2026-10-31');
+    expect(
+      rows
+        .map(row => row.notes ?? null)
+        .sort((a, b) => String(a).localeCompare(String(b))),
+    ).toEqual(['matched', null]);
+    expect(await api.applyTransactionImport(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+  });
+  test('rejects malformed options and closed accounts', async () => {
+    const account = await api.createAccount({ name: 'Import closing' }, 0);
+    const transactions = [{ date: '2026-10-01', amount: 1 }];
+    await expect(
+      api.previewTransactionImport({
+        accountId: account,
+        transactions,
+        opts: { payeeNameNormalization: 'upper' as 'original' },
+      }),
+    ).rejects.toThrow();
+    await expect(
+      api.previewTransactionImport({ accountId: account, transactions: [] }),
+    ).rejects.toThrow();
+    await api.closeAccount(account);
+    await expect(
+      api.previewTransactionImport({ accountId: account, transactions }),
+    ).rejects.toThrow();
+  });
+});
+
+describe('guarded transaction deletion', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('deletes plain, split and transfer transactions with exact cascades', async () => {
+    const checking = await api.createAccount({ name: 'Checking' }, 0);
+    const savings = await api.createAccount({ name: 'Savings' }, 0);
+    const transferPayee = (await api.getPayees()).find(
+      row => row.transfer_acct === savings,
+    );
+    if (!transferPayee) {
+      throw new Error('Expected transfer payee');
+    }
+    await api.addTransactions(
+      checking,
+      [
+        { date: '2026-10-01', amount: -100, notes: 'plain' },
+        {
+          date: '2026-10-02',
+          amount: -300,
+          notes: 'split',
+          subtransactions: [{ amount: -100 }, { amount: -200 }],
+        },
+        {
+          date: '2026-10-03',
+          amount: -500,
+          notes: 'transfer',
+          payee: transferPayee.id,
+        },
+      ],
+      { runTransfers: true },
+    );
+    const rows = await api.getTransactions(
+      checking,
+      '2026-10-01',
+      '2026-10-31',
+    );
+    const byNotes = (notes: string) => {
+      const row = rows.find(r => r.notes === notes);
+      if (!row) {
+        throw new Error('Missing ' + notes);
+      }
+      return row;
+    };
+    const plain = byNotes('plain');
+    const split = byNotes('split');
+    const transfer = byNotes('transfer');
+    if (!transfer.transfer_id) {
+      throw new Error('Expected linked transfer');
+    }
+
+    const plainProposal = await api.previewTransactionDeletion({
+      id: plain.id,
+    });
+    expect(plainProposal.after).toEqual({
+      deletedIds: [plain.id],
+      transferDeletedIds: [],
+      transferUnlinkedIds: [],
+    });
+    expect(await api.applyTransactionDeletion(plainProposal)).toMatchObject({
+      status: 'committed-local',
+      affectedIds: [plain.id],
+    });
+
+    const children = (split.subtransactions ?? []).map(child => child.id);
+    expect(children).toHaveLength(2);
+    await expect(
+      api.previewTransactionDeletion({ id: children[0] }),
+    ).rejects.toThrow();
+    const splitProposal = await api.previewTransactionDeletion({
+      id: split.id,
+    });
+    expect(splitProposal.after.deletedIds).toEqual(
+      [split.id, ...children].sort(),
+    );
+    expect(await api.applyTransactionDeletion(splitProposal)).toMatchObject({
+      status: 'committed-local',
+    });
+
+    const transferProposal = await api.previewTransactionDeletion({
+      id: transfer.id,
+    });
+    expect(transferProposal.after.transferDeletedIds).toEqual([
+      transfer.transfer_id,
+    ]);
+    expect(await api.applyTransactionDeletion(transferProposal)).toMatchObject({
+      status: 'committed-local',
+    });
+    expect(
+      await api.getTransactions(checking, '2026-10-01', '2026-10-31'),
+    ).toEqual([]);
+    expect(
+      await api.getTransactions(savings, '2026-10-01', '2026-10-31'),
+    ).toEqual([]);
+    expect(await api.applyTransactionDeletion(plainProposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+  });
+  test('rejects malformed, missing and changed deletions', async () => {
+    const account = await api.createAccount({ name: 'Cash' }, 0);
+    await api.addTransactions(account, [
+      { date: '2026-10-01', amount: -100, notes: 'keep' },
+    ]);
+    const [row] = await api.getTransactions(
+      account,
+      '2026-10-01',
+      '2026-10-31',
+    );
+    for (const bad of [
+      {},
+      { id: '' },
+      { id: 'missing' },
+      { id: row.id, x: 1 },
+    ]) {
+      await expect(
+        api.previewTransactionDeletion(
+          bad as unknown as Parameters<
+            typeof api.previewTransactionDeletion
+          >[0],
+        ),
+      ).rejects.toThrow();
+    }
+    const proposal = await api.previewTransactionDeletion({ id: row.id });
+    await api.updateTransaction(row.id, { notes: 'edited' });
+    expect(await api.applyTransactionDeletion(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    expect(
+      await api.getTransactions(account, '2026-10-01', '2026-10-31'),
+    ).toHaveLength(1);
+  });
+});
+
+describe('guarded transaction classification updates', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('updates category and payee and rejects transfer-changing edits', async () => {
+    const checking = await api.createAccount({ name: 'Checking' }, 0);
+    const savings = await api.createAccount({ name: 'Savings' }, 0);
+    const offbudget = await api.createAccount(
+      { name: 'Loan', offbudget: true },
+      0,
+    );
+    const payee = await api.createPayee({ name: 'Grocer' });
+    const transferPayee = (await api.getPayees()).find(
+      row => row.transfer_acct === savings,
+    );
+    const groups = await api.getCategoryGroups();
+    const category = groups
+      .flatMap(group => group.categories ?? [])
+      .find(row => !row.is_income);
+    if (!transferPayee || !category) {
+      throw new Error('Expected fixtures');
+    }
+    await api.addTransactions(checking, [
+      { date: '2026-10-01', amount: -100, notes: 'plain' },
+    ]);
+    await api.addTransactions(offbudget, [
+      { date: '2026-10-01', amount: -100, notes: 'off' },
+    ]);
+    const [plain] = await api.getTransactions(
+      checking,
+      '2026-10-01',
+      '2026-10-31',
+    );
+    const [off] = await api.getTransactions(
+      offbudget,
+      '2026-10-01',
+      '2026-10-31',
+    );
+    const proposal = await api.previewTransactionUpdate({
+      id: plain.id,
+      fields: { category: category.id, payee },
+    });
+    expect(await api.applyTransactionUpdate(proposal)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+    });
+    const [updated] = await api.getTransactions(
+      checking,
+      '2026-10-01',
+      '2026-10-31',
+    );
+    expect(updated).toMatchObject({ category: category.id, payee });
+    for (const fields of [
+      { payee: transferPayee.id },
+      { payee: 'missing' },
+      { category: 'missing' },
+      { account: savings },
+    ]) {
+      await expect(
+        api.previewTransactionUpdate({
+          id: plain.id,
+          fields,
+        } as unknown as Parameters<typeof api.previewTransactionUpdate>[0]),
+      ).rejects.toThrow();
+    }
+    await expect(
+      api.previewTransactionUpdate({
+        id: off.id,
+        fields: { category: category.id },
+      }),
+    ).rejects.toThrow();
+  });
+});
+
+describe('guarded account groups', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('creates, renames and deletes groups, ungrouping members without ledger changes', async () => {
+    const before = await api.getAccountGroups();
+    const proposal = await api.previewAccountGroupCreation({ name: 'Daily' });
+    expect(await api.getAccountGroups()).toEqual(before);
+    const created = await api.applyAccountGroupCreation(proposal);
+    if (created.status !== 'committed-local') {
+      throw new Error('Expected committed account group creation');
+    }
+    const groupId = created.accountGroupCreation.groupId;
+    expect(await api.applyAccountGroupCreation(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    await expect(
+      api.previewAccountGroupCreation({ name: 'Daily' }),
+    ).rejects.toThrow();
+
+    const renamed = await api.applyAccountGroupUpdate(
+      await api.previewAccountGroupUpdate({
+        id: groupId,
+        fields: { name: 'Everyday' },
+      }),
+    );
+    expect(renamed).toMatchObject({ status: 'committed-local' });
+    expect(await api.getAccountGroups()).toContainEqual(
+      expect.objectContaining({ id: groupId, name: 'Everyday' }),
+    );
+
+    const account = await api.createAccount(
+      { name: 'Grouped', offbudget: false },
+      5000,
+    );
+    await api.updateAccount(account, { account_group_id: groupId });
+    const deletion = await api.previewAccountGroupDeletion({ id: groupId });
+    expect(deletion.after).toEqual({
+      action: 'tombstone',
+      ungroupedAccountIds: [account],
+    });
+    expect(await api.applyAccountGroupDeletion(deletion)).toMatchObject({
+      status: 'committed-local',
+    });
+    expect(
+      (await api.getAccountGroups()).some(group => group.id === groupId),
+    ).toBe(false);
+    const inspected = (await api.inspectAccounts({})).accounts.find(
+      row => row.id === account,
+    );
+    expect(inspected?.group).toBeNull();
+    expect(inspected?.balances.ledger).toBe(5000);
+
+    for (const request of [{ name: '' }, { name: 'x', extra: true }]) {
+      await expect(
+        api.previewAccountGroupCreation(
+          request as unknown as Parameters<
+            typeof api.previewAccountGroupCreation
+          >[0],
+        ),
+      ).rejects.toThrow();
+    }
+    await expect(
+      api.previewAccountGroupDeletion({ id: 'missing' }),
+    ).rejects.toThrow();
+  });
+});
+
+describe('guarded batch categorization', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('changes only frozen IDs, guards splits, transfers and reconciled rows, and rejects stale previews', async () => {
+    const group = await api.createCategoryGroup({ name: 'Batch group' });
+    const food = await api.createCategory({ name: 'Food', group_id: group });
+    const fun = await api.createCategory({ name: 'Fun', group_id: group });
+    const account = await api.createAccount({ name: 'Batch checking' }, 0);
+    const savings = await api.createAccount({ name: 'Batch savings' }, 0);
+    await api.addTransactions(account, [
+      { date: '2026-08-01', amount: -100, notes: 'a' },
+      { date: '2026-08-02', amount: -200, notes: 'b', category: food },
+      { date: '2026-08-03', amount: -300, notes: 'c' },
+      { date: '2026-08-04', amount: -400, notes: 'r' },
+      {
+        date: '2026-08-05',
+        amount: -500,
+        subtransactions: [
+          { amount: -200, notes: 's1' },
+          { amount: -300, notes: 's2' },
+        ],
+      },
+    ]);
+    const transferPayee = (await api.getPayees()).find(
+      payee => payee.transfer_acct === savings,
+    )!;
+    await api.addTransactions(
+      account,
+      [{ date: '2026-08-06', amount: -600, payee: transferPayee.id }],
+      { runTransfers: true },
+    );
+    const added = await api.getTransactions(
+      account,
+      '2026-08-01',
+      '2026-08-31',
+    );
+    await api.updateTransaction(added.find(row => row.notes === 'r')!.id, {
+      reconciled: true,
+    });
+    const rows = await api.getTransactions(account, '2026-08-01', '2026-08-31');
+    const byNotes = (notes: string) => rows.find(row => row.notes === notes)!;
+    const [a, b, c, r] = ['a', 'b', 'c', 'r'].map(byNotes);
+    const parent = rows.find(row => row.is_parent)!;
+    const child = parent.subtransactions![0];
+    const transfer = rows.find(row => row.transfer_id)!;
+
+    const proposal = await api.previewTransactionCategorization({
+      ids: [b.id, a.id, child.id],
+      category: food,
+    });
+    expect(proposal.after).toEqual({
+      category: { id: food, name: 'Food' },
+      changedIds: [a.id, child.id].sort(),
+      unchangedIds: [b.id],
+      reconciledIds: [],
+    });
+    expect(
+      await api.getTransactions(account, '2026-08-01', '2026-08-31'),
+    ).toEqual(rows);
+    const applied = await api.applyTransactionCategorization(proposal);
+    expect(applied).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+      affectedIds: [a.id, child.id].sort(),
+    });
+    const after = await api.getTransactions(
+      account,
+      '2026-08-01',
+      '2026-08-31',
+    );
+    const find = (id: string) =>
+      after
+        .flatMap(row => [row, ...(row.subtransactions ?? [])])
+        .find(row => row.id === id)!;
+    expect(find(a.id).category).toBe(food);
+    expect(find(child.id).category).toBe(food);
+    expect(find(c.id).category ?? null).toBeNull();
+    expect(find(parent.id).amount).toBe(-500);
+    expect(await api.applyTransactionCategorization(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+
+    // A change to an affected record after preview makes it stale.
+    const stale = await api.previewTransactionCategorization({
+      ids: [c.id],
+      category: fun,
+    });
+    await api.updateTransaction(c.id, { notes: 'edited' });
+    expect(await api.applyTransactionCategorization(stale)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    expect(
+      (await api.getTransactions(account, '2026-08-01', '2026-08-31')).find(
+        row => row.id === c.id,
+      )?.category ?? null,
+    ).toBeNull();
+
+    await expect(
+      api.previewTransactionCategorization({ ids: [r.id], category: fun }),
+    ).rejects.toThrow(/reconciled/);
+    const unlocked = await api.previewTransactionCategorization({
+      ids: [r.id],
+      category: fun,
+      allowReconciled: true,
+    });
+    expect(unlocked.after.reconciledIds).toEqual([r.id]);
+    await expect(
+      api.previewTransactionCategorization({ ids: [parent.id], category: fun }),
+    ).rejects.toThrow(/split parent/);
+    await expect(
+      api.previewTransactionCategorization({
+        ids: [transfer.id],
+        category: fun,
+      }),
+    ).rejects.toThrow(/transfer/);
+    for (const request of [
+      { ids: [], category: fun },
+      { ids: [a.id, a.id], category: fun },
+      { ids: [a.id], category: 'missing' },
+      { ids: ['missing'], category: fun },
+      { ids: [a.id], category: fun, extra: 1 },
+    ]) {
+      await expect(
+        api.previewTransactionCategorization(
+          request as unknown as Parameters<
+            typeof api.previewTransactionCategorization
+          >[0],
+        ),
+      ).rejects.toThrow();
+    }
+  });
+});
+
+describe('guarded duplicate merge', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('previews the engine-chosen kept row, guards reconciled rows and rejects invalid or stale merges', async () => {
+    const account = await api.createAccount({ name: 'Merge checking' }, 0);
+    await api.addTransactions(account, [
+      { date: '2026-08-02', amount: -700, notes: 'manual' },
+      { date: '2026-08-05', amount: -900, notes: 'other amount' },
+      { date: '2026-08-06', amount: -300, notes: 'late' },
+      { date: '2026-08-04', amount: -300, notes: 'early' },
+    ]);
+    await api.addTransactions(account, [
+      {
+        date: '2026-08-03',
+        amount: -700,
+        imported_id: 'bank-1',
+      },
+    ]);
+    const rows = await api.getTransactions(account, '2026-08-01', '2026-08-31');
+    const byNotes = (notes: string) => rows.find(row => row.notes === notes)!;
+    const imported = rows.find(row => row.imported_id === 'bank-1')!;
+    const manual = byNotes('manual');
+
+    const proposal = await api.previewTransactionMerge({
+      ids: [manual.id, imported.id],
+    });
+    expect(proposal.after).toMatchObject({
+      keepId: imported.id,
+      dropId: manual.id,
+      movedChildIds: [],
+      deletedChildIds: [],
+      transfer: null,
+    });
+    expect(
+      await api.getTransactions(account, '2026-08-01', '2026-08-31'),
+    ).toEqual(rows);
+    const merged = await api.applyTransactionMerge(proposal);
+    if (merged.status !== 'committed-local') {
+      throw new Error('Expected committed merge');
+    }
+    expect(merged.transactionMerge.keptId).toBe(imported.id);
+    const after = await api.getTransactions(
+      account,
+      '2026-08-01',
+      '2026-08-31',
+    );
+    expect(after.some(row => row.id === manual.id)).toBe(false);
+    expect(after.find(row => row.id === imported.id)?.notes).toBe('manual');
+    expect(await api.applyTransactionMerge(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+
+    const early = byNotes('early');
+    const late = byNotes('late');
+    await api.updateTransaction(late.id, { reconciled: true });
+    await expect(
+      api.previewTransactionMerge({ ids: [early.id, late.id] }),
+    ).rejects.toThrow(/reconciled/);
+    const unlocked = await api.previewTransactionMerge({
+      ids: [late.id, early.id],
+      allowReconciled: true,
+    });
+    expect(unlocked.after.keepId).toBe(early.id);
+    await api.updateTransaction(early.id, { notes: 'changed' });
+    expect(await api.applyTransactionMerge(unlocked)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+
+    await expect(
+      api.previewTransactionMerge({
+        ids: [early.id, byNotes('other amount').id],
+      }),
+    ).rejects.toThrow(/different amounts/);
+    for (const request of [
+      { ids: [early.id] },
+      { ids: [early.id, early.id] },
+      { ids: [early.id, 'missing'] },
+      { ids: [early.id, late.id], extra: true },
+    ]) {
+      await expect(
+        api.previewTransactionMerge(
+          request as unknown as Parameters<
+            typeof api.previewTransactionMerge
+          >[0],
+        ),
+      ).rejects.toThrow();
+    }
+  });
+});
+
+describe('guarded split edits', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('splits and re-splits while preserving the parent amount and rejects invalid sums before writes', async () => {
+    const group = await api.createCategoryGroup({ name: 'Split group' });
+    const food = await api.createCategory({
+      name: 'Split food',
+      group_id: group,
+    });
+    const home = await api.createCategory({
+      name: 'Split home',
+      group_id: group,
+    });
+    const account = await api.createAccount({ name: 'Split checking' }, 0);
+    await api.addTransactions(account, [
+      { date: '2026-08-10', amount: -1000, notes: 'to split', category: food },
+    ]);
+    const list = () => api.getTransactions(account, '2026-08-01', '2026-08-31');
+    const before = await list();
+    const target = before.find(row => row.notes === 'to split')!;
+
+    await expect(
+      api.previewTransactionSplit({
+        id: target.id,
+        subtransactions: [{ amount: -400 }, { amount: -500 }],
+      }),
+    ).rejects.toThrow(/sum/);
+    expect(await list()).toEqual(before);
+
+    const proposal = await api.previewTransactionSplit({
+      id: target.id,
+      subtransactions: [
+        { amount: -400, category: food, notes: 'groceries' },
+        { amount: -600, category: home },
+      ],
+    });
+    expect(proposal.after.removedChildIds).toEqual([]);
+    expect(await list()).toEqual(before);
+    const applied = await api.applyTransactionSplit(proposal);
+    if (applied.status !== 'committed-local') {
+      throw new Error('Expected committed split');
+    }
+    expect(applied.transactionSplit.childIds).toHaveLength(2);
+    let parent = (await list()).find(row => row.id === target.id)!;
+    expect(parent.is_parent).toBe(true);
+    expect(parent.amount).toBe(-1000);
+    expect(parent.error ?? null).toBeNull();
+    expect(
+      parent.subtransactions!.map(row => `${row.amount}:${row.category}`),
+    ).toEqual(expect.arrayContaining([`-400:${food}`, `-600:${home}`]));
+    expect(parent.subtransactions).toHaveLength(2);
+    expect(await api.applyTransactionSplit(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+
+    const resplit = await api.previewTransactionSplit({
+      id: target.id,
+      subtransactions: [
+        { amount: -100, category: home },
+        { amount: -200, category: home },
+        { amount: -700, category: food },
+      ],
+    });
+    expect([...resplit.after.removedChildIds].sort()).toEqual(
+      [...applied.transactionSplit.childIds].sort(),
+    );
+    expect(await api.applyTransactionSplit(resplit)).toMatchObject({
+      status: 'committed-local',
+    });
+    parent = (await list()).find(row => row.id === target.id)!;
+    expect(parent.amount).toBe(-1000);
+    expect(parent.subtransactions).toHaveLength(3);
+    expect(
+      parent.subtransactions!.reduce((sum, row) => sum + row.amount, 0),
+    ).toBe(-1000);
+
+    const child = parent.subtransactions![0];
+    for (const request of [
+      { id: child.id, subtransactions: [{ amount: child.amount }] },
+      { id: target.id, subtransactions: [] },
+      {
+        id: target.id,
+        subtransactions: [{ amount: -1000, category: 'missing' }],
+      },
+      { id: target.id, subtransactions: [{ amount: -1000, extra: 1 }] },
+      { id: 'missing', subtransactions: [{ amount: -1 }] },
+    ]) {
+      await expect(
+        api.previewTransactionSplit(
+          request as unknown as Parameters<
+            typeof api.previewTransactionSplit
+          >[0],
+        ),
+      ).rejects.toThrow();
+    }
+    await api.updateTransaction(target.id, { reconciled: true });
+    await expect(
+      api.previewTransactionSplit({
+        id: target.id,
+        subtransactions: [{ amount: -1000, category: food }],
+      }),
+    ).rejects.toThrow(/reconciled/);
+  });
+});
+
+describe('cash plan inspection and guarded saves', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('scenarios are transient, saves change only cashPlanning, and invalid plans fail', async () => {
+    const group = await api.createCategoryGroup({ name: 'Plan group' });
+    const rent = await api.createCategory({
+      name: 'Plan rent',
+      group_id: group,
+    });
+    const account = await api.createAccount({ name: 'Plan cash' }, 0);
+    await api.addTransactions(account, [
+      { date: '2016-10-10', amount: -300000, category: rent },
+      { date: '2016-11-10', amount: -300000, category: rent },
+    ]);
+    const range = { startDate: '2016-10-01', endDate: '2016-11-30' };
+    const prefsBefore = await api.inspectPreferences();
+    const base = await api.inspectCashPlan(range);
+    expect(base.summary.months).toBe(2);
+    const rentRow = base.summary.categories.find(row => row.id === rent)!;
+    expect(rentRow.monthlyOutflow).toBe(300000);
+    expect(base.projections).not.toBeNull();
+
+    const scenario = await api.inspectCashPlan({
+      ...range,
+      scenario: { categoryTargets: { [rent]: 100000 } },
+    });
+    expect(scenario.scenarioApplied).toBe(true);
+    expect(scenario.projections!.historical).toEqual(
+      base.projections!.historical,
+    );
+    expect(scenario.projections!.targets.monthlyOutflow).toBe(
+      base.projections!.targets.monthlyOutflow - 200000,
+    );
+    expect(await api.inspectPreferences()).toEqual(prefsBefore);
+
+    const config = {
+      ...range,
+      categoryTargets: { [rent]: 100000 },
+      goal: { balance: 5000000, deadline: '2018-12-31' },
+      forecastEndDate: '2018-12-31',
+    };
+    const proposal = await api.previewCashPlanSave({ config });
+    expect(proposal.after.preference.value).toBe(JSON.stringify(config));
+    expect(await api.inspectPreferences()).toEqual(prefsBefore);
+    expect(await api.applyCashPlanSave(proposal)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+    });
+    const saved = await api.inspectCashPlan();
+    expect(saved.saved).toEqual({ stored: true, config });
+    expect(saved.config).toEqual(config);
+
+    const reset = await api.previewCashPlanSave({ config: null });
+    expect(await api.applyCashPlanSave(reset)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+    });
+    expect((await api.inspectCashPlan()).saved.stored).toBe(false);
+
+    for (const bad of [
+      { ...config, endDate: '2999-01-01' },
+      { ...config, categoryTargets: { [rent]: -1 } },
+      { ...config, goal: { balance: 1.5 } },
+      { ...config, forecastEndDate: '2016-06-01' },
+      { ...config, extra: true },
+    ]) {
+      await expect(
+        api.previewCashPlanSave({
+          config: bad as unknown as typeof config,
+        }),
+      ).rejects.toThrow();
+    }
+    await expect(
+      api.inspectCashPlan({
+        ...range,
+        scenario: { categoryTargets: { [rent]: -5 } },
+      }),
+    ).rejects.toThrow();
+  });
+});
+
+describe('guarded clearing and unlocking', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('sets cleared on frozen IDs, carries split children, and needs unlock for reconciled rows', async () => {
+    const account = await api.createAccount({ name: 'Clear checking' }, 0);
+    await api.addTransactions(account, [
+      { date: '2026-08-01', amount: -100, notes: 'a', cleared: false },
+      { date: '2026-08-02', amount: -200, notes: 'b', cleared: true },
+      { date: '2026-08-03', amount: -300, notes: 'r', cleared: true },
+      {
+        date: '2026-08-05',
+        amount: -500,
+        cleared: false,
+        subtransactions: [
+          { amount: -200, notes: 's1' },
+          { amount: -300, notes: 's2' },
+        ],
+      },
+    ]);
+    const initial = await api.getTransactions(
+      account,
+      '2026-08-01',
+      '2026-08-31',
+    );
+    await api.updateTransaction(initial.find(row => row.notes === 'r')!.id, {
+      reconciled: true,
+    });
+    const rows = await api.getTransactions(account, '2026-08-01', '2026-08-31');
+    const byNotes = (notes: string) => rows.find(row => row.notes === notes)!;
+    const [a, b, r] = ['a', 'b', 'r'].map(byNotes);
+    const parent = rows.find(row => row.is_parent)!;
+    const childIds = parent.subtransactions!.map(row => row.id);
+
+    const proposal = await api.previewTransactionClearing({
+      ids: [a.id, b.id, parent.id],
+      cleared: true,
+    });
+    expect(proposal.after).toEqual({
+      cleared: true,
+      changedIds: expect.arrayContaining([a.id, parent.id, ...childIds]),
+      unchangedIds: [b.id],
+      unlockedIds: [],
+    });
+    expect(proposal.after.changedIds).toHaveLength(2 + childIds.length);
+    expect(
+      await api.getTransactions(account, '2026-08-01', '2026-08-31'),
+    ).toEqual(rows);
+    expect(await api.applyTransactionClearing(proposal)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+    });
+    const after = await api.getTransactions(
+      account,
+      '2026-08-01',
+      '2026-08-31',
+    );
+    const all = after.flatMap(row => [row, ...(row.subtransactions ?? [])]);
+    for (const id of [a.id, b.id, parent.id, ...childIds]) {
+      expect(all.find(row => row.id === id)!.cleared).toBe(true);
+    }
+    expect(all.find(row => row.id === parent.id)!.amount).toBe(-500);
+    expect(await api.applyTransactionClearing(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+
+    await expect(
+      api.previewTransactionClearing({ ids: [childIds[0]], cleared: false }),
+    ).rejects.toThrow(/split child/);
+    await expect(
+      api.previewTransactionClearing({ ids: [r.id], cleared: false }),
+    ).rejects.toThrow(/reconciled/);
+    await expect(
+      api.previewTransactionClearing({ ids: [a.id], cleared: 'yes' as never }),
+    ).rejects.toThrow(/cleared must be a boolean/);
+
+    const stale = await api.previewTransactionClearing({
+      ids: [a.id],
+      cleared: false,
+    });
+    await api.updateTransaction(a.id, { notes: 'edited' });
+    expect(await api.applyTransactionClearing(stale)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+
+    const unlock = await api.previewTransactionClearing({
+      ids: [r.id],
+      cleared: true,
+      unlock: true,
+    });
+    expect(unlock.after).toEqual({
+      cleared: true,
+      changedIds: [r.id],
+      unchangedIds: [],
+      unlockedIds: [r.id],
+    });
+    await api.applyTransactionClearing(unlock);
+    const unlocked = (
+      await api.getTransactions(account, '2026-08-01', '2026-08-31')
+    ).find(row => row.id === r.id)!;
+    expect(unlocked).toMatchObject({ cleared: true, reconciled: false });
+    expect(unlocked.amount).toBe(-300);
+  });
+});
+
+describe('transfer review', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('lists candidates with ambiguity and classification, and audits broken links', async () => {
+    const checking = await api.createAccount({ name: 'TR checking' }, 0);
+    const savings = await api.createAccount({ name: 'TR savings' }, 0);
+    const card = await api.createAccount({ name: 'TR card' }, 0);
+    const equity = await api.createAccount(
+      { name: 'TR equity', offbudget: true },
+      0,
+    );
+    await api.addTransactions(checking, [
+      { date: '2026-08-01', amount: -50000, notes: 'to savings' },
+      { date: '2026-08-10', amount: -20000, notes: 'card payment a' },
+      { date: '2026-08-11', amount: -20000, notes: 'card payment b' },
+      { date: '2026-08-20', amount: -70000, notes: 'to equity' },
+      { date: '2026-08-25', amount: -99000, notes: 'far apart' },
+    ]);
+    await api.addTransactions(savings, [
+      { date: '2026-08-02', amount: 50000, notes: 'from checking' },
+      { date: '2026-08-31', amount: 99000, notes: 'far apart in' },
+    ]);
+    await api.addTransactions(card, [
+      { date: '2026-08-11', amount: 20000, notes: 'card credit' },
+    ]);
+    await api.addTransactions(equity, [
+      { date: '2026-08-20', amount: 70000, notes: 'equity in' },
+    ]);
+    const result = await api.findTransferCandidates({
+      start: '2026-08-01',
+      end: '2026-08-31',
+    });
+    const byNotes = (from: string) =>
+      result.candidates.filter(c => c.from.notes === from);
+    expect(byNotes('to savings')).toHaveLength(1);
+    expect(byNotes('to savings')[0]).toMatchObject({
+      amount: 50000,
+      dateGapDays: 1,
+      classification: 'internal',
+      ambiguous: false,
+    });
+    // Two same-amount outflows near one card credit are both ambiguous.
+    expect([
+      ...byNotes('card payment a'),
+      ...byNotes('card payment b'),
+    ]).toEqual([
+      expect.objectContaining({ ambiguous: true }),
+      expect.objectContaining({ ambiguous: true }),
+    ]);
+    expect(byNotes('to equity')[0].classification).toBe('budget-boundary');
+    expect(byNotes('far apart')).toHaveLength(0);
+    expect(result.ambiguousCount).toBe(2);
+    expect(
+      (
+        await api.findTransferCandidates({ start: '2026-08-01', days: 6 })
+      ).candidates.filter(c => c.from.notes === 'far apart'),
+    ).toHaveLength(1);
+    await expect(api.findTransferCandidates({ days: 99 })).rejects.toThrow(
+      /days/,
+    );
+
+    // A real transfer is linked and clean; broken links are reported.
+    const savingsPayee = (await api.getPayees()).find(
+      p => p.transfer_acct === savings,
+    )!;
+    await api.addTransactions(
+      checking,
+      [{ date: '2026-08-15', amount: -1000, payee: savingsPayee.id }],
+      { runTransfers: true },
+    );
+    await api.addTransactions(
+      checking,
+      [{ date: '2026-08-16', amount: -2000, payee: savingsPayee.id }],
+      { runTransfers: true },
+    );
+    const rows = await api.getTransactions(
+      checking,
+      '2026-08-15',
+      '2026-08-16',
+    );
+    const linked = rows.find(r => r.amount === -1000)!;
+    const orphan = rows.find(r => r.amount === -2000)!;
+    const clean = await api.inspectTransfer(linked.id);
+    expect(clean).toMatchObject({
+      linked: true,
+      classification: 'internal',
+      issues: [],
+      categoryCleared: true,
+      repair: 'none',
+    });
+    expect(clean.counterpart?.amount).toBe(1000);
+    await api.internal!.send('transactions-batch-update', {
+      deleted: [{ id: orphan.transfer_id! }],
+      runTransfers: false,
+    });
+    expect(await api.inspectTransfer(orphan.id)).toMatchObject({
+      issues: ['missing-counterpart'],
+      repair: 'unlink',
+    });
+    const audit = await api.auditTransfers();
+    expect(audit.findings.map(f => f.transaction.id)).toEqual([orphan.id]);
+  });
+});
+
+describe('guarded transfer match, unmatch and repair', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('links imported opposite entries without new money movement and repairs broken links', async () => {
+    const group = await api.createCategoryGroup({ name: 'TM group' });
+    const food = await api.createCategory({ name: 'TM food', group_id: group });
+    const checking = await api.createAccount({ name: 'TM checking' }, 0);
+    const savings = await api.createAccount({ name: 'TM savings' }, 0);
+    const equity = await api.createAccount(
+      { name: 'TM equity', offbudget: true },
+      0,
+    );
+    await api.importTransactions(checking, [
+      {
+        date: '2026-08-01',
+        amount: -50000,
+        account: checking,
+        imported_id: 'tm-out',
+        category: food,
+      },
+      {
+        date: '2026-08-05',
+        amount: -70000,
+        account: checking,
+        imported_id: 'tm-eq',
+        category: food,
+      },
+    ]);
+    await api.importTransactions(savings, [
+      {
+        date: '2026-08-02',
+        amount: 50000,
+        account: savings,
+        imported_id: 'tm-in',
+      },
+    ]);
+    await api.importTransactions(equity, [
+      {
+        date: '2026-08-05',
+        amount: 70000,
+        account: equity,
+        imported_id: 'tm-eq-in',
+      },
+    ]);
+    const all = async () => [
+      ...(await api.getTransactions(checking, '2026-08-01', '2026-08-31')),
+      ...(await api.getTransactions(savings, '2026-08-01', '2026-08-31')),
+      ...(await api.getTransactions(equity, '2026-08-01', '2026-08-31')),
+    ];
+    const total = (rows: Array<{ amount: number }>) =>
+      rows.reduce((sum, row) => sum + row.amount, 0);
+    const before = await all();
+    const out = before.find(r => r.amount === -50000)!;
+    const into = before.find(r => r.amount === 50000)!;
+    const eqOut = before.find(r => r.amount === -70000)!;
+    const eqIn = before.find(r => r.amount === 70000)!;
+
+    const proposal = await api.previewTransferMatch({ ids: [into.id, out.id] });
+    expect(proposal.after).toMatchObject({
+      classification: 'internal',
+      categoryCleared: true,
+      reconciledIds: [],
+    });
+    expect(await all()).toEqual(before);
+    expect(await api.applyTransferMatch(proposal)).toMatchObject({
+      status: 'committed-local',
+      affectedIds: [out.id, into.id],
+    });
+    let rows = await all();
+    expect(rows).toHaveLength(before.length);
+    expect(total(rows)).toBe(total(before));
+    expect(rows.find(r => r.id === out.id)).toMatchObject({
+      transfer_id: into.id,
+      category: null,
+      amount: -50000,
+      date: '2026-08-01',
+    });
+    expect(rows.find(r => r.id === into.id)?.transfer_id).toBe(out.id);
+    expect((await api.inspectTransfer(out.id)).issues).toEqual([]);
+    expect(await api.applyTransferMatch(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    await expect(
+      api.previewTransferMatch({ ids: [out.id, eqIn.id] }),
+    ).rejects.toThrow(/already linked/);
+
+    // Budget boundary keeps the on-budget category.
+    const boundary = await api.previewTransferMatch({
+      ids: [eqOut.id, eqIn.id],
+    });
+    expect(boundary.after.classification).toBe('budget-boundary');
+    expect(boundary.after.categoryCleared).toBe(false);
+    await api.applyTransferMatch(boundary);
+    rows = await all();
+    expect(rows.find(r => r.id === eqOut.id)?.category).toBe(food);
+    expect(total(rows)).toBe(total(before));
+
+    // Unmatch keeps both rows as ordinary transactions.
+    const unmatch = await api.previewTransferUnmatch({ id: into.id });
+    await api.applyTransferUnmatch(unmatch);
+    rows = await all();
+    expect(rows).toHaveLength(before.length);
+    for (const id of [out.id, into.id]) {
+      expect(rows.find(r => r.id === id)).toMatchObject({
+        transfer_id: null,
+        payee: null,
+      });
+    }
+    await expect(api.previewTransferUnmatch({ id: out.id })).rejects.toThrow(
+      /not linked/,
+    );
+
+    // Resync: a counterpart whose amount drifted follows its source.
+    await api.applyTransferMatch(
+      await api.previewTransferMatch({ ids: [out.id, into.id] }),
+    );
+    await api.internal!.send('transactions-batch-update', {
+      updated: [{ id: into.id, amount: 40000 }],
+      runTransfers: false,
+    });
+    expect((await api.inspectTransfer(out.id)).issues).toEqual([
+      'amount-mismatch',
+    ]);
+    const resync = await api.previewTransferRepair({ id: out.id });
+    expect(resync.after.repair).toBe('resync');
+    expect(await api.applyTransferRepair(resync)).toMatchObject({
+      status: 'committed-local',
+      counterpartId: into.id,
+    });
+    expect((await all()).find(r => r.id === into.id)?.amount).toBe(50000);
+    await expect(api.previewTransferRepair({ id: out.id })).rejects.toThrow(
+      /no transfer issues/,
+    );
+
+    // Unlink: the counterpart disappeared without the engine's cleanup.
+    await api.internal!.send('transactions-batch-update', {
+      deleted: [{ id: into.id }],
+      runTransfers: false,
+    });
+    const unlink = await api.previewTransferRepair({ id: out.id });
+    expect(unlink.after).toEqual({
+      repair: 'unlink',
+      issues: ['missing-counterpart'],
+    });
+    await api.applyTransferRepair(unlink);
+    expect((await all()).find(r => r.id === out.id)).toMatchObject({
+      transfer_id: null,
+      payee: null,
+    });
+
+    // Relink: a transfer payee without a link gets its counterpart back.
+    const savingsPayee = (await api.getPayees()).find(
+      p => p.transfer_acct === savings,
+    )!;
+    await api.internal!.send('transactions-batch-update', {
+      updated: [{ id: out.id, payee: savingsPayee.id }],
+      runTransfers: false,
+    });
+    const relink = await api.previewTransferRepair({ id: out.id });
+    expect(relink.after.repair).toBe('relink');
+    const relinked = await api.applyTransferRepair(relink);
+    expect(relinked).toMatchObject({ status: 'committed-local' });
+    const created = (await all()).find(
+      r => r.id === (relinked as { counterpartId: string }).counterpartId,
+    )!;
+    expect(created).toMatchObject({
+      account: savings,
+      amount: 50000,
+      transfer_id: out.id,
+    });
+
+    // Reconciled rows need an explicit allowance.
+    await api.applyTransferUnmatch(
+      await api.previewTransferUnmatch({ id: out.id }),
+    );
+    await api.updateTransaction(out.id, { reconciled: true });
+    await expect(
+      api.previewTransferMatch({ ids: [out.id, created.id] }),
+    ).rejects.toThrow(/reconciled/);
+    expect(
+      (
+        await api.previewTransferMatch({
+          ids: [out.id, created.id],
+          allowReconciled: true,
+        })
+      ).after.reconciledIds,
+    ).toEqual([out.id]);
+  });
+});
+
+describe('import file inspection and saved mappings', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('normalizes CSV, OFX and encodings without writes, flags bad rows and round-trips saved mappings', async () => {
+    const mocks = path.join(
+      __dirname,
+      '..',
+      'loot-core',
+      'src',
+      'mocks',
+      'files',
+    );
+    const dir = await fs.mkdtemp(path.join(__dirname, 'mocks', 'import-'));
+    try {
+      const account = await api.createAccount({ name: 'Import inspect' }, 0);
+      const ledgerBefore = await api.getTransactions(
+        account,
+        '2000-01-01',
+        '2100-01-01',
+      );
+      const debitCredit = path.join(dir, 'bank.csv');
+      await fs.writeFile(
+        debitCredit,
+        'Date,Description,Debit,Credit,Memo\n24/12/2026,Grocer,12.50,,weekly\n25/12/2026,Employer,,1000.00,pay\n26/12/2026,Broken,abc,,\n',
+      );
+      const fields = {
+        date: 'Date',
+        payee: 'Description',
+        notes: 'Memo',
+        outflow: 'Debit',
+        inflow: 'Credit',
+      };
+      const result = await api.inspectImportFile({
+        path: debitCredit,
+        settings: { fields },
+      });
+      expect(result.file).toMatchObject({ format: 'csv', name: 'bank.csv' });
+      expect(result.file.sha256).toMatch(/^[0-9a-f]{64}$/);
+      expect(result.settings.dateFormat).toBe('dd mm yyyy');
+      expect(result.rowCount).toBe(3);
+      expect(result.validCount).toBe(2);
+      expect(result.rows[0].transaction).toMatchObject({
+        date: '2026-12-24',
+        amount: -1250,
+        payee_name: 'Grocer',
+        notes: 'weekly',
+      });
+      expect(result.rows[1].transaction?.amount).toBe(100000);
+      expect(result.rows[2].errors.join(' ')).toMatch(/amount/);
+      expect(result.dateRange).toEqual({
+        start: '2026-12-24',
+        end: '2026-12-25',
+      });
+
+      // Ambiguous day/month order is reported, never guessed.
+      const ambiguous = path.join(dir, 'ambiguous.csv');
+      await fs.writeFile(
+        ambiguous,
+        'Date,Payee,Amount\n03/04/2026,A,-1.00\n05/06/2026,B,2.00\n',
+      );
+      const unsure = await api.inspectImportFile({ path: ambiguous });
+      expect(unsure.dateFormatCandidates).toEqual(
+        expect.arrayContaining(['mm dd yyyy', 'dd mm yyyy']),
+      );
+      expect(unsure.validCount).toBe(0);
+      expect(unsure.warnings.join(' ')).toMatch(/Ambiguous date format/);
+      const chosen = await api.inspectImportFile({
+        path: ambiguous,
+        settings: { dateFormat: 'dd mm yyyy' },
+      });
+      expect(chosen.rows[0].transaction?.date).toBe('2026-04-03');
+
+      // A card export with positive charges is flipped.
+      const flipped = await api.inspectImportFile({
+        path: ambiguous,
+        settings: { dateFormat: 'mm dd yyyy', flipAmount: true },
+      });
+      expect(flipped.rows.map(r => r.transaction?.amount)).toEqual([100, -200]);
+
+      // OFX keeps its transaction IDs; encodings decode like the dialog.
+      const ofx = await api.inspectImportFile({
+        path: path.join(mocks, 'credit-card.ofx'),
+      });
+      expect(ofx.file.format).toBe('ofx');
+      expect(ofx.validCount).toBeGreaterThan(0);
+      expect(ofx.rows[0].transaction?.imported_id).toBeTruthy();
+      expect(ofx.rows[0].transaction?.amount).toBe(-600);
+      const utf16 = await api.inspectImportFile({
+        path: path.join(mocks, 'utf-16le.csv'),
+        settings: { dateFormat: 'yyyy mm dd' },
+      });
+      expect(utf16.columns).toContain('Könyvelés dátuma');
+      const latin = await api.inspectImportFile({
+        path: path.join(mocks, 'windows-1252.csv'),
+        settings: { encoding: 'windows-1252', dateFormat: 'yyyy mm dd' },
+      });
+      expect(latin.rows[0].transaction?.payee_name).toBe('Café Rémy');
+
+      await expect(
+        api.inspectImportFile({ path: path.join(dir, 'x.pdf') }),
+      ).rejects.toThrow(/Unsupported import file type/);
+      await expect(
+        api.inspectImportFile({ path: debitCredit, settings: { bogus: 1 } }),
+      ).rejects.toThrow(/unknown setting/);
+
+      // Saved mappings are the dialog's synced preferences.
+      const save = await api.previewImportMappingSave({
+        account,
+        format: 'csv',
+        settings: { fields, dateFormat: 'dd mm yyyy', flipAmount: false },
+      });
+      expect(save.after.preferences.map(p => p.id)).toEqual([
+        `csv-mappings-${account}`,
+        `parse-date-${account}-csv`,
+        `flip-amount-${account}-csv`,
+      ]);
+      await api.applyImportMappingSave(save);
+      const stored = await api.getImportMapping(account, 'csv');
+      expect(stored.settings).toMatchObject({
+        fields: { ...fields, amount: null, inOut: null, category: null },
+        dateFormat: 'dd mm yyyy',
+        flipAmount: false,
+      });
+      const viaSaved = await api.inspectImportFile({
+        path: debitCredit,
+        account,
+      });
+      expect(viaSaved.sources).toMatchObject({
+        fields: 'saved',
+        dateFormat: 'saved',
+      });
+      expect(viaSaved.validCount).toBe(2);
+      await expect(
+        api.previewImportMappingSave({
+          account,
+          format: 'ofx',
+          settings: { delimiter: ';' },
+        }),
+      ).rejects.toThrow(/does not apply/);
+      await api.applyImportMappingSave(
+        await api.previewImportMappingSave({
+          account,
+          format: 'csv',
+          reset: true,
+        }),
+      );
+      expect((await api.getImportMapping(account, 'csv')).settings).toEqual({});
+      expect(
+        await api.getTransactions(account, '2000-01-01', '2100-01-01'),
+      ).toEqual(ledgerBefore);
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('guarded file import', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('previews per-row outcomes without writes, commits the plan and marks changed files stale', async () => {
+    const dir = await fs.mkdtemp(path.join(__dirname, 'mocks', 'import-'));
+    try {
+      const account = await api.createAccount({ name: 'File import' }, 0);
+      await api.addTransactions(account, [
+        { date: '2026-10-02', amount: -1250, payee_name: 'Grocer' },
+      ]);
+      const [existing] = await api.getTransactions(
+        account,
+        '2026-10-01',
+        '2026-10-31',
+      );
+      const file = path.join(dir, 'card.csv');
+      await fs.writeFile(
+        file,
+        'Date,Payee,Amount\n2026-10-02,Grocer,-12.50\n2026-10-03,Bakery,-4.00\n2026-10-04,Broken,x\n',
+      );
+      const settings = {
+        fields: { date: 'Date', payee: 'Payee', amount: 'Amount' },
+        dateFormat: 'yyyy mm dd',
+      };
+      await expect(
+        api.previewFileImport({ path: file, accountId: account, settings }),
+      ).rejects.toThrow(/rows are invalid/);
+      const request = {
+        path: file,
+        accountId: account,
+        settings,
+        invalidRows: 'skip' as const,
+      };
+      const preview = await api.previewFileImport(request);
+      expect(
+        preview.after.rows.map(row => [row.outcome, row.match?.kind ?? null]),
+      ).toEqual([
+        ['duplicate', 'payee_date_amount'],
+        ['add', null],
+        ['invalid', null],
+      ]);
+      expect(preview.after.rows[0].match?.transactionId).toBe(existing.id);
+      expect(preview.after.summary).toMatchObject({
+        add: 1,
+        duplicate: 1,
+        invalid: 1,
+        newPayees: ['Bakery'],
+      });
+      expect(
+        await api.getTransactions(account, '2026-10-01', '2026-10-31'),
+      ).toHaveLength(1);
+      const outcome = await api.applyFileImport(preview);
+      expect(outcome.status).toBe('committed-local');
+      if (outcome.status !== 'committed-local') return;
+      expect(outcome.fileImport.addedIds).toHaveLength(1);
+      expect(outcome.fileImport.updatedIds).toEqual([]);
+      const again = await api.previewFileImport(request);
+      expect(again.after.rows.map(row => row.outcome)).toEqual([
+        'duplicate',
+        'duplicate',
+        'invalid',
+      ]);
+      await fs.writeFile(file, 'Date,Payee,Amount\n2026-10-09,Other,-1.00\n');
+      expect(await api.applyFileImport(again)).toMatchObject({
+        status: 'rejected',
+        code: 'STALE_PREVIEW',
+      });
+      await expect(
+        api.previewFileImport({
+          ...request,
+          sha256: preview.before.file.sha256,
+        }),
+      ).rejects.toThrow(/Import file changed/);
+      expect(
+        await api.getTransactions(account, '2026-10-01', '2026-10-31'),
+      ).toHaveLength(2);
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('rule tests and historical rule application', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('tests rules without writing and applies one rule to frozen transactions', async () => {
+    const account = await api.createAccount({ name: 'Rule apply' }, 0);
+    const group = await api.createCategoryGroup({ name: 'Rule group' });
+    const category = await api.createCategory({
+      name: 'Rule category',
+      group_id: group,
+    });
+    await api.addTransactions(account, [
+      { date: '2026-10-05', amount: -100, imported_payee: 'Bar One' },
+      { date: '2026-10-06', amount: -200, imported_payee: 'Elsewhere' },
+    ]);
+    const rule = await api.createRule({
+      stage: null,
+      conditionsOp: 'and',
+      conditions: [{ field: 'imported_payee', op: 'contains', value: 'Bar' }],
+      actions: [{ op: 'set', field: 'category', value: category }],
+    });
+    const payeesBefore = await api.getPayees();
+    const tested = await api.testRules({
+      transaction: {
+        account,
+        date: '2026-10-04',
+        amount: -450,
+        payee_name: 'coffee bar',
+      },
+    });
+    expect(tested.result.category).toBe(category);
+    expect(tested.appliedRules.map(r => r.id)).toEqual([rule.id]);
+    expect(tested.newPayees).toEqual(['Coffee Bar']);
+    expect(await api.getPayees()).toEqual(payeesBefore);
+
+    const matches = await api.findRuleMatches(rule.id);
+    expect(matches.ids).toHaveLength(1);
+    const proposal = await api.previewRuleApply({
+      ruleId: rule.id,
+      ids: matches.ids,
+    });
+    expect(proposal.after.rows[0].category).toBe(category);
+    const all = await api.getTransactions(account, '2026-10-01', '2026-10-31');
+    expect(all.find(t => t.id === matches.ids[0])?.category).toBeNull();
+    const outcome = await api.applyRuleApply(proposal);
+    expect(outcome.status).toBe('committed-local');
+    const after = await api.getTransactions(
+      account,
+      '2026-10-01',
+      '2026-10-31',
+    );
+    expect(after.find(t => t.id === matches.ids[0])?.category).toBe(category);
+    const other = all.find(t => t.id !== matches.ids[0]);
+    await expect(
+      api.previewRuleApply({ ruleId: rule.id, ids: [other!.id] }),
+    ).rejects.toThrow(/no longer match/);
+    await expect(
+      api.previewRuleApply({ ruleId: 'missing', ids: matches.ids }),
+    ).rejects.toThrow(/Rule does not exist/);
+  });
+});
+
+describe('schedule occurrences', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('inspects a schedule and posts its occurrence once', async () => {
+    const account = await api.createAccount({ name: 'Schedule post' }, 0);
+    const payee = await api.createPayee({ name: 'Schedule payee' });
+    const id = await api.createSchedule({
+      name: 'One-off bill',
+      posts_transaction: false,
+      payee,
+      account,
+      amount: -2500,
+      amountOp: 'is',
+      date: '2030-01-15',
+    });
+    const inspected = await api.inspectSchedules({
+      id,
+      start: '2030-01-01',
+      end: '2030-03-31',
+    });
+    expect(inspected.schedules[0].occurrences).toEqual(['2030-01-15']);
+    await expect(
+      api.previewSchedulePost({ id, date: '2030-02-15' }),
+    ).rejects.toThrow(/not the next occurrence/);
+    const proposal = await api.previewSchedulePost({ id, date: '2030-01-15' });
+    expect(proposal.after.rows[0].amount).toBe(-2500);
+    const outcome = await api.applySchedulePost(proposal);
+    expect(outcome.status).toBe('committed-local');
+    const rows = await api.getTransactions(account, '2030-01-01', '2030-01-31');
+    expect(rows).toHaveLength(1);
+    expect(rows[0].schedule).toBe(id);
+    await expect(
+      api.previewSchedulePost({ id, date: '2030-01-15' }),
+    ).rejects.toThrow(/already has transaction/);
+    // A one-off schedule has no later occurrence to skip to. Recurring
+    // skips are covered by the packaged CLI proof (see 0024 implementation.md).
+    await expect(
+      api.previewScheduleSkip({ id, date: '2030-01-15' }),
+    ).rejects.toThrow(/no occurrence after/);
+  });
+});
+
+describe('allocation moves', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('moves allocations with explicit insufficient funds', async () => {
+    const month = '2017-01';
+    const groups = await api.getCategoryGroups();
+    const group = groups.find(g => !g.is_income)!;
+    const from = await api.createCategory({
+      name: 'Move from',
+      group_id: group.id,
+    });
+    const to = await api.createCategory({
+      name: 'Move to',
+      group_id: group.id,
+    });
+    await api.setBudgetAmount(month, from, 30000);
+    const proposal = await api.previewBudgetMove({
+      month,
+      from,
+      to,
+      amount: 10000,
+    });
+    expect(proposal.after.totalBudgetedChange).toBe(0);
+    expect((await api.applyBudgetMove(proposal)).status).toBe(
+      'committed-local',
+    );
+    await expect(
+      api.previewBudgetMove({ month, from, to, amount: 50000 }),
+    ).rejects.toThrow(/Insufficient funds/);
+    const allowed = await api.previewBudgetMove({
+      month,
+      from,
+      to,
+      amount: 25000,
+      allowOverspend: true,
+    });
+    expect(allowed.after.from.budgeted).toBe(-5000);
+    expect((await api.applyBudgetMove(allowed)).status).toBe('committed-local');
+  });
+});
+
+describe('reconciliation', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('finishes only a zero difference over the frozen cleared set', async () => {
+    const account = await api.createAccount({ name: 'Reconcile' }, 0);
+    await api.addTransactions(account, [
+      { date: '2017-01-05', amount: -1000, cleared: true },
+      { date: '2017-01-25', amount: -500, cleared: true },
+    ]);
+    const all = await api.getReconciliationStatus({ accountId: account });
+    const cut = await api.getReconciliationStatus({
+      accountId: account,
+      statementDate: '2017-01-10',
+      statementBalance: all.clearedBalance + 500,
+    });
+    expect(cut.difference).toBe(0);
+    expect(cut.clearedAfterCutoffCount).toBeGreaterThanOrEqual(1);
+    await expect(
+      api.previewReconcileFinish({
+        accountId: account,
+        statementDate: '2017-01-10',
+        statementBalance: all.clearedBalance,
+        ids: cut.candidateIds,
+      }),
+    ).rejects.toThrow(/does not match/);
+    const proposal = await api.previewReconcileFinish({
+      accountId: account,
+      statementDate: '2017-01-10',
+      statementBalance: cut.statementBalance!,
+      ids: cut.candidateIds,
+    });
+    expect((await api.applyReconcileFinish(proposal)).status).toBe(
+      'committed-local',
+    );
+    const after = await api.getReconciliationStatus({ accountId: account });
+    expect(after.account.lastReconciled).not.toBeNull();
+    expect(after.candidateIds.length).toBe(cut.clearedAfterCutoffCount);
+    const adjust = await api.previewReconcileAdjust({
+      accountId: account,
+      amount: 250,
+      date: '2017-01-26',
+    });
+    expect(adjust.after.clearedBalance).toBe(after.clearedBalance + 250);
+    expect((await api.applyReconcileAdjust(adjust)).status).toBe(
+      'committed-local',
+    );
+  });
+});
+
+describe('ledger reports', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('scope accounts, separate tracking from net cash and reject bad ranges', async () => {
+    const cash = await api.createAccount({ name: 'Report cash' }, 0);
+    const tracked = await api.createAccount(
+      { name: 'Report tracking', offbudget: true },
+      0,
+    );
+    await api.addTransactions(cash, [
+      { date: '2017-03-05', amount: 5000 },
+      { date: '2017-03-06', amount: -2000, notes: '=SUM(A1)' },
+    ]);
+    await api.addTransactions(tracked, [{ date: '2017-03-07', amount: 10000 }]);
+    // The test environment clock is fixed, so include rows after it.
+    const request = {
+      start: '2017-03',
+      end: '2017-03',
+      accountIds: [cash],
+      includeFuture: true,
+    };
+    const flow = await api.getCashFlowReport({ ...request, details: true });
+    expect(flow.totals).toEqual({
+      income: 5000,
+      expense: -2000,
+      net: 3000,
+      transfersOffBudget: 0,
+    });
+    expect(flow.details?.map(d => d.notes)).toContain('=SUM(A1)');
+    expect(flow.scope.amounts).toBe('integer cents');
+    const cats = await api.getCategoryReport(request);
+    expect(cats.totals.uncategorized).toBe(3000);
+    const worth = await api.getNetWorthReport({
+      start: '2017-03',
+      end: '2017-03',
+      accountIds: [cash, tracked],
+      includeFuture: true,
+    });
+    expect(worth.months[0].netCash).toBe(3000);
+    expect(worth.months[0].tracking).toBe(10000);
+    expect(worth.months[0].netWorth).toBe(13000);
+    await expect(
+      api.getCashFlowReport({ start: '2017-04', end: '2017-03' }),
+    ).rejects.toThrow(/Invalid report request/);
+    await expect(
+      api.getNetWorthReport({ start: '2010-01', end: '2017-03' }),
+    ).rejects.toThrow(/at most 60 months/);
+  });
+});
+
+describe('data quality checkup', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('finds duplicates and uncategorized rows and verifies coverage only with evidence', async () => {
+    const account = await api.createAccount({ name: 'Checkup' }, 0);
+    await api.addTransactions(account, [
+      { date: '2017-05-03', amount: -1234 },
+      { date: '2017-05-04', amount: -1234 },
+    ]);
+    const result = await api.getDataQualityCheckup({
+      start: '2017-05',
+      end: '2017-07',
+      accountIds: [account],
+      statements: [{ accountId: account, month: '2017-06', noActivity: true }],
+    });
+    const codes = result.findings.map(f => f.code);
+    expect(codes).toContain('uncategorized');
+    expect(codes).toContain('duplicate-candidate');
+    expect(result.coverage[0].months.map(m => m.status)).toEqual([
+      'observed',
+      'statement-verified',
+      'unknown',
+    ]);
+    await expect(
+      api.getDataQualityCheckup({
+        start: '2017-05',
+        end: '2017-05',
+        statements: [{ accountId: account, month: '2017-05' }],
+      }),
+    ).rejects.toThrow(/endingBalance or noActivity/);
   });
 });

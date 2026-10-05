@@ -1,0 +1,14 @@
+# 0015 packaged account inspection and account groups (Linux, 2026-10-05 00:25 PDT)
+# Build: yarn exec lage build --scope=@actual-app/cli --no-cache; yarn workspace @actual-app/sync-server build
+# Command: (packages/cli) node --test integration/accounts-inspect.test.mjs
+# First run with the 0016 files (shared run below), rerun after adding the ambiguous resolve assertion: pass 1, fail 0
+
+✔ account inspection separates totals and account groups survive sync (11410.840413ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 137823.258873

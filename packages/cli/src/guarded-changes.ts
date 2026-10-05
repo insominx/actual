@@ -15,6 +15,11 @@ import type { ChangeReceipt } from './change-journal';
 import { resolveConfig } from './config';
 import type { CliConfig, CliGlobalOpts } from './config';
 import { withConnection } from './connection';
+import {
+  GUARDED_OPERATIONS,
+  isGuardedOperation,
+  PAYLOAD_SCOPED_OPERATIONS,
+} from './guarded-operations';
 import { readJsonInput } from './input';
 import { acquireExclusive } from './lock';
 import { isRecord, stableJson } from './utils';
@@ -534,6 +539,322 @@ export async function executeCategoryCreation(
   return { id: receipt.outcome.categoryCreation.categoryId, receipt };
 }
 
+export async function executePayeeCreation(
+  opts: CliGlobalOpts,
+  operationId: string | undefined,
+  request: api.PayeeCreationRequest,
+) {
+  if (!operationId) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      'Version 2 payee creation requires --operation-id for durable retry.',
+      false,
+      { field: 'operationId' },
+    );
+  }
+  const prepared = await previewGuardedChange(
+    opts,
+    'payees.create',
+    undefined,
+    { operationId, data: JSON.stringify(request) },
+  );
+  const receipt = await applyGuardedChange(opts, operationId, {
+    token: prepared.token,
+  });
+  if (
+    receipt.outcome?.status !== 'committed-local' ||
+    !('payeeCreation' in receipt.outcome)
+  ) {
+    throw new AgentError(
+      'PARTIAL_COMPLETION',
+      'Payee creation has no acknowledged engine identity.',
+      false,
+      { operationId },
+    );
+  }
+  return { id: receipt.outcome.payeeCreation.payeeId, receipt };
+}
+
+// Shared direct version 2 path for payee and tag catalog writes. The command
+// supplies the exact change ID and payload the changes command would accept.
+export async function executeCatalogChange(
+  opts: CliGlobalOpts,
+  operationId: string | undefined,
+  operation:
+    | 'payees.update'
+    | 'payees.delete'
+    | 'payees.merge'
+    | 'tags.update'
+    | 'tags.delete'
+    | 'notes.set'
+    | 'preferences.set'
+    | 'account-groups.update'
+    | 'account-groups.delete'
+    | 'rules.update'
+    | 'rules.delete'
+    | 'schedules.update'
+    | 'schedules.delete'
+    | 'transactions.delete'
+    | 'transactions.split',
+  id: string,
+  payload: Record<string, unknown>,
+) {
+  if (!operationId) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      `Version 2 ${operation} requires --operation-id for durable retry.`,
+      false,
+      { field: 'operationId' },
+    );
+  }
+  const prepared = await previewGuardedChange(opts, operation, id, {
+    operationId,
+    data: JSON.stringify(payload),
+  });
+  const receipt = await applyGuardedChange(opts, operationId, {
+    token: prepared.token,
+  });
+  return { success: true, id, receipt };
+}
+
+// Direct version 2 path for guarded operations scoped by their payload, such
+// as batch categorization over frozen transaction IDs.
+export async function executeScopedChange(
+  opts: CliGlobalOpts,
+  operationId: string | undefined,
+  operation:
+    | 'transactions.categorize'
+    | 'transactions.clear'
+    | 'transfers.match'
+    | 'transfers.unmatch'
+    | 'transfers.repair'
+    | 'imports.mapping-save'
+    | 'imports.file'
+    | 'rules.apply'
+    | 'schedules.post'
+    | 'schedules.skip'
+    | 'budgets.move'
+    | 'budgets.apply-templates'
+    | 'reconcile.finish'
+    | 'reconcile.adjust'
+    | 'transactions.merge'
+    | 'cash-planning.save',
+  payload: Record<string, unknown>,
+) {
+  if (!operationId) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      `Version 2 ${operation} requires --operation-id for durable retry.`,
+      false,
+      { field: 'operationId' },
+    );
+  }
+  const prepared = await previewGuardedChange(opts, operation, undefined, {
+    operationId,
+    data: JSON.stringify(payload),
+  });
+  const receipt = await applyGuardedChange(opts, operationId, {
+    token: prepared.token,
+  });
+  return { success: true, receipt };
+}
+
+export async function executeTagCreation(
+  opts: CliGlobalOpts,
+  operationId: string | undefined,
+  request: api.TagCreationRequest,
+) {
+  if (!operationId) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      'Version 2 tag creation requires --operation-id for durable retry.',
+      false,
+      { field: 'operationId' },
+    );
+  }
+  const prepared = await previewGuardedChange(opts, 'tags.create', undefined, {
+    operationId,
+    data: JSON.stringify(request),
+  });
+  const receipt = await applyGuardedChange(opts, operationId, {
+    token: prepared.token,
+  });
+  if (
+    receipt.outcome?.status !== 'committed-local' ||
+    !('tagCreation' in receipt.outcome)
+  ) {
+    throw new AgentError(
+      'PARTIAL_COMPLETION',
+      'Tag creation has no acknowledged engine identity.',
+      false,
+      { operationId },
+    );
+  }
+  return { id: receipt.outcome.tagCreation.tagId, receipt };
+}
+
+export async function executeAccountGroupCreation(
+  opts: CliGlobalOpts,
+  operationId: string | undefined,
+  request: api.AccountGroupCreationRequest,
+) {
+  if (!operationId) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      'Account group creation requires --operation-id for durable retry.',
+      false,
+      { field: 'operationId' },
+    );
+  }
+  const prepared = await previewGuardedChange(
+    opts,
+    'account-groups.create',
+    undefined,
+    { operationId, data: JSON.stringify(request) },
+  );
+  const receipt = await applyGuardedChange(opts, operationId, {
+    token: prepared.token,
+  });
+  if (
+    receipt.outcome?.status !== 'committed-local' ||
+    !('accountGroupCreation' in receipt.outcome)
+  ) {
+    throw new AgentError(
+      'PARTIAL_COMPLETION',
+      'Account group creation has no acknowledged engine identity.',
+      false,
+      { operationId },
+    );
+  }
+  return { id: receipt.outcome.accountGroupCreation.groupId, receipt };
+}
+
+export async function executeTransactionAddition(
+  opts: CliGlobalOpts,
+  operationId: string,
+  request: api.TransactionAdditionRequest,
+) {
+  const prepared = await previewGuardedChange(
+    opts,
+    'transactions.add',
+    request.accountId,
+    { operationId, data: JSON.stringify(request.transactions) },
+  );
+  const receipt = await applyGuardedChange(opts, operationId, {
+    token: prepared.token,
+  });
+  if (
+    receipt.outcome?.status !== 'committed-local' ||
+    !('transactionAddition' in receipt.outcome)
+  ) {
+    throw new AgentError(
+      'PARTIAL_COMPLETION',
+      'Transaction addition has no acknowledged engine identities.',
+      false,
+      { operationId },
+    );
+  }
+  return { ids: receipt.outcome.transactionAddition.transactionIds, receipt };
+}
+
+export async function executeTransactionImport(
+  opts: CliGlobalOpts,
+  operationId: string,
+  request: api.TransactionImportRequest,
+) {
+  const prepared = await previewGuardedChange(
+    opts,
+    'transactions.import',
+    request.accountId,
+    { operationId, data: JSON.stringify(request.transactions) },
+  );
+  const receipt = await applyGuardedChange(opts, operationId, {
+    token: prepared.token,
+  });
+  if (
+    receipt.outcome?.status !== 'committed-local' ||
+    !('transactionImport' in receipt.outcome)
+  ) {
+    throw new AgentError(
+      'PARTIAL_COMPLETION',
+      'Transaction import has no acknowledged engine identities.',
+      false,
+      { operationId },
+    );
+  }
+  return { ...receipt.outcome.transactionImport, receipt };
+}
+
+export async function executeScheduleCreation(
+  opts: CliGlobalOpts,
+  operationId: string | undefined,
+  request: api.ScheduleCreationRequest,
+) {
+  if (!operationId) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      'Version 2 schedule creation requires --operation-id for durable retry.',
+      false,
+      { field: 'operationId' },
+    );
+  }
+  const prepared = await previewGuardedChange(
+    opts,
+    'schedules.create',
+    undefined,
+    { operationId, data: JSON.stringify(request) },
+  );
+  const receipt = await applyGuardedChange(opts, operationId, {
+    token: prepared.token,
+  });
+  if (
+    receipt.outcome?.status !== 'committed-local' ||
+    !('scheduleCreation' in receipt.outcome)
+  ) {
+    throw new AgentError(
+      'PARTIAL_COMPLETION',
+      'Schedule creation has no acknowledged engine identity.',
+      false,
+      { operationId },
+    );
+  }
+  return { id: receipt.outcome.scheduleCreation.scheduleId, receipt };
+}
+
+export async function executeRuleCreation(
+  opts: CliGlobalOpts,
+  operationId: string | undefined,
+  request: api.RuleCreationRequest,
+) {
+  if (!operationId) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      'Version 2 rule creation requires --operation-id for durable retry.',
+      false,
+      { field: 'operationId' },
+    );
+  }
+  const prepared = await previewGuardedChange(opts, 'rules.create', undefined, {
+    operationId,
+    data: JSON.stringify(request),
+  });
+  const receipt = await applyGuardedChange(opts, operationId, {
+    token: prepared.token,
+  });
+  if (
+    receipt.outcome?.status !== 'committed-local' ||
+    !('ruleCreation' in receipt.outcome)
+  ) {
+    throw new AgentError(
+      'PARTIAL_COMPLETION',
+      'Rule creation has no acknowledged engine identity.',
+      false,
+      { operationId },
+    );
+  }
+  return { id: receipt.outcome.ruleCreation.ruleId, receipt };
+}
+
 export async function executeCategoryDeletion(
   opts: CliGlobalOpts,
   operationId: string | undefined,
@@ -908,6 +1229,287 @@ export async function resolveGuardConfig(
   return resolved;
 }
 
+type DomainAdapter = {
+  preview: (request: unknown) => Promise<api.ChangeProposal>;
+  apply: (
+    proposal: api.ChangeProposal,
+  ) => Promise<NonNullable<ChangeReceipt['outcome']>>;
+};
+
+// Explicit per-operation public API methods. Each entry names its canonical
+// preview and apply endpoints; there is no universal execute operation.
+const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
+  'transactions.update': {
+    preview: r =>
+      api.previewTransactionUpdate(r as api.TransactionUpdateRequest),
+    apply: p => api.applyTransactionUpdate(p as api.TransactionUpdateProposal),
+  },
+  'category-groups.delete': {
+    preview: r =>
+      api.previewCategoryGroupDeletion(r as api.CategoryGroupDeletionRequest),
+    apply: p =>
+      api.applyCategoryGroupDeletion(p as api.CategoryGroupDeletionProposal),
+  },
+  'category-groups.update': {
+    preview: r =>
+      api.previewCategoryGroupUpdate(r as api.CategoryGroupUpdateRequest),
+    apply: p =>
+      api.applyCategoryGroupUpdate(p as api.CategoryGroupUpdateProposal),
+  },
+  'category-groups.create': {
+    preview: r =>
+      api.previewCategoryGroupCreation(r as api.CategoryGroupCreationRequest),
+    apply: p =>
+      api.applyCategoryGroupCreation(p as api.CategoryGroupCreationProposal),
+  },
+  'categories.create': {
+    preview: r => api.previewCategoryCreation(r as api.CategoryCreationRequest),
+    apply: p => api.applyCategoryCreation(p as api.CategoryCreationProposal),
+  },
+  'categories.delete': {
+    preview: r => api.previewCategoryDeletion(r as api.CategoryDeletionRequest),
+    apply: p => api.applyCategoryDeletion(p as api.CategoryDeletionProposal),
+  },
+  'categories.update': {
+    preview: r => api.previewCategoryUpdate(r as api.CategoryUpdateRequest),
+    apply: p => api.applyCategoryUpdate(p as api.CategoryUpdateProposal),
+  },
+  'payees.create': {
+    preview: r => api.previewPayeeCreation(r as api.PayeeCreationRequest),
+    apply: p => api.applyPayeeCreation(p as api.PayeeCreationProposal),
+  },
+  'payees.update': {
+    preview: r => api.previewPayeeUpdate(r as api.PayeeUpdateRequest),
+    apply: p => api.applyPayeeUpdate(p as api.PayeeUpdateProposal),
+  },
+  'payees.delete': {
+    preview: r => api.previewPayeeDeletion(r as api.PayeeDeletionRequest),
+    apply: p => api.applyPayeeDeletion(p as api.PayeeDeletionProposal),
+  },
+  'payees.merge': {
+    preview: r => api.previewPayeeMerge(r as api.PayeeMergeRequest),
+    apply: p => api.applyPayeeMerge(p as api.PayeeMergeProposal),
+  },
+  'tags.create': {
+    preview: r => api.previewTagCreation(r as api.TagCreationRequest),
+    apply: p => api.applyTagCreation(p as api.TagCreationProposal),
+  },
+  'tags.update': {
+    preview: r => api.previewTagUpdate(r as api.TagUpdateRequest),
+    apply: p => api.applyTagUpdate(p as api.TagUpdateProposal),
+  },
+  'tags.delete': {
+    preview: r => api.previewTagDeletion(r as api.TagDeletionRequest),
+    apply: p => api.applyTagDeletion(p as api.TagDeletionProposal),
+  },
+  'notes.set': {
+    preview: r => api.previewNoteSet(r as api.NoteSetRequest),
+    apply: p => api.applyNoteSet(p as api.NoteSetProposal),
+  },
+  'preferences.set': {
+    preview: r => api.previewPreferenceSet(r as api.PreferenceSetRequest),
+    apply: p => api.applyPreferenceSet(p as api.PreferenceSetProposal),
+  },
+  'account-groups.create': {
+    preview: r =>
+      api.previewAccountGroupCreation(r as api.AccountGroupCreationRequest),
+    apply: p =>
+      api.applyAccountGroupCreation(p as api.AccountGroupCreationProposal),
+  },
+  'account-groups.update': {
+    preview: r =>
+      api.previewAccountGroupUpdate(r as api.AccountGroupUpdateRequest),
+    apply: p =>
+      api.applyAccountGroupUpdate(p as api.AccountGroupUpdateProposal),
+  },
+  'account-groups.delete': {
+    preview: r =>
+      api.previewAccountGroupDeletion(r as api.AccountGroupDeletionRequest),
+    apply: p =>
+      api.applyAccountGroupDeletion(p as api.AccountGroupDeletionProposal),
+  },
+  'rules.create': {
+    preview: r => api.previewRuleCreation(r as api.RuleCreationRequest),
+    apply: p => api.applyRuleCreation(p as api.RuleCreationProposal),
+  },
+  'rules.update': {
+    preview: r => api.previewRuleUpdate(r as api.RuleUpdateRequest),
+    apply: p => api.applyRuleUpdate(p as api.RuleUpdateProposal),
+  },
+  'rules.delete': {
+    preview: r => api.previewRuleDeletion(r as api.RuleDeletionRequest),
+    apply: p => api.applyRuleDeletion(p as api.RuleDeletionProposal),
+  },
+  'schedules.create': {
+    preview: r => api.previewScheduleCreation(r as api.ScheduleCreationRequest),
+    apply: p => api.applyScheduleCreation(p as api.ScheduleCreationProposal),
+  },
+  'schedules.update': {
+    preview: r => api.previewScheduleUpdate(r as api.ScheduleUpdateRequest),
+    apply: p => api.applyScheduleUpdate(p as api.ScheduleUpdateProposal),
+  },
+  'schedules.delete': {
+    preview: r => api.previewScheduleDeletion(r as api.ScheduleDeletionRequest),
+    apply: p => api.applyScheduleDeletion(p as api.ScheduleDeletionProposal),
+  },
+  'transactions.delete': {
+    preview: r =>
+      api.previewTransactionDeletion(r as api.TransactionDeletionRequest),
+    apply: p =>
+      api.applyTransactionDeletion(p as api.TransactionDeletionProposal),
+  },
+  'transactions.categorize': {
+    preview: r =>
+      api.previewTransactionCategorization(
+        r as api.TransactionCategorizationRequest,
+      ),
+    apply: p =>
+      api.applyTransactionCategorization(
+        p as api.TransactionCategorizationProposal,
+      ),
+  },
+  'transactions.clear': {
+    preview: r =>
+      api.previewTransactionClearing(r as api.TransactionClearingRequest),
+    apply: p =>
+      api.applyTransactionClearing(p as api.TransactionClearingProposal),
+  },
+  'imports.mapping-save': {
+    preview: r =>
+      api.previewImportMappingSave(r as api.ImportMappingSaveRequest),
+    apply: p => api.applyImportMappingSave(p as api.ImportMappingSaveProposal),
+  },
+  'rules.apply': {
+    preview: r => api.previewRuleApply(r as api.RuleApplyRequest),
+    apply: p => api.applyRuleApply(p as api.RuleApplyProposal),
+  },
+  'schedules.post': {
+    preview: r => api.previewSchedulePost(r as api.ScheduleOccurrenceRequest),
+    apply: p => api.applySchedulePost(p as api.SchedulePostProposal),
+  },
+  'schedules.skip': {
+    preview: r => api.previewScheduleSkip(r as api.ScheduleOccurrenceRequest),
+    apply: p => api.applyScheduleSkip(p as api.ScheduleSkipProposal),
+  },
+  'budgets.move': {
+    preview: r => api.previewBudgetMove(r as api.BudgetMoveRequest),
+    apply: p => api.applyBudgetMove(p as api.BudgetMoveProposal),
+  },
+  'budgets.apply-templates': {
+    preview: r =>
+      api.previewTemplateApplication(r as api.BudgetTemplatesRequest),
+    apply: p => api.applyTemplateApplication(p as api.BudgetTemplatesProposal),
+  },
+  'reconcile.finish': {
+    preview: r => api.previewReconcileFinish(r as api.ReconcileFinishRequest),
+    apply: p => api.applyReconcileFinish(p as api.ReconcileFinishProposal),
+  },
+  'reconcile.adjust': {
+    preview: r => api.previewReconcileAdjust(r as api.ReconcileAdjustRequest),
+    apply: p => api.applyReconcileAdjust(p as api.ReconcileAdjustProposal),
+  },
+  'imports.file': {
+    preview: r => api.previewFileImport(r as api.ImportFileRequest),
+    apply: p => api.applyFileImport(p as api.ImportFileProposal),
+  },
+  'transfers.match': {
+    preview: r => api.previewTransferMatch(r as api.TransferMatchRequest),
+    apply: p => api.applyTransferMatch(p as api.TransferMatchProposal),
+  },
+  'transfers.unmatch': {
+    preview: r => api.previewTransferUnmatch(r as api.TransferUnmatchRequest),
+    apply: p => api.applyTransferUnmatch(p as api.TransferUnmatchProposal),
+  },
+  'transfers.repair': {
+    preview: r => api.previewTransferRepair(r as api.TransferRepairRequest),
+    apply: p => api.applyTransferRepair(p as api.TransferRepairProposal),
+  },
+  'transactions.merge': {
+    preview: r => api.previewTransactionMerge(r as api.TransactionMergeRequest),
+    apply: p => api.applyTransactionMerge(p as api.TransactionMergeProposal),
+  },
+  'transactions.split': {
+    preview: r => api.previewTransactionSplit(r as api.TransactionSplitRequest),
+    apply: p => api.applyTransactionSplit(p as api.TransactionSplitProposal),
+  },
+  'cash-planning.save': {
+    preview: r => api.previewCashPlanSave(r as api.CashPlanSaveRequest),
+    apply: p => api.applyCashPlanSave(p as api.CashPlanSaveProposal),
+  },
+  'transactions.add': {
+    preview: r =>
+      api.previewTransactionAddition(r as api.TransactionAdditionRequest),
+    apply: p =>
+      api.applyTransactionAddition(p as api.TransactionAdditionProposal),
+  },
+  'transactions.import': {
+    preview: r =>
+      api.previewTransactionImport(r as api.TransactionImportRequest),
+    apply: p => api.applyTransactionImport(p as api.TransactionImportProposal),
+  },
+  'accounts.close': {
+    preview: r => api.previewAccountClosure(r as api.AccountCloseRequest),
+    apply: p => api.applyAccountClosure(p as api.AccountCloseProposal),
+  },
+  'accounts.delete': {
+    preview: r => api.previewAccountDeletion(r as api.AccountDeletionRequest),
+    apply: p => api.applyAccountDeletion(p as api.AccountDeletionProposal),
+  },
+  'accounts.reopen': {
+    preview: r => api.previewAccountReopen(r as api.AccountReopenRequest),
+    apply: p => api.applyAccountReopen(p as api.AccountReopenProposal),
+  },
+  'accounts.update': {
+    preview: r => api.previewAccountUpdate(r as api.AccountUpdateRequest),
+    apply: p => api.applyAccountUpdate(p as api.AccountUpdateProposal),
+  },
+  'accounts.create': {
+    preview: r => api.previewAccountCreation(r as api.AccountCreationRequest),
+    apply: p => api.applyAccountCreation(p as api.AccountCreationProposal),
+  },
+  'budgets.set-amount': {
+    preview: r => api.previewBudgetAmount(r as api.BudgetAmountRequest),
+    apply: p => api.applyBudgetAmount(p as api.BudgetAmountProposal),
+  },
+  'budgets.set-carryover': {
+    preview: r => api.previewBudgetCarryover(r as api.BudgetCarryoverRequest),
+    apply: p => api.applyBudgetCarryover(p as api.BudgetCarryoverProposal),
+  },
+  'budgets.hold-next-month': {
+    preview: r => api.previewBudgetHold(r as api.BudgetHoldRequest),
+    apply: p => api.applyBudgetHold(p as api.BudgetHoldProposal),
+  },
+  'budgets.reset-hold': {
+    preview: r => api.previewBudgetHold(r as api.BudgetHoldRequest),
+    apply: p => api.applyBudgetHold(p as api.BudgetHoldProposal),
+  },
+  'budgets.rename': {
+    preview: r => api.previewBudgetMetadata(r as api.BudgetMetadataRequest),
+    apply: p => api.applyBudgetMetadata(p as api.BudgetMetadataProposal),
+  },
+  'budgets.archive': {
+    preview: r => api.previewBudgetMetadata(r as api.BudgetMetadataRequest),
+    apply: p => api.applyBudgetMetadata(p as api.BudgetMetadataProposal),
+  },
+  'budgets.clone': {
+    preview: r => api.previewBudgetClone(r as api.BudgetCloneRequest),
+    apply: p => api.applyBudgetClone(p as api.BudgetCloneProposal),
+  },
+};
+
+function domainAdapter(operation: string): DomainAdapter {
+  const adapter = Object.prototype.hasOwnProperty.call(
+    DOMAIN_ADAPTERS,
+    operation,
+  )
+    ? DOMAIN_ADAPTERS[operation]
+    : undefined;
+  if (!adapter) {
+    throw new AgentError('INVALID_INPUT', 'Unsupported guarded operation.');
+  }
+  return adapter;
+}
+
 function changeRequest(
   operation: string,
   id: string,
@@ -916,6 +1518,43 @@ function changeRequest(
   | api.CategoryGroupUpdateRequest
   | api.CategoryGroupCreationRequest
   | api.CategoryCreationRequest
+  | api.PayeeCreationRequest
+  | api.PayeeUpdateRequest
+  | api.PayeeDeletionRequest
+  | api.PayeeMergeRequest
+  | api.TagCreationRequest
+  | api.TagUpdateRequest
+  | api.TagDeletionRequest
+  | api.NoteSetRequest
+  | api.PreferenceSetRequest
+  | api.AccountGroupCreationRequest
+  | api.AccountGroupUpdateRequest
+  | api.AccountGroupDeletionRequest
+  | api.RuleCreationRequest
+  | api.RuleUpdateRequest
+  | api.RuleDeletionRequest
+  | api.ScheduleCreationRequest
+  | api.ScheduleUpdateRequest
+  | api.ScheduleDeletionRequest
+  | api.TransactionDeletionRequest
+  | api.TransactionCategorizationRequest
+  | api.TransactionClearingRequest
+  | api.TransferMatchRequest
+  | api.ImportMappingSaveRequest
+  | api.ImportFileRequest
+  | api.RuleApplyRequest
+  | api.ScheduleOccurrenceRequest
+  | api.BudgetMoveRequest
+  | api.BudgetTemplatesRequest
+  | api.ReconcileFinishRequest
+  | api.ReconcileAdjustRequest
+  | api.TransferUnmatchRequest
+  | api.TransferRepairRequest
+  | api.TransactionMergeRequest
+  | api.TransactionSplitRequest
+  | api.CashPlanSaveRequest
+  | api.TransactionAdditionRequest
+  | api.TransactionImportRequest
   | api.CategoryGroupDeletionRequest
   | api.CategoryDeletionRequest
   | api.CategoryUpdateRequest
@@ -949,6 +1588,568 @@ function changeRequest(
   }
   if (operation === 'categories.create') {
     return payload as api.CategoryCreationRequest;
+  }
+  if (operation === 'payees.create') {
+    return payload as api.PayeeCreationRequest;
+  }
+  if (operation === 'payees.update') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(key => key !== 'name') ||
+      typeof payload.name !== 'string'
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Payee update accepts only a name.',
+      );
+    }
+    return { id, fields: { name: payload.name } };
+  }
+  if (operation === 'payees.merge') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(key => key !== 'mergeIds') ||
+      !Array.isArray(payload.mergeIds) ||
+      !payload.mergeIds.every(value => typeof value === 'string')
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Payee merge requires only a mergeIds array; the target is the change ID.',
+      );
+    }
+    return { targetId: id, mergeIds: payload.mergeIds as string[] };
+  }
+  if (operation === 'cash-planning.save') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(key => key !== 'config') ||
+      !('config' in payload) ||
+      !(payload.config === null || isRecord(payload.config))
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Cash plan save takes only a config object, or null to reset.',
+      );
+    }
+    return payload as api.CashPlanSaveRequest;
+  }
+  if (operation === 'transactions.split') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['subtransactions', 'allowReconciled'].includes(key),
+      ) ||
+      !Array.isArray(payload.subtransactions) ||
+      !(
+        payload.allowReconciled === undefined ||
+        typeof payload.allowReconciled === 'boolean'
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Split takes a subtransactions array and optional allowReconciled; the transaction is the change ID.',
+      );
+    }
+    return {
+      id,
+      subtransactions:
+        payload.subtransactions as api.TransactionSplitRequest['subtransactions'],
+      ...(payload.allowReconciled === undefined
+        ? {}
+        : { allowReconciled: payload.allowReconciled }),
+    };
+  }
+  if (operation === 'transactions.merge') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['ids', 'allowReconciled'].includes(key),
+      ) ||
+      !Array.isArray(payload.ids) ||
+      payload.ids.length !== 2 ||
+      !payload.ids.every(value => typeof value === 'string') ||
+      !(
+        payload.allowReconciled === undefined ||
+        typeof payload.allowReconciled === 'boolean'
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Merge takes exactly two ids and optional allowReconciled.',
+      );
+    }
+    return {
+      ids: [payload.ids[0], payload.ids[1]] as [string, string],
+      ...(payload.allowReconciled === undefined
+        ? {}
+        : { allowReconciled: payload.allowReconciled }),
+    };
+  }
+  if (operation === 'imports.mapping-save') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['account', 'format', 'settings', 'reset'].includes(key),
+      ) ||
+      typeof payload.account !== 'string' ||
+      typeof payload.format !== 'string' ||
+      !(payload.settings === undefined || isRecord(payload.settings)) ||
+      !(payload.reset === undefined || typeof payload.reset === 'boolean')
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Import mapping save takes account, format, and settings (object) or reset.',
+      );
+    }
+    return {
+      account: payload.account,
+      format: payload.format,
+      ...(payload.settings === undefined ? {} : { settings: payload.settings }),
+      ...(payload.reset === undefined ? {} : { reset: payload.reset }),
+    };
+  }
+  if (operation === 'reconcile.finish') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key =>
+          !['accountId', 'statementBalance', 'statementDate', 'ids'].includes(
+            key,
+          ),
+      ) ||
+      typeof payload.accountId !== 'string' ||
+      !Number.isSafeInteger(payload.statementBalance) ||
+      !(
+        payload.statementDate === undefined ||
+        typeof payload.statementDate === 'string'
+      ) ||
+      !Array.isArray(payload.ids) ||
+      !payload.ids.every(value => typeof value === 'string')
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Reconciliation finish takes accountId, statementBalance (integer cents), ids (candidate IDs) and optional statementDate.',
+      );
+    }
+    return {
+      accountId: payload.accountId,
+      statementBalance: payload.statementBalance as number,
+      ...(payload.statementDate === undefined
+        ? {}
+        : { statementDate: payload.statementDate }),
+      ids: payload.ids as string[],
+    };
+  }
+  if (operation === 'reconcile.adjust') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['accountId', 'amount', 'date'].includes(key),
+      ) ||
+      typeof payload.accountId !== 'string' ||
+      !Number.isSafeInteger(payload.amount) ||
+      !(payload.date === undefined || typeof payload.date === 'string')
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Reconciliation adjustment takes accountId, amount (integer cents) and optional date.',
+      );
+    }
+    return {
+      accountId: payload.accountId,
+      amount: payload.amount as number,
+      ...(payload.date === undefined ? {} : { date: payload.date }),
+    };
+  }
+  if (operation === 'budgets.move') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key =>
+          !['month', 'from', 'to', 'amount', 'allowOverspend'].includes(key),
+      ) ||
+      typeof payload.month !== 'string' ||
+      typeof payload.from !== 'string' ||
+      typeof payload.to !== 'string' ||
+      !Number.isSafeInteger(payload.amount) ||
+      !(
+        payload.allowOverspend === undefined ||
+        typeof payload.allowOverspend === 'boolean'
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Allocation move takes month, from, to (category IDs or to-budget), amount (integer cents) and optional allowOverspend.',
+      );
+    }
+    return {
+      month: payload.month,
+      from: payload.from,
+      to: payload.to,
+      amount: payload.amount as number,
+      ...(payload.allowOverspend === undefined
+        ? {}
+        : { allowOverspend: payload.allowOverspend }),
+    };
+  }
+  if (operation === 'budgets.apply-templates') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['month', 'categoryIds', 'force'].includes(key),
+      ) ||
+      typeof payload.month !== 'string' ||
+      !(
+        payload.categoryIds === undefined ||
+        (Array.isArray(payload.categoryIds) &&
+          payload.categoryIds.every(value => typeof value === 'string'))
+      ) ||
+      !(payload.force === undefined || typeof payload.force === 'boolean')
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Template application takes month, optional categoryIds and optional force.',
+      );
+    }
+    return {
+      month: payload.month,
+      ...(payload.categoryIds === undefined
+        ? {}
+        : { categoryIds: payload.categoryIds as string[] }),
+      ...(payload.force === undefined ? {} : { force: payload.force }),
+    };
+  }
+  if (operation === 'schedules.post' || operation === 'schedules.skip') {
+    const post = operation === 'schedules.post';
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['id', 'date', ...(post ? ['today'] : [])].includes(key),
+      ) ||
+      typeof payload.id !== 'string' ||
+      typeof payload.date !== 'string' ||
+      !(
+        payload.today === undefined ||
+        (post && typeof payload.today === 'boolean')
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        post
+          ? 'Schedule post takes id, date (the next occurrence) and optional today.'
+          : 'Schedule skip takes id and date (the next occurrence).',
+      );
+    }
+    return {
+      id: payload.id,
+      date: payload.date,
+      ...(payload.today === undefined ? {} : { today: payload.today }),
+    };
+  }
+  if (operation === 'rules.apply') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['ruleId', 'ids', 'allowReconciled'].includes(key),
+      ) ||
+      typeof payload.ruleId !== 'string' ||
+      !Array.isArray(payload.ids) ||
+      !payload.ids.every(value => typeof value === 'string') ||
+      !(
+        payload.allowReconciled === undefined ||
+        typeof payload.allowReconciled === 'boolean'
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Rule application takes ruleId, ids (transaction IDs) and optional allowReconciled.',
+      );
+    }
+    return {
+      ruleId: payload.ruleId,
+      ids: payload.ids as string[],
+      ...(payload.allowReconciled === undefined
+        ? {}
+        : { allowReconciled: payload.allowReconciled }),
+    };
+  }
+  if (operation === 'imports.file') {
+    const opts = isRecord(payload) ? payload.opts : undefined;
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key =>
+          ![
+            'path',
+            'accountId',
+            'settings',
+            'useSaved',
+            'sha256',
+            'invalidRows',
+            'opts',
+          ].includes(key),
+      ) ||
+      typeof payload.path !== 'string' ||
+      typeof payload.accountId !== 'string' ||
+      !(payload.settings === undefined || isRecord(payload.settings)) ||
+      !(
+        payload.useSaved === undefined || typeof payload.useSaved === 'boolean'
+      ) ||
+      !(payload.sha256 === undefined || typeof payload.sha256 === 'string') ||
+      !(
+        payload.invalidRows === undefined ||
+        payload.invalidRows === 'reject' ||
+        payload.invalidRows === 'skip'
+      ) ||
+      !(opts === undefined || isRecord(opts))
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'File import takes path, accountId and optional settings, useSaved, sha256, invalidRows (reject or skip) and opts.',
+      );
+    }
+    return payload as api.ImportFileRequest;
+  }
+  if (operation === 'transfers.match') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['ids', 'allowReconciled'].includes(key),
+      ) ||
+      !Array.isArray(payload.ids) ||
+      payload.ids.length !== 2 ||
+      !payload.ids.every(value => typeof value === 'string') ||
+      !(
+        payload.allowReconciled === undefined ||
+        typeof payload.allowReconciled === 'boolean'
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Transfer match takes ids (two transaction IDs) and optional allowReconciled.',
+      );
+    }
+    return {
+      ids: payload.ids as string[],
+      ...(payload.allowReconciled === undefined
+        ? {}
+        : { allowReconciled: payload.allowReconciled }),
+    };
+  }
+  if (operation === 'transfers.unmatch' || operation === 'transfers.repair') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['id', 'allowReconciled'].includes(key),
+      ) ||
+      typeof payload.id !== 'string' ||
+      !(
+        payload.allowReconciled === undefined ||
+        typeof payload.allowReconciled === 'boolean'
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Transfer unmatch and repair take id and optional allowReconciled.',
+      );
+    }
+    return {
+      id: payload.id,
+      ...(payload.allowReconciled === undefined
+        ? {}
+        : { allowReconciled: payload.allowReconciled }),
+    };
+  }
+  if (operation === 'transactions.clear') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['ids', 'cleared', 'unlock'].includes(key),
+      ) ||
+      !Array.isArray(payload.ids) ||
+      !payload.ids.every(value => typeof value === 'string') ||
+      typeof payload.cleared !== 'boolean' ||
+      !(payload.unlock === undefined || typeof payload.unlock === 'boolean')
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Clearing takes ids, cleared (boolean) and optional unlock.',
+      );
+    }
+    return {
+      ids: payload.ids as string[],
+      cleared: payload.cleared,
+      ...(payload.unlock === undefined ? {} : { unlock: payload.unlock }),
+    };
+  }
+  if (operation === 'transactions.categorize') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['ids', 'category', 'allowReconciled'].includes(key),
+      ) ||
+      !Array.isArray(payload.ids) ||
+      !payload.ids.every(value => typeof value === 'string') ||
+      !(payload.category === null || typeof payload.category === 'string') ||
+      !(
+        payload.allowReconciled === undefined ||
+        typeof payload.allowReconciled === 'boolean'
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Categorization takes ids, category (ID or null) and optional allowReconciled.',
+      );
+    }
+    return {
+      ids: payload.ids as string[],
+      category: payload.category,
+      ...(payload.allowReconciled === undefined
+        ? {}
+        : { allowReconciled: payload.allowReconciled }),
+    };
+  }
+  if (operation === 'transactions.add' || operation === 'transactions.import') {
+    if (!Array.isArray(payload)) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Transaction addition and import take a transactions array; the account is the change ID.',
+      );
+    }
+    return {
+      accountId: id,
+      transactions: payload as Array<Record<string, unknown>>,
+    };
+  }
+  if (operation === 'schedules.create') {
+    return payload as api.ScheduleCreationRequest;
+  }
+  if (operation === 'schedules.update') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['fields', 'resetNextDate'].includes(key),
+      ) ||
+      !isRecord(payload.fields)
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Schedule update takes { fields, resetNextDate? }; the schedule is the change ID.',
+      );
+    }
+    return {
+      id,
+      fields: payload.fields,
+      ...(payload.resetNextDate === undefined
+        ? {}
+        : { resetNextDate: payload.resetNextDate as boolean }),
+    };
+  }
+  if (operation === 'rules.create') {
+    return payload as api.RuleCreationRequest;
+  }
+  if (operation === 'rules.update') {
+    if (!isRecord(payload) || 'id' in payload) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Rule update takes rule fields; the rule is the change ID.',
+      );
+    }
+    return { id, fields: payload as api.RuleUpdateRequest['fields'] };
+  }
+  if (
+    operation === 'payees.delete' ||
+    operation === 'tags.delete' ||
+    operation === 'rules.delete' ||
+    operation === 'schedules.delete' ||
+    operation === 'transactions.delete'
+  ) {
+    if (isRecord(payload) && Object.keys(payload).length) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Deletion takes only the target ID and no payload.',
+      );
+    }
+    return { id };
+  }
+  if (operation === 'tags.create') {
+    return payload as api.TagCreationRequest;
+  }
+  if (operation === 'tags.update') {
+    if (
+      !isRecord(payload) ||
+      !Object.keys(payload).length ||
+      Object.keys(payload).some(
+        key => !['tag', 'color', 'description'].includes(key),
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Tag update requires tag, color or description.',
+      );
+    }
+    return { id, fields: payload as api.TagUpdateRequest['fields'] };
+  }
+  if (operation === 'account-groups.create') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(key => key !== 'name') ||
+      typeof payload.name !== 'string'
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Account group creation takes {"name":"<name>"} and no target ID.',
+      );
+    }
+    return { name: payload.name };
+  }
+  if (operation === 'account-groups.update') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(key => key !== 'name') ||
+      typeof payload.name !== 'string'
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Account group update takes {"name":"<name>"}; the group is the change ID.',
+      );
+    }
+    return { id, fields: { name: payload.name } };
+  }
+  if (operation === 'account-groups.delete') {
+    if (isRecord(payload) && Object.keys(payload).length) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Deletion takes only the target ID and no payload.',
+      );
+    }
+    return { id };
+  }
+  if (operation === 'preferences.set') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(key => key !== 'value') ||
+      !(typeof payload.value === 'string' || payload.value === null)
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Preference change takes {"value":"<text>"} or {"value":null} to reset; the key is the change ID.',
+      );
+    }
+    return { id, value: payload.value };
+  }
+  if (operation === 'notes.set') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(key => key !== 'note') ||
+      typeof payload.note !== 'string'
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Note change takes {"note":"<text>"}; the note ID is the change ID.',
+      );
+    }
+    return { id, note: payload.note };
   }
   if (
     operation === 'categories.delete' ||
@@ -1080,48 +2281,14 @@ export async function previewGuardedChange(
   input: { operationId: string; data?: string; file?: string },
 ): Promise<ChangeReceipt> {
   validateOperationId(input.operationId);
-  if (
-    ![
-      'budgets.create',
-      'budgets.clone',
-      'backups.restore',
-      'budgets.publish',
-      'transactions.update',
-      'category-groups.delete',
-      'categories.delete',
-      'category-groups.update',
-      'categories.update',
-      'category-groups.create',
-      'categories.create',
-      'accounts.update',
-      'accounts.reopen',
-      'accounts.delete',
-      'accounts.close',
-      'accounts.create',
-      'budgets.set-amount',
-      'budgets.set-carryover',
-      'budgets.hold-next-month',
-      'budgets.reset-hold',
-      'budgets.rename',
-      'budgets.archive',
-    ].includes(operation)
-  ) {
+  if (!isGuardedOperation(operation)) {
     throw new AgentError(
       'INVALID_INPUT',
-      'Supported operations: category-groups.delete, category-groups.update, category-groups.create, categories.create, categories.update, categories.delete, accounts.close, accounts.delete, accounts.reopen, accounts.update, accounts.create, budgets.create, budgets.clone, budgets.publish, backups.restore, transactions.update, budgets.set-amount, budgets.set-carryover, budgets.hold-next-month, budgets.reset-hold, budgets.rename, and budgets.archive.',
+      `Supported operations: ${GUARDED_OPERATIONS.join(', ')}.`,
     );
   }
   const restores = operation === 'backups.restore';
-  if (
-    [
-      'accounts.create',
-      'category-groups.create',
-      'categories.create',
-      'budgets.hold-next-month',
-      'budgets.reset-hold',
-    ].includes(operation) &&
-    id !== undefined
-  ) {
+  if (PAYLOAD_SCOPED_OPERATIONS.includes(operation) && id !== undefined) {
     throw new AgentError(
       'INVALID_INPUT',
       'This operation selects its scope through the payload. Omit the ID argument.',
@@ -1199,78 +2366,7 @@ export async function previewGuardedChange(
                     ? await api.previewBudgetPublication(
                         request as api.BudgetPublicationRequest,
                       )
-                    : operation === 'budgets.clone'
-                      ? await api.previewBudgetClone(
-                          request as api.BudgetCloneRequest,
-                        )
-                      : operation === 'transactions.update'
-                        ? await api.previewTransactionUpdate(
-                            request as api.TransactionUpdateRequest,
-                          )
-                        : operation === 'category-groups.delete'
-                          ? await api.previewCategoryGroupDeletion(
-                              request as api.CategoryGroupDeletionRequest,
-                            )
-                          : operation === 'category-groups.update'
-                            ? await api.previewCategoryGroupUpdate(
-                                request as api.CategoryGroupUpdateRequest,
-                              )
-                            : operation === 'category-groups.create'
-                              ? await api.previewCategoryGroupCreation(
-                                  request as api.CategoryGroupCreationRequest,
-                                )
-                              : operation === 'categories.create'
-                                ? await api.previewCategoryCreation(
-                                    request as api.CategoryCreationRequest,
-                                  )
-                                : operation === 'categories.delete'
-                                  ? await api.previewCategoryDeletion(
-                                      request as api.CategoryDeletionRequest,
-                                    )
-                                  : operation === 'categories.update'
-                                    ? await api.previewCategoryUpdate(
-                                        request as api.CategoryUpdateRequest,
-                                      )
-                                    : operation === 'accounts.close'
-                                      ? await api.previewAccountClosure(
-                                          request as api.AccountCloseRequest,
-                                        )
-                                      : operation === 'accounts.delete'
-                                        ? await api.previewAccountDeletion(
-                                            request as api.AccountDeletionRequest,
-                                          )
-                                        : operation === 'accounts.reopen'
-                                          ? await api.previewAccountReopen(
-                                              request as api.AccountReopenRequest,
-                                            )
-                                          : operation === 'accounts.update'
-                                            ? await api.previewAccountUpdate(
-                                                request as api.AccountUpdateRequest,
-                                              )
-                                            : operation === 'accounts.create'
-                                              ? await api.previewAccountCreation(
-                                                  request as api.AccountCreationRequest,
-                                                )
-                                              : operation ===
-                                                  'budgets.set-amount'
-                                                ? await api.previewBudgetAmount(
-                                                    request as api.BudgetAmountRequest,
-                                                  )
-                                                : operation ===
-                                                    'budgets.set-carryover'
-                                                  ? await api.previewBudgetCarryover(
-                                                      request as api.BudgetCarryoverRequest,
-                                                    )
-                                                  : operation ===
-                                                        'budgets.hold-next-month' ||
-                                                      operation ===
-                                                        'budgets.reset-hold'
-                                                    ? await api.previewBudgetHold(
-                                                        request as api.BudgetHoldRequest,
-                                                      )
-                                                    : await api.previewBudgetMetadata(
-                                                        request as api.BudgetMetadataRequest,
-                                                      );
+                    : await domainAdapter(operation).preview(request);
           } catch {
             throw new AgentError(
               'INVALID_INPUT',
@@ -1492,6 +2588,15 @@ export async function applyGuardedChange(
               );
             }
           }
+          if (
+            !['budgets.publish', 'budgets.create', 'backups.restore'].includes(
+              receipt.proposal.operation,
+            )
+          ) {
+            // Resolve the adapter before recording intent, so an unsupported
+            // operation can never become an uncertain receipt.
+            domainAdapter(receipt.proposal.operation);
+          }
           await persist('uncertain');
           let outcome: NonNullable<ChangeReceipt['outcome']>;
           try {
@@ -1512,87 +2617,9 @@ export async function applyGuardedChange(
                     })
                   : receipt.proposal.operation === 'budgets.create'
                     ? await api.applyBudgetCreation(receipt.proposal)
-                    : receipt.proposal.operation === 'budgets.clone'
-                      ? await api.applyBudgetClone(receipt.proposal)
-                      : receipt.proposal.operation === 'transactions.update'
-                        ? await api.applyTransactionUpdate(receipt.proposal)
-                        : receipt.proposal.operation ===
-                            'category-groups.delete'
-                          ? await api.applyCategoryGroupDeletion(
-                              receipt.proposal,
-                            )
-                          : receipt.proposal.operation ===
-                              'category-groups.update'
-                            ? await api.applyCategoryGroupUpdate(
-                                receipt.proposal,
-                              )
-                            : receipt.proposal.operation ===
-                                'category-groups.create'
-                              ? await api.applyCategoryGroupCreation(
-                                  receipt.proposal,
-                                )
-                              : receipt.proposal.operation ===
-                                  'categories.create'
-                                ? await api.applyCategoryCreation(
-                                    receipt.proposal,
-                                  )
-                                : receipt.proposal.operation ===
-                                    'categories.delete'
-                                  ? await api.applyCategoryDeletion(
-                                      receipt.proposal,
-                                    )
-                                  : receipt.proposal.operation ===
-                                      'categories.update'
-                                    ? await api.applyCategoryUpdate(
-                                        receipt.proposal,
-                                      )
-                                    : receipt.proposal.operation ===
-                                        'accounts.close'
-                                      ? await api.applyAccountClosure(
-                                          receipt.proposal,
-                                        )
-                                      : receipt.proposal.operation ===
-                                          'accounts.delete'
-                                        ? await api.applyAccountDeletion(
-                                            receipt.proposal,
-                                          )
-                                        : receipt.proposal.operation ===
-                                            'accounts.reopen'
-                                          ? await api.applyAccountReopen(
-                                              receipt.proposal,
-                                            )
-                                          : receipt.proposal.operation ===
-                                              'accounts.update'
-                                            ? await api.applyAccountUpdate(
-                                                receipt.proposal,
-                                              )
-                                            : receipt.proposal.operation ===
-                                                'accounts.create'
-                                              ? await api.applyAccountCreation(
-                                                  receipt.proposal,
-                                                )
-                                              : receipt.proposal.operation ===
-                                                  'budgets.set-amount'
-                                                ? await api.applyBudgetAmount(
-                                                    receipt.proposal,
-                                                  )
-                                                : receipt.proposal.operation ===
-                                                    'budgets.set-carryover'
-                                                  ? await api.applyBudgetCarryover(
-                                                      receipt.proposal,
-                                                    )
-                                                  : receipt.proposal
-                                                        .operation ===
-                                                        'budgets.hold-next-month' ||
-                                                      receipt.proposal
-                                                        .operation ===
-                                                        'budgets.reset-hold'
-                                                    ? await api.applyBudgetHold(
-                                                        receipt.proposal,
-                                                      )
-                                                    : await api.applyBudgetMetadata(
-                                                        receipt.proposal,
-                                                      );
+                    : await domainAdapter(receipt.proposal.operation).apply(
+                        receipt.proposal,
+                      );
             }
           } catch {
             updateAgentContext({ commit: 'uncertain' });

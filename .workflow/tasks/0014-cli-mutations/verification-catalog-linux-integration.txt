@@ -1,0 +1,31 @@
+✔ guarded payee update preserves raw domains and acknowledgements (online) (8920.615896ms)
+✔ guarded payee update preserves raw domains and acknowledgements (offline) (8162.16121ms)
+✔ guarded payee deletion preserves raw domains and acknowledgements (online) (7429.015197ms)
+✔ guarded payee deletion preserves raw domains and acknowledgements (offline) (7195.661799ms)
+✔ guarded payee merge preserves raw domains and acknowledgements (online) (8844.468472ms)
+✔ guarded payee merge preserves raw domains and acknowledgements (offline) (8548.80647ms)
+✔ guarded tag creation preserves raw domains and acknowledgements (online) (7689.11679ms)
+✔ guarded tag creation preserves raw domains and acknowledgements (offline) (7060.881341ms)
+✔ guarded tag update preserves raw domains and acknowledgements (online) (8671.106209ms)
+✔ guarded tag update preserves raw domains and acknowledgements (offline) (8210.275561ms)
+✔ guarded tag deletion preserves raw domains and acknowledgements (online) (7459.793407ms)
+✔ guarded tag deletion preserves raw domains and acknowledgements (offline) (7342.399995ms)
+✔ killed guarded payee merge at before-engine retains its exact outcome without replay (38058.693293ms)
+✔ killed guarded payee merge at after-engine retains its exact outcome without replay (37748.624963ms)
+✔ killed guarded payee merge at before-sync retains its exact outcome without replay (38352.351078ms)
+✔ killed guarded tag creation at before-engine retains its exact outcome without replay (35921.484421ms)
+✔ killed guarded tag creation at after-engine retains its exact outcome without replay (35985.360372ms)
+✔ killed guarded tag creation at before-sync retains its exact outcome without replay (36210.494941ms)
+✔ guarded payee creation preserves raw domains and acknowledgements (online) (7780.376386ms)
+✔ guarded payee creation preserves raw domains and acknowledgements (offline) (7189.610588ms)
+✔ killed guarded payee creation at before-engine retains its exact outcome without replay (35402.355241ms)
+✔ killed guarded payee creation at after-engine retains its exact outcome without replay (35008.59834ms)
+✔ killed guarded payee creation at before-sync retains its exact outcome without replay (36166.421912ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 317881.936806

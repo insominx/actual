@@ -48,6 +48,32 @@ export function registerAccountsCommand(program: Command) {
     });
 
   accounts
+    .command('inspect')
+    .description(
+      'Inspect balances (ledger, cleared, reconciled, future) with on/off-budget totals, groups and duplicate names',
+    )
+    .option('--cutoff <date>', 'Balance cutoff day YYYY-MM-DD (default today)')
+    .option('--include-closed', 'List closed accounts too', false)
+    .action(async (cmdOpts: { cutoff?: string; includeClosed: boolean }) => {
+      const opts = program.opts();
+      await withConnection(
+        opts,
+        async () => {
+          printOutput(
+            await api.inspectAccounts({
+              ...(cmdOpts.cutoff === undefined
+                ? {}
+                : { cutoff: cmdOpts.cutoff }),
+              includeClosed: cmdOpts.includeClosed,
+            }),
+            opts.format,
+          );
+        },
+        { mutates: false },
+      );
+    });
+
+  accounts
     .command('create')
     .description('Create a new account')
     .option('--operation-id <id>', 'Required for version 2; durable retry ID')
@@ -91,6 +117,10 @@ export function registerAccountsCommand(program: Command) {
     .option('--operation-id <id>', 'Required for version 2; durable retry ID')
     .option('--name <name>', 'New account name')
     .option('--offbudget <bool>', 'Set off-budget status')
+    .option(
+      '--account-group-id <id>',
+      'Move the account into an account group, or "none" to ungroup it',
+    )
     .action(async (id: string, cmdOpts) => {
       const opts = program.opts();
       const fields: api.AccountUpdateRequest['fields'] = {};
@@ -104,9 +134,18 @@ export function registerAccountsCommand(program: Command) {
       if (cmdOpts.offbudget !== undefined) {
         fields.offbudget = parseBoolFlag(cmdOpts.offbudget, '--offbudget');
       }
+      if (cmdOpts.accountGroupId !== undefined) {
+        const groupId = String(cmdOpts.accountGroupId).trim();
+        if (groupId === '') {
+          throw new Error(
+            'Invalid --account-group-id: use a group ID or "none".',
+          );
+        }
+        fields.account_group_id = groupId === 'none' ? null : groupId;
+      }
       if (Object.keys(fields).length === 0) {
         throw new Error(
-          'No update fields provided. Use --name or --offbudget.',
+          'No update fields provided. Use --name, --offbudget or --account-group-id.',
         );
       }
       if (opts.outputVersion === '2') {

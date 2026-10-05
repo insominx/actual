@@ -1,0 +1,8 @@
+Windows Task Scheduler dry-run on liftoff @ 802e9c12d
+cmd: create disposable offline job win-schedule-dryrun, then
+     actual ... jobs schedule win-schedule-dryrun
+result: printed windowsTaskScheduler recipe:
+  schtasks /Create /SC MINUTE /MO 15 /TN "Actual win-schedule-dryrun" /TR "..."
+Dry-run: schtasks /Create NOT executed.
+  schtasks /Query /TN "Actual win-schedule-dryrun" → EXIT 1 (task absent) — expected.
+evidence: evidence/jobs-schedule-windows.json, schtasks-recipe.txt, schtasks-dryrun.txt

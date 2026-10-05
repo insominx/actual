@@ -39,7 +39,7 @@ async function getTags(): Promise<TagEntity[]> {
   return tags.map(tag => ({ ...tag, hidden: !!tag.hidden }));
 }
 
-async function createTag({
+export async function createTag({
   tag,
   color = null,
   description = null,
@@ -67,7 +67,9 @@ async function createTag({
   return { id, tag, color, description };
 }
 
-async function deleteTag(tag: Pick<TagEntity, 'id'>): Promise<TagEntity['id']> {
+export async function deleteTag(
+  tag: Pick<TagEntity, 'id'>,
+): Promise<TagEntity['id']> {
   await db.deleteTag(tag);
   return tag.id;
 }
@@ -101,7 +103,7 @@ async function unhideAllTags(ids: Array<TagEntity['id']>) {
   return ids;
 }
 
-async function updateTag(
+export async function updateTag(
   tag: Partial<TagEntity> & Pick<TagEntity, 'id'>,
 ): Promise<Partial<TagEntity>> {
   const { hidden, ...rest } = tag;

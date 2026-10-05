@@ -1,7 +1,14 @@
 import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
+import { AgentError } from '#agent-output';
 import { withConnection } from '#connection';
+import {
+  executeCatalogChange,
+  executeScopedChange,
+  executeTransactionAddition,
+  executeTransactionImport,
+} from '#guarded-changes';
 import { readJsonInput } from '#input';
 import { printOutput } from '#output';
 
@@ -43,8 +50,30 @@ export function registerTransactionsCommand(program: Command) {
     )
     .option('--learn-categories', 'Learn category assignments', false)
     .option('--run-transfers', 'Process transfers', false)
+    .option(
+      '--operation-id <id>',
+      'Version 2 only: run the guarded addition with this durable retry ID',
+    )
     .action(async cmdOpts => {
       const opts = program.opts();
+      if (opts.outputVersion === '2' && cmdOpts.operationId) {
+        if (cmdOpts.learnCategories || cmdOpts.runTransfers) {
+          throw new AgentError(
+            'INVALID_INPUT',
+            'Guarded transaction addition does not run transfers or learn categories; omit --operation-id to use the unguarded path for those.',
+          );
+        }
+        printOutput(
+          await executeTransactionAddition(opts, cmdOpts.operationId, {
+            accountId: cmdOpts.account,
+            transactions: readJsonInput(cmdOpts) as Array<
+              Record<string, unknown>
+            >,
+          }),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {
@@ -75,8 +104,30 @@ export function registerTransactionsCommand(program: Command) {
       'Read transaction data from JSON file (use - for stdin)',
     )
     .option('--dry-run', 'Preview without importing', false)
+    .option(
+      '--operation-id <id>',
+      'Version 2 only: run the guarded import with this durable retry ID',
+    )
     .action(async cmdOpts => {
       const opts = program.opts();
+      if (opts.outputVersion === '2' && cmdOpts.operationId) {
+        if (cmdOpts.dryRun) {
+          throw new AgentError(
+            'INVALID_INPUT',
+            'Use changes preview transactions.import for a guarded dry run; --dry-run cannot be combined with --operation-id.',
+          );
+        }
+        printOutput(
+          await executeTransactionImport(opts, cmdOpts.operationId, {
+            accountId: cmdOpts.account,
+            transactions: readJsonInput(cmdOpts) as Array<
+              Record<string, unknown>
+            >,
+          }),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {
@@ -118,10 +169,245 @@ export function registerTransactionsCommand(program: Command) {
     });
 
   transactions
-    .command('delete <id>')
-    .description('Delete a transaction')
+    .command('get <id>')
+    .description(
+      'Show one transaction with its split children, split balance and transfer counterpart',
+    )
     .action(async (id: string) => {
       const opts = program.opts();
+      await withConnection(
+        opts,
+        async () => {
+          printOutput(await inspectTransaction(id), opts.format);
+        },
+        { mutates: false },
+      );
+    });
+
+  transactions
+    .command('categorize')
+    .description(
+      'Set one category on a frozen list of transactions through a guarded change',
+    )
+    .option('--operation-id <id>', 'Required; durable retry ID')
+    .requiredOption('--ids <ids>', 'Comma-separated transaction IDs')
+    .requiredOption(
+      '--category <id>',
+      'Category ID, or "none" to clear the category',
+    )
+    .option(
+      '--allow-reconciled',
+      'Allow changing reconciled transactions (they are listed in the receipt)',
+      false,
+    )
+    .action(
+      async (cmdOpts: {
+        operationId?: string;
+        ids: string;
+        category: string;
+        allowReconciled: boolean;
+      }) => {
+        const opts = program.opts();
+        const ids = cmdOpts.ids
+          .split(',')
+          .map(id => id.trim())
+          .filter(Boolean);
+        if (!ids.length) {
+          throw new Error(
+            'Invalid --ids: provide at least one transaction ID.',
+          );
+        }
+        const category = cmdOpts.category.trim();
+        if (!category) {
+          throw new Error('Invalid --category: use a category ID or "none".');
+        }
+        printOutput(
+          await executeScopedChange(
+            opts,
+            cmdOpts.operationId,
+            'transactions.categorize',
+            {
+              ids,
+              category: category === 'none' ? null : category,
+              ...(cmdOpts.allowReconciled ? { allowReconciled: true } : {}),
+            },
+          ),
+          opts.format,
+        );
+      },
+    );
+
+  transactions
+    .command('clear')
+    .description(
+      'Mark a frozen list of transactions cleared or uncleared, optionally removing their reconciled lock, through a guarded change',
+    )
+    .option('--operation-id <id>', 'Required; durable retry ID')
+    .requiredOption('--ids <ids>', 'Comma-separated transaction IDs')
+    .option('--uncleared', 'Mark the transactions uncleared instead', false)
+    .option(
+      '--unlock',
+      'Remove the reconciled lock from reconciled transactions (required to change them; never marks anything reconciled)',
+      false,
+    )
+    .action(
+      async (cmdOpts: {
+        operationId?: string;
+        ids: string;
+        uncleared: boolean;
+        unlock: boolean;
+      }) => {
+        const opts = program.opts();
+        const ids = cmdOpts.ids
+          .split(',')
+          .map(id => id.trim())
+          .filter(Boolean);
+        if (!ids.length) {
+          throw new Error(
+            'Invalid --ids: provide at least one transaction ID.',
+          );
+        }
+        printOutput(
+          await executeScopedChange(
+            opts,
+            cmdOpts.operationId,
+            'transactions.clear',
+            {
+              ids,
+              cleared: !cmdOpts.uncleared,
+              ...(cmdOpts.unlock ? { unlock: true } : {}),
+            },
+          ),
+          opts.format,
+        );
+      },
+    );
+
+  transactions
+    .command('merge')
+    .description(
+      'Merge two duplicate transactions through a guarded change; the engine keeps the imported or earlier one',
+    )
+    .option('--operation-id <id>', 'Required; durable retry ID')
+    .requiredOption(
+      '--ids <ids>',
+      'Exactly two comma-separated transaction IDs',
+    )
+    .option(
+      '--allow-reconciled',
+      'Allow merging reconciled transactions',
+      false,
+    )
+    .action(
+      async (cmdOpts: {
+        operationId?: string;
+        ids: string;
+        allowReconciled: boolean;
+      }) => {
+        const opts = program.opts();
+        const ids = cmdOpts.ids
+          .split(',')
+          .map(id => id.trim())
+          .filter(Boolean);
+        if (ids.length !== 2) {
+          throw new Error(
+            'Invalid --ids: provide exactly two transaction IDs.',
+          );
+        }
+        printOutput(
+          await executeScopedChange(
+            opts,
+            cmdOpts.operationId,
+            'transactions.merge',
+            {
+              ids,
+              ...(cmdOpts.allowReconciled ? { allowReconciled: true } : {}),
+            },
+          ),
+          opts.format,
+        );
+      },
+    );
+
+  transactions
+    .command('split <id>')
+    .description(
+      'Split a transaction, or replace its split children, through a guarded change',
+    )
+    .option('--operation-id <id>', 'Required; durable retry ID')
+    .option(
+      '--data <json>',
+      'Children as JSON: [{"amount":-500,"category":"<id>","notes":"..."}]',
+    )
+    .option('--file <path>', 'Read children from JSON file (use - for stdin)')
+    .option(
+      '--allow-reconciled',
+      'Allow splitting a reconciled transaction',
+      false,
+    )
+    .action(
+      async (
+        id: string,
+        cmdOpts: {
+          operationId?: string;
+          data?: string;
+          file?: string;
+          allowReconciled: boolean;
+        },
+      ) => {
+        const opts = program.opts();
+        if (!cmdOpts.operationId) {
+          throw new AgentError(
+            'INVALID_INPUT',
+            'Version 2 transactions.split requires --operation-id for durable retry.',
+            false,
+            { field: 'operationId' },
+          );
+        }
+        const subtransactions = readJsonInput(cmdOpts);
+        if (!Array.isArray(subtransactions)) {
+          throw new AgentError(
+            'INVALID_INPUT',
+            'Split children must be a JSON array.',
+            false,
+            { field: 'data' },
+          );
+        }
+        printOutput(
+          await executeCatalogChange(
+            opts,
+            cmdOpts.operationId,
+            'transactions.split',
+            id,
+            {
+              subtransactions,
+              ...(cmdOpts.allowReconciled ? { allowReconciled: true } : {}),
+            },
+          ),
+          opts.format,
+        );
+      },
+    );
+
+  transactions
+    .command('delete <id>')
+    .description('Delete a transaction')
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
+    .action(async (id: string, cmdOpts: { operationId?: string }) => {
+      const opts = program.opts();
+      if (opts.outputVersion === '2') {
+        printOutput(
+          await executeCatalogChange(
+            opts,
+            cmdOpts.operationId,
+            'transactions.delete',
+            id,
+            {},
+          ),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {
@@ -131,4 +417,96 @@ export function registerTransactionsCommand(program: Command) {
         { mutates: true },
       );
     });
+}
+
+type TransactionRow = {
+  id: string;
+  account: string;
+  date: string;
+  amount: number;
+  payee: string | null;
+  category: string | null;
+  notes: string | null;
+  cleared: boolean;
+  reconciled: boolean;
+  is_parent: boolean;
+  is_child: boolean;
+  parent_id: string | null;
+  transfer_id: string | null;
+  imported_id: string | null;
+  schedule: string | null;
+};
+
+async function selectRows(filter: Record<string, unknown>) {
+  const { data } = (await api.aqlQuery(
+    api
+      .q('transactions')
+      .filter(filter)
+      .select([
+        'id',
+        'account',
+        'date',
+        'amount',
+        'payee',
+        'category',
+        'notes',
+        'cleared',
+        'reconciled',
+        'is_parent',
+        'is_child',
+        'parent_id',
+        'transfer_id',
+        'imported_id',
+        'schedule',
+      ])
+      .options({ splits: 'all' }),
+  )) as { data: TransactionRow[] };
+  return data;
+}
+
+// Read-only view of one transaction. A split child resolves to its parent so
+// the caller always sees the whole split and whether it balances.
+export async function inspectTransaction(id: string) {
+  const [requested] = await selectRows({ id });
+  if (!requested) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      `Transaction not found: ${id}`,
+      false,
+      {
+        field: 'id',
+      },
+    );
+  }
+  const rootId = requested.is_child ? requested.parent_id : requested.id;
+  const [root] = rootId ? await selectRows({ id: rootId }) : [requested];
+  const parent = root ?? requested;
+  const children = parent.is_parent
+    ? await selectRows({ parent_id: parent.id })
+    : [];
+  const childTotal = children.reduce((sum, row) => sum + row.amount, 0);
+  const transferIds = [parent, ...children]
+    .map(row => row.transfer_id)
+    .filter((value): value is string => !!value);
+  const transfers = transferIds.length
+    ? await selectRows({ id: { $oneof: transferIds } })
+    : [];
+  return {
+    requestedId: id,
+    transaction: parent,
+    children,
+    split: parent.is_parent
+      ? {
+          childCount: children.length,
+          childTotal,
+          balanced: childTotal === parent.amount,
+        }
+      : null,
+    transfers: transfers.map(row => ({
+      id: row.id,
+      account: row.account,
+      amount: row.amount,
+      parentId: row.parent_id,
+    })),
+  };
 }

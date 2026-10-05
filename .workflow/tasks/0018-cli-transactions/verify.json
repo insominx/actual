@@ -1,0 +1,40 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api test"
+        },
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "transactions-integration",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/guarded-transaction-categorize.test.mjs integration/guarded-transaction-merge.test.mjs integration/guarded-transaction-split.test.mjs integration/guarded-transaction-clear.test.mjs"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/loot-core/src/server/transactions/guarded-categorize.ts packages/cli/src/commands/transactions.ts packages/cli/src/guarded-changes.ts packages/cli/src/json-schema.ts packages/cli/integration/guarded-transaction-categorize.test.mjs packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/transactions/guarded-merge.ts packages/loot-core/src/server/transactions/guarded-split.ts packages/loot-core/src/server/transactions/guarded-clear.ts packages/cli/integration/guarded-transaction-merge.test.mjs packages/cli/integration/guarded-transaction-split.test.mjs packages/cli/integration/guarded-transaction-clear.test.mjs"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/loot-core/src/server/transactions/guarded-categorize.ts packages/cli/src/commands/transactions.ts packages/cli/src/guarded-changes.ts packages/cli/src/json-schema.ts packages/cli/integration/guarded-transaction-categorize.test.mjs packages/api/methods.ts packages/api/methods.test.ts packages/docs/docs/api/cli.md packages/loot-core/src/server/transactions/guarded-merge.ts packages/loot-core/src/server/transactions/guarded-split.ts packages/loot-core/src/server/transactions/guarded-clear.ts packages/cli/integration/guarded-transaction-merge.test.mjs packages/cli/integration/guarded-transaction-split.test.mjs packages/cli/integration/guarded-transaction-clear.test.mjs"
+        }
+      ]
+    }
+  }
+}

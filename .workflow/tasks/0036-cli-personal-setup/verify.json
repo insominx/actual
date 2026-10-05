@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        {
+          "id": "personal-setup-fixture",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/personal-setup.test.mjs"
+        }
+      ]
+    }
+  }
+}

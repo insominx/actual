@@ -1,0 +1,11 @@
+✔ cash flow and categories reconcile to the ledger with refunds, splits, transfers and a deleted category (6282.556544ms)
+✔ net worth separates net cash from off-budget tracking and future rows stay out unless asked for (6298.78007ms)
+✔ CSV and HTML exports neutralize hostile text, carry the incompleteness label and never overwrite (6337.013447ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 18975.59493

@@ -1,7 +1,7 @@
 # Task Progress: Complete setup, intake, checkup, close, and goal workflows
 
-Current status: active
-Current phase: planned; prerequisite hold
+Current status: completed locally on Linux; Windows rerun pending
+Current phase: three slices implemented and verified on Linux
 
 ## Dependencies
 
@@ -13,23 +13,23 @@ None to review this planned contract. This request creates tasks only; implement
 
 ## Agent next actions
 
-- [ ] Confirm prerequisite acceptance and reread produced APIs/schemas before review-plan.
-- [ ] Review this contract, then implement its first complete operation path.
+- [x] Confirm prerequisite acceptance and reread produced APIs/schemas before review-plan.
+- [x] Review this contract, then implement its first complete operation path.
 
 ## Implementation checklist
 
-- [ ] Add bounded workflow schema/run store and implement intake using imports/transfers/checkup as the first complete slice.
-- [ ] Add setup, weekly checkup, monthly close, and goal review with explicit completion criteria and backup artifact paths.
-- [ ] Add resume/cancel and receipt links; document one-run versus per-operation authorization and preserve user instructions without redundant prompts.
-- [ ] Run section 12 checks, record limitations and evidence, and update dependent task readiness.
+- [x] Add bounded workflow schema/run store and implement intake using imports/transfers/checkup as the first complete slice.
+- [x] Add setup, weekly checkup, monthly close, and goal review with explicit completion criteria and backup artifact paths.
+- [x] Add resume/cancel and receipt links; document one-run versus per-operation authorization and preserve user instructions without redundant prompts.
+- [x] Run section 12 checks, record limitations and evidence, and update dependent task readiness.
 
 ## Acceptance trace
 
-| ID  | Required outcome                                                                                                                      | Evidence      | Status  |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------- |
-| A1  | Fresh headless setup, multi-file intake, and monthly close succeed using disposable budgets with no browser assistance.               | Not collected | Pending |
-| A2  | A crash after import resumes at review/reconciliation instead of reimporting; cancellation preserves accurate partial outcomes.       | Not collected | Pending |
-| A3  | Goal review and scenarios change no saved plan until save; incomplete reconciliation prevents a claim that monthly close is complete. | Not collected | Pending |
+| ID  | Required outcome                                                                                                                      | Evidence                                                                           | Status       |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------ |
+| A1  | Fresh headless setup, multi-file intake, and monthly close succeed using disposable budgets with no browser assistance.               | `workflows.test.mjs`, `src/workflows.test.ts` (`verification-workflows-linux.txt`) | Met on Linux |
+| A2  | A crash after import resumes at review/reconciliation instead of reimporting; cancellation preserves accurate partial outcomes.       | `workflows.test.mjs`, `src/workflows.test.ts` (`verification-workflows-linux.txt`) | Met on Linux |
+| A3  | Goal review and scenarios change no saved plan until save; incomplete reconciliation prevents a claim that monthly close is complete. | `workflows.test.mjs`, `src/workflows.test.ts` (`verification-workflows-linux.txt`) | Met on Linux |
 
 ## Execution decision ledger
 
@@ -38,3 +38,4 @@ Create `execution-decisions.md` only for material choices/departures during impl
 ## Execution log
 
 - 2026-10-02: Created the sequenced task contract. No production implementation or feature verification performed.
+- 2026-10-05 03:50 PT: Implemented `workflow setup|intake|weekly-checkup|monthly-close|goal-review` and `workflow run list|inspect|resume|cancel` over existing reads and guarded changes with device-local resumable run records. Packaged `workflows.test.mjs` 2/2 and unit 4/4 (CLI unit 325) on Linux. Decisions D1-D10. Completed locally on Linux.

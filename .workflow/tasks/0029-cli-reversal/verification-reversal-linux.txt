@@ -1,0 +1,11 @@
+✔ categorization, allocation and cash-target reversals restore before-values and leave later edits alone (14944.248068ms)
+✔ concurrent edits, modified transfer legs and reconciliation locks block unsafe inverses (10463.416943ms)
+✔ merges, deletions and unapplied changes are never reversed and point to backup recovery (8116.487745ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 33587.150967

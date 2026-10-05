@@ -106,8 +106,57 @@ Known baseline: prior cash-planning verification recorded repository-wide format
 
 2026-10-04 checkpoint: guarded category-group creation passes final nine-case local Windows acceptance. Task 0014 remains partial with 19 existing write adapters outstanding.
 
-
 2026-10-04 checkpoint: guarded category-group updates pass final nine-case local Windows acceptance. Task 0014 remains partial with 18 existing write adapters outstanding.
 
-
 2026-10-04 checkpoint: guarded category-group deletion passes final nine-case local Windows acceptance. Task 0014 remains partial with 17 existing write adapters outstanding.
+
+2026-10-04 checkpoint: guarded payee creation passes five-case local Linux acceptance. Task 0014 remains partial with 16 existing write adapters outstanding.
+2026-10-04 checkpoint: guarded payee update/delete/merge and tag create/update/delete pass local Linux packaged acceptance. Task 0014 remains partial with 10 existing write adapters outstanding.
+2026-10-04 checkpoint: guarded rule create/update/delete pass local Linux packaged acceptance. Task 0014 remains partial with 7 existing write adapters outstanding.
+2026-10-04 checkpoint: guarded schedule create/update/delete pass local Linux packaged acceptance. Task 0014 remains partial with 4 existing write adapters outstanding (transactions add/import/full update/delete).
+2026-10-04 checkpoint: guarded transaction deletion and category/payee updates pass local Linux acceptance. transactions.add and transactions.import remain.
+2026-10-04 checkpoint: 0017-cli-query started (its prerequisites 0009 and 0012 are complete; it does not wait on 0014). Slice 1, core schema metadata and pre-execution query validation, is implemented.
+
+2026-10-04 23:53 PT checkpoint: 0017-cli-query is completed locally on Linux (A1-A3 verified with unit and packaged evidence; Windows rerun pending). Dependents 0018, 0020, 0026 and 0027 no longer wait on 0017 but remain held on 0014 and their other prerequisites.
+
+2026-10-05 00:11 PT checkpoint: 0014-cli-mutations is completed locally on Linux. Every existing write adapter is guarded, the full changes.test.mjs regression passes 86/86 and all guarded-* packaged cases pass; the Windows rerun of the Linux-only adapters remains open. ASSUMPTION for Michael to review: dependents may start on this Linux acceptance. 0016-cli-catalog-settings started (notes, typed synced preferences and catalog inspection).
+
+2026-10-05 00:25 PT checkpoint: 0015-cli-accounts is partially implemented on Linux. `accounts inspect` separates on-budget, off-budget and future balances; guarded account groups (create, rename, delete, assign) survive sync; duplicate names resolve as ambiguous. Opening-balance edits reuse guarded transactions.update (D8); 0015 is completed locally on Linux with the Windows rerun open. 0016 packaged notes, preferences and catalog inspection proofs pass 10/10 on Linux.
+
+2026-10-05 00:41 PT checkpoint: 0018-cli-transactions started (ASSUMPTION for Michael to review: 0016's open browser check does not block it). Guarded `transactions categorize` over frozen IDs passes 6/6 packaged cases on Linux, including three process kills. Open in 0018: `transactions get`, guarded split edits and duplicate merge.
+
+2026-10-05 01:14 PT checkpoint: 0016-cli-catalog-settings is completed locally on Linux (browser check for A1 passes in `browser-catalog.test.mjs`). 0018-cli-transactions is completed locally on Linux: guarded categorize, merge, split and clear/unlock plus `transactions get` (0018 D10-D11). 0026-cli-cash-planning is completed locally on Linux: `cash-planning inspect` with transient scenarios and guarded save/reset/target/goal edits, proven in packaged and browser tests. Windows reruns remain open for 0014-0018 and 0026. 0019-cli-transfers and 0020-cli-file-parsing now have every prerequisite completed locally; 0019 starts next.
+
+2026-10-05 01:24 PT checkpoint: 0019-cli-transfers is completed locally on Linux (transfer candidates, inspect, check, guarded match/unmatch/repair; packaged 6/6, API 2/2; decisions D1-D7). 0024-cli-schedules now has all prerequisites completed locally; 0020-cli-file-parsing is ready.
+
+2026-10-05 01:31 PT checkpoint: 0020-cli-file-parsing is completed locally on Linux: the import dialog's mapping rules are shared core code, `imports inspect|parse` normalize files without writes, and `imports mappings get|set|reset` share the dialog's synced preferences (browser round-trip proven). Revised dependency contract (0020 D5): 0021's import preview must freeze the file SHA-256 so a changed file invalidates a prepared import. 0021-cli-imports now has every prerequisite completed locally.
+
+2026-10-05 01:48 PT checkpoint: 0021-cli-imports is completed locally on Linux: guarded `imports.file` (read-only `imports preview` with per-row outcomes and exact versus heuristic match evidence, `imports apply` bound to the file hash, settings and options, `imports history` from the device-local journal) and `imports batch` (per-file receipts, stop at first failure, overlap detection, transfer candidate review). 0022-cli-reconciliation and 0023-cli-rules now have every prerequisite completed locally.
+
+2026-10-05 02:02 PT checkpoint: 0023-cli-rules is completed locally on Linux: `rules test` (import-path evaluation with rule trace, no writes), `rules matches`, and guarded `rules.apply` (the rule editor's apply actions over frozen IDs, with split, delete and new-payee preview). Engine gap recorded for Michael (0023 D3): rules that set a new payee name create it during import previews.
+
+2026-10-05 02:20 PT checkpoint: 0024-cli-schedules is completed locally on Linux: `schedules inspect|upcoming` (engine recurrence occurrences with status, links and posted rows, no writes) and guarded `schedules.post|skip` for the next occurrence with duplicate protection (packaged 12/12, API 1/1; decisions D1-D9). 0025-cli-budgeting now has every prerequisite completed locally.
+
+2026-10-05 02:47 PT checkpoint: 0025-cli-budgeting is completed locally on Linux: guarded `budgets.move` (total preserved, explicit insufficient funds) and `budgets.apply-templates` (preview equals apply, skipped invalid templates listed), read-only `budgets templates` and flag-gated `budgets reservations` (packaged 8/8, API 1/1; D1-D8). 0022-cli-reconciliation is completed locally on Linux: `reconcile status` with statement cutoff, guarded zero-difference `reconcile.finish` over the frozen set and explicit `reconcile.adjust` (packaged 7/7, API 1/1; D1-D7). 0027-cli-reports and 0029-cli-reversal now have every prerequisite completed locally; 0028 waits on 0027.
+
+2026-10-05 03:02 PT checkpoint: 0027-cli-reports is completed locally on Linux: read-only `reports cash-flow|categories|net-worth` from a core report owner with declared scope, completeness and contributing IDs, plus CSV/HTML export with formula-safe escaping (packaged 3/3, API 1/1; D1-D10). 0028-cli-data-quality now has every prerequisite completed locally.
+
+2026-10-05 03:10 PT checkpoint: 0028-cli-data-quality is completed locally on Linux: read-only `checkup data-quality` (stable finding codes with evidence, uncertainty and suggested operations; coverage that stays unknown without statement evidence) and device-local `checkup statement add|list|remove` (packaged 3/3, API 1/1; D1-D9).
+
+2026-10-05 03:21 PT checkpoint: 0029-cli-reversal is completed locally on Linux: `changes inspect` (receipt diagnosis, next steps, backup recovery) and guarded `changes reverse` for `transactions.categorize`, `budgets.move` and `cash-planning.save`, refusing with conflicts when records changed and never reversing merges, deletions or imports (packaged 3/3, unit 5/5; D1-D9).
+
+2026-10-05 03:40 PT checkpoint: 0030-cli-bank-sync is completed locally on Linux: `bank-sync status` (no secrets), `bank-sync refresh` with per-account outcomes for linked accounts only and a consent prerequisite otherwise, and device-local `bank-sync results`; proven with a disposable fake SimpleFIN provider (packaged 1/1, unit 1/1; D1-D7). No real credentials were needed.
+
+Checkpoint 2026-10-05 03:50 PT: 0031 workflows completed locally on Linux. `workflow setup|intake|weekly-checkup|monthly-close|goal-review` run fixed steps over existing reads and guarded changes with resumable run records (`workflow run list|inspect|resume|cancel`); packaged 2/2, unit 325. Windows rerun pending. Decisions D4, D5 and D7 are for Michael.
+
+Checkpoint 2026-10-05 03:54 PT: 0032 automation completed locally on Linux. `jobs create|list|status|run|disable|enable|schedule` import stable routed inbox files through resumable intake runs with dedupe, overlap locking, local results and printed scheduler recipes; packaged 1/1, unit 327. Windows Task Scheduler execution pending. Decisions D3, D4 and D10 are for Michael.
+
+Checkpoint 2026-10-05 03:58 PT: 0033 MCP completed locally on Linux. `actual mcp serve` exposes registry-generated domain tools and resources over stdio and runs each call through the CLI; packaged 2/2 including the official SDK client, unit 331. Live MCP host E2E blocked (no host app or credentials). Decisions D2 and D4 are for Michael.
+
+Checkpoint 2026-10-05 04:03 PT: 0034 distribution completed locally on Linux. Packed API/CLI tarballs install into a clean directory and run first-run workflows; `actual upgrade check` diagnoses device-local schema versions without writing; bash tutorial executed, PowerShell tutorial pending Windows. Packaged 3/3, unit 333. Decisions D2, D3 and D5 are for Michael.
+
+Checkpoint 2026-10-05 04:15 PT: 0035 acceptance completed locally on Linux. Six personal workflows on synthetic Chase, Capital One and Robinhood exports trace to receipts; 6000-row history baseline, bounded output, paging and two-client contention recorded; browser interop 4/4. Fixed a 0031 workflow-finding de-duplication defect. Decisions D2, D3, D6 and D9 are for Michael.
+
+Checkpoint 2026-10-05 09:35 PT: 0036 personal-setup completed locally as fixture-only (D6). Michael declined real personal financial data; A1-A3 met on disposable synthetic Chase/Capital One/Robinhood exports via `integration/personal-setup.test.mjs` (1/1). No real budget opened. Real-budget HITL remains optional if Michael later supplies exports and an explicit budget id.
+
+Checkpoint 2026-10-05 09:55 PT: Windows liftoff verified PowerShell `first-run.ps1`, packed yarn-pack/npm install (172 ops), and `jobs schedule` schtasks dry-run (no `/Create`). Branch `workflow/complete-remaining-tasks` @ 802e9c12d on liftoff.

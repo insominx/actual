@@ -168,8 +168,12 @@ actual accounts list [--include-closed]
 # Create an account
 actual accounts create --name "Checking" [--offbudget] [--balance 50000]
 
-# Update an account
-actual accounts update <id> [--name "New Name"] [--offbudget true]
+# Inspect balances: ledger, cleared, uncleared, reconciled and future activity,
+# with on-budget/off-budget totals, account groups and duplicate names
+actual accounts inspect [--cutoff 2026-01-31] [--include-closed]
+
+# Update an account (use --account-group-id none to ungroup it)
+actual accounts update <id> [--name "New Name"] [--offbudget true] [--account-group-id <id>]
 
 # Close an account (with optional transfer)
 actual accounts close <id> [--transfer-account <id>] [--transfer-category <id>]
@@ -183,6 +187,22 @@ actual accounts delete <id>
 # Get account balance
 actual accounts balance <id> [--cutoff 2026-01-31]
 ```
+
+`accounts inspect` is read-only. Balances mirror the engine's account leaf rows. The cutoff defaults to today; transactions dated after it are reported as `future` with a count and are excluded from `ledger`. Totals count open accounts only, so on-budget money and off-budget equity stay separate. Closed accounts are listed with `--include-closed` but never counted. `sameNameIds` lists other accounts with the same name; resolve names with `actual query resolve accounts <name>`, which reports ambiguous matches instead of guessing.
+
+### Account Groups
+
+```bash
+# List account groups
+actual account-groups list
+
+# Create, rename or delete a group through guarded changes
+actual account-groups create --name "Everyday" --operation-id <unique-id>
+actual account-groups update <id> --name "Daily" --operation-id <unique-id>
+actual account-groups delete <id> --operation-id <unique-id>
+```
+
+Account group writes always use the guarded change protocol and require `--operation-id`. Retrying a committed creation returns the same group. Deleting a group ungroups its member accounts; their balances and transactions are unchanged. Move an account with `actual accounts update <id> --account-group-id <group-id>`.
 
 ### Budgets
 
@@ -213,7 +233,23 @@ actual budgets hold-next-month --month 2026-03 --amount 10000
 
 # Reset held funds
 actual budgets reset-hold --month 2026-03
+
+# Move an allocation (guarded; from/to are category IDs or to-budget)
+actual budgets move --month 2026-03 --from <id> --to <id> --amount 10000 [--allow-overspend] --operation-id <unique-id>
+
+# Templates: what the engine would apply, then apply them (guarded)
+actual budgets templates
+actual budgets apply-templates --month 2026-03 [--force | --categories <id,id>] --operation-id <unique-id>
+
+# Reservation breakdown for the current month (experimental, read-only)
+actual budgets reservations
 ```
+
+`budgets move` is the app's "Transfer to category" (or allocating from To Budget) as a guarded change. The preview shows both sides' budgeted amounts and balances before and after, To Budget, and `totalBudgetedChange` (zero for category to category moves, so the total budgeted is preserved). A move that would leave the source category with a negative balance is refused unless `--allow-overspend` is given, and a move from To Budget larger than To Budget is always refused (the app would silently clamp it). Category moves also add the app's movement line to the month's budget notes. Tracking budgets have no To Budget to move.
+
+`budgets templates` lists the templates the engine would use after its own refresh from category notes (note-managed and UI-managed categories), and the validation errors the app's "Check templates" reports. `budgets apply-templates` previews the per-category allocations and goals the template engine computes, then applies them through the same engine: without flags it fills templated categories that are still at zero, `--force` overwrites every templated category, and `--categories` overwrites only the listed ones. Template engine errors block the preview; invalid template lines the engine skips (as the app does) are listed in `templateErrors`. The app's template refresh (storing parsed note templates) runs at apply and is listed as a side effect. Cash-planning targets are never written by allocation tools.
+
+`budgets reservations` returns the reservation breakdown for the current month. It is experimental and requires `flags.budgetReservations` (`actual preferences set flags.budgetReservations true --operation-id ...`); envelope budgets only.
 
 ### Categories
 
@@ -221,11 +257,14 @@ actual budgets reset-hold --month 2026-03
 # List all categories
 actual categories list
 
+# Inspect categories: duplicates, hidden/deleted rows, merge targets, transaction counts
+actual categories inspect [--include-deleted] [--name <text>]
+
 # Create a category
 actual categories create --name "Groceries" --group-id <id> [--is-income]
 
 # Update a category
-actual categories update <id> [--name "Food"] [--hidden true]
+actual categories update <id> [--name "Food"] [--hidden true] [--group-id <id>]
 
 # Delete a category (with optional transfer)
 actual categories delete <id> [--transfer-to <id>]
@@ -267,7 +306,30 @@ actual transactions update <id> --data '{"notes":"Updated note"}'
 
 # Delete a transaction
 actual transactions delete <id>
+
+# Show one transaction with split children, split balance and transfer counterparts
+actual transactions get <id>
+
+# Set one category on a frozen list of transactions (guarded; "none" clears it)
+actual transactions categorize --ids <id>,<id> --category <id> --operation-id <unique-id> [--allow-reconciled]
+
+# Merge two duplicate transactions (guarded; the engine keeps the imported or earlier one)
+actual transactions merge --ids <id>,<id> --operation-id <unique-id> [--allow-reconciled]
+
+# Split a transaction, or replace its split children (guarded; children must sum to the amount)
+actual transactions split <id> --data '[{"amount":-400,"category":"<id>"},{"amount":-600,"category":"<id>"}]' --operation-id <unique-id> [--allow-reconciled]
+
+# Mark transactions cleared (or --uncleared); --unlock removes the reconciled lock (guarded)
+actual transactions clear --ids <id>,<id> --operation-id <unique-id> [--uncleared] [--unlock]
 ```
+
+`transactions categorize` freezes the selected IDs and their current categories in the preview. Apply rejects the batch with `STALE_PREVIEW` if any record changed after preview, instead of widening or narrowing it. Split parents are rejected (categorize their children), transfers between two on-budget accounts and off-budget transactions cannot take a category, and reconciled transactions need `--allow-reconciled`; the proposal lists them in `reconciledIds`. Rules are not rerun. Preview the same batch with `actual changes preview transactions.categorize --operation-id <unique-id> --data '{"ids":["<id>"],"category":"<id>"}'`.
+
+`transactions split` writes through the shared split helpers. Children take `amount` and optional `category`, `notes` and `payee` (inheriting the parent payee). Their amounts must sum to the parent amount, so an invalid split fails before any write. Re-splitting a parent lists the replaced children in `removedChildIds`; the parent amount, date, account and cleared flag stay unchanged and the parent category is cleared. Split children, transfers and, without `--allow-reconciled`, reconciled transactions are rejected. The receipt outcome lists the new child IDs.
+
+`transactions merge` uses the engine's merge owner. The preview names `keepId` (imported over manual, then the earlier date) and `dropId`, split children that move or are deleted, and transfer counterparts merged by the same rule. Both rows must be in the same account with the same amount, split children cannot be merged, and reconciled rows need `--allow-reconciled`. The kept row fills its empty payee, category, notes and schedule from the dropped row; the dropped row is tombstoned.
+
+`transactions clear` sets the cleared flag on a frozen list of transactions. Reconciled transactions are rejected unless `--unlock` is passed, which removes their reconciled lock (listed in `unlockedIds`); it never marks anything reconciled, which belongs to reconciliation. Select a split parent rather than its children: the children follow the parent's cleared and reconciled state. Amounts, dates, accounts and categories are unchanged and rules are not rerun. To reverse a clearing, run it again with the opposite flag; to reverse a categorization, categorize back to the category in the receipt's `before` record.
 
 ### Payees
 
@@ -277,6 +339,9 @@ actual payees list
 
 # List common payees
 actual payees common
+
+# Inspect payees: duplicates, merged rows and transaction counts
+actual payees inspect [--include-deleted] [--name <text>]
 
 # Create a payee
 actual payees create --name "Grocery Store"
@@ -307,6 +372,258 @@ actual tags update <id> [--tag "trip"] [--color "#00ff00"]
 actual tags delete <id>
 ```
 
+### Notes
+
+```bash
+# Read a note (prints the live target and the text, or null when there is no note)
+actual notes get --account <account-id>
+actual notes get --category <category-id> [--month 2026-10]
+actual notes get --group <group-id>
+actual notes get --month 2026-10
+
+# Replace a note through a guarded change (an operation ID is always required)
+actual notes set --account <account-id> --note "Statement closes on the 3rd" --operation-id <unique-id>
+actual notes set --month 2026-10 --clear --operation-id <unique-id>
+```
+
+Note IDs follow the app: `account-<id>`, a category or group ID, `budget-<YYYY-MM>` for a month and `<category-id>-<YYYY-MM>` for a category's month note; a raw ID can be passed instead of a flag. Targets must be live, so a typo or deleted entity is rejected instead of creating an orphan note. Reading a missing note returns `null` and writes nothing. `notes set` runs the guarded `notes.set` change (`actual changes preview notes.set <note-id> --data '{"note":"text"}'` works too), rejects stale previews and returns a receipt. Category notes can carry `#template` and `#goal` lines, so the preview warns that budget templates reading notes will use the new text.
+
+### Preferences
+
+```bash
+# List synced preferences with scope, authority, allowed values, app default and current value
+actual preferences inspect [key]
+
+# Change or reset an allowlisted preference (an operation ID is always required)
+actual preferences set dateFormat yyyy-MM-dd --operation-id <unique-id>
+actual preferences reset dateFormat --operation-id <unique-id>
+```
+
+Only synced budget preferences are covered; device-local settings never sync and budget metadata such as the name belongs to `budgets rename`. Settable keys are display settings (`dateFormat`, `numberFormat`, `hideFraction`, `isPrivacyEnabled`, `defaultCurrencyCode`, `currencySymbolPosition`, `currencySpaceBetweenAmountAndSymbol`, `firstDayOfWeekIdx`, `upcomingScheduledTransactionLength`, `show-hidden-tags`) and `flags.<feature>` experimental flags, each with validated values. Domain-owned keys are listed with their owner and rejected here: `budgetType`, `cashPlanning` (its typed tool), import mappings and bank sync options. Unknown keys fail. Inspection never writes, and an unset key reports `null` with the app default alongside. `reset` clears the stored value so the app falls back to its default. Changes run the guarded `preferences.set` change (`actual changes preview preferences.set <key> --data '{"value":"..."}'`, or `{"value":null}` to reset).
+
+### Cash Planning
+
+```bash
+# Balances, history averages, category totals, projections and goal dates (read-only)
+actual cash-planning inspect [--start 2026-08-01] [--end 2026-09-30] [--scenario '{"categoryTargets":{"<id>":50000},"goal":{"balance":2000000,"deadline":"2027-06-30"}}']
+
+# Guarded saves of the synced cashPlanning preference (each requires --operation-id)
+actual cash-planning save --data '{"startDate":"2026-08-01","endDate":"2026-09-30","categoryTargets":{},"forecastEndDate":"2027-12-31"}'
+actual cash-planning set-target --category <id> --amount 50000
+actual cash-planning reset-target --category <id>
+actual cash-planning set-goal --balance 2000000 [--deadline 2027-06-30] | --clear
+actual cash-planning reset
+```
+
+`cash-planning inspect` uses the same calculation functions as the Cash planning report. It returns included on-budget balances, history months as calendar fractions, income, outflow and external-movement averages, category totals, the historical and target projections (goal state, completion, depletion and deadline gaps) and the chart points. `--start`, `--end` and `--scenario` are transient: they override the saved plan for this call only and are never stored. With no history in the range, projections are `null` with a warning. Saves validate the whole plan the way the report reads it back and write only the `cashPlanning` preference; transactions, allocations, templates and schedules are unchanged. Removing a target restores that category's unrounded historical average. The edit helpers read the saved plan first, so a concurrent change before apply makes the preview stale rather than being overwritten.
+
+### Transfers
+
+```bash
+# Unlinked opposite entries in different accounts within a date window (read-only)
+actual transfers candidates [--account <id>] [--start 2026-10-01] [--end 2026-10-31] [--days 3] [--limit 200]
+
+# One transaction's link checked from both sides, and a budget-wide link audit (read-only)
+actual transfers inspect <id>
+actual transfers check [--account <id>]
+
+# Guarded link changes (each requires --operation-id)
+actual transfers match --ids <id>,<id> [--allow-reconciled]
+actual transfers unmatch <id> [--allow-reconciled]
+actual transfers repair <id> [--allow-reconciled]
+```
+
+`transfers candidates` pairs unlinked leaf transactions whose amounts cancel, in different accounts, at most `--days` apart. Each pair carries both legs (account, date, payee, imported, cleared and reconciled state), the date gap, a classification and `ambiguous` with the alternative IDs when either leg has more than one candidate. Classifications follow the engine's transfer rule: `internal` (two on-budget accounts, including card payments; net budget cash is unchanged and the category is cleared), `off-budget-internal`, and `budget-boundary` (on-budget to off-budget, such as cash to equity; it moves money out of or into the budget once and keeps its category). Rows whose payee is already a transfer payee are reported by `inspect` and `check`, not offered as candidates.
+
+`transfers match` links two existing entries without adding or deleting a transaction: both get the other account's transfer payee and the link, amounts and dates stay as recorded, and categories are cleared only for internal transfers. Ambiguity is never resolved for you; match the pair you choose, and a leg that is already linked is refused. Split rows are refused (set the child's payee to a transfer payee with `transactions split`), and reconciled rows need `--allow-reconciled`. To record a new transfer, add a transaction with the destination account's transfer payee; the engine creates the counterpart.
+
+`transfers unmatch` unlinks a healthy transfer and keeps both rows as ordinary transactions with no payee, since a transfer payee would relink them on the next edit; delete an unwanted leg with `transactions delete`. `transfers inspect` reports `missing-counterpart`, `not-reciprocal`, `amount-mismatch`, `payee-mismatch`, `same-account` and `unlinked-transfer-payee`, plus the repair that applies: `unlink` removes a broken link from this row only, `resync` makes the counterpart follow this row through the engine's linked transfer update, and `relink` recreates a missing counterpart through the engine's transfer creation (this adds one transaction, disclosed in the preview).
+
+### Reconcile
+
+```bash
+# Cleared balance, difference and the candidates a finish would lock (read-only)
+actual reconcile status <account-id> [--balance 123456] [--date 2026-09-30]
+
+# Lock the candidates when the difference is zero (guarded)
+actual reconcile finish <account-id> --balance 123456 [--date 2026-09-30] --ids <id,id,...> --operation-id <unique-id>
+
+# Explicit balance adjustment (guarded)
+actual reconcile adjust <account-id> --amount -700 [--date 2026-09-30] --operation-id <unique-id>
+```
+
+`reconcile status` uses the app's cleared balance (cleared top-level transactions, so splits count once). `--date` is an explicit statement cutoff: later rows are excluded from the balance and candidates and counted in `clearedAfterCutoffCount`; without it the result matches the app's reconcile bar. `difference` is the statement balance minus the cleared balance, and `candidateIds` are the cleared, unreconciled transactions a finish would lock. `reconcile finish` requires a zero difference and exactly those IDs, so a transaction cleared or edited after the status read makes the request invalid or the preview stale; it locks the candidates and their split children (never the other side of a transfer) and sets the account's last reconciled time. Nothing is ever added to force a match: `reconcile adjust` is a separate, explicit cleared "Reconciliation balance adjustment" transaction (rules run, as in the app). To change a reconciled transaction, unlock it with `actual transactions clear --ids <id> --unlock --operation-id <unique-id>`. Actual keeps no in-progress reconciliation, so there is nothing to cancel: reads and previews write nothing.
+
+### Reports
+
+```bash
+# Monthly on-budget income, expense and net (read-only)
+actual reports cash-flow --from-month 2026-01 --to-month 2026-09 [--accounts <id,id>] [--include-future] [--details]
+
+# Income and spending by category per month (read-only)
+actual reports categories --from-month 2026-01 --to-month 2026-09 [--details]
+
+# Net worth, net cash and tracking balances at each month end (read-only)
+actual reports net-worth --from-month 2026-01 --to-month 2026-09 [--accounts <id,id>]
+
+# Write a self-contained CSV or HTML file instead of printing (never overwrites)
+actual reports cash-flow --from-month 2026-01 --to-month 2026-09 --details --export csv --out ./cash-flow.csv
+```
+
+Every report returns `scope` (range, cutoff, accounts, transfer, split and opening-balance treatment, future-dated handling, currency and integer cents) and `completeness`; when no transaction exists before the range start, `completeness.note` says that earlier periods are unknown, not zero. Ranges are at most 60 months. Future-dated transactions are excluded (the cutoff is today) unless `--include-future` is passed. `cash-flow` and `categories` use on-budget accounts and count split children instead of their parent; transfers between accounts are excluded, and `cash-flow` lists transfers to off-budget accounts separately as `transfersOffBudget`. `categories` nets refunds against their category, keeps deleted categories (flagged `deleted`) and reports uncategorized amounts separately. Both list `contributingIds` (at most 1000, with `contributingTruncated`) and, with `--details`, the contributing rows. `net-worth` reports every account at each month end: `netCash` covers on-budget accounts, `tracking` covers off-budget accounts and `netWorth` is their sum. To compare periods, run a report twice. CSV exports keep cents next to a decimal column, quote every field that needs it and prefix text starting with `=`, `+`, `-`, `@`, a tab or a carriage return with `'` so spreadsheets do not evaluate it; HTML exports escape all text and load nothing external. PDF is not produced; print the HTML instead.
+
+### Reversal and recovery
+
+```bash
+# Diagnose a receipt: state, what it means, safe next steps and reversal support (read-only)
+actual changes inspect <operation-id>
+
+# Compensate a committed change with a new guarded change (retry with the same new ID)
+actual changes reverse <operation-id> --operation-id <new-id> [--preview]
+```
+
+`changes reverse` supports `transactions.categorize` (all changed rows must have had one prior category), `budgets.move` and `cash-planning.save` (including `set-target` and `reset-target`). It builds the inverse from the receipt's before-values, prepares it as a new guarded change under the new operation ID, and refuses with `STALE_PREVIEW` and the list of `conflicts` when the records no longer hold the original after-values (for example a later recategorization, an edited amount, a transfer leg changed through its counterpart, or changed budgeted amounts). Engine refusals, such as a transaction reconciled since, are `INVALID_INPUT`. `--preview` stops after preparing; apply it with `actual changes apply <new-id> --token <token>`. Retrying with the same new ID returns the same receipt and never writes twice. Merges, deletions, imports, added rows, reconciliation finishes, uncertain receipts and changes that were never applied are not reversed: the error explains why and lists backup recovery steps (`backups list`, `backups restore` into a new local budget, `budgets compare`, then explicit changes). A restore never replaces the live budget. `capabilities.reversal` in `actual schema <operation>` is `true` for the reversible operations.
+
+### Bank sync
+
+```bash
+# Linked accounts, last sync, persisted status and provider configuration (read-only, no secrets)
+actual bank-sync status
+
+# Refresh already-linked accounts; one outcome per account
+actual bank-sync refresh [--accounts <id,id>]
+
+# Device-local run records (latest first), or one run
+actual bank-sync results [run-id] [--limit 10]
+```
+
+`bank-sync refresh` runs the engine's bank sync only for open accounts that are already linked to a provider. Each outcome is `imported` (with `addedIds` and `matchedIds`), `no-new-transactions`, `not-linked`, `auth-required`, `rate-limited` (retryable), `attention-required`, `account-missing` or `provider-error`, with a `prerequisite` when you need to act in the app. With no linked accounts the result is a `prerequisite` and no provider is contacted: linking and reauthentication need provider consent in the Actual app, and file imports (`actual imports`) keep working. An empty feed is not verified history coverage; record statement evidence with `actual checkup statement add`. Every run is recorded in `bank-sync-runs/` in the CLI data directory as `committed-local` before the push and `synced` after it; if the push fails, the command returns `PARTIAL_COMPLETION` with the run ID so `actual bank-sync results <run-id>` still shows the outcomes. The legacy `actual server bank-sync` command is unchanged.
+
+### Workflows
+
+```bash
+# New local budget (optional), accounts and categories; one guarded change per item
+actual workflow setup --spec '{"budgetName":"Household","accounts":[{"name":"Checking","offbudget":false,"initialBalance":0}],"categoryGroups":[{"name":"Bills","categories":["Rent"]}]}'
+
+# Import several files (manifest of file, account, settings), then review transfers and data quality
+actual workflow intake manifest.json [--from-month 2026-09 --to-month 2026-09]
+
+# Read-only checkup: data quality (two months), schedules due in 7 days, bank sync status
+actual workflow weekly-checkup [--as-of 2026-09-15]
+
+# Backup, reconcile each statement (finish only with --finish), then review
+actual workflow monthly-close --month 2026-09 --statements '[{"accountId":"<id>","endingBalance":123456}]' [--finish] [--backup-directory ./backups]
+
+# Saved cash plan beside a transient scenario; saves nothing
+actual workflow goal-review [--scenario '{"categoryTargets":{"<id>":50000}}']
+
+# Run records
+actual workflow run list | inspect <run-id> | resume <run-id> | cancel <run-id>
+```
+
+Workflows are fixed sequences of the same reads and guarded changes the other commands use; they never run shell commands or contain their own finance logic. Each run is a device-local record in `workflow-runs/` in the CLI data directory with the budget, the validated input, every step's status (`committed`, `completed`, `unresolved`, `failed`, `not-run`), operation IDs and unresolved items. A mutation step fixes its operation ID (`<run-id>-<step>`) and payload before it runs, so `workflow run resume` never repeats a committed change: an interrupted step replays its receipt from the change journal. Intake binds each file to the SHA-256 observed when the run started. `--stop-after <step>` pauses a run; `cancel` keeps committed steps and marks the rest `not-run`. Running a workflow authorizes the mutations it lists (one run, not one prompt per operation); `monthly-close` finishes a reconciliation only with `--finish` and a zero difference, and `summary.closeComplete` is true only when every statement reconciled. Invalid or ambiguous import rows, unmatched statements, transfer candidates and months without statement evidence stay in `unresolved` and the run ends `needs-review`. Goal review never saves; save a reviewed plan with `actual cash-planning save`.
+
+### Automation jobs
+
+```bash
+# Save a job bound to the selected budget (routes are file-name regexes, first match wins)
+actual jobs create nightly --inbox ~/bank/inbox --processed ~/bank/done --error ~/bank/error \
+  --routes '[{"match":"^checking-.*\\.csv$","account":"<id>","settings":{...}}]' \
+  --allow imports.file [--allow-cross-account] [--stable-seconds 30]
+
+actual jobs run nightly [--dry-run]
+actual jobs status nightly
+actual jobs list
+actual jobs disable nightly | enable nightly
+
+# Print cron, systemd timer and Windows Task Scheduler recipes (installs nothing)
+actual jobs schedule nightly [--every 15] [--executable actual]
+```
+
+A job runs the `intake` workflow with only the mutations it lists (`imports.file`). Each `jobs run` first resumes an interrupted run, then scans the inbox: files named like downloads in progress (`.part`, `.tmp`, `.crdownload`) or modified within `--stable-seconds` stay pending, files without a route stay in the inbox, and content already imported with the same account and settings moves to processed as a duplicate without importing. The same content routed to another account waits for `--allow-cross-account`. Imported files move to processed, failed ones to error; the three directories must be separate. Only one run of a job is active at a time; an overlapping invocation fails with a retryable `job-active` error. Every run writes a local JSON result under `jobs/<name>/results/` in the CLI data directory; external alerts are yours to configure. Job records contain no credentials.
+
+### MCP (optional)
+
+```bash
+# Serve MCP over stdio for an agent host (protocol on stdout, diagnostics on stderr)
+actual --sync-id <id> mcp serve [--domains accounts,transactions,changes,workflow]
+```
+
+Example host configuration:
+
+```json
+{
+  "mcpServers": {
+    "actual": {
+      "command": "actual",
+      "args": ["--sync-id", "<sync-id>", "mcp", "serve"],
+      "env": { "ACTUAL_SERVER_URL": "http://localhost:5006" }
+    }
+  }
+}
+```
+
+Every registered CLI operation is one tool (`accounts list` is `accounts_list`, `cash-planning inspect` is `cash-planning_inspect`) with the same input schema as `actual schema <operation>`, positional arguments as properties, and read-only and destructive annotations. There is no generic execute tool, and `server init/start/stop/logs/bootstrap`, `sync watch` and `profiles set/use` stay CLI-only. Each call runs the CLI with version 2 output and returns its envelope as `structuredContent`, so results, guarded changes, receipts and workflow runs are exactly the CLI's. Unknown tools and invalid inputs fail before anything runs. Resources: `actual://domains`, `actual://operations`, `actual://schema/{tool}`. Cancelling a call stops its process; guarded changes and workflow runs keep their recorded state. Budget selection and credentials come from the serve command's options or environment (prefer `ACTUAL_PASSWORD` or a profile over arguments); tools never take credentials. MCP is optional: nothing in the CLI depends on it.
+
+### Installation, upgrades and tutorials
+
+The CLI needs Node.js 22 or later. It depends on `@actual-app/api`, which uses the native `better-sqlite3` module: npm downloads a prebuilt binary for common platforms (Windows x64, Linux x64/arm64 with glibc, macOS); elsewhere npm builds it, which needs Python and a C++ toolchain. Install with `npm install -g @actual-app/cli` and keep the CLI on the same release line as your server.
+
+Keep secrets out of command lines: set `ACTUAL_SERVER_URL` and `ACTUAL_PASSWORD` (or a session token) in the environment, or save a profile with password and token files (`actual profiles set`). First run against a new server is `actual server bootstrap`, then `actual workflow setup` (see Workflows) or `actual budgets create`.
+
+```bash
+# Before and after upgrading: read-only report of device-local state
+actual upgrade check [--server]
+```
+
+`upgrade check` lists the schema versions of profiles, change receipts, workflow runs, jobs, bank sync runs and statement evidence, and which versions this CLI reads; it also lists prepared or uncertain receipts and unfinished workflow runs to settle before upgrading, and with `--server` compares the server release line. It never rewrites or deletes a file. Every device-local store is at schema version 1; a record written by a newer CLI is reported with the action to install that version, and commands that meet such a record fail with `INVALID_INPUT` instead of reinterpreting it. Budget IDs, sync IDs, import mappings and cash planning live in the budget and are preserved by the engine.
+
+Tutorials: [`examples/first-run.sh`](https://github.com/actualbudget/actual/blob/master/packages/cli/examples/first-run.sh) (bash) and [`examples/first-run.ps1`](https://github.com/actualbudget/actual/blob/master/packages/cli/examples/first-run.ps1) (PowerShell 7.3 or later) create a budget, import a CSV, add a transaction from stdin JSON and make a backup, with paths containing spaces.
+
+### Checkup
+
+```bash
+# Read-only findings and month coverage (never repairs anything)
+actual checkup data-quality --from-month 2026-01 --to-month 2026-09 [--accounts <id,id>] [--duplicate-window 3] [--limit 200]
+
+# Device-local statement evidence used for coverage (not bank verification)
+actual checkup statement add --account <id> --month 2026-08 --ending-balance 123456 [--source "paper statement"] [--import-operation <operation-id>] [--replace]
+actual checkup statement add --account <id> --month 2026-07 --no-activity
+actual checkup statement list
+actual checkup statement remove --account <id> --month 2026-07
+```
+
+Each finding has a stable `code` (`uncategorized`, `deleted-category`, `duplicate-candidate`, `transfer-issue`, `statement-discrepancy`, `coverage-unknown`), a `severity` (errors first), up to 100 record `ids` (`idsTruncated`, `count`), the `evidence` behind it, an `uncertainty` statement and `suggested` supported operations with example commands; the checkup itself never applies them. Duplicate candidates are a heuristic (same account and amount within the window, split children and transfers left out, rows with two different bank import IDs never paired). Transfer findings come from `transfers inspect`. Coverage lists every account and month: `observed` (rows exist, not verified), `statement-verified` (recorded evidence matches the ledger balance at month end, or a no-activity month really has no rows), `discrepancy`, or `unknown`; a month with no rows is never reported complete without evidence. Statement evidence is stored per budget in `statement-evidence.json` in the CLI data directory, and is a user declaration, not a bank check. Closed accounts are checked only when named in `--accounts`.
+
+### Imports
+
+```bash
+# Inspect or parse an import file without importing (read-only)
+actual imports inspect statement.csv [--account <id>] [--no-saved] [--settings '{"fields":{"date":"Posted","payee":"Who","outflow":"Debit","inflow":"Credit"},"dateFormat":"dd mm yyyy","delimiter":";"}'] [--limit 20]
+actual imports parse statement.ofx [--account <id>] [--limit 1000]
+
+# Saved per-account import settings (guarded writes require --operation-id)
+actual imports mappings get --account <id> [--format csv]
+actual imports mappings set --account <id> [--format csv] --settings '{"fields":{...},"dateFormat":"dd mm yyyy","flipAmount":true}'
+actual imports mappings reset --account <id> [--format csv]
+
+# Import a file into an account (preview is read-only; apply is guarded)
+actual imports preview statement.ofx --account <id> [--settings '{...}'] [--no-saved] [--skip-invalid] [--no-reimport-deleted|--reimport-deleted] [--uncleared] [--payee-names original]
+actual imports apply statement.ofx --account <id> --operation-id <unique-id> [--expect-sha256 <hash>] [same options]
+actual imports batch manifest.json --operation-id <id> [--dry-run] [--no-reimport-deleted] [--uncleared] [--payee-names original]
+actual imports history [--operation-id <id>]
+```
+
+Import inspection runs the same parser as the import dialog (CSV and TSV, QIF, OFX and QFX, and CAMT.053 XML) and the same shared field-mapping, date and amount rules, so a candidate here is what the dialog would import. The result reports the format, size and SHA-256 of the file, the settings used with the source of each (`request`, `saved`, `detected` or `default`), CSV columns, the date range of valid rows, and each row with its normalized transaction (date, integer amount, payee, notes, category name and the OFX/QFX transaction ID as `imported_id`) or its errors. Rows with unparseable dates, malformed amounts or missing mapped columns are reported, never dropped. When several date formats parse every row (for example `03/04/2026`), nothing is normalized until you pass `settings.dateFormat`. Files over 10 MiB and unsupported types are rejected. Inspection never writes to the budget.
+
+CSV settings are `fields` (map `date`, `amount` or `outflow`/`inflow`, `payee`, `notes`, `inOut`, `category` to column names), `dateFormat` (`yyyy mm dd`, `yy mm dd`, `mm dd yyyy`, `mm dd yy`, `dd mm yyyy`, `dd mm yy`), `delimiter`, `encoding`, `hasHeaderRow`, `skipStartLines`, `skipEndLines`, `inOutMode` with `outValue`, and `flipAmount` (for card exports with positive charges). QIF uses `dateFormat`, `flipAmount` and `swapPayeeAndMemo`; OFX/QFX uses `swapPayeeAndMemo` and `fallbackMissingPayeeToMemo`. `multiplier` applies to one inspection only. `imports mappings set` stores settings in the same synced preferences, with the same serialization, that the import dialog reads and writes, so a mapping saved from the CLI is the dialog's next default and the reverse. Supported formats are those of the parser; no institution-specific export is claimed.
+
+`imports preview` parses the file as `imports inspect` does and then plans the import through the same engine path as the import dialog and `transactions import`: rules run, duplicates are matched, and nothing is written. Each row gets an outcome: `add`, `update` (matched and changed, for example gaining its imported ID), `duplicate` (matched with nothing to change), `reconciled` (matched a locked row, left alone), `deleted` (matched a deleted row while deleted rows are not reimported), or `invalid` with its errors. A matched row names the transaction it matched and how: `imported_id` (exact bank ID), `payee_date_amount` or `date_amount`. The last two are the engine's heuristic matching within seven days and the same amount; review them before applying. The preview also lists the planned new and updated rows after rules, new payee names, category names that match no category, the file hash and the resolved settings and options (`defaultCleared`, `reimportDeleted` resolved from the account preference when not given, `payeeNameNormalization`, `invalidRows`). A file with any invalid row is rejected unless `--skip-invalid` is given; files over 1000 rows are rejected.
+
+`imports apply` is a guarded change. Its proposal freezes the file hash, resolved settings and options; apply prepares again and rejects with `STALE_PREVIEW` if the file, the saved mapping, an option or the affected ledger changed, so a token from `changes preview imports.file --data '{"path":"/abs/statement.ofx","accountId":"..."}'` never imports a different file. `--expect-sha256` with the hash from `imports preview` rejects a direct apply whose file changed since you reviewed it. The commit is verified against the planned rows. `imports history` lists the file imports in this device's change journal with their hash, settings, options, planned summary and result; it reads only the local journal, so imports made in the browser or on another device are not listed.
+
+`imports batch` takes a JSON manifest, an array of up to 20 entries `{"file":"bank.ofx","account":"<id>","settings":{...},"useSaved":true,"skipInvalid":false}` with paths relative to the manifest. Each file is its own guarded import with operation ID `<id>-1`, `<id>-2` and so on, applied in order so later files are matched against rows committed by earlier ones. The batch stops at the first failure with `PARTIAL_COMPLETION`: the error details list committed, failed and not-attempted files. Rerunning with the same `--operation-id` returns stored receipts for committed files and never replays an uncertain one. After importing, the result lists transfer candidates (see `transfers candidates`) over the imported date range of each account; nothing is linked automatically. `--dry-run` previews every file against the current ledger and lists rows of later files that duplicate a row of an earlier file for the same account (`overlaps`); it does not list transfer candidates because the new rows do not exist yet.
+
 ### Rules
 
 ```bash
@@ -327,7 +644,18 @@ actual rules update --data '{"id":"...","stage":"pre",...}'
 
 # Delete a rule
 actual rules delete <id>
+
+# Test the rules on a sample transaction (read-only)
+actual rules test --data '{"account":"<id>","date":"2026-10-04","amount":-450,"payee_name":"coffee bar"}' [--payee-names original]
+
+# Transactions a rule selects now, then apply its actions to a frozen list (guarded)
+actual rules matches <ruleId> [--limit 500]
+actual rules apply <ruleId> --ids <id1,id2> --operation-id <unique-id> [--allow-reconciled]
 ```
+
+`rules test` runs the sample through the same steps as an imported row: the payee name is normalized and resolved (title case by default, as imports do), then the rules run in their engine order (stage `pre`, then default, then `post`). It returns the sample as resolved, the result, the fields that changed, the rules whose actions ran in order with their definitions, and payee names an import would create (including a name set by a rule). Nothing is written: no payee is created and no rule is learned. Use it to check that a merchant is categorized before importing.
+
+`rules apply` is the rule editor's "apply actions" as a guarded change: the rule's actions (including splits, formulas and `delete-transaction`) are applied to the listed transactions only; other rules and category learning do not run. Preview (`changes preview rules.apply --data '{"ruleId":"...","ids":[...]}'`) lists each row before and after, split children as `newChildOf` with their position, deletions as `tombstone`, and payee names that would be created. Every listed transaction must still match the rule's conditions and must not be a split parent (a splitting rule also excludes split children). Reconciled transactions need `--allow-reconciled`. Apply rejects with `STALE_PREVIEW` if the rule, the transactions or the ledger changed since preview, and verifies the written rows against the plan. `rules matches` lists the candidate IDs, newest first.
 
 ### Schedules
 
@@ -343,7 +671,19 @@ actual schedules update <id> --data '{"name":"Updated Rent"}' [--reset-next-date
 
 # Delete a schedule
 actual schedules delete <id>
+
+# Occurrences in a window (default today through 30 days), with status
+actual schedules upcoming [--start 2026-10-01 --end 2026-12-31] [--account <id>] [--include-completed]
+actual schedules inspect <id> [--start ... --end ...]
+
+# Post or skip the next occurrence (guarded; version 2)
+actual schedules post <id> --date <next-date> [--today] --operation-id <unique-id>
+actual schedules skip <id> --date <next-date> --operation-id <unique-id>
 ```
+
+Schedules record bills; these commands never pay anything. `schedules upcoming` and `schedules inspect` compute occurrences with the engine's recurrence helpers (the ones that advance `next_date`), so month-end patterns, leap days, weekday patterns and weekend skipping match the app. Each schedule reports its status (`missed`, `due`, `upcoming`, `paid`, `scheduled`, `completed`), whether it posts automatically (`postsTransaction`), its account, payee, transfer account and category, the amount rule, the occurrences in the window (at most 100, `occurrencesTruncated` when cut) and transactions already posted for it in the window. The window is at most three years.
+
+`schedules post` adds the next occurrence's transaction exactly as the app's "Post transaction" does: rules run and a transfer schedule creates the counterpart. `--date` must be the schedule's current next date, and an occurrence that already has a linked transaction is rejected, so a retry with a new operation ID cannot post twice (the same ID replays the receipt). Posting does not change `next_date`; as in the app, the schedule shows the occurrence as paid. `schedules skip` advances `next_date` past the named occurrence with the same recurrence and adds nothing. Both are also available as `changes preview schedules.post|schedules.skip --data '{"id":"...","date":"YYYY-MM-DD"}'`. Editing or deleting a schedule never changes transactions already posted for it.
 
 ### Query (ActualQL)
 
@@ -351,11 +691,19 @@ Run queries using [ActualQL](./actual-ql/index.md).
 
 #### Subcommands
 
-| Subcommand             | Description                       |
-| ---------------------- | --------------------------------- |
-| `query run`            | Execute an AQL query              |
-| `query tables`         | List available tables             |
-| `query fields <table>` | List fields and types for a table |
+| Subcommand                     | Description                                    |
+| ------------------------------ | ---------------------------------------------- |
+| `query run`                    | Execute an AQL query                           |
+| `query tables`                 | List available tables                          |
+| `query fields <table>`         | List fields and types for a table              |
+| `query resolve <table> <text>` | Find entities by id or name; reports ambiguity |
+| `query aggregate`              | Split-aware totals by category                 |
+
+With `--output-version 2`, `query tables` and `query fields` read table, field, operator and function metadata from the core query schema, and `query run` compiles the query against that schema before connecting; an unknown table, field, path, operator or function, or a condition with several operators (only the first would apply; use `$and`), returns `INVALID_INPUT`. Version 2 results are `{ rows, page, snapshot }`: pages default to 1000 rows (maximum 10000), `page.truncated` and `page.nextCursor` describe continuation, non-aggregate queries get a final `id` tie-breaker, and repeating the same query with `--cursor <nextCursor>` continues it. If the budget changed since the previous page, `snapshot.changedSinceCursor` is true and a warning is added; use `--require-fresh` when another client may be writing.
+
+`query resolve accounts "checking"` matches an exact id, then a case-insensitive exact name, then a substring, and returns `status` `unique`, `ambiguous` or `none` with the matches. Supported tables: accounts, payees, categories, category_groups, schedules, tags.
+
+`query aggregate --start 2026-08-01 --end 2026-08-31 [--account <id>] [--splits leaves|parents]` returns engine totals by category with inflow and outflow. Transfers, starting balances and uncategorized rows are separate groups; deleted categories are marked `deleted` and missing ones `unavailable`. The grouped total always equals the engine total for the same scope.
 
 #### `query run` Options
 
@@ -631,6 +979,12 @@ Guarded category updates use `actual changes preview categories.update <category
 Direct version 2 `categories update` requires `--operation-id` and returns `success`, `id` and `receipt`. Its existing name and hidden options retain their meaning. Acknowledged retries preserve later edits rather than repeating the old update. Unknown outcomes never replay. Legacy output remains unchanged.
 
 Guarded category creation uses `actual changes preview categories.create --operation-id <unique-id> --data '{"name":"Groceries","group_id":"group-id","is_income":false,"hidden":false}'`. Omit the target ID argument. Name and group ID are required; both flags default to false. Preview binds the destination group, canonical sibling ordering and source state without creating rows. Apply creates the category and self mapping through the core owner and returns their actual IDs plus reordered sibling IDs.
+
+Guarded payee creation uses `actual changes preview payees.create --operation-id <unique-id> --data '{"name":"Corner Grocer"}'`. Omit the target ID argument. The name keeps its exact spelling, and duplicate or empty names follow the existing API behavior. A supplied `transfer_acct` retains the existing ignored creation semantics and never creates a transfer payee. Preview binds the full source state without writing. Apply creates the payee and its self mapping through the core owner and returns their actual generated IDs. Direct version 2 `payees create` requires `--operation-id` and returns `id` and `receipt`. Acknowledged retries do not recreate the payee; unknown outcomes never replay; receipts without a complete payee and mapping acknowledgement remain retained. Legacy output remains `{ id }`.
+
+Guarded payee updates use `actual changes preview payees.update <payee-id> --operation-id <unique-id> --data '{"name":"New name"}'`; only a non-empty name is accepted, and transfer, missing or deleted payees are rejected. Guarded payee deletion uses `changes preview payees.delete <payee-id> --data '{}'`; transfer payees stay unchanged and the preview says so. Guarded merges use `changes preview payees.merge <target-id> --data '{"mergeIds":["id-1","id-2"]}'`; sources must be unique, live and exclude the target, transfer sources are skipped and listed, and the preview lists every mapping that will point at the target. Guarded tags use `tags.create` (payload `{"tag":"name","color":null,"description":null}`, no target ID), `tags.update <tag-id>` (any of `tag`, `color`, `description`) and `tags.delete <tag-id> --data '{}'`. Tag names cannot contain whitespace or `#`; creating a name held by a live tag is rejected, while a deleted tag with that name is revived. Tag changes never rewrite transaction notes. Direct version 2 `payees update|delete|merge` and `tags create|update|delete` require `--operation-id` and return a receipt; `tags create` also returns the actual tag `id`. Legacy outputs are unchanged. Guarded rules use `changes preview rules.create --data '<rule>'` (all of `stage`, `conditionsOp`, `conditions`, `actions`; no target ID), `rules.update <rule-id> --data '<fields>'` (any subset, merged over the stored rule) and `rules.delete <rule-id> --data '{}'`. Rules are validated like the legacy API, rules that belong to a schedule cannot be edited or deleted this way, and existing transactions are never re-run. Direct version 2 `rules create|update|delete` require `--operation-id`; `rules create` returns the actual rule `id`. Guarded schedules use `changes preview schedules.create --data '<schedule>'` (explicit live `payee` and `account`, `posts_transaction`, `amountOp`, `date`; no target ID), `schedules.update <schedule-id> --data '{"fields":{...},"resetNextDate":false}'` and `schedules.delete <schedule-id> --data '{}'`. The preview binds the exact linked rule conditions and actions; the next date is recomputed by the owner at apply. Direct version 2 `schedules create|update|delete` require `--operation-id`; `schedules create` returns the actual schedule `id`. Guarded transaction deletion uses `changes preview transactions.delete <transaction-id> --data '{}'`; it deletes a top-level transaction or a whole split (never a single split child), and the preview lists every transfer counterpart that will be deleted or unlinked. Direct version 2 `transactions delete` requires `--operation-id`. Guarded `transactions.update` also accepts `category` (live category or null) and `payee` (live non-transfer payee); edits that would link or unlink a transfer, or set a category on a split parent, transfer or off-budget row, are rejected.
+
+Guarded transaction additions use `actual changes preview transactions.add <account-id> --operation-id <unique-id> --data '[{"date":"2026-10-01","amount":-1250}]'`. The account must be live and open. Preview shows the planned rows after rules and split expansion; transfers are not run and categories are not learned. Guarded imports use `changes preview transactions.import <account-id>` with the same array payload; preview lists matched updates and new rows, and apply verifies the committed result against that plan. Direct version 2 `transactions add` and `transactions import` use the guarded path only when `--operation-id` is supplied and then return the acknowledged ids and `receipt`; without it they keep their existing behavior.
 
 Direct version 2 `categories create` requires `--operation-id` and returns `id` and `receipt`. Acknowledged retries preserve later category edits and do not create another category. Unknown creation outcomes never replay. Receipts with missing or incomplete generated identities remain retained. Legacy output remains `{ id }`.
 

@@ -1,0 +1,20 @@
+✔ schedule inspection computes month-end, leap-day, pattern, weekend and transfer occurrences without writing (16527.668793ms)
+✔ posting an occurrence is idempotent, imports treat it as a duplicate, and schedule edits keep history (12097.273734ms)
+✔ guarded schedule post preserves raw domains and acknowledgements (online) (7042.8905ms)
+✔ guarded schedule post preserves raw domains and acknowledgements (offline) (7267.84474ms)
+✔ killed guarded schedule post at before-engine retains its exact outcome without replay (37801.894086ms)
+✔ killed guarded schedule post at after-engine retains its exact outcome without replay (38328.93043ms)
+✔ killed guarded schedule post at before-sync retains its exact outcome without replay (38350.420999ms)
+✔ guarded schedule skip preserves raw domains and acknowledgements (online) (6953.312448ms)
+✔ guarded schedule skip preserves raw domains and acknowledgements (offline) (7174.027034ms)
+✔ killed guarded schedule skip at before-engine retains its exact outcome without replay (38369.095605ms)
+✔ killed guarded schedule skip at after-engine retains its exact outcome without replay (37821.109928ms)
+✔ killed guarded schedule skip at before-sync retains its exact outcome without replay (38664.334419ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 286467.555118

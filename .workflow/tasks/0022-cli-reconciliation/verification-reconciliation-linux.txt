@@ -1,0 +1,23 @@
+✔ allocation moves preserve the total, refuse insufficient funds and survive sync (13408.634521ms)
+✔ template preview matches apply without writing and invalid templates fail clearly (14707.696805ms)
+✔ reservations are read-only and flag-gated (6766.42149ms)
+✔ guarded allocation move preserves raw domains and acknowledgements (online) (6633.671806ms)
+✔ guarded allocation move preserves raw domains and acknowledgements (offline) (6559.485559ms)
+✔ killed guarded allocation move at before-engine retains its exact outcome without replay (37753.705368ms)
+✔ killed guarded allocation move at after-engine retains its exact outcome without replay (36771.56439ms)
+✔ killed guarded allocation move at before-sync retains its exact outcome without replay (37779.254265ms)
+✔ status matches the app cleared balance, cutoff excludes later rows, and only a zero difference with the frozen set finishes (10629.477147ms)
+✔ adjustments and unlocks are explicit and last reconciled survives sync (11603.599048ms)
+✔ guarded reconciliation adjustment preserves raw domains and acknowledgements (online) (5710.229809ms)
+✔ guarded reconciliation adjustment preserves raw domains and acknowledgements (offline) (5642.220689ms)
+✔ killed guarded reconciliation adjustment at before-engine retains its exact outcome without replay (35926.177109ms)
+✔ killed guarded reconciliation adjustment at after-engine retains its exact outcome without replay (36259.822345ms)
+✔ killed guarded reconciliation adjustment at before-sync retains its exact outcome without replay (36286.705954ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 160445.045485

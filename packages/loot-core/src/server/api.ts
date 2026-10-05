@@ -49,19 +49,18 @@ import type {
   BudgetHoldRequest,
   BudgetMetadataProposal,
   BudgetMetadataRequest,
+  BudgetMoveRequest,
   BudgetPublicationOutcome,
   BudgetPublicationProposal,
   BudgetPublicationRequest,
   BudgetRestoreProposal,
   BudgetRestoreRequest,
+  BudgetTemplatesRequest,
   CategoryCreationOutcome,
   CategoryCreationProposal,
   CategoryCreationRequest,
   CategoryDeletionProposal,
   CategoryDeletionRequest,
-  PayeeCreationOutcome,
-  PayeeCreationProposal,
-  PayeeCreationRequest,
   CategoryGroupCreationOutcome,
   CategoryGroupCreationProposal,
   CategoryGroupCreationRequest,
@@ -71,6 +70,10 @@ import type {
   CategoryGroupUpdateRequest,
   CategoryUpdateProposal,
   CategoryUpdateRequest,
+  ChangeProposal,
+  PayeeCreationOutcome,
+  PayeeCreationProposal,
+  PayeeCreationRequest,
   TransactionUpdateOutcome,
   TransactionUpdateProposal,
   TransactionUpdateRequest,
@@ -85,11 +88,29 @@ import type {
 import type { ServerHandlers } from '#types/server-handlers';
 
 import {
+  performAccountGroupCreation,
+  performAccountGroupDeletion,
+  performAccountGroupUpdate,
+  prepareAccountGroupCreation,
+  prepareAccountGroupDeletion,
+  prepareAccountGroupUpdate,
+} from './account-groups/guarded';
+import {
   inspectAccountClosure,
   makeAccountClosingTransaction,
   performAccountClosure,
 } from './accounts/app';
+import { bankSyncRefresh, bankSyncStatus } from './accounts/bank-sync-status';
+import type { BankSyncRunners } from './accounts/bank-sync-status';
+import { inspectAccounts } from './accounts/inspect';
 import { inspectStartingBalancePayee } from './accounts/payees';
+import {
+  performReconcileAdjust,
+  performReconcileFinish,
+  prepareReconcileAdjust,
+  prepareReconcileFinish,
+  reconciliationStatus,
+} from './accounts/reconcile';
 import { addTransactions } from './accounts/sync';
 import {
   accountGroupModel,
@@ -103,11 +124,7 @@ import {
   scheduleModel,
   tagModel,
 } from './api-models';
-import type {
-  AmountOPType,
-  APIAccountEntity,
-  APIScheduleEntity,
-} from './api-models';
+import type { APIAccountEntity, APIScheduleEntity } from './api-models';
 import { aqlQuery } from './aql';
 import {
   inspectBudgetAmount,
@@ -130,23 +147,138 @@ import {
   prepareCategoryUpdate,
 } from './budget/app';
 import {
+  budgetReservations,
+  inspectTemplates,
+  performBudgetMove,
+  performTemplateApplication,
+  prepareBudgetMove,
+  prepareTemplateApplication,
+} from './budget/guarded-allocation';
+import {
   copySourceIgnoredTables,
   inspectCopySource,
 } from './budgetfiles/copy-source';
+import {
+  inspectCashPlan,
+  performCashPlanSave,
+  prepareCashPlanSave,
+} from './cash-planning/plan';
+import { inspectCatalog } from './catalog-inspect';
+import { dataQualityCheckup } from './checkup/data-quality';
 import * as cloudStorage from './cloud-storage';
 import type { RemoteFile } from './cloud-storage';
 import * as db from './db';
 import { APIError, withErrorCode } from './errors';
+import { guardedApply, guardedSourceHash } from './guarded-proposal';
 import { importActual } from './importers/actual';
 import { runMutator } from './mutators';
+import {
+  performNoteSet,
+  prepareNoteSet,
+  readNote,
+  resolveNoteTarget,
+} from './notes/guarded';
 import {
   inspectPayeeCreation,
   createPayee as performPayeeCreation,
 } from './payees/app';
+import {
+  performPayeeDeletion,
+  performPayeeMerge,
+  performPayeeUpdate,
+  preparePayeeDeletion,
+  preparePayeeMerge,
+  preparePayeeUpdate,
+} from './payees/guarded';
+import {
+  inspectPreferences,
+  performPreferenceSet,
+  preparePreferenceSet,
+} from './preferences/catalog';
 import * as prefs from './prefs';
+import {
+  cashFlowReport,
+  categoryReport,
+  netWorthReport,
+} from './reports/ledger-reports';
+import { findRuleMatches, testRules } from './rules/evaluate';
+import {
+  performRuleCreation,
+  performRuleDeletion,
+  performRuleUpdate,
+  prepareRuleCreation,
+  prepareRuleDeletion,
+  prepareRuleUpdate,
+} from './rules/guarded';
+import { performRuleApply, prepareRuleApply } from './rules/guarded-apply';
+import { applyApiScheduleFields } from './schedules/api-fields';
+import {
+  performScheduleCreation,
+  performScheduleDeletion,
+  performScheduleUpdate,
+  prepareScheduleCreation,
+  prepareScheduleDeletion,
+  prepareScheduleUpdate,
+} from './schedules/guarded';
+import {
+  performSchedulePost,
+  performScheduleSkip,
+  prepareSchedulePost,
+  prepareScheduleSkip,
+} from './schedules/guarded-occurrence';
+import { inspectSchedules } from './schedules/inspect';
 import { getServer } from './server-config';
 import * as sheet from './sheet';
 import { batchMessages, getSyncStatus, setSyncingMode } from './sync';
+import {
+  performTagCreation,
+  performTagDeletion,
+  performTagUpdate,
+  prepareTagCreation,
+  prepareTagDeletion,
+  prepareTagUpdate,
+} from './tags/guarded';
+import {
+  performTransactionAddition,
+  prepareTransactionAddition,
+} from './transactions/guarded-add';
+import {
+  performTransactionCategorization,
+  prepareTransactionCategorization,
+} from './transactions/guarded-categorize';
+import {
+  performTransactionClearing,
+  prepareTransactionClearing,
+} from './transactions/guarded-clear';
+import {
+  performTransactionDeletion,
+  prepareTransactionDeletion,
+} from './transactions/guarded-delete';
+import {
+  performTransactionImport,
+  prepareTransactionImport,
+} from './transactions/guarded-import';
+import {
+  performTransactionMerge,
+  prepareTransactionMerge,
+} from './transactions/guarded-merge';
+import {
+  performTransactionSplit,
+  prepareTransactionSplit,
+} from './transactions/guarded-split';
+import {
+  performFileImport,
+  prepareFileImport,
+} from './transactions/import/guarded-file-import';
+import {
+  importPreferenceKeys,
+  inspectImportFile,
+  savedImportSettings,
+} from './transactions/import/inspect-file';
+import {
+  performImportMappingSave,
+  prepareImportMappingSave,
+} from './transactions/import/mapping-save';
 import { planLinkedTransferUpdate } from './transactions/linked-transfer-plan';
 import {
   getTransferredAccount,
@@ -154,6 +286,19 @@ import {
   prepareTransferTransaction,
   transferClearsCategory,
 } from './transactions/transfer';
+import {
+  performTransferMatch,
+  performTransferRepair,
+  performTransferUnmatch,
+  prepareTransferMatch,
+  prepareTransferRepair,
+  prepareTransferUnmatch,
+} from './transfers/guarded';
+import {
+  auditTransfers,
+  findTransferCandidates,
+  inspectTransfer,
+} from './transfers/inspect';
 
 let IMPORT_MODE = false;
 
@@ -1522,6 +1667,14 @@ handlers['api/query'] = async function ({ query }) {
   return aqlQuery(query);
 };
 
+// Read-only fingerprint of the persistent budget tables (the same source
+// fingerprint guarded previews bind). Any committed change, local-only or
+// synchronized, changes it.
+handlers['api/query-snapshot'] = async function () {
+  checkFileOpen();
+  return { marker: await guardedSourceHash() };
+};
+
 handlers['api/budget-months'] = async function () {
   checkFileOpen();
   const { start, end } = await handlers['get-budget-bounds']();
@@ -2095,6 +2248,54 @@ async function inspectTransactionReferences(transactions: TransactionEntity[]) {
   );
 }
 
+// Category and payee edits stay inside the existing transfer-free plan: a
+// payee change that would link or unlink a transfer, a category on a transfer,
+// split parent or off-budget row, and unknown or deleted references are
+// rejected before any plan is built.
+async function inspectGuardedClassification(
+  transaction: TransactionEntity,
+  fields: TransactionUpdateRequest['fields'],
+) {
+  if (fields.category !== undefined) {
+    if (transaction.is_parent || transaction.transfer_id) {
+      throw APIError(
+        'Category edits are not supported on split parents or transfers',
+      );
+    }
+    const account = await db.first<Pick<db.DbAccount, 'offbudget'>>(
+      'SELECT offbudget FROM accounts WHERE id = ?',
+      [transaction.account],
+    );
+    if (fields.category !== null && account?.offbudget) {
+      throw APIError('Off-budget transactions cannot carry a category');
+    }
+    if (
+      fields.category !== null &&
+      !(await db.first(
+        'SELECT id FROM categories WHERE id = ? AND tombstone = 0',
+        [fields.category],
+      ))
+    ) {
+      throw APIError('Category does not exist');
+    }
+  }
+  if (fields.payee !== undefined) {
+    if (transaction.transfer_id) {
+      throw APIError('Changing a transfer payee requires a repair operation');
+    }
+    const payee = await db.first<Pick<db.DbPayee, 'transfer_acct'>>(
+      'SELECT transfer_acct FROM payees WHERE id = ? AND tombstone = 0',
+      [fields.payee],
+    );
+    if (!payee) {
+      throw APIError('Payee does not exist');
+    }
+    if (payee.transfer_acct) {
+      throw APIError('Transfer linking requires a separate repair operation');
+    }
+  }
+}
+
 async function prepareTransactionUpdate(
   request: TransactionUpdateRequest,
 ): Promise<TransactionUpdateProposal> {
@@ -2120,6 +2321,10 @@ async function prepareTransactionUpdate(
           return !Number.isSafeInteger(value);
         case 'cleared':
           return typeof value !== 'boolean';
+        case 'category':
+          return value !== null && (typeof value !== 'string' || !value);
+        case 'payee':
+          return typeof value !== 'string' || !value;
         case 'date':
           return (
             typeof value !== 'string' ||
@@ -2133,7 +2338,7 @@ async function prepareTransactionUpdate(
     })
   ) {
     throw APIError(
-      'This guarded update supports notes, amount, date, and cleared only',
+      'This guarded update supports notes, amount, date, cleared, category, and payee only',
     );
   }
   const { data } = await aqlQuery(
@@ -2145,6 +2350,7 @@ async function prepareTransactionUpdate(
   const transactions = ungroupTransactions(data);
   const transaction = transactions.find(row => row.id === request.id);
   if (!transaction) throw APIError('Transaction not found');
+  await inspectGuardedClassification(transaction, request.fields);
   const splitReferences = await inspectTransactionReferences(transactions);
   const linked = new Map<
     string,
@@ -3065,6 +3271,451 @@ handlers['api/payee-apply-creation'] = withMutation(
     };
   },
 );
+
+// Guarded payee and tag catalog adapters. Owners provide read-only plans and
+// canonical writers; guardedApply owns identity, staleness and receipts.
+function guardedCatalogHandlers<
+  Request,
+  Proposal extends ChangeProposal,
+  Outcome,
+>(
+  prepare: (request: Request) => Promise<Proposal>,
+  apply: (proposal: Proposal) => Promise<Outcome>,
+) {
+  return {
+    preview: withMutation(async (request: Request) => {
+      checkFileOpen();
+      return prepare(request);
+    }),
+    apply: withMutation(async (proposal: Proposal) => {
+      checkFileOpen();
+      return apply(proposal);
+    }),
+  };
+}
+{
+  const payeeUpdate = guardedCatalogHandlers(
+    preparePayeeUpdate,
+    guardedApply({
+      operation: 'payees.update',
+      noun: 'Payee update',
+      prepare: preparePayeeUpdate,
+      perform: performPayeeUpdate,
+    }),
+  );
+  handlers['api/payee-preview-update'] = payeeUpdate.preview;
+  handlers['api/payee-apply-update'] = payeeUpdate.apply;
+  const payeeDeletion = guardedCatalogHandlers(
+    preparePayeeDeletion,
+    guardedApply({
+      operation: 'payees.delete',
+      noun: 'Payee deletion',
+      prepare: preparePayeeDeletion,
+      perform: performPayeeDeletion,
+    }),
+  );
+  handlers['api/payee-preview-deletion'] = payeeDeletion.preview;
+  handlers['api/payee-apply-deletion'] = payeeDeletion.apply;
+  const payeeMerge = guardedCatalogHandlers(
+    preparePayeeMerge,
+    guardedApply({
+      operation: 'payees.merge',
+      noun: 'Payee merge',
+      prepare: preparePayeeMerge,
+      perform: performPayeeMerge,
+    }),
+  );
+  handlers['api/payee-preview-merge'] = payeeMerge.preview;
+  handlers['api/payee-apply-merge'] = payeeMerge.apply;
+  const tagCreation = guardedCatalogHandlers(
+    prepareTagCreation,
+    guardedApply({
+      operation: 'tags.create',
+      noun: 'Tag creation',
+      prepare: prepareTagCreation,
+      perform: performTagCreation,
+    }),
+  );
+  handlers['api/tag-preview-creation'] = tagCreation.preview;
+  handlers['api/tag-apply-creation'] = tagCreation.apply;
+  const tagUpdate = guardedCatalogHandlers(
+    prepareTagUpdate,
+    guardedApply({
+      operation: 'tags.update',
+      noun: 'Tag update',
+      prepare: prepareTagUpdate,
+      perform: performTagUpdate,
+    }),
+  );
+  handlers['api/tag-preview-update'] = tagUpdate.preview;
+  handlers['api/tag-apply-update'] = tagUpdate.apply;
+  const tagDeletion = guardedCatalogHandlers(
+    prepareTagDeletion,
+    guardedApply({
+      operation: 'tags.delete',
+      noun: 'Tag deletion',
+      prepare: prepareTagDeletion,
+      perform: performTagDeletion,
+    }),
+  );
+  handlers['api/tag-preview-deletion'] = tagDeletion.preview;
+  handlers['api/tag-apply-deletion'] = tagDeletion.apply;
+  const noteSet = guardedCatalogHandlers(
+    prepareNoteSet,
+    guardedApply({
+      operation: 'notes.set',
+      noun: 'Note change',
+      prepare: prepareNoteSet,
+      perform: performNoteSet,
+    }),
+  );
+  handlers['api/note-preview-set'] = noteSet.preview;
+  handlers['api/note-apply-set'] = noteSet.apply;
+  const preferenceSet = guardedCatalogHandlers(
+    preparePreferenceSet,
+    guardedApply({
+      operation: 'preferences.set',
+      noun: 'Preference change',
+      prepare: preparePreferenceSet,
+      perform: performPreferenceSet,
+    }),
+  );
+  handlers['api/preference-preview-set'] = preferenceSet.preview;
+  handlers['api/preference-apply-set'] = preferenceSet.apply;
+  const accountGroupCreation = guardedCatalogHandlers(
+    prepareAccountGroupCreation,
+    guardedApply({
+      operation: 'account-groups.create',
+      noun: 'Account group creation',
+      prepare: prepareAccountGroupCreation,
+      perform: performAccountGroupCreation,
+    }),
+  );
+  handlers['api/account-group-preview-creation'] = accountGroupCreation.preview;
+  handlers['api/account-group-apply-creation'] = accountGroupCreation.apply;
+  const accountGroupUpdate = guardedCatalogHandlers(
+    prepareAccountGroupUpdate,
+    guardedApply({
+      operation: 'account-groups.update',
+      noun: 'Account group update',
+      prepare: prepareAccountGroupUpdate,
+      perform: performAccountGroupUpdate,
+    }),
+  );
+  handlers['api/account-group-preview-update'] = accountGroupUpdate.preview;
+  handlers['api/account-group-apply-update'] = accountGroupUpdate.apply;
+  const accountGroupDeletion = guardedCatalogHandlers(
+    prepareAccountGroupDeletion,
+    guardedApply({
+      operation: 'account-groups.delete',
+      noun: 'Account group deletion',
+      prepare: prepareAccountGroupDeletion,
+      perform: performAccountGroupDeletion,
+    }),
+  );
+  handlers['api/account-group-preview-deletion'] = accountGroupDeletion.preview;
+  handlers['api/account-group-apply-deletion'] = accountGroupDeletion.apply;
+  const transactionImport = guardedCatalogHandlers(
+    prepareTransactionImport,
+    guardedApply({
+      operation: 'transactions.import',
+      noun: 'Transaction import',
+      prepare: prepareTransactionImport,
+      perform: performTransactionImport,
+    }),
+  );
+  handlers['api/transactions-preview-import'] = transactionImport.preview;
+  handlers['api/transactions-apply-import'] = transactionImport.apply;
+  const transactionAddition = guardedCatalogHandlers(
+    prepareTransactionAddition,
+    guardedApply({
+      operation: 'transactions.add',
+      noun: 'Transaction addition',
+      prepare: prepareTransactionAddition,
+      perform: performTransactionAddition,
+    }),
+  );
+  handlers['api/transactions-preview-addition'] = transactionAddition.preview;
+  handlers['api/transactions-apply-addition'] = transactionAddition.apply;
+  const transactionDeletion = guardedCatalogHandlers(
+    prepareTransactionDeletion,
+    guardedApply({
+      operation: 'transactions.delete',
+      noun: 'Transaction deletion',
+      prepare: prepareTransactionDeletion,
+      perform: performTransactionDeletion,
+    }),
+  );
+  handlers['api/transaction-preview-deletion'] = transactionDeletion.preview;
+  handlers['api/transaction-apply-deletion'] = transactionDeletion.apply;
+  const transactionCategorization = guardedCatalogHandlers(
+    prepareTransactionCategorization,
+    guardedApply({
+      operation: 'transactions.categorize',
+      noun: 'Transaction categorization',
+      prepare: prepareTransactionCategorization,
+      perform: performTransactionCategorization,
+    }),
+  );
+  handlers['api/transactions-preview-categorization'] =
+    transactionCategorization.preview;
+  handlers['api/transactions-apply-categorization'] =
+    transactionCategorization.apply;
+  const transactionClearing = guardedCatalogHandlers(
+    prepareTransactionClearing,
+    guardedApply({
+      operation: 'transactions.clear',
+      noun: 'Transaction clearing',
+      prepare: prepareTransactionClearing,
+      perform: performTransactionClearing,
+    }),
+  );
+  handlers['api/transactions-preview-clearing'] = transactionClearing.preview;
+  handlers['api/transactions-apply-clearing'] = transactionClearing.apply;
+  const importMappingSave = guardedCatalogHandlers(
+    prepareImportMappingSave,
+    guardedApply({
+      operation: 'imports.mapping-save',
+      noun: 'Import mapping save',
+      prepare: prepareImportMappingSave,
+      perform: performImportMappingSave,
+    }),
+  );
+  handlers['api/import-mapping-preview-save'] = importMappingSave.preview;
+  handlers['api/import-mapping-apply-save'] = importMappingSave.apply;
+  const fileImport = guardedCatalogHandlers(
+    prepareFileImport,
+    guardedApply({
+      operation: 'imports.file',
+      noun: 'File import',
+      prepare: prepareFileImport,
+      perform: performFileImport,
+    }),
+  );
+  handlers['api/import-file-preview'] = fileImport.preview;
+  handlers['api/import-file-apply'] = fileImport.apply;
+  const ruleApply = guardedCatalogHandlers(
+    prepareRuleApply,
+    guardedApply({
+      operation: 'rules.apply',
+      noun: 'Rule application',
+      prepare: prepareRuleApply,
+      perform: performRuleApply,
+    }),
+  );
+  handlers['api/rules-preview-apply'] = ruleApply.preview;
+  handlers['api/rules-apply'] = ruleApply.apply;
+  const schedulePost = guardedCatalogHandlers(
+    prepareSchedulePost,
+    guardedApply({
+      operation: 'schedules.post',
+      noun: 'Schedule post',
+      prepare: prepareSchedulePost,
+      perform: performSchedulePost,
+    }),
+  );
+  handlers['api/schedules-preview-post'] = schedulePost.preview;
+  handlers['api/schedules-post'] = schedulePost.apply;
+  const scheduleSkip = guardedCatalogHandlers(
+    prepareScheduleSkip,
+    guardedApply({
+      operation: 'schedules.skip',
+      noun: 'Schedule skip',
+      prepare: prepareScheduleSkip,
+      perform: performScheduleSkip,
+    }),
+  );
+  handlers['api/schedules-preview-skip'] = scheduleSkip.preview;
+  handlers['api/schedules-skip'] = scheduleSkip.apply;
+  const prepareMoveInMonth = async (request: BudgetMoveRequest) => {
+    if (typeof request?.month === 'string') await validateMonth(request.month);
+    return prepareBudgetMove(request);
+  };
+  const budgetMove = guardedCatalogHandlers(
+    prepareMoveInMonth,
+    guardedApply({
+      operation: 'budgets.move',
+      noun: 'Allocation move',
+      prepare: prepareMoveInMonth,
+      perform: performBudgetMove,
+    }),
+  );
+  handlers['api/budget-preview-move'] = budgetMove.preview;
+  const reconcileFinish = guardedCatalogHandlers(
+    prepareReconcileFinish,
+    guardedApply({
+      operation: 'reconcile.finish',
+      noun: 'Reconciliation',
+      prepare: prepareReconcileFinish,
+      perform: performReconcileFinish,
+    }),
+  );
+  handlers['api/reconcile-preview-finish'] = reconcileFinish.preview;
+  handlers['api/reconcile-finish'] = reconcileFinish.apply;
+  const reconcileAdjust = guardedCatalogHandlers(
+    prepareReconcileAdjust,
+    guardedApply({
+      operation: 'reconcile.adjust',
+      noun: 'Reconciliation adjustment',
+      prepare: prepareReconcileAdjust,
+      perform: performReconcileAdjust,
+    }),
+  );
+  handlers['api/reconcile-preview-adjust'] = reconcileAdjust.preview;
+  handlers['api/reconcile-adjust'] = reconcileAdjust.apply;
+  handlers['api/budget-move'] = budgetMove.apply;
+  const prepareTemplatesInMonth = async (request: BudgetTemplatesRequest) => {
+    if (typeof request?.month === 'string') await validateMonth(request.month);
+    return prepareTemplateApplication(request);
+  };
+  const templateApplication = guardedCatalogHandlers(
+    prepareTemplatesInMonth,
+    guardedApply({
+      operation: 'budgets.apply-templates',
+      noun: 'Template application',
+      prepare: prepareTemplatesInMonth,
+      perform: performTemplateApplication,
+    }),
+  );
+  handlers['api/budget-preview-templates'] = templateApplication.preview;
+  handlers['api/budget-apply-templates'] = templateApplication.apply;
+  const transferMatch = guardedCatalogHandlers(
+    prepareTransferMatch,
+    guardedApply({
+      operation: 'transfers.match',
+      noun: 'Transfer match',
+      prepare: prepareTransferMatch,
+      perform: performTransferMatch,
+    }),
+  );
+  handlers['api/transfers-preview-match'] = transferMatch.preview;
+  handlers['api/transfers-apply-match'] = transferMatch.apply;
+  const transferUnmatch = guardedCatalogHandlers(
+    prepareTransferUnmatch,
+    guardedApply({
+      operation: 'transfers.unmatch',
+      noun: 'Transfer unmatch',
+      prepare: prepareTransferUnmatch,
+      perform: performTransferUnmatch,
+    }),
+  );
+  handlers['api/transfers-preview-unmatch'] = transferUnmatch.preview;
+  handlers['api/transfers-apply-unmatch'] = transferUnmatch.apply;
+  const transferRepair = guardedCatalogHandlers(
+    prepareTransferRepair,
+    guardedApply({
+      operation: 'transfers.repair',
+      noun: 'Transfer repair',
+      prepare: prepareTransferRepair,
+      perform: performTransferRepair,
+    }),
+  );
+  handlers['api/transfers-preview-repair'] = transferRepair.preview;
+  handlers['api/transfers-apply-repair'] = transferRepair.apply;
+  const transactionMerge = guardedCatalogHandlers(
+    prepareTransactionMerge,
+    guardedApply({
+      operation: 'transactions.merge',
+      noun: 'Transaction merge',
+      prepare: prepareTransactionMerge,
+      perform: performTransactionMerge,
+    }),
+  );
+  handlers['api/transactions-preview-merge'] = transactionMerge.preview;
+  handlers['api/transactions-apply-merge'] = transactionMerge.apply;
+  const transactionSplit = guardedCatalogHandlers(
+    prepareTransactionSplit,
+    guardedApply({
+      operation: 'transactions.split',
+      noun: 'Transaction split',
+      prepare: prepareTransactionSplit,
+      perform: performTransactionSplit,
+    }),
+  );
+  handlers['api/transactions-preview-split'] = transactionSplit.preview;
+  handlers['api/transactions-apply-split'] = transactionSplit.apply;
+  const cashPlanSave = guardedCatalogHandlers(
+    prepareCashPlanSave,
+    guardedApply({
+      operation: 'cash-planning.save',
+      noun: 'Cash plan save',
+      prepare: prepareCashPlanSave,
+      perform: performCashPlanSave,
+    }),
+  );
+  handlers['api/cash-planning-preview-save'] = cashPlanSave.preview;
+  handlers['api/cash-planning-apply-save'] = cashPlanSave.apply;
+  handlers['api/cash-planning-inspect'] = async request => {
+    checkFileOpen();
+    return inspectCashPlan(request);
+  };
+  const scheduleCreation = guardedCatalogHandlers(
+    prepareScheduleCreation,
+    guardedApply({
+      operation: 'schedules.create',
+      noun: 'Schedule creation',
+      prepare: prepareScheduleCreation,
+      perform: performScheduleCreation,
+    }),
+  );
+  handlers['api/schedule-preview-creation'] = scheduleCreation.preview;
+  handlers['api/schedule-apply-creation'] = scheduleCreation.apply;
+  const scheduleUpdate = guardedCatalogHandlers(
+    prepareScheduleUpdate,
+    guardedApply({
+      operation: 'schedules.update',
+      noun: 'Schedule update',
+      prepare: prepareScheduleUpdate,
+      perform: performScheduleUpdate,
+    }),
+  );
+  handlers['api/schedule-preview-update'] = scheduleUpdate.preview;
+  handlers['api/schedule-apply-update'] = scheduleUpdate.apply;
+  const scheduleDeletion = guardedCatalogHandlers(
+    prepareScheduleDeletion,
+    guardedApply({
+      operation: 'schedules.delete',
+      noun: 'Schedule deletion',
+      prepare: prepareScheduleDeletion,
+      perform: performScheduleDeletion,
+    }),
+  );
+  handlers['api/schedule-preview-deletion'] = scheduleDeletion.preview;
+  handlers['api/schedule-apply-deletion'] = scheduleDeletion.apply;
+  const ruleCreation = guardedCatalogHandlers(
+    prepareRuleCreation,
+    guardedApply({
+      operation: 'rules.create',
+      noun: 'Rule creation',
+      prepare: prepareRuleCreation,
+      perform: performRuleCreation,
+    }),
+  );
+  handlers['api/rule-preview-creation'] = ruleCreation.preview;
+  handlers['api/rule-apply-creation'] = ruleCreation.apply;
+  const ruleUpdate = guardedCatalogHandlers(
+    prepareRuleUpdate,
+    guardedApply({
+      operation: 'rules.update',
+      noun: 'Rule update',
+      prepare: prepareRuleUpdate,
+      perform: performRuleUpdate,
+    }),
+  );
+  handlers['api/rule-preview-update'] = ruleUpdate.preview;
+  handlers['api/rule-apply-update'] = ruleUpdate.apply;
+  const ruleDeletion = guardedCatalogHandlers(
+    prepareRuleDeletion,
+    guardedApply({
+      operation: 'rules.delete',
+      noun: 'Rule deletion',
+      prepare: prepareRuleDeletion,
+      perform: performRuleDeletion,
+    }),
+  );
+  handlers['api/rule-preview-deletion'] = ruleDeletion.preview;
+  handlers['api/rule-apply-deletion'] = ruleDeletion.apply;
+}
 
 async function prepareGuardedCategoryGroupCreation(
   request: CategoryGroupCreationRequest,
@@ -4390,6 +5041,135 @@ handlers['api/note-get'] = async function ({ id }) {
   return handlers['notes-get']({ id });
 };
 
+// Read-only: resolves a note ID to its live target and returns the stored
+// text, or null when no note exists. A missing note is never created.
+handlers['api/note-target'] = async function ({ id }) {
+  checkFileOpen();
+  const target = await resolveNoteTarget(id);
+  const row = await readNote(id);
+  return { target, note: row?.note ?? null };
+};
+
+// Read-only typed preference catalog with current values; unset keys report
+// null and nothing is written.
+handlers['api/preferences-inspect'] = async function ({ key } = {}) {
+  checkFileOpen();
+  return inspectPreferences(key);
+};
+
+// Read-only catalog inspection with hidden/deleted status, mapping targets,
+// resolved transaction counts and same-name duplicates.
+handlers['api/catalog-inspect'] = async function (arg) {
+  checkFileOpen();
+  return inspectCatalog(arg);
+};
+
+// Read-only account inspection: engine balances split by cleared, reconciled
+// and future activity, on/off-budget totals and duplicate names.
+handlers['api/accounts-inspect'] = async function (arg) {
+  checkFileOpen();
+  return inspectAccounts(arg);
+};
+
+// Read-only transfer review: unlinked candidate pairs with evidence and
+// ambiguity, one transaction's link checked from both sides, and a
+// budget-wide audit of broken links.
+// Read-only import file inspection through the dialog's parser and shared
+// mapping rules, and the account's saved import settings.
+handlers['api/import-file-inspect'] = async function (arg) {
+  checkFileOpen();
+  return inspectImportFile(arg);
+};
+handlers['api/import-mapping-get'] = async function (arg) {
+  checkFileOpen();
+  const account = arg?.account;
+  const format = arg?.format === 'qfx' ? 'ofx' : arg?.format;
+  if (typeof account !== 'string' || !account) {
+    throw APIError('account is required');
+  }
+  if (!['csv', 'qif', 'ofx', 'xml'].includes(format)) {
+    throw APIError('format must be csv, qif, ofx, qfx or xml');
+  }
+  return {
+    account,
+    format,
+    keys: importPreferenceKeys(account, format),
+    settings: await savedImportSettings(account, format),
+  };
+};
+
+handlers['api/rules-matches'] = async function (arg) {
+  checkFileOpen();
+  return findRuleMatches(arg);
+};
+function bankSyncRunners(): BankSyncRunners {
+  return {
+    single: ids => handlers['accounts-bank-sync']({ ids }),
+    simpleFin: ids => handlers['simplefin-batch-sync']({ ids }),
+    status: {
+      goCardless: () => handlers['gocardless-status'](),
+      simpleFin: () => handlers['simplefin-status'](),
+      pluggyai: () => handlers['pluggyai-status'](),
+    },
+  };
+}
+handlers['api/bank-sync-status'] = async function () {
+  checkFileOpen();
+  return bankSyncStatus(bankSyncRunners());
+};
+handlers['api/bank-sync-refresh'] = async function (arg) {
+  checkFileOpen();
+  return bankSyncRefresh(arg, bankSyncRunners());
+};
+handlers['api/checkup-data-quality'] = async function (arg) {
+  checkFileOpen();
+  return dataQualityCheckup(arg);
+};
+handlers['api/reports-cash-flow'] = async function (arg) {
+  checkFileOpen();
+  return cashFlowReport(arg);
+};
+handlers['api/reports-categories'] = async function (arg) {
+  checkFileOpen();
+  return categoryReport(arg);
+};
+handlers['api/reports-net-worth'] = async function (arg) {
+  checkFileOpen();
+  return netWorthReport(arg);
+};
+handlers['api/reconcile-status'] = async function (arg) {
+  checkFileOpen();
+  return reconciliationStatus(arg);
+};
+handlers['api/budget-templates'] = async function () {
+  checkFileOpen();
+  return inspectTemplates();
+};
+handlers['api/budget-reservations'] = async function (arg) {
+  checkFileOpen();
+  return budgetReservations(arg ?? {});
+};
+handlers['api/schedules-inspect'] = async function (arg) {
+  checkFileOpen();
+  return inspectSchedules(arg ?? {});
+};
+handlers['api/rules-test'] = async function (arg) {
+  checkFileOpen();
+  return testRules(arg);
+};
+handlers['api/transfers-candidates'] = async function (arg) {
+  checkFileOpen();
+  return findTransferCandidates(arg ?? {});
+};
+handlers['api/transfers-inspect'] = async function (arg) {
+  checkFileOpen();
+  return inspectTransfer(arg?.id);
+};
+handlers['api/transfers-audit'] = async function (arg) {
+  checkFileOpen();
+  return auditTransfers(arg ?? {});
+};
+
 handlers['api/note-update'] = withMutation(async function ({ id, note }) {
   checkFileOpen();
   return handlers['notes-save']({ id, note });
@@ -4560,120 +5340,7 @@ handlers['api/schedule-update'] = withMutation(async function ({
   }
 
   const sched = data[0] as ScheduleEntity;
-  let conditionsUpdated = false;
-  // Find all indices to avoid direct assignment
-  const payeeIndex = sched._conditions.findIndex(c => c.field === 'payee');
-  const accountIndex = sched._conditions.findIndex(c => c.field === 'account');
-  const dateIndex = sched._conditions.findIndex(c => c.field === 'date');
-  const amountIndex = sched._conditions.findIndex(c => c.field === 'amount');
-
-  for (const key in fields) {
-    const typedKey = key as keyof APIScheduleEntity;
-    const value = fields[typedKey];
-
-    switch (typedKey) {
-      case 'name': {
-        const newName = String(value);
-        const { data: existing } = await aqlQuery(
-          q('schedules').filter({ name: newName }).select('*'),
-        );
-        if (!existing || existing.length === 0 || existing[0].id === sched.id) {
-          sched.name = newName;
-          conditionsUpdated = true;
-        } else {
-          throw APIError(`There is already a schedule named: ${newName}`);
-        }
-        break;
-      }
-      case 'next_date':
-      case 'completed': {
-        throw APIError(
-          `Field ${typedKey} is system-managed and not user-editable.`,
-        );
-      }
-      case 'posts_transaction': {
-        sched.posts_transaction = Boolean(value);
-        conditionsUpdated = true;
-        break;
-      }
-      case 'payee': {
-        if (payeeIndex !== -1) {
-          sched._conditions[payeeIndex].value = value;
-          conditionsUpdated = true;
-        } else {
-          sched._conditions.push({
-            field: 'payee',
-            op: 'is',
-            value: String(value),
-          });
-          conditionsUpdated = true;
-        }
-        break;
-      }
-      case 'account': {
-        if (accountIndex !== -1) {
-          sched._conditions[accountIndex].value = value;
-          conditionsUpdated = true;
-        } else {
-          sched._conditions.push({
-            field: 'account',
-            op: 'is',
-            value: String(value),
-          });
-          conditionsUpdated = true;
-        }
-        break;
-      }
-      case 'amountOp': {
-        if (amountIndex !== -1) {
-          let convertedOp: AmountOPType;
-          switch (value) {
-            case 'is':
-              convertedOp = 'is';
-              break;
-            case 'isapprox':
-              convertedOp = 'isapprox';
-              break;
-            case 'isbetween':
-              convertedOp = 'isbetween';
-              break;
-            default:
-              throw APIError(
-                `Invalid amount operator: ${String(value)}. Expected: is, isapprox, or isbetween`,
-              );
-          }
-          sched._conditions[amountIndex].op = convertedOp;
-          conditionsUpdated = true;
-        } else {
-          throw APIError(`Ammount can not be found. There is a bug here`);
-        }
-        break;
-      }
-      case 'amount': {
-        if (amountIndex !== -1) {
-          sched._conditions[amountIndex].value = value;
-          conditionsUpdated = true;
-        } else {
-          throw APIError(`Ammount can not be found. There is a bug here`);
-        }
-        break;
-      }
-      case 'date': {
-        if (dateIndex !== -1) {
-          sched._conditions[dateIndex].value = value;
-          conditionsUpdated = true;
-        } else {
-          throw APIError(
-            `Date can not be found. Schedules can not be created without a date there is a bug here`,
-          );
-        }
-        break;
-      }
-      default: {
-        throw APIError(`Unhandled field: ${typedKey}`);
-      }
-    }
-  }
+  const conditionsUpdated = await applyApiScheduleFields(sched, fields);
 
   if (conditionsUpdated) {
     return handlers['schedule/update']({

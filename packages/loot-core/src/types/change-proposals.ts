@@ -1,9 +1,13 @@
-import type { TransactionEntity } from './models';
+import type { NewRuleEntity, TransactionEntity } from './models';
+import type { CashPlanningConfig } from './models/cash-planning';
 
 export type TransactionUpdateRequest = {
   id: string;
   fields: Partial<
-    Pick<TransactionEntity, 'notes' | 'amount' | 'date' | 'cleared'>
+    Pick<
+      TransactionEntity,
+      'notes' | 'amount' | 'date' | 'cleared' | 'category' | 'payee'
+    >
   >;
 };
 
@@ -47,6 +51,654 @@ export type PayeeCreationOutcome =
   | (Extract<TransactionUpdateOutcome, { status: 'committed-local' }> & {
       payeeCreation: { payeeId: string; mappingId: string };
     });
+
+type CatalogProposal<Operation extends string, Request, Before, After> = {
+  schemaVersion: 1;
+  operation: Operation;
+  budget: TransactionUpdateProposal['budget'];
+  request: Request;
+  before: { sourceHash: string } & Before;
+  after: After;
+  references: unknown;
+  sideEffects: string[];
+};
+type CatalogCommit<Extra> =
+  | Extract<TransactionUpdateOutcome, { status: 'rejected' }>
+  | (Extract<TransactionUpdateOutcome, { status: 'committed-local' }> & Extra);
+
+export type PayeeUpdateRequest = { id: string; fields: { name: string } };
+export type PayeeUpdateProposal = CatalogProposal<
+  'payees.update',
+  PayeeUpdateRequest,
+  { payee: Record<string, unknown> },
+  { payee: Record<string, unknown> }
+>;
+
+export type PayeeDeletionRequest = { id: string };
+export type PayeeDeletionProposal = CatalogProposal<
+  'payees.delete',
+  PayeeDeletionRequest,
+  { payee: Record<string, unknown> },
+  { action: 'tombstone' | 'unchanged-transfer-payee' }
+>;
+
+export type PayeeMergeRequest = { targetId: string; mergeIds: string[] };
+export type PayeeMergeProposal = CatalogProposal<
+  'payees.merge',
+  PayeeMergeRequest,
+  {
+    target: Record<string, unknown>;
+    sources: Array<Record<string, unknown>>;
+  },
+  {
+    action: 'merge' | 'unchanged-transfer-target';
+    mergedIds: string[];
+    skippedTransferIds: string[];
+    mappings: Array<{ id: string; targetId: string }>;
+  }
+>;
+export type PayeeMergeOutcome = CatalogCommit<{
+  payeeMerge: { targetId: string; mergedIds: string[] };
+}>;
+
+export type TagCreationRequest = {
+  tag: string;
+  color?: string | null;
+  description?: string | null;
+};
+export type TagCreationProposal = CatalogProposal<
+  'tags.create',
+  TagCreationRequest,
+  { existing: Record<string, unknown> | null },
+  {
+    action: 'insert' | 'revive';
+    tag: Record<string, unknown>;
+  }
+>;
+export type TagCreationOutcome = CatalogCommit<{
+  tagCreation: { tagId: string; action: 'insert' | 'revive' };
+}>;
+
+export type TagUpdateRequest = {
+  id: string;
+  fields: { tag?: string; color?: string | null; description?: string | null };
+};
+export type TagUpdateProposal = CatalogProposal<
+  'tags.update',
+  TagUpdateRequest,
+  { tag: Record<string, unknown> },
+  { tag: Record<string, unknown> }
+>;
+
+export type TagDeletionRequest = { id: string };
+export type TagDeletionProposal = CatalogProposal<
+  'tags.delete',
+  TagDeletionRequest,
+  { tag: Record<string, unknown> },
+  { action: 'tombstone' }
+>;
+
+export type NoteTarget =
+  | {
+      kind: 'account' | 'category' | 'category-group';
+      id: string;
+      name: string;
+    }
+  | { kind: 'month'; month: string }
+  | { kind: 'category-month'; id: string; name: string; month: string };
+export type NoteSetRequest = { id: string; note: string };
+export type NoteSetProposal = CatalogProposal<
+  'notes.set',
+  NoteSetRequest,
+  { note: { id: string; note: string | null } | null },
+  { target: NoteTarget; note: { id: string; note: string } }
+>;
+
+export type AccountGroupCreationRequest = { name: string };
+export type AccountGroupCreationProposal = CatalogProposal<
+  'account-groups.create',
+  AccountGroupCreationRequest,
+  Record<never, never>,
+  { group: Record<string, unknown> }
+>;
+export type AccountGroupCreationOutcome = CatalogCommit<{
+  accountGroupCreation: { groupId: string };
+}>;
+export type AccountGroupUpdateRequest = {
+  id: string;
+  fields: { name: string };
+};
+export type AccountGroupUpdateProposal = CatalogProposal<
+  'account-groups.update',
+  AccountGroupUpdateRequest,
+  { group: Record<string, unknown> },
+  { group: Record<string, unknown> }
+>;
+export type AccountGroupDeletionRequest = { id: string };
+export type AccountGroupDeletionProposal = CatalogProposal<
+  'account-groups.delete',
+  AccountGroupDeletionRequest,
+  { group: Record<string, unknown> },
+  { action: 'tombstone'; ungroupedAccountIds: string[] }
+>;
+
+export type PreferenceSetRequest = { id: string; value: string | null };
+export type PreferenceSetProposal = CatalogProposal<
+  'preferences.set',
+  PreferenceSetRequest,
+  { preference: { id: string; value: string | null } | null },
+  {
+    description: Record<string, unknown>;
+    preference: { id: string; value: string | null };
+  }
+>;
+
+export type RuleFieldsRequest = Omit<NewRuleEntity, 'stage' | 'tombstone'> & {
+  stage: NewRuleEntity['stage'] | 'default';
+};
+export type RuleCreationRequest = RuleFieldsRequest;
+export type RuleCreationProposal = CatalogProposal<
+  'rules.create',
+  RuleCreationRequest,
+  object,
+  { rule: Record<string, unknown> }
+>;
+export type RuleCreationOutcome = CatalogCommit<{
+  ruleCreation: { ruleId: string };
+}>;
+
+export type RuleUpdateRequest = {
+  id: string;
+  fields: Partial<RuleFieldsRequest>;
+};
+export type RuleUpdateProposal = CatalogProposal<
+  'rules.update',
+  RuleUpdateRequest,
+  { rule: Record<string, unknown> },
+  { rule: Record<string, unknown> }
+>;
+
+export type RuleDeletionRequest = { id: string };
+export type RuleDeletionProposal = CatalogProposal<
+  'rules.delete',
+  RuleDeletionRequest,
+  { rule: Record<string, unknown> },
+  { action: 'tombstone' }
+>;
+
+export type ScheduleCreationRequest = {
+  name?: string | null;
+  posts_transaction: boolean;
+  payee: string;
+  account: string;
+  amount?: number | { num1: number; num2: number };
+  amountOp: 'is' | 'isapprox' | 'isbetween';
+  date: unknown;
+};
+export type ScheduleCreationProposal = CatalogProposal<
+  'schedules.create',
+  ScheduleCreationRequest,
+  object,
+  { schedule: Record<string, unknown>; rule: Record<string, unknown> }
+>;
+export type ScheduleCreationOutcome = CatalogCommit<{
+  scheduleCreation: { scheduleId: string; ruleId: string };
+}>;
+
+export type ScheduleUpdateRequest = {
+  id: string;
+  fields: Record<string, unknown>;
+  resetNextDate?: boolean;
+};
+export type ScheduleUpdateProposal = CatalogProposal<
+  'schedules.update',
+  ScheduleUpdateRequest,
+  { schedule: Record<string, unknown>; rule: Record<string, unknown> },
+  { schedule: Record<string, unknown>; rule: Record<string, unknown> }
+>;
+
+export type ScheduleDeletionRequest = { id: string };
+export type ScheduleDeletionProposal = CatalogProposal<
+  'schedules.delete',
+  ScheduleDeletionRequest,
+  { schedule: Record<string, unknown>; rule: Record<string, unknown> },
+  { action: 'tombstone'; ruleId: string }
+>;
+
+export type TransactionDeletionRequest = { id: string };
+export type TransactionDeletionProposal = CatalogProposal<
+  'transactions.delete',
+  TransactionDeletionRequest,
+  { transaction: Record<string, unknown> },
+  {
+    deletedIds: string[];
+    transferDeletedIds: string[];
+    transferUnlinkedIds: string[];
+  }
+>;
+
+export type TransactionCategorizationRequest = {
+  ids: string[];
+  category: string | null;
+  allowReconciled?: boolean;
+};
+export type TransactionCategorizationProposal = CatalogProposal<
+  'transactions.categorize',
+  TransactionCategorizationRequest,
+  {
+    transactions: Array<{
+      id: string;
+      account: string;
+      amount: number;
+      date: number;
+      category: string | null;
+      parentId: string | null;
+      transferId: string | null;
+      reconciled: boolean;
+    }>;
+  },
+  {
+    category: { id: string; name: string } | null;
+    changedIds: string[];
+    unchangedIds: string[];
+    reconciledIds: string[];
+  }
+>;
+
+export type TransactionClearingRequest = {
+  ids: string[];
+  cleared: boolean;
+  unlock?: boolean;
+};
+export type TransactionClearingProposal = CatalogProposal<
+  'transactions.clear',
+  TransactionClearingRequest,
+  {
+    transactions: Array<{
+      id: string;
+      account: string;
+      amount: number;
+      date: number;
+      parentId: string | null;
+      cleared: boolean;
+      reconciled: boolean;
+    }>;
+  },
+  {
+    cleared: boolean;
+    changedIds: string[];
+    unchangedIds: string[];
+    unlockedIds: string[];
+  }
+>;
+
+export type ImportMappingSaveRequest = {
+  account: string;
+  format: string;
+  settings?: Record<string, unknown>;
+  reset?: boolean;
+};
+export type ImportMappingSaveProposal = CatalogProposal<
+  'imports.mapping-save',
+  ImportMappingSaveRequest,
+  { preferences: Array<{ id: string; value: string | null }> },
+  { preferences: Array<{ id: string; value: string | null }> }
+>;
+
+export type TransferLegSnapshot = {
+  id: string;
+  account: string;
+  amount: number;
+  date: number;
+  payee: string | null;
+  category: string | null;
+  transferId: string | null;
+  parentId: string | null;
+  reconciled: boolean;
+};
+type TransferLinkPlan = {
+  id: string;
+  payee: string | null;
+  transferId: string | null;
+  category: string | null;
+};
+export type TransferMatchRequest = {
+  ids: string[];
+  allowReconciled?: boolean;
+};
+export type TransferMatchProposal = CatalogProposal<
+  'transfers.match',
+  TransferMatchRequest,
+  { transactions: TransferLegSnapshot[] },
+  {
+    classification: 'internal' | 'off-budget-internal' | 'budget-boundary';
+    categoryCleared: boolean;
+    transactions: TransferLinkPlan[];
+    reconciledIds: string[];
+  }
+>;
+export type TransferUnmatchRequest = { id: string; allowReconciled?: boolean };
+export type TransferUnmatchProposal = CatalogProposal<
+  'transfers.unmatch',
+  TransferUnmatchRequest,
+  { transactions: TransferLegSnapshot[] },
+  { transactions: TransferLinkPlan[]; reconciledIds: string[] }
+>;
+export type TransferRepairRequest = { id: string; allowReconciled?: boolean };
+export type TransferRepairProposal = CatalogProposal<
+  'transfers.repair',
+  TransferRepairRequest,
+  { transactions: TransferLegSnapshot[] },
+  { repair: 'unlink' | 'resync' | 'relink'; issues: string[] }
+>;
+export type TransferRepairOutcome = CatalogCommit<{
+  changed: boolean;
+  affectedIds: string[];
+  counterpartId: string | null;
+}>;
+
+export type TransactionMergeRequest = {
+  ids: [string, string];
+  allowReconciled?: boolean;
+};
+export type TransactionMergeProposal = CatalogProposal<
+  'transactions.merge',
+  TransactionMergeRequest,
+  { transactions: Array<Record<string, unknown>> },
+  {
+    keepId: string;
+    dropId: string;
+    movedChildIds: string[];
+    deletedChildIds: string[];
+    transfer: { keepId: string; dropId: string } | null;
+  }
+>;
+export type TransactionMergeOutcome = CatalogCommit<{
+  transactionMerge: { keptId: string };
+}>;
+
+export type TransactionSplitRequest = {
+  id: string;
+  subtransactions: Array<{
+    amount: number;
+    category?: string | null;
+    notes?: string | null;
+    payee?: string | null;
+  }>;
+  allowReconciled?: boolean;
+};
+export type TransactionSplitProposal = CatalogProposal<
+  'transactions.split',
+  TransactionSplitRequest,
+  {
+    transaction: Record<string, unknown>;
+    children: Array<{ id: string; amount: number; category: string | null }>;
+  },
+  {
+    amount: number;
+    children: Array<{
+      amount: number;
+      category: string | null;
+      notes: string | null;
+      payee: string | null;
+    }>;
+    removedChildIds: string[];
+  }
+>;
+export type TransactionSplitOutcome = CatalogCommit<{
+  transactionSplit: { childIds: string[] };
+}>;
+
+export type CashPlanSaveRequest = {
+  config: CashPlanningConfig | null;
+};
+export type CashPlanSaveProposal = CatalogProposal<
+  'cash-planning.save',
+  CashPlanSaveRequest,
+  { preference: { id: string; value: string | null } | null },
+  { preference: { id: string; value: string | null } }
+>;
+
+export type TransactionAdditionRequest = {
+  accountId: string;
+  transactions: Array<Record<string, unknown>>;
+};
+export type TransactionAdditionProposal = CatalogProposal<
+  'transactions.add',
+  TransactionAdditionRequest,
+  object,
+  { rows: Array<Record<string, unknown>> }
+>;
+export type TransactionAdditionOutcome = CatalogCommit<{
+  transactionAddition: { transactionIds: string[] };
+}>;
+
+export type TransactionImportRequest = {
+  accountId: string;
+  transactions: Array<Record<string, unknown>>;
+  opts?: {
+    defaultCleared?: boolean;
+    reimportDeleted?: boolean;
+    payeeNameNormalization?: 'original' | 'title-case';
+  };
+};
+export type TransactionImportProposal = CatalogProposal<
+  'transactions.import',
+  TransactionImportRequest,
+  object,
+  {
+    added: Array<Record<string, unknown>>;
+    updated: Array<Record<string, unknown>>;
+  }
+>;
+export type TransactionImportOutcome = CatalogCommit<{
+  transactionImport: { addedIds: string[]; updatedIds: string[] };
+}>;
+
+export type ImportFileRequest = {
+  path: string;
+  accountId: string;
+  settings?: Record<string, unknown>;
+  useSaved?: boolean;
+  sha256?: string;
+  invalidRows?: 'reject' | 'skip';
+  opts?: TransactionImportRequest['opts'];
+};
+export type ImportFileRowOutcome = {
+  index: number;
+  outcome:
+    | 'add'
+    | 'update'
+    | 'duplicate'
+    | 'reconciled'
+    | 'deleted'
+    | 'invalid';
+  match: {
+    kind: 'imported_id' | 'payee_date_amount' | 'date_amount';
+    transactionId: string;
+  } | null;
+  errors?: string[];
+};
+export type ImportFileProposal = CatalogProposal<
+  'imports.file',
+  ImportFileRequest,
+  {
+    file: { name: string; format: string; size: number; sha256: string };
+    settings: Record<string, unknown>;
+    sources: Record<string, string>;
+  },
+  {
+    added: Array<Record<string, unknown>>;
+    updated: Array<Record<string, unknown>>;
+    rows: ImportFileRowOutcome[];
+    summary: {
+      rowCount: number;
+      add: number;
+      update: number;
+      duplicate: number;
+      reconciled: number;
+      deleted: number;
+      invalid: number;
+      newPayees: string[];
+      unresolvedCategories: string[];
+    };
+    options: {
+      defaultCleared: boolean;
+      reimportDeleted: boolean;
+      payeeNameNormalization: 'original' | 'title-case';
+      invalidRows: 'reject' | 'skip';
+    };
+  }
+>;
+export type ImportFileOutcome = CatalogCommit<{
+  fileImport: {
+    sha256: string;
+    addedIds: string[];
+    updatedIds: string[];
+  };
+}>;
+
+export type RuleApplyRequest = {
+  ruleId: string;
+  ids: string[];
+  allowReconciled?: boolean;
+};
+export type RuleApplyProposal = CatalogProposal<
+  'rules.apply',
+  RuleApplyRequest,
+  {
+    rule: Record<string, unknown>;
+    rows: Array<Record<string, unknown>>;
+  },
+  {
+    rows: Array<Record<string, unknown>>;
+    reconciledIds: string[];
+    newPayees: string[];
+    errors: string[];
+  }
+>;
+export type RuleApplyOutcome = CatalogCommit<{
+  ruleApplication: { updatedIds: string[]; createdIds: string[] };
+}>;
+
+export type ReconcileFinishRequest = {
+  accountId: string;
+  statementBalance: number;
+  statementDate?: string;
+  ids: string[];
+};
+export type ReconcileFinishProposal = CatalogProposal<
+  'reconcile.finish',
+  ReconcileFinishRequest,
+  { clearedBalance: number; lastReconciled: string | null },
+  { lockedIds: string[]; difference: 0; setsLastReconciled: true }
+>;
+export type ReconcileFinishOutcome = CatalogCommit<{
+  reconciliation: { lockedIds: string[]; lastReconciled: string };
+}>;
+export type ReconcileAdjustRequest = {
+  accountId: string;
+  amount: number;
+  date?: string;
+};
+export type ReconcileAdjustProposal = CatalogProposal<
+  'reconcile.adjust',
+  ReconcileAdjustRequest,
+  { clearedBalance: number },
+  { rows: Array<Record<string, unknown>>; clearedBalance: number }
+>;
+export type ReconcileAdjustOutcome = CatalogCommit<{
+  adjustment: { transactionIds: string[] };
+}>;
+
+export type BudgetMoveRequest = {
+  month: string;
+  from: string;
+  to: string;
+  amount: number;
+  allowOverspend?: boolean;
+};
+export type BudgetMoveCell = {
+  id: string;
+  name: string | null;
+  budgeted: number | null;
+  balance: number;
+};
+export type BudgetMoveProposal = CatalogProposal<
+  'budgets.move',
+  BudgetMoveRequest,
+  { from: BudgetMoveCell; to: BudgetMoveCell; toBudget: number | null },
+  {
+    from: BudgetMoveCell;
+    to: BudgetMoveCell;
+    toBudget: number | null;
+    totalBudgetedChange: number;
+  }
+>;
+export type BudgetMoveOutcome = CatalogCommit<{
+  budgetMove: { month: string; amount: number };
+}>;
+export type BudgetTemplatesRequest = {
+  month: string;
+  categoryIds?: string[];
+  force?: boolean;
+};
+export type BudgetTemplateRow = {
+  categoryId: string;
+  name: string;
+  before: { budgeted: number; goal: number | null };
+  after: { budgeted: number; goal: number | null; longGoal: boolean };
+};
+export type BudgetTemplatesProposal = CatalogProposal<
+  'budgets.apply-templates',
+  BudgetTemplatesRequest,
+  object,
+  {
+    rows: BudgetTemplateRow[];
+    clearedGoals: string[];
+    toBudget: number | null;
+    templateErrors: string[];
+  }
+>;
+export type BudgetTemplatesOutcome = CatalogCommit<{
+  templateApplication: { categoryIds: string[] };
+}>;
+
+export type ScheduleOccurrenceRequest = {
+  id: string;
+  date: string;
+  today?: boolean;
+};
+export type ScheduleSnapshot = {
+  id: string;
+  name: string | null;
+  nextDate: string;
+  postsTransaction: boolean;
+  account: string | null;
+  payee: string | null;
+  amount: number;
+};
+export type SchedulePostProposal = CatalogProposal<
+  'schedules.post',
+  ScheduleOccurrenceRequest,
+  { schedule: ScheduleSnapshot },
+  {
+    rows: Array<Record<string, unknown>>;
+    transferAccount: string | null;
+  }
+>;
+export type SchedulePostOutcome = CatalogCommit<{
+  schedulePost: { transactionIds: string[] };
+}>;
+export type ScheduleSkipProposal = CatalogProposal<
+  'schedules.skip',
+  ScheduleOccurrenceRequest,
+  { schedule: ScheduleSnapshot },
+  { nextDate: string }
+>;
+export type ScheduleSkipOutcome = CatalogCommit<{
+  scheduleSkip: { previousDate: string; nextDate: string };
+}>;
 
 export type CategoryGroupUpdateRequest = {
   id: string;
@@ -432,6 +1084,43 @@ export type BudgetMetadataProposal = {
 export type ChangeProposal =
   | CategoryGroupUpdateProposal
   | PayeeCreationProposal
+  | PayeeUpdateProposal
+  | PayeeDeletionProposal
+  | PayeeMergeProposal
+  | TagCreationProposal
+  | TagUpdateProposal
+  | TagDeletionProposal
+  | NoteSetProposal
+  | PreferenceSetProposal
+  | AccountGroupCreationProposal
+  | AccountGroupUpdateProposal
+  | AccountGroupDeletionProposal
+  | RuleCreationProposal
+  | RuleUpdateProposal
+  | RuleDeletionProposal
+  | ScheduleCreationProposal
+  | ScheduleUpdateProposal
+  | ScheduleDeletionProposal
+  | TransactionDeletionProposal
+  | TransactionCategorizationProposal
+  | TransactionClearingProposal
+  | TransferMatchProposal
+  | ImportMappingSaveProposal
+  | TransferUnmatchProposal
+  | TransferRepairProposal
+  | TransactionMergeProposal
+  | TransactionSplitProposal
+  | CashPlanSaveProposal
+  | TransactionAdditionProposal
+  | TransactionImportProposal
+  | ImportFileProposal
+  | RuleApplyProposal
+  | SchedulePostProposal
+  | BudgetMoveProposal
+  | ReconcileFinishProposal
+  | ReconcileAdjustProposal
+  | BudgetTemplatesProposal
+  | ScheduleSkipProposal
   | CategoryGroupCreationProposal
   | CategoryCreationProposal
   | CategoryGroupDeletionProposal

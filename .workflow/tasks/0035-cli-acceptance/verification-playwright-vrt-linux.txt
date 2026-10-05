@@ -1,0 +1,33 @@
+Command: E2E_USE_BUILD=1 E2E_WORKERS=2 yarn vrt
+  (packages/desktop-client script: cross-env VRT=true npx playwright test --browser=chromium)
+Build: existing packages/desktop-client/build
+Host: Linux box, Chromium headless (Playwright 1.61.1)
+Policy: did NOT pass --update-snapshots (conservative; see D11)
+
+Result (~8.0m):
+  122 passed
+  28 failed (screenshot mismatches; each retried once)
+  17 did not run (serial suites after a failure)
+  EXIT 1
+
+Failure themes (no baselines rewritten):
+1) Tiny diffs (~13 px, ratio 0.01): widespread on accounts/transactions/rules/schedules —
+   consistent with font/AA or build/env drift vs CI jammy + --skip-translations baselines,
+   not attributed to a single fork feature.
+2) Larger diffs (reports list ~149k px / 0.17): Reports dashboard includes fork "Cash planning"
+   chrome plus chart/number shifts vs upstream snapshots
+   (sample: evidence/vrt-samples/reports-cash-flow-list-diff.png).
+3) cash-planning.test.ts functional scenarios themselves passed under VRT=true.
+
+Failed tests (28):
+  accounts.test.ts (5), budget.mobile.test.ts (2), budget.test.ts (2),
+  command-bar.test.ts (2), help-menu.test.ts (2), reports.test.ts (1),
+  rules.test.ts (2), schedules.test.ts (2), settings.mobile.test.ts (1),
+  transactions.test.ts (9)
+
+Full log: evidence/playwright-vrt-linux.txt
+Samples: evidence/vrt-samples/{reports-cash-flow-list-diff,accounts-tiny-13px-diff}.png
+
+Follow-up for Michael: optional `yarn vrt --update-snapshots` after a CI-parity browser
+build (`yarn build:browser --skip-translations` with REACT_APP_NETLIFY=true) if fork
+baselines should be adopted deliberately.

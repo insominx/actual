@@ -79,7 +79,7 @@
         "0012-cli-sync",
         "0013-cli-backups"
       ],
-      "status": "partially-implemented"
+      "status": "completed-locally"
     },
     {
       "key": "cli-accounts",
@@ -88,7 +88,7 @@
       "stage": "Domain tools",
       "mode": "AFK",
       "dependencies": ["0011-cli-budget-lifecycle", "0014-cli-mutations"],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-catalog-settings",
@@ -97,7 +97,7 @@
       "stage": "Domain tools",
       "mode": "AFK",
       "dependencies": ["0014-cli-mutations"],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-query",
@@ -106,7 +106,7 @@
       "stage": "Domain tools",
       "mode": "AFK",
       "dependencies": ["0009-cli-sessions", "0012-cli-sync"],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-transactions",
@@ -120,7 +120,7 @@
         "0016-cli-catalog-settings",
         "0017-cli-query"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-transfers",
@@ -129,7 +129,7 @@
       "stage": "Domain tools",
       "mode": "AFK",
       "dependencies": ["0018-cli-transactions"],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-file-parsing",
@@ -142,7 +142,7 @@
         "0016-cli-catalog-settings",
         "0017-cli-query"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-imports",
@@ -156,7 +156,7 @@
         "0019-cli-transfers",
         "0014-cli-mutations"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-reconciliation",
@@ -165,7 +165,7 @@
       "stage": "Domain tools",
       "mode": "AFK",
       "dependencies": ["0021-cli-imports", "0019-cli-transfers"],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-rules",
@@ -174,7 +174,7 @@
       "stage": "Domain tools",
       "mode": "AFK",
       "dependencies": ["0018-cli-transactions", "0021-cli-imports"],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-schedules",
@@ -183,7 +183,7 @@
       "stage": "Domain tools",
       "mode": "AFK",
       "dependencies": ["0018-cli-transactions", "0019-cli-transfers"],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-budgeting",
@@ -197,7 +197,7 @@
         "0024-cli-schedules",
         "0014-cli-mutations"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-cash-planning",
@@ -210,7 +210,7 @@
         "0016-cli-catalog-settings",
         "0014-cli-mutations"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-reports",
@@ -224,7 +224,7 @@
         "0026-cli-cash-planning",
         "0025-cli-budgeting"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-data-quality",
@@ -238,7 +238,7 @@
         "0023-cli-rules",
         "0027-cli-reports"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-reversal",
@@ -254,7 +254,7 @@
         "0025-cli-budgeting",
         "0026-cli-cash-planning"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-bank-sync",
@@ -267,7 +267,7 @@
         "0012-cli-sync",
         "0019-cli-transfers"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-workflows",
@@ -284,7 +284,7 @@
         "0028-cli-data-quality",
         "0029-cli-reversal"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-automation",
@@ -293,7 +293,7 @@
       "stage": "Workflows and delivery",
       "mode": "AFK",
       "dependencies": ["0031-cli-workflows", "0030-cli-bank-sync"],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-mcp",
@@ -302,7 +302,7 @@
       "stage": "Optional interface",
       "mode": "AFK",
       "dependencies": ["0007-cli-contract", "0031-cli-workflows"],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-distribution",
@@ -311,7 +311,7 @@
       "stage": "Workflows and delivery",
       "mode": "AFK",
       "dependencies": ["0031-cli-workflows", "0010-cli-runtime"],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-acceptance",
@@ -324,7 +324,7 @@
         "0032-cli-automation",
         "0030-cli-bank-sync"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-personal-setup",
@@ -333,7 +333,7 @@
       "stage": "Personal adoption",
       "mode": "HITL",
       "dependencies": ["0035-cli-acceptance"],
-      "status": "planned-prerequisite-hold"
+      "status": "blocked-hitl"
     }
   ]
 }

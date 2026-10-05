@@ -1,0 +1,17 @@
+✔ guarded payee creation preserves raw domains and acknowledgements (online) (7956.257789ms)
+✔ guarded payee creation preserves raw domains and acknowledgements (offline) (7914.874127ms)
+✔ killed guarded payee creation at before-engine retains its exact outcome without replay (35901.491334ms)
+✔ killed guarded payee creation at after-engine retains its exact outcome without replay (35589.069603ms)
+✔ killed guarded payee creation at before-sync retains its exact outcome without replay (36246.693316ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 123668.635958
+
+real	2m3.707s
+user	0m33.312s
+sys	0m6.235s

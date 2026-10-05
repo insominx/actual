@@ -1,0 +1,20 @@
+Michael-approved fork VRT baseline adoption (box Linux Chromium).
+
+1) CI-parity rebuild:
+   REACT_APP_NETLIFY=true yarn build:browser --skip-translations
+   (matches .github/workflows/e2e-test.yml + vrt-update-generate.yml)
+   EXIT 0 ~33.6s; evidence/vrt-ci-parity-build.txt
+
+2) Snapshot update:
+   E2E_USE_BUILD=1 E2E_WORKERS=2 yarn vrt --update-snapshots
+   Result: 167 passed (7.1m); 111 chromium-linux PNG baselines rewritten
+   evidence/playwright-vrt-update.txt
+
+3) Confirm (no update):
+   E2E_USE_BUILD=1 E2E_WORKERS=2 yarn vrt
+   Result: 167 passed (6.8m) EXIT 0
+   evidence/playwright-vrt-confirm.txt
+
+ASSUMPTION (D12): Michael approved adopting these fork baselines on this
+host/build (box, not Playwright jammy CI container). Baselines may still
+differ from GitHub Actions jammy runner screenshots.

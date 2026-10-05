@@ -1,0 +1,13 @@
+✔ guarded transaction import preserves raw domains and acknowledgements (online) (9507.635456ms)
+✔ guarded transaction import preserves raw domains and acknowledgements (offline) (8746.080149ms)
+✔ killed guarded transaction import at before-engine retains its exact outcome without replay (36890.971591ms)
+✔ killed guarded transaction import at after-engine retains its exact outcome without replay (37100.231532ms)
+✔ killed guarded transaction import at before-sync retains its exact outcome without replay (38314.846887ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 130617.955214

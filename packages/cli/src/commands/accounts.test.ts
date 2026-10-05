@@ -240,7 +240,7 @@ describe('accounts commands', () => {
 
     it('rejects update with no fields', async () => {
       await expect(run(['accounts', 'update', 'acct-1'])).rejects.toThrow(
-        'No update fields provided. Use --name or --offbudget.',
+        'No update fields provided. Use --name, --offbudget or --account-group-id.',
       );
     });
   });

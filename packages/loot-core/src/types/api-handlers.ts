@@ -1,5 +1,14 @@
-// @ts-strict-ignore
 import type { ImportTransactionsResult } from '#server/accounts/app';
+import type {
+  bankSyncRefresh,
+  bankSyncStatus,
+} from '#server/accounts/bank-sync-status';
+// @ts-strict-ignore
+import type { AccountInspection } from '#server/accounts/inspect';
+import type {
+  ReconciliationStatus,
+  ReconciliationStatusRequest,
+} from '#server/accounts/reconcile';
 import type { PayeeNameNormalization } from '#server/accounts/sync';
 import type {
   APIAccountEntity,
@@ -12,9 +21,47 @@ import type {
   APIScheduleEntity,
   APITagEntity,
 } from '#server/api-models';
+import type { TemplateInspection } from '#server/budget/guarded-allocation';
 import type { BudgetFileHandlers } from '#server/budgetfiles/app';
+import type {
+  CatalogInspectKind,
+  CatalogInspectRow,
+} from '#server/catalog-inspect';
+import type {
+  dataQualityCheckup,
+  DataQualityRequest,
+} from '#server/checkup/data-quality';
+import type {
+  cashFlowReport,
+  categoryReport,
+  netWorthReport,
+  ReportRequest,
+} from '#server/reports/ledger-reports';
+import type {
+  RuleMatches,
+  RuleTestRequest,
+  RuleTestResult,
+} from '#server/rules/evaluate';
+import type {
+  ScheduleInspectionRequest,
+  ScheduleInspectionResult,
+} from '#server/schedules/inspect';
 import type { batchUpdateTransactions } from '#server/transactions';
+import type {
+  ImportFileInspection,
+  ImportFileInspectRequest,
+  ImportMappingSettings,
+} from '#server/transactions/import/inspect-file';
+import type {
+  TransferCandidates,
+  TransferInspection,
+} from '#server/transfers/inspect';
 import type { QueryState } from '#shared/query';
+import type {
+  CashPlanInspection,
+  CashPlanInspectRequest,
+} from '#types/models/cash-planning';
+import type { ReservationsResult } from '#types/models/reservations';
 
 import type {
   AccountCloseOutcome,
@@ -26,6 +73,13 @@ import type {
   AccountDeletionOutcome,
   AccountDeletionProposal,
   AccountDeletionRequest,
+  AccountGroupCreationOutcome,
+  AccountGroupCreationProposal,
+  AccountGroupCreationRequest,
+  AccountGroupDeletionProposal,
+  AccountGroupDeletionRequest,
+  AccountGroupUpdateProposal,
+  AccountGroupUpdateRequest,
   AccountReopenProposal,
   AccountReopenRequest,
   AccountUpdateProposal,
@@ -42,19 +96,24 @@ import type {
   BudgetHoldRequest,
   BudgetMetadataProposal,
   BudgetMetadataRequest,
+  BudgetMoveOutcome,
+  BudgetMoveProposal,
+  BudgetMoveRequest,
   BudgetPublicationOutcome,
   BudgetPublicationProposal,
   BudgetPublicationRequest,
   BudgetRestoreProposal,
   BudgetRestoreRequest,
+  BudgetTemplatesOutcome,
+  BudgetTemplatesProposal,
+  BudgetTemplatesRequest,
+  CashPlanSaveProposal,
+  CashPlanSaveRequest,
   CategoryCreationOutcome,
   CategoryCreationProposal,
   CategoryCreationRequest,
   CategoryDeletionProposal,
   CategoryDeletionRequest,
-  PayeeCreationOutcome,
-  PayeeCreationProposal,
-  PayeeCreationRequest,
   CategoryGroupCreationOutcome,
   CategoryGroupCreationProposal,
   CategoryGroupCreationRequest,
@@ -64,9 +123,89 @@ import type {
   CategoryGroupUpdateRequest,
   CategoryUpdateProposal,
   CategoryUpdateRequest,
+  ImportFileOutcome,
+  ImportFileProposal,
+  ImportFileRequest,
+  ImportMappingSaveProposal,
+  ImportMappingSaveRequest,
+  NoteSetProposal,
+  NoteSetRequest,
+  NoteTarget,
+  PayeeCreationOutcome,
+  PayeeCreationProposal,
+  PayeeCreationRequest,
+  PayeeDeletionProposal,
+  PayeeDeletionRequest,
+  PayeeMergeOutcome,
+  PayeeMergeProposal,
+  PayeeMergeRequest,
+  PayeeUpdateProposal,
+  PayeeUpdateRequest,
+  PreferenceSetProposal,
+  PreferenceSetRequest,
+  ReconcileAdjustOutcome,
+  ReconcileAdjustProposal,
+  ReconcileAdjustRequest,
+  ReconcileFinishOutcome,
+  ReconcileFinishProposal,
+  ReconcileFinishRequest,
+  RuleApplyOutcome,
+  RuleApplyProposal,
+  RuleApplyRequest,
+  RuleCreationOutcome,
+  RuleCreationProposal,
+  RuleCreationRequest,
+  RuleDeletionProposal,
+  RuleDeletionRequest,
+  RuleUpdateProposal,
+  RuleUpdateRequest,
+  ScheduleCreationOutcome,
+  ScheduleCreationProposal,
+  ScheduleCreationRequest,
+  ScheduleDeletionProposal,
+  ScheduleDeletionRequest,
+  ScheduleOccurrenceRequest,
+  SchedulePostOutcome,
+  SchedulePostProposal,
+  ScheduleSkipOutcome,
+  ScheduleSkipProposal,
+  ScheduleUpdateProposal,
+  ScheduleUpdateRequest,
+  TagCreationOutcome,
+  TagCreationProposal,
+  TagCreationRequest,
+  TagDeletionProposal,
+  TagDeletionRequest,
+  TagUpdateProposal,
+  TagUpdateRequest,
+  TransactionAdditionOutcome,
+  TransactionAdditionProposal,
+  TransactionAdditionRequest,
+  TransactionCategorizationProposal,
+  TransactionCategorizationRequest,
+  TransactionClearingProposal,
+  TransactionClearingRequest,
+  TransactionDeletionProposal,
+  TransactionDeletionRequest,
+  TransactionImportOutcome,
+  TransactionImportProposal,
+  TransactionImportRequest,
+  TransactionMergeOutcome,
+  TransactionMergeProposal,
+  TransactionMergeRequest,
+  TransactionSplitOutcome,
+  TransactionSplitProposal,
+  TransactionSplitRequest,
   TransactionUpdateOutcome,
   TransactionUpdateProposal,
   TransactionUpdateRequest,
+  TransferMatchProposal,
+  TransferMatchRequest,
+  TransferRepairOutcome,
+  TransferRepairProposal,
+  TransferRepairRequest,
+  TransferUnmatchProposal,
+  TransferUnmatchRequest,
 } from './change-proposals';
 import type {
   AccountEntity,
@@ -169,6 +308,295 @@ export type ApiHandlers = {
   'api/payee-apply-creation': (
     arg: PayeeCreationProposal,
   ) => Promise<PayeeCreationOutcome>;
+  'api/payee-preview-update': (
+    arg: PayeeUpdateRequest,
+  ) => Promise<PayeeUpdateProposal>;
+  'api/payee-apply-update': (
+    arg: PayeeUpdateProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/payee-preview-deletion': (
+    arg: PayeeDeletionRequest,
+  ) => Promise<PayeeDeletionProposal>;
+  'api/payee-apply-deletion': (
+    arg: PayeeDeletionProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/payee-preview-merge': (
+    arg: PayeeMergeRequest,
+  ) => Promise<PayeeMergeProposal>;
+  'api/payee-apply-merge': (
+    arg: PayeeMergeProposal,
+  ) => Promise<PayeeMergeOutcome>;
+  'api/tag-preview-creation': (
+    arg: TagCreationRequest,
+  ) => Promise<TagCreationProposal>;
+  'api/tag-apply-creation': (
+    arg: TagCreationProposal,
+  ) => Promise<TagCreationOutcome>;
+  'api/tag-preview-update': (
+    arg: TagUpdateRequest,
+  ) => Promise<TagUpdateProposal>;
+  'api/tag-apply-update': (
+    arg: TagUpdateProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/tag-preview-deletion': (
+    arg: TagDeletionRequest,
+  ) => Promise<TagDeletionProposal>;
+  'api/tag-apply-deletion': (
+    arg: TagDeletionProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/note-preview-set': (arg: NoteSetRequest) => Promise<NoteSetProposal>;
+  'api/note-apply-set': (
+    arg: NoteSetProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/note-target': (arg: {
+    id: string;
+  }) => Promise<{ target: NoteTarget; note: string | null }>;
+  'api/account-group-preview-creation': (
+    arg: AccountGroupCreationRequest,
+  ) => Promise<AccountGroupCreationProposal>;
+  'api/account-group-apply-creation': (
+    arg: AccountGroupCreationProposal,
+  ) => Promise<AccountGroupCreationOutcome>;
+  'api/account-group-preview-update': (
+    arg: AccountGroupUpdateRequest,
+  ) => Promise<AccountGroupUpdateProposal>;
+  'api/account-group-apply-update': (
+    arg: AccountGroupUpdateProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/account-group-preview-deletion': (
+    arg: AccountGroupDeletionRequest,
+  ) => Promise<AccountGroupDeletionProposal>;
+  'api/account-group-apply-deletion': (
+    arg: AccountGroupDeletionProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/preference-preview-set': (
+    arg: PreferenceSetRequest,
+  ) => Promise<PreferenceSetProposal>;
+  'api/preference-apply-set': (
+    arg: PreferenceSetProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/accounts-inspect': (arg: {
+    cutoff?: string;
+    includeClosed?: boolean;
+  }) => Promise<AccountInspection>;
+  'api/import-file-inspect': (
+    arg: ImportFileInspectRequest,
+  ) => Promise<ImportFileInspection>;
+  'api/import-mapping-get': (arg: {
+    account: string;
+    format: string;
+  }) => Promise<{
+    account: string;
+    format: string;
+    keys: Record<string, string>;
+    settings: Partial<ImportMappingSettings>;
+  }>;
+  'api/import-mapping-preview-save': (
+    arg: ImportMappingSaveRequest,
+  ) => Promise<ImportMappingSaveProposal>;
+  'api/import-mapping-apply-save': (
+    arg: ImportMappingSaveProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/bank-sync-status': () => ReturnType<typeof bankSyncStatus>;
+  'api/bank-sync-refresh': (arg?: {
+    accountIds?: string[];
+  }) => ReturnType<typeof bankSyncRefresh>;
+  'api/checkup-data-quality': (
+    arg: DataQualityRequest,
+  ) => ReturnType<typeof dataQualityCheckup>;
+  'api/reports-cash-flow': (
+    arg: ReportRequest,
+  ) => ReturnType<typeof cashFlowReport>;
+  'api/reports-categories': (
+    arg: ReportRequest,
+  ) => ReturnType<typeof categoryReport>;
+  'api/reports-net-worth': (
+    arg: ReportRequest,
+  ) => ReturnType<typeof netWorthReport>;
+  'api/reconcile-status': (
+    arg: ReconciliationStatusRequest,
+  ) => Promise<ReconciliationStatus>;
+  'api/reconcile-preview-finish': (
+    arg: ReconcileFinishRequest,
+  ) => Promise<ReconcileFinishProposal>;
+  'api/reconcile-finish': (
+    arg: ReconcileFinishProposal,
+  ) => Promise<ReconcileFinishOutcome>;
+  'api/reconcile-preview-adjust': (
+    arg: ReconcileAdjustRequest,
+  ) => Promise<ReconcileAdjustProposal>;
+  'api/reconcile-adjust': (
+    arg: ReconcileAdjustProposal,
+  ) => Promise<ReconcileAdjustOutcome>;
+  'api/budget-preview-move': (
+    arg: BudgetMoveRequest,
+  ) => Promise<BudgetMoveProposal>;
+  'api/budget-move': (arg: BudgetMoveProposal) => Promise<BudgetMoveOutcome>;
+  'api/budget-preview-templates': (
+    arg: BudgetTemplatesRequest,
+  ) => Promise<BudgetTemplatesProposal>;
+  'api/budget-apply-templates': (
+    arg: BudgetTemplatesProposal,
+  ) => Promise<BudgetTemplatesOutcome>;
+  'api/budget-templates': () => Promise<TemplateInspection>;
+  'api/budget-reservations': (arg: {
+    month?: string;
+  }) => Promise<ReservationsResult>;
+  'api/schedules-inspect': (
+    arg: ScheduleInspectionRequest,
+  ) => Promise<ScheduleInspectionResult>;
+  'api/schedules-preview-post': (
+    arg: ScheduleOccurrenceRequest,
+  ) => Promise<SchedulePostProposal>;
+  'api/schedules-post': (
+    arg: SchedulePostProposal,
+  ) => Promise<SchedulePostOutcome>;
+  'api/schedules-preview-skip': (
+    arg: ScheduleOccurrenceRequest,
+  ) => Promise<ScheduleSkipProposal>;
+  'api/schedules-skip': (
+    arg: ScheduleSkipProposal,
+  ) => Promise<ScheduleSkipOutcome>;
+  'api/rules-test': (arg: RuleTestRequest) => Promise<RuleTestResult>;
+  'api/rules-matches': (arg: {
+    ruleId: string;
+    limit?: number;
+  }) => Promise<RuleMatches>;
+  'api/rules-preview-apply': (
+    arg: RuleApplyRequest,
+  ) => Promise<RuleApplyProposal>;
+  'api/rules-apply': (arg: RuleApplyProposal) => Promise<RuleApplyOutcome>;
+  'api/import-file-preview': (
+    arg: ImportFileRequest,
+  ) => Promise<ImportFileProposal>;
+  'api/import-file-apply': (
+    arg: ImportFileProposal,
+  ) => Promise<ImportFileOutcome>;
+  'api/transfers-candidates': (arg: {
+    account?: string;
+    start?: string;
+    end?: string;
+    days?: number;
+    limit?: number;
+  }) => Promise<TransferCandidates>;
+  'api/transfers-inspect': (arg: { id: string }) => Promise<TransferInspection>;
+  'api/transfers-audit': (arg: { account?: string }) => Promise<{
+    checked: number;
+    linked: number;
+    findings: TransferInspection[];
+  }>;
+  'api/catalog-inspect': (arg: {
+    kind: CatalogInspectKind;
+    includeDeleted?: boolean;
+  }) => Promise<CatalogInspectRow[]>;
+  'api/preferences-inspect': (arg: {
+    key?: string;
+  }) => Promise<Array<Record<string, unknown> & { key: string }>>;
+  'api/rule-preview-creation': (
+    arg: RuleCreationRequest,
+  ) => Promise<RuleCreationProposal>;
+  'api/rule-apply-creation': (
+    arg: RuleCreationProposal,
+  ) => Promise<RuleCreationOutcome>;
+  'api/rule-preview-update': (
+    arg: RuleUpdateRequest,
+  ) => Promise<RuleUpdateProposal>;
+  'api/rule-apply-update': (
+    arg: RuleUpdateProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/rule-preview-deletion': (
+    arg: RuleDeletionRequest,
+  ) => Promise<RuleDeletionProposal>;
+  'api/rule-apply-deletion': (
+    arg: RuleDeletionProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/schedule-preview-creation': (
+    arg: ScheduleCreationRequest,
+  ) => Promise<ScheduleCreationProposal>;
+  'api/schedule-apply-creation': (
+    arg: ScheduleCreationProposal,
+  ) => Promise<ScheduleCreationOutcome>;
+  'api/schedule-preview-update': (
+    arg: ScheduleUpdateRequest,
+  ) => Promise<ScheduleUpdateProposal>;
+  'api/schedule-apply-update': (
+    arg: ScheduleUpdateProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/schedule-preview-deletion': (
+    arg: ScheduleDeletionRequest,
+  ) => Promise<ScheduleDeletionProposal>;
+  'api/schedule-apply-deletion': (
+    arg: ScheduleDeletionProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/transaction-preview-deletion': (
+    arg: TransactionDeletionRequest,
+  ) => Promise<TransactionDeletionProposal>;
+  'api/transaction-apply-deletion': (
+    arg: TransactionDeletionProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/transactions-preview-categorization': (
+    arg: TransactionCategorizationRequest,
+  ) => Promise<TransactionCategorizationProposal>;
+  'api/transactions-apply-categorization': (
+    arg: TransactionCategorizationProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/transactions-preview-clearing': (
+    arg: TransactionClearingRequest,
+  ) => Promise<TransactionClearingProposal>;
+  'api/transactions-apply-clearing': (
+    arg: TransactionClearingProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/transfers-preview-match': (
+    arg: TransferMatchRequest,
+  ) => Promise<TransferMatchProposal>;
+  'api/transfers-apply-match': (
+    arg: TransferMatchProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/transfers-preview-unmatch': (
+    arg: TransferUnmatchRequest,
+  ) => Promise<TransferUnmatchProposal>;
+  'api/transfers-apply-unmatch': (
+    arg: TransferUnmatchProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/transfers-preview-repair': (
+    arg: TransferRepairRequest,
+  ) => Promise<TransferRepairProposal>;
+  'api/transfers-apply-repair': (
+    arg: TransferRepairProposal,
+  ) => Promise<TransferRepairOutcome>;
+  'api/transactions-preview-merge': (
+    arg: TransactionMergeRequest,
+  ) => Promise<TransactionMergeProposal>;
+  'api/transactions-apply-merge': (
+    arg: TransactionMergeProposal,
+  ) => Promise<TransactionMergeOutcome>;
+  'api/transactions-preview-split': (
+    arg: TransactionSplitRequest,
+  ) => Promise<TransactionSplitProposal>;
+  'api/transactions-apply-split': (
+    arg: TransactionSplitProposal,
+  ) => Promise<TransactionSplitOutcome>;
+  'api/cash-planning-inspect': (
+    arg: CashPlanInspectRequest,
+  ) => Promise<CashPlanInspection>;
+  'api/cash-planning-preview-save': (
+    arg: CashPlanSaveRequest,
+  ) => Promise<CashPlanSaveProposal>;
+  'api/cash-planning-apply-save': (
+    arg: CashPlanSaveProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/transactions-preview-addition': (
+    arg: TransactionAdditionRequest,
+  ) => Promise<TransactionAdditionProposal>;
+  'api/transactions-apply-addition': (
+    arg: TransactionAdditionProposal,
+  ) => Promise<TransactionAdditionOutcome>;
+  'api/transactions-preview-import': (
+    arg: TransactionImportRequest,
+  ) => Promise<TransactionImportProposal>;
+  'api/transactions-apply-import': (
+    arg: TransactionImportProposal,
+  ) => Promise<TransactionImportOutcome>;
   'api/category-group-preview-creation': (
     arg: CategoryGroupCreationRequest,
   ) => Promise<CategoryGroupCreationProposal>;
@@ -289,6 +717,8 @@ export type ApiHandlers = {
   'api/abort-import': () => Promise<void>;
 
   'api/query': (arg: { query: QueryState }) => Promise<unknown>;
+
+  'api/query-snapshot': () => Promise<{ marker: string }>;
 
   'api/budget-months': () => Promise<string[]>;
 

@@ -1,8 +1,10 @@
 import type { Command, Option } from 'commander';
 
 import { AgentError } from './agent-output';
+import { DIRECT_GUARDED_COMMANDS } from './guarded-operations';
 import { operationPayloadSchema } from './json-schema';
 import type { JsonSchema } from './json-schema';
+import { REVERSIBLE_COMMANDS } from './reversal';
 
 type PropertySchema = {
   type: 'string' | 'integer' | 'boolean';
@@ -36,7 +38,7 @@ const NONNEGATIVE = new Set([
   'lockTimeout',
 ]);
 const DATES = new Set(['start', 'end', 'cutoff']);
-const MONTHS = new Set(['month']);
+const MONTHS = new Set(['month', 'fromMonth', 'toMonth']);
 const BOOLEANS = new Set(['offbudget', 'hidden', 'carryover']);
 const WATCH_RANGES: Record<string, { minimum: number; maximum: number }> = {
   interval: { minimum: 1, maximum: 300 },
@@ -57,6 +59,44 @@ const READ_OPERATIONS = new Set([
   'query.run',
   'query.tables',
   'query.fields',
+  'query.resolve',
+  'query.aggregate',
+  'notes.get',
+  'preferences.inspect',
+  'categories.inspect',
+  'accounts.inspect',
+  'payees.inspect',
+  'transactions.get',
+  'cash-planning.inspect',
+  'transfers.candidates',
+  'transfers.inspect',
+  'transfers.check',
+  'imports.inspect',
+  'imports.parse',
+  'imports.mappings.get',
+  'imports.preview',
+  'imports.history',
+  'rules.test',
+  'rules.matches',
+  'schedules.inspect',
+  'schedules.upcoming',
+  'budgets.templates',
+  'budgets.reservations',
+  'reconcile.status',
+  'reports.cash-flow',
+  'reports.categories',
+  'reports.net-worth',
+  'checkup.data-quality',
+  'changes.inspect',
+  'bank-sync.status',
+  'bank-sync.results',
+  'workflow.weekly-checkup',
+  'workflow.goal-review',
+  'workflow.run.list',
+  'workflow.run.inspect',
+  'jobs.status',
+  'jobs.schedule',
+  'upgrade.check',
   'server.version',
   'server.get-id',
   'rules.payee-rules',
@@ -140,7 +180,7 @@ export function discoverOperations(root: Command) {
     capabilities: {
       mutates: boolean;
       preview: false;
-      reversal: false;
+      reversal: boolean;
       destructive: boolean;
     };
     examples: string[];
@@ -170,31 +210,7 @@ export function discoverOperations(root: Command) {
           ...command.options
             .filter(o => o.mandatory)
             .map(o => o.attributeName()),
-          ...([
-            'budgets.create',
-            'accounts.create',
-            'accounts.update',
-            'accounts.reopen',
-            'accounts.delete',
-            'accounts.close',
-            'category-groups.delete',
-            'categories.delete',
-            'category-groups.update',
-            'categories.update',
-            'category-groups.create',
-            'categories.create',
-            'budgets.clone',
-            'budgets.publish',
-            'backups.restore',
-            'budgets.rename',
-            'budgets.archive',
-            'budgets.set-amount',
-            'budgets.set-carryover',
-            'budgets.hold-next-month',
-            'budgets.reset-hold',
-          ].includes(name)
-            ? ['operationId']
-            : []),
+          ...(DIRECT_GUARDED_COMMANDS.includes(name) ? ['operationId'] : []),
         ],
       },
       arguments: command.registeredArguments.map(a => ({
@@ -206,7 +222,7 @@ export function discoverOperations(root: Command) {
       capabilities: {
         mutates,
         preview: false,
-        reversal: false,
+        reversal: REVERSIBLE_COMMANDS.includes(name),
         destructive: ['delete', 'merge', 'close', 'prune'].includes(verb),
       },
       examples: [`actual ${name.replaceAll('.', ' ')} --help`],

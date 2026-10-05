@@ -14,7 +14,7 @@ import type {
 
 import { Action, Condition, rankRules } from '.';
 
-function validateRule(rule: Partial<RuleEntity>) {
+export function validateRule(rule: Partial<RuleEntity>) {
   // Returns an array of errors, the array is the same link as the
   // passed-in `array`, or null if there are no errors
   function runValidation<T>(array: T[], validate: (item: T) => unknown) {
@@ -102,7 +102,7 @@ async function ruleValidate(
   return { error };
 }
 
-async function addRule(
+export async function addRule(
   rule: Omit<RuleEntity, 'id'>,
 ): Promise<{ error: ValidationError } | RuleEntity> {
   const error = validateRule(rule);
@@ -114,7 +114,7 @@ async function addRule(
   return { id, ...rule };
 }
 
-async function updateRule(
+export async function updateRule(
   rule: RuleEntity,
 ): Promise<{ error: ValidationError } | RuleEntity> {
   const error = validateRule(rule);
@@ -126,7 +126,7 @@ async function updateRule(
   return rule;
 }
 
-async function deleteRule(id: RuleEntity['id']) {
+export async function deleteRule(id: RuleEntity['id']) {
   return rules.deleteRule(id);
 }
 

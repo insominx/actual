@@ -66,6 +66,12 @@ const transactionUpdate = object({
   schedule: string,
 });
 delete transactionUpdate.properties?.payee_name;
+const ruleFields = {
+  stage: { enum: ['pre', 'post', 'default', null] },
+  conditionsOp: { enum: ['and', 'or'] },
+  conditions: { type: 'array', items: { type: 'object' } },
+  actions: { type: 'array', items: { type: 'object' } },
+} satisfies Record<string, JsonSchema>;
 const rule = object(
   {
     id: string,
@@ -98,7 +104,17 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
     case 'changes.preview':
       return {
         anyOf: [
-          object({ notes: string, amount: money, date, cleared: boolean }),
+          object({
+            notes: string,
+            amount: money,
+            date,
+            cleared: boolean,
+            category: nullableId,
+            payee: string,
+          }),
+          { type: 'array', items: object(importProperties, ['date']) },
+          object({ note: string }, ['note']),
+          object({ value: nullableId }, ['value']),
           object({ transferAccount: string, transferCategory: string }),
           object({ transferCategoryId: string }),
           object(
@@ -171,6 +187,146 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
             }),
           },
           object({ name: string }, ['name']),
+          object({ name: string, transfer_acct: string }, ['name']),
+          object({ mergeIds: { type: 'array', items: string } }, ['mergeIds']),
+          object(
+            {
+              ids: { type: 'array', items: string },
+              category: nullableId,
+              allowReconciled: boolean,
+            },
+            ['ids', 'category'],
+          ),
+          object(
+            {
+              ids: { type: 'array', items: string },
+              allowReconciled: boolean,
+            },
+            ['ids'],
+          ),
+          object(
+            {
+              ids: { type: 'array', items: string },
+              cleared: boolean,
+              unlock: boolean,
+            },
+            ['ids', 'cleared'],
+          ),
+          object({ id: string, allowReconciled: boolean }, ['id']),
+          object(
+            {
+              account: string,
+              format: string,
+              settings: { type: 'object' },
+              reset: boolean,
+            },
+            ['account', 'format'],
+          ),
+          object(
+            {
+              path: string,
+              accountId: string,
+              settings: { type: 'object' },
+              useSaved: boolean,
+              sha256: string,
+              invalidRows: { type: 'string', enum: ['reject', 'skip'] },
+              opts: object({
+                defaultCleared: boolean,
+                reimportDeleted: boolean,
+                payeeNameNormalization: {
+                  type: 'string',
+                  enum: ['original', 'title-case'],
+                },
+              }),
+            },
+            ['path', 'accountId'],
+          ),
+          object(
+            {
+              ruleId: string,
+              ids: { type: 'array', items: string },
+              allowReconciled: boolean,
+            },
+            ['ruleId', 'ids'],
+          ),
+          object({ id: string, date: string, today: boolean }, ['id', 'date']),
+          object(
+            {
+              month: string,
+              from: string,
+              to: string,
+              amount: { type: 'integer' },
+              allowOverspend: boolean,
+            },
+            ['month', 'from', 'to', 'amount'],
+          ),
+          object(
+            {
+              accountId: string,
+              statementBalance: { type: 'integer' },
+              statementDate: string,
+              ids: { type: 'array', items: string },
+            },
+            ['accountId', 'statementBalance', 'ids'],
+          ),
+          object(
+            { accountId: string, amount: { type: 'integer' }, date: string },
+            ['accountId', 'amount'],
+          ),
+          object(
+            {
+              month: string,
+              categoryIds: { type: 'array', items: string },
+              force: boolean,
+            },
+            ['month'],
+          ),
+          object(
+            {
+              subtransactions: {
+                type: 'array',
+                items: object(
+                  {
+                    amount: money,
+                    category: nullableId,
+                    notes: { anyOf: [string, { type: 'null' }] },
+                    payee: nullableId,
+                  },
+                  ['amount'],
+                ),
+              },
+              allowReconciled: boolean,
+            },
+            ['subtransactions'],
+          ),
+          object(
+            { config: { anyOf: [{ type: 'object' }, { type: 'null' }] } },
+            ['config'],
+          ),
+          object(ruleFields, [
+            'stage',
+            'conditionsOp',
+            'conditions',
+            'actions',
+          ]),
+          object(ruleFields),
+          object({ fields: { type: 'object' }, resetNextDate: boolean }, [
+            'fields',
+          ]),
+          { ...schedule, required: ['date', 'amountOp', 'posts_transaction'] },
+          object(
+            {
+              tag: string,
+              color: { anyOf: [string, { type: 'null' }] },
+              description: { anyOf: [string, { type: 'null' }] },
+            },
+            ['tag'],
+          ),
+          object({
+            tag: string,
+            color: { anyOf: [string, { type: 'null' }] },
+            description: { anyOf: [string, { type: 'null' }] },
+          }),
           object({ name: string, path: string, timeout: money }, [
             'name',
             'path',

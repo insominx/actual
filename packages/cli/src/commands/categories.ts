@@ -8,7 +8,7 @@ import {
   executeCategoryUpdate,
 } from '#guarded-changes';
 import { printOutput } from '#output';
-import { parseBoolFlag } from '#utils';
+import { filterByName, parseBoolFlag } from '#utils';
 
 export function registerCategoriesCommand(program: Command) {
   const categories = program
@@ -28,6 +28,39 @@ export function registerCategoriesCommand(program: Command) {
             cmdOpts.includeHidden ? {} : { hidden: false },
           );
           printOutput(result, opts.format);
+        },
+        { mutates: false },
+      );
+    });
+
+  categories
+    .command('inspect')
+    .description(
+      'Inspect categories with IDs, hidden/deleted status, merge targets, transaction counts and same-name duplicates',
+    )
+    .option(
+      '--include-deleted',
+      'Include deleted rows and where they now resolve',
+      false,
+    )
+    .option(
+      '--name <text>',
+      'Only rows whose name contains this text (case-insensitive)',
+    )
+    .action(async (cmdOpts: { includeDeleted: boolean; name?: string }) => {
+      const opts = program.opts();
+      await withConnection(
+        opts,
+        async () => {
+          printOutput(
+            filterByName(
+              await api.inspectCatalog('categories', {
+                includeDeleted: cmdOpts.includeDeleted,
+              }),
+              cmdOpts.name,
+            ),
+            opts.format,
+          );
         },
         { mutates: false },
       );
@@ -75,14 +108,18 @@ export function registerCategoriesCommand(program: Command) {
     .option('--operation-id <id>', 'Required for version 2; durable retry ID')
     .option('--name <name>', 'New category name')
     .option('--hidden <bool>', 'Set hidden status')
+    .option('--group-id <id>', 'Move the category to this category group')
     .action(async (id: string, cmdOpts) => {
       const fields: api.CategoryUpdateRequest['fields'] = {};
       if (cmdOpts.name !== undefined) fields.name = cmdOpts.name;
+      if (cmdOpts.groupId !== undefined) fields.group_id = cmdOpts.groupId;
       if (cmdOpts.hidden !== undefined) {
         fields.hidden = parseBoolFlag(cmdOpts.hidden, '--hidden');
       }
       if (Object.keys(fields).length === 0) {
-        throw new Error('No update fields provided. Use --name or --hidden.');
+        throw new Error(
+          'No update fields provided. Use --name, --hidden or --group-id.',
+        );
       }
       const opts = program.opts();
       if (opts.outputVersion === '2') {

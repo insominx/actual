@@ -194,7 +194,7 @@ export async function mergeTransactionsNoTransfer(
   return keep.id;
 }
 
-function determineKeepDrop(
+export function determineKeepDrop(
   a: TransactionEntity,
   b: TransactionEntity,
 ): { keep: TransactionEntity; drop: TransactionEntity } {

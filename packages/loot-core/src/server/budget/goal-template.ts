@@ -138,7 +138,7 @@ export function runCheckTemplates() {
   return checkTemplateNotes();
 }
 
-async function getCategories(): Promise<CategoryEntity[]> {
+export async function getTemplateCategories(): Promise<CategoryEntity[]> {
   const { data: categoryGroups }: { data: CategoryGroupEntity[] } =
     await aqlQuery(q('category_groups').filter({ hidden: false }).select('*'));
 
@@ -214,7 +214,7 @@ type ComputedTemplates = {
   orphanGoals: TemplateGoal[];
 };
 
-async function computeTemplates(
+export async function computeTemplates(
   month: string,
   force: boolean,
   categoryTemplates: Record<CategoryEntity['id'], Template[]>,
@@ -224,7 +224,7 @@ async function computeTemplates(
   // setup categories
   const isTracking = isTrackingBudget();
   if (!categories.length) {
-    categories = (await getCategories()).filter(
+    categories = (await getTemplateCategories()).filter(
       c => isTracking || !c.is_income,
     );
   }

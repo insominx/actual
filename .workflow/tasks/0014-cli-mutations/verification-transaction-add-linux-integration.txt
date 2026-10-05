@@ -1,0 +1,13 @@
+✔ guarded transaction addition preserves raw domains and acknowledgements (online) (8320.630111ms)
+✔ guarded transaction addition preserves raw domains and acknowledgements (offline) (7676.275282ms)
+✔ killed guarded transaction addition at before-engine retains its exact outcome without replay (36723.17796ms)
+✔ killed guarded transaction addition at after-engine retains its exact outcome without replay (36023.905697ms)
+✔ killed guarded transaction addition at before-sync retains its exact outcome without replay (36862.13279ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 125664.241712

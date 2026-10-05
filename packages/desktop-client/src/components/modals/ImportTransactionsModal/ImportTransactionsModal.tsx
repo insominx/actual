@@ -48,13 +48,14 @@ import { Transaction } from './Transaction';
 import type { DateFormat, FieldMapping, ImportTransaction } from './utils';
 import {
   applyFieldMappings,
-  dateFormats,
   filterByStartDate,
+  getFileType,
+  getInitialDateFormat,
+  getInitialMappings,
   isDateFormat,
   parseAmountFields,
   parseCategoryFields,
   parseDate,
-  stripCsvImportTransaction,
 } from './utils';
 
 function CheckboxToggle({
@@ -77,94 +78,6 @@ function CheckboxToggle({
       {children}
     </LabeledCheckbox>
   );
-}
-
-function getFileType(filepath: string): string {
-  const m = filepath.match(/\.([^.]*)$/);
-  if (!m) return 'ofx';
-  const rawType = m[1].toLowerCase();
-  if (rawType === 'tsv') return 'csv';
-  return rawType;
-}
-
-function getInitialDateFormat(transactions, mappings) {
-  if (transactions.length === 0 || mappings.date == null) {
-    return 'yyyy mm dd';
-  }
-
-  const transaction = transactions[0];
-  const date = transaction[mappings.date];
-
-  const found =
-    date == null
-      ? null
-      : dateFormats.find(f => parseDate(date, f.format) != null);
-  return found ? found.format : 'mm dd yyyy';
-}
-
-function getInitialMappings(transactions) {
-  if (transactions.length === 0) {
-    return {};
-  }
-
-  const transaction = stripCsvImportTransaction(transactions[0]);
-  const fields = Object.entries(transaction);
-
-  function key(entry) {
-    return entry ? entry[0] : null;
-  }
-
-  const dateField = key(
-    fields.find(([name]) => name.toLowerCase().includes('date')) ||
-      fields.find(([, value]) => String(value)?.match(/^\d+[-/]\d+[-/]\d+$/)),
-  );
-
-  const amountField = key(
-    fields.find(([name]) => name.toLowerCase().includes('amount')) ||
-      fields.find(([, value]) => String(value)?.match(/^-?[.,\d]+$/)),
-  );
-
-  const categoryField = key(
-    fields.find(([name]) => name.toLowerCase().includes('category')),
-  );
-
-  const payeeField = key(
-    fields.find(([name]) => name.toLowerCase().includes('payee')) ||
-      fields.find(
-        ([name]) =>
-          name !== dateField && name !== amountField && name !== categoryField,
-      ),
-  );
-
-  const notesField = key(
-    fields.find(([name]) => name.toLowerCase().includes('notes')) ||
-      fields.find(
-        ([name]) =>
-          name !== dateField &&
-          name !== amountField &&
-          name !== categoryField &&
-          name !== payeeField,
-      ),
-  );
-
-  const inOutField = key(
-    fields.find(
-      ([name]) =>
-        name !== dateField &&
-        name !== amountField &&
-        name !== payeeField &&
-        name !== notesField,
-    ),
-  );
-
-  return {
-    date: dateField,
-    amount: amountField,
-    payee: payeeField,
-    notes: notesField,
-    inOut: inOutField,
-    category: categoryField,
-  };
 }
 
 type LastParse = {
@@ -442,7 +355,10 @@ export function ImportTransactionsModal({
 
             const parseDateFormat =
               prefs[`parse-date-${accountId}-${filetype}`] ||
-              getInitialDateFormat(transactions, mappings);
+              getInitialDateFormat(
+                transactions,
+                mappings as Partial<FieldMapping>,
+              );
             setParseDateFormat(
               isDateFormat(parseDateFormat) ? parseDateFormat : null,
             );
