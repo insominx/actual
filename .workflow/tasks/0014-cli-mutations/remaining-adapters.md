@@ -114,4 +114,4 @@ schedules.create, schedules.update and schedules.delete are guarded (D55). Packa
 
 transactions.delete is guarded (D56) and the guarded transactions.update scope now includes category and payee (D57). Packaged proof: verification-transaction-delete-linux-integration.txt; the existing changes.test.mjs transaction update suite was rerun. Inventory is now 2 open (transactions.add, transactions.import) plus the documented D57 exclusions.
 
-transactions.add is guarded (D58) with API and CLI unit coverage; no dedicated packaged suite yet. Inventory: transactions.import remains open, plus the D57 and D58 exclusions.
+transactions.add is guarded (D58). Packaged proof: verification-transaction-add-linux-integration.txt (5/5, online, offline and three crash boundaries). Inventory: transactions.import remains open, plus the D57 and D58 exclusions.

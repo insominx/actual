@@ -112,6 +112,7 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
             category: nullableId,
             payee: string,
           }),
+          { type: 'array', items: object(importProperties, ['date']) },
           object({ transferAccount: string, transferCategory: string }),
           object({ transferCategoryId: string }),
           object(

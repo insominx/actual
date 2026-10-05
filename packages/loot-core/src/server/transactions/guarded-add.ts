@@ -34,7 +34,7 @@ const PROJECTED = [
 
 type PlannedRow = Record<string, unknown>;
 
-function project(
+export function projectAddedTransaction(
   row: Partial<TransactionEntity>,
   payee: unknown,
   parentIndex: number | null,
@@ -42,12 +42,11 @@ function project(
   const out: PlannedRow = { payee, parentIndex };
   for (const key of PROJECTED) {
     const value = row[key];
+    // Unset flags are stored as false, so booleans never project to null.
     out[key] =
-      value === undefined
-        ? null
-        : key === 'cleared' || key === 'reconciled' || key.startsWith('is_')
-          ? Boolean(value)
-          : value;
+      key === 'cleared' || key === 'reconciled' || key.startsWith('is_')
+        ? Boolean(value)
+        : (value ?? null);
   }
   return out;
 }
@@ -63,7 +62,7 @@ async function plan(request: TransactionAdditionRequest) {
   }
   const ids = added.map(row => row.id);
   const rows = added.map(row =>
-    project(
+    projectAddedTransaction(
       row,
       newPayees.has(row.payee)
         ? { newPayee: newPayees.get(row.payee) }
@@ -157,7 +156,11 @@ export async function performTransactionAddition(
       payee = { newPayee: created?.name };
     }
     actual.push(
-      project(row, payee, row.parent_id ? ids.indexOf(row.parent_id) : null),
+      projectAddedTransaction(
+        row,
+        payee,
+        row.parent_id ? ids.indexOf(row.parent_id) : null,
+      ),
     );
   }
   if (canonicalJson(actual) !== canonicalJson(current.after.rows)) {

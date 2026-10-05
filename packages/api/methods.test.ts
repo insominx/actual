@@ -4956,6 +4956,62 @@ describe('guarded schedule creation, updates and deletions', () => {
   });
 });
 
+describe('guarded transaction addition', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('previews planned rows and applies them with acknowledged ids', async () => {
+    const account = await api.createAccount({ name: 'Adds' }, 0);
+    const request = {
+      accountId: account,
+      transactions: [
+        { date: '2026-10-01', amount: -100, notes: 'one' },
+        {
+          date: '2026-10-02',
+          amount: -300,
+          notes: 'split',
+          subtransactions: [{ amount: -100 }, { amount: -200 }],
+        },
+      ],
+    };
+    const proposal = await api.previewTransactionAddition(request);
+    expect(proposal.after.rows).toHaveLength(4);
+    expect(
+      await api.getTransactions(account, '2026-10-01', '2026-10-31'),
+    ).toEqual([]);
+    const outcome = await api.applyTransactionAddition(proposal);
+    expect(outcome).toMatchObject({ status: 'committed-local' });
+    if (!('transactionAddition' in outcome)) {
+      throw new Error('Expected addition outcome');
+    }
+    expect(outcome.transactionAddition.transactionIds).toHaveLength(4);
+    const rows = await api.getTransactions(account, '2026-10-01', '2026-10-31');
+    expect(rows.map(row => row.notes).sort()).toEqual(['one', 'split']);
+    expect(await api.applyTransactionAddition(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+  });
+  test('rejects malformed requests and closed accounts', async () => {
+    const account = await api.createAccount({ name: 'Closing' }, 0);
+    await expect(
+      api.previewTransactionAddition({ accountId: account, transactions: [] }),
+    ).rejects.toThrow();
+    await expect(
+      api.previewTransactionAddition({
+        accountId: 'missing',
+        transactions: [{ date: '2026-10-01', amount: 1 }],
+      }),
+    ).rejects.toThrow();
+    await api.closeAccount(account);
+    await expect(
+      api.previewTransactionAddition({
+        accountId: account,
+        transactions: [{ date: '2026-10-01', amount: 1 }],
+      }),
+    ).rejects.toThrow();
+  });
+});
+
 describe('guarded transaction deletion', () => {
   beforeEach(async () => {
     await api.loadBudget(budgetName);
