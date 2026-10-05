@@ -31,6 +31,7 @@ import type {
   TransactionSplitOutcome,
   TransactionUpdateOutcome,
   TransferRepairOutcome,
+  ImportFileOutcome,
 } from '@actual-app/api';
 
 import { AgentError } from './agent-output';
@@ -69,7 +70,8 @@ export type ChangeReceipt = {
     | AccountGroupCreationOutcome
     | TransactionMergeOutcome
     | TransactionSplitOutcome
-    | TransferRepairOutcome;
+    | TransferRepairOutcome
+    | ImportFileOutcome;
   artifact?: { path: string; timeout: number };
 };
 

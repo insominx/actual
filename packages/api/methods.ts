@@ -70,6 +70,8 @@ import type {
   CategoryGroupUpdateRequest,
   CategoryUpdateProposal,
   CategoryUpdateRequest,
+  ImportFileProposal,
+  ImportFileRequest,
   ImportMappingSaveProposal,
   ImportMappingSaveRequest,
   NoteSetProposal,
@@ -151,6 +153,10 @@ export type {
   TransactionClearingProposal,
   ImportMappingSaveRequest,
   ImportMappingSaveProposal,
+  ImportFileRequest,
+  ImportFileProposal,
+  ImportFileOutcome,
+  ImportFileRowOutcome,
   TransferMatchRequest,
   TransferMatchProposal,
   TransferUnmatchRequest,
@@ -505,6 +511,17 @@ export function previewImportMappingSave(request: ImportMappingSaveRequest) {
 }
 export function applyImportMappingSave(proposal: ImportMappingSaveProposal) {
   return send('api/import-mapping-apply-save', proposal);
+}
+/**
+ * Prepare a guarded import of one statement file into one account: parse it
+ * with the import dialog's rules, then plan the canonical import (rules,
+ * duplicate matching). Read-only.
+ */
+export function previewFileImport(request: ImportFileRequest) {
+  return send('api/import-file-preview', request);
+}
+export function applyFileImport(proposal: ImportFileProposal) {
+  return send('api/import-file-apply', proposal);
 }
 export function previewTransferMatch(request: TransferMatchRequest) {
   return send('api/transfers-preview-match', request);

@@ -629,6 +629,7 @@ export async function executeScopedChange(
     | 'transfers.unmatch'
     | 'transfers.repair'
     | 'imports.mapping-save'
+    | 'imports.file'
     | 'transactions.merge'
     | 'cash-planning.save',
   payload: Record<string, unknown>,
@@ -1371,6 +1372,10 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
       api.previewImportMappingSave(r as api.ImportMappingSaveRequest),
     apply: p => api.applyImportMappingSave(p as api.ImportMappingSaveProposal),
   },
+  'imports.file': {
+    preview: r => api.previewFileImport(r as api.ImportFileRequest),
+    apply: p => api.applyFileImport(p as api.ImportFileProposal),
+  },
   'transfers.match': {
     preview: r => api.previewTransferMatch(r as api.TransferMatchRequest),
     apply: p => api.applyTransferMatch(p as api.TransferMatchProposal),
@@ -1500,6 +1505,7 @@ function changeRequest(
   | api.TransactionClearingRequest
   | api.TransferMatchRequest
   | api.ImportMappingSaveRequest
+  | api.ImportFileRequest
   | api.TransferUnmatchRequest
   | api.TransferRepairRequest
   | api.TransactionMergeRequest
@@ -1659,6 +1665,43 @@ function changeRequest(
       ...(payload.settings === undefined ? {} : { settings: payload.settings }),
       ...(payload.reset === undefined ? {} : { reset: payload.reset }),
     };
+  }
+  if (operation === 'imports.file') {
+    const opts = isRecord(payload) ? payload.opts : undefined;
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key =>
+          ![
+            'path',
+            'accountId',
+            'settings',
+            'useSaved',
+            'sha256',
+            'invalidRows',
+            'opts',
+          ].includes(key),
+      ) ||
+      typeof payload.path !== 'string' ||
+      typeof payload.accountId !== 'string' ||
+      !(payload.settings === undefined || isRecord(payload.settings)) ||
+      !(
+        payload.useSaved === undefined || typeof payload.useSaved === 'boolean'
+      ) ||
+      !(payload.sha256 === undefined || typeof payload.sha256 === 'string') ||
+      !(
+        payload.invalidRows === undefined ||
+        payload.invalidRows === 'reject' ||
+        payload.invalidRows === 'skip'
+      ) ||
+      !(opts === undefined || isRecord(opts))
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'File import takes path, accountId and optional settings, useSaved, sha256, invalidRows (reject or skip) and opts.',
+      );
+    }
+    return payload as api.ImportFileRequest;
   }
   if (operation === 'transfers.match') {
     if (

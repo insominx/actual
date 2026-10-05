@@ -495,6 +495,69 @@ export type TransactionImportOutcome = CatalogCommit<{
   transactionImport: { addedIds: string[]; updatedIds: string[] };
 }>;
 
+export type ImportFileRequest = {
+  path: string;
+  accountId: string;
+  settings?: Record<string, unknown>;
+  useSaved?: boolean;
+  sha256?: string;
+  invalidRows?: 'reject' | 'skip';
+  opts?: TransactionImportRequest['opts'];
+};
+export type ImportFileRowOutcome = {
+  index: number;
+  outcome:
+    | 'add'
+    | 'update'
+    | 'duplicate'
+    | 'reconciled'
+    | 'deleted'
+    | 'invalid';
+  match: {
+    kind: 'imported_id' | 'payee_date_amount' | 'date_amount';
+    transactionId: string;
+  } | null;
+  errors?: string[];
+};
+export type ImportFileProposal = CatalogProposal<
+  'imports.file',
+  ImportFileRequest,
+  {
+    file: { name: string; format: string; size: number; sha256: string };
+    settings: Record<string, unknown>;
+    sources: Record<string, string>;
+  },
+  {
+    added: Array<Record<string, unknown>>;
+    updated: Array<Record<string, unknown>>;
+    rows: ImportFileRowOutcome[];
+    summary: {
+      rowCount: number;
+      add: number;
+      update: number;
+      duplicate: number;
+      reconciled: number;
+      deleted: number;
+      invalid: number;
+      newPayees: string[];
+      unresolvedCategories: string[];
+    };
+    options: {
+      defaultCleared: boolean;
+      reimportDeleted: boolean;
+      payeeNameNormalization: 'original' | 'title-case';
+      invalidRows: 'reject' | 'skip';
+    };
+  }
+>;
+export type ImportFileOutcome = CatalogCommit<{
+  fileImport: {
+    sha256: string;
+    addedIds: string[];
+    updatedIds: string[];
+  };
+}>;
+
 export type CategoryGroupUpdateRequest = {
   id: string;
   fields: {
@@ -908,6 +971,7 @@ export type ChangeProposal =
   | CashPlanSaveProposal
   | TransactionAdditionProposal
   | TransactionImportProposal
+  | ImportFileProposal
   | CategoryGroupCreationProposal
   | CategoryCreationProposal
   | CategoryGroupDeletionProposal

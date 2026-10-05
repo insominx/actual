@@ -88,6 +88,9 @@ import type {
   CategoryGroupUpdateRequest,
   CategoryUpdateProposal,
   CategoryUpdateRequest,
+  ImportFileOutcome,
+  ImportFileProposal,
+  ImportFileRequest,
   ImportMappingSaveProposal,
   ImportMappingSaveRequest,
   NoteSetProposal,
@@ -345,6 +348,12 @@ export type ApiHandlers = {
   'api/import-mapping-apply-save': (
     arg: ImportMappingSaveProposal,
   ) => Promise<TransactionUpdateOutcome>;
+  'api/import-file-preview': (
+    arg: ImportFileRequest,
+  ) => Promise<ImportFileProposal>;
+  'api/import-file-apply': (
+    arg: ImportFileProposal,
+  ) => Promise<ImportFileOutcome>;
   'api/transfers-candidates': (arg: {
     account?: string;
     start?: string;

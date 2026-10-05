@@ -233,6 +233,10 @@ import {
   prepareTransactionSplit,
 } from './transactions/guarded-split';
 import {
+  performFileImport,
+  prepareFileImport,
+} from './transactions/import/guarded-file-import';
+import {
   importPreferenceKeys,
   inspectImportFile,
   savedImportSettings,
@@ -3445,6 +3449,17 @@ function guardedCatalogHandlers<
   );
   handlers['api/import-mapping-preview-save'] = importMappingSave.preview;
   handlers['api/import-mapping-apply-save'] = importMappingSave.apply;
+  const fileImport = guardedCatalogHandlers(
+    prepareFileImport,
+    guardedApply({
+      operation: 'imports.file',
+      noun: 'File import',
+      prepare: prepareFileImport,
+      perform: performFileImport,
+    }),
+  );
+  handlers['api/import-file-preview'] = fileImport.preview;
+  handlers['api/import-file-apply'] = fileImport.apply;
   const transferMatch = guardedCatalogHandlers(
     prepareTransferMatch,
     guardedApply({

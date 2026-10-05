@@ -119,6 +119,7 @@ describe('registered agent commands', () => {
       'imports.mappings.reset',
       ['imports', 'mappings', 'reset', '--account', 'a'],
     ],
+    ['imports.apply', ['imports', 'apply', 'f.csv', '--account', 'a']],
     ['cash-planning.reset', ['cash-planning', 'reset']],
     [
       'cash-planning.set-target',

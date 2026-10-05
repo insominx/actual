@@ -73,7 +73,7 @@ function byId(a: Row, b: Row) {
   return String(a.id).localeCompare(String(b.id));
 }
 
-async function plan(request: TransactionImportRequest) {
+export async function planTransactionImport(request: TransactionImportRequest) {
   const { added, updated, payeesToCreate } = await planReconciledTransactions(
     request.accountId,
     structuredClone(request.transactions),
@@ -147,7 +147,7 @@ export async function prepareTransactionImport(
   }
   let planned;
   try {
-    planned = await plan(request);
+    planned = await planTransactionImport(request);
   } catch (error) {
     if (error instanceof TransactionError || error instanceof Error) {
       throw APIError(error.message);

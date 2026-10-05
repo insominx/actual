@@ -73,6 +73,8 @@ const READ_OPERATIONS = new Set([
   'imports.inspect',
   'imports.parse',
   'imports.mappings.get',
+  'imports.preview',
+  'imports.history',
   'server.version',
   'server.get-id',
   'rules.payee-rules',
