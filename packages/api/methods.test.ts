@@ -7020,3 +7020,37 @@ describe('ledger reports', () => {
     ).rejects.toThrow(/at most 60 months/);
   });
 });
+
+describe('data quality checkup', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('finds duplicates and uncategorized rows and verifies coverage only with evidence', async () => {
+    const account = await api.createAccount({ name: 'Checkup' }, 0);
+    await api.addTransactions(account, [
+      { date: '2017-05-03', amount: -1234 },
+      { date: '2017-05-04', amount: -1234 },
+    ]);
+    const result = await api.getDataQualityCheckup({
+      start: '2017-05',
+      end: '2017-07',
+      accountIds: [account],
+      statements: [{ accountId: account, month: '2017-06', noActivity: true }],
+    });
+    const codes = result.findings.map(f => f.code);
+    expect(codes).toContain('uncategorized');
+    expect(codes).toContain('duplicate-candidate');
+    expect(result.coverage[0].months.map(m => m.status)).toEqual([
+      'observed',
+      'statement-verified',
+      'unknown',
+    ]);
+    await expect(
+      api.getDataQualityCheckup({
+        start: '2017-05',
+        end: '2017-05',
+        statements: [{ accountId: account, month: '2017-05' }],
+      }),
+    ).rejects.toThrow(/endingBalance or noActivity/);
+  });
+});

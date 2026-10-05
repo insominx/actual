@@ -1,0 +1,11 @@
+✔ findings cover duplicates, uncategorized rows, an orphan transfer and a statement discrepancy with bounded output (6215.073159ms)
+✔ empty months stay unknown until a no-activity statement verifies them (8740.652018ms)
+✔ repeated checkups write nothing to the budget and never repair (5341.914308ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 20357.032434

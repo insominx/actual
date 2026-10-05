@@ -85,6 +85,7 @@ const READ_OPERATIONS = new Set([
   'reports.cash-flow',
   'reports.categories',
   'reports.net-worth',
+  'checkup.data-quality',
   'server.version',
   'server.get-id',
   'rules.payee-rules',

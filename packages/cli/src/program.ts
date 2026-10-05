@@ -14,6 +14,7 @@ import { registerCashPlanningCommand } from './commands/cash-planning';
 import { registerCategoriesCommand } from './commands/categories';
 import { registerCategoryGroupsCommand } from './commands/category-groups';
 import { registerChangesCommand } from './commands/changes';
+import { registerCheckupCommand } from './commands/checkup';
 import { registerDiagnosticsCommand } from './commands/diagnostics';
 import { registerImportsCommand } from './commands/imports';
 import { registerNotesCommand } from './commands/notes';
@@ -173,6 +174,7 @@ export function createProgram(
   registerTransfersCommand(program);
   registerReconcileCommand(program);
   registerReportsCommand(program);
+  registerCheckupCommand(program);
   registerImportsCommand(program);
   registerRulesCommand(program);
   registerSchedulesCommand(program);

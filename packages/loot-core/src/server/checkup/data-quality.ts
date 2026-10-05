@@ -79,6 +79,20 @@ export type CoverageMonth = {
   } | null;
 };
 
+export type AccountCoverage = {
+  accountId: string;
+  name: string;
+  offBudget: boolean;
+  closed: boolean;
+  months: CoverageMonth[];
+  summary: {
+    observed: number;
+    statementVerified: number;
+    discrepancy: number;
+    unknown: number;
+  };
+};
+
 type LeafRow = {
   id: string;
   account: string;
@@ -423,7 +437,7 @@ export async function dataQualityCheckup(request: DataQualityRequest) {
     );
     return row?.balance ?? 0;
   }
-  const coverage = [];
+  const coverage: AccountCoverage[] = [];
   const coverageAccounts = [
     ...accounts,
     ...allAccounts.filter(

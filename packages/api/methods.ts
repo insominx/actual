@@ -1039,6 +1039,7 @@ export type {
 } from '@actual-app/core/server/rules/evaluate';
 export type { TemplateInspection } from '@actual-app/core/server/budget/guarded-allocation';
 export type {
+  AccountCoverage,
   CoverageMonth,
   CoverageStatus,
   DataQualityFinding,
