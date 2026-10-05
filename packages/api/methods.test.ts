@@ -5650,3 +5650,71 @@ describe('guarded transaction classification updates', () => {
     ).rejects.toThrow();
   });
 });
+
+describe('guarded account groups', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('creates, renames and deletes groups, ungrouping members without ledger changes', async () => {
+    const before = await api.getAccountGroups();
+    const proposal = await api.previewAccountGroupCreation({ name: 'Daily' });
+    expect(await api.getAccountGroups()).toEqual(before);
+    const created = await api.applyAccountGroupCreation(proposal);
+    if (created.status !== 'committed-local') {
+      throw new Error('Expected committed account group creation');
+    }
+    const groupId = created.accountGroupCreation.groupId;
+    expect(await api.applyAccountGroupCreation(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    await expect(
+      api.previewAccountGroupCreation({ name: 'Daily' }),
+    ).rejects.toThrow();
+
+    const renamed = await api.applyAccountGroupUpdate(
+      await api.previewAccountGroupUpdate({
+        id: groupId,
+        fields: { name: 'Everyday' },
+      }),
+    );
+    expect(renamed).toMatchObject({ status: 'committed-local' });
+    expect(await api.getAccountGroups()).toContainEqual(
+      expect.objectContaining({ id: groupId, name: 'Everyday' }),
+    );
+
+    const account = await api.createAccount(
+      { name: 'Grouped', offbudget: false },
+      5000,
+    );
+    await api.updateAccount(account, { account_group_id: groupId });
+    const deletion = await api.previewAccountGroupDeletion({ id: groupId });
+    expect(deletion.after).toEqual({
+      action: 'tombstone',
+      ungroupedAccountIds: [account],
+    });
+    expect(await api.applyAccountGroupDeletion(deletion)).toMatchObject({
+      status: 'committed-local',
+    });
+    expect(
+      (await api.getAccountGroups()).some(group => group.id === groupId),
+    ).toBe(false);
+    const inspected = (await api.inspectAccounts({})).accounts.find(
+      row => row.id === account,
+    );
+    expect(inspected?.group).toBeNull();
+    expect(inspected?.balances.ledger).toBe(5000);
+
+    for (const request of [{ name: '' }, { name: 'x', extra: true }]) {
+      await expect(
+        api.previewAccountGroupCreation(
+          request as unknown as Parameters<
+            typeof api.previewAccountGroupCreation
+          >[0],
+        ),
+      ).rejects.toThrow();
+    }
+    await expect(
+      api.previewAccountGroupDeletion({ id: 'missing' }),
+    ).rejects.toThrow();
+  });
+});
