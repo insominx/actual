@@ -580,6 +580,20 @@ export function inspectSchedules(request: ScheduleInspectionRequest = {}) {
   return send('api/schedules-inspect', request);
 }
 /**
+ * Bank sync status: linked accounts, last sync, persisted sync status and
+ * provider configuration, without secrets. Read-only.
+ */
+export function getBankSyncStatus() {
+  return send('api/bank-sync-status');
+}
+/**
+ * Run bank sync for already-linked accounts and return one outcome per
+ * account. Never creates a provider connection.
+ */
+export function refreshBankSync(request?: { accountIds?: string[] }) {
+  return send('api/bank-sync-refresh', request);
+}
+/**
  * Read-only data-quality checkup: uncategorized rows, deleted categories,
  * duplicate candidates, transfer link problems, statement discrepancies and
  * month coverage. Never repairs anything.
@@ -1038,6 +1052,12 @@ export type {
   RuleTestResult,
 } from '@actual-app/core/server/rules/evaluate';
 export type { TemplateInspection } from '@actual-app/core/server/budget/guarded-allocation';
+export type {
+  BankSyncAccountOutcome,
+  BankSyncAccountStatus,
+  BankSyncOutcomeStatus,
+  BankSyncProviderState,
+} from '@actual-app/core/server/accounts/bank-sync-status';
 export type {
   AccountCoverage,
   CoverageMonth,

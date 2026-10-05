@@ -1,4 +1,8 @@
 import type { ImportTransactionsResult } from '#server/accounts/app';
+import type {
+  bankSyncRefresh,
+  bankSyncStatus,
+} from '#server/accounts/bank-sync-status';
 // @ts-strict-ignore
 import type { AccountInspection } from '#server/accounts/inspect';
 import type {
@@ -393,6 +397,10 @@ export type ApiHandlers = {
   'api/import-mapping-apply-save': (
     arg: ImportMappingSaveProposal,
   ) => Promise<TransactionUpdateOutcome>;
+  'api/bank-sync-status': () => ReturnType<typeof bankSyncStatus>;
+  'api/bank-sync-refresh': (arg?: {
+    accountIds?: string[];
+  }) => ReturnType<typeof bankSyncRefresh>;
   'api/checkup-data-quality': (
     arg: DataQualityRequest,
   ) => ReturnType<typeof dataQualityCheckup>;

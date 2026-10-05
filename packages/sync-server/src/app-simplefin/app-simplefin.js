@@ -123,6 +123,8 @@ app.post(
     } catch (e) {
       if (isForbidden(e.message)) {
         invalidToken(res);
+      } else if (e.message === 'Rate limited') {
+        rateLimited(res);
       } else {
         serverDown(e, res);
       }
@@ -291,6 +293,18 @@ function invalidToken(res) {
       status: 'rejected',
       reason:
         'Invalid SimpleFIN access token.  Reset the token and re-link any broken accounts.',
+    },
+  });
+}
+
+function rateLimited(res) {
+  res.send({
+    status: 'ok',
+    data: {
+      error_type: 'RATE_LIMIT_EXCEEDED',
+      error_code: 'RATE_LIMIT_EXCEEDED',
+      status: 'rejected',
+      reason: 'SimpleFIN rate limit exceeded. Try again later.',
     },
   });
 }
@@ -467,6 +481,10 @@ async function getAccounts(
 
   if (response.status === 403) {
     throw new Error('Forbidden');
+  }
+
+  if (response.status === 429) {
+    throw new Error('Rate limited');
   }
 
   const text = await response.text();

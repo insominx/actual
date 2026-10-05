@@ -100,6 +100,8 @@ import {
   makeAccountClosingTransaction,
   performAccountClosure,
 } from './accounts/app';
+import { bankSyncRefresh, bankSyncStatus } from './accounts/bank-sync-status';
+import type { BankSyncRunners } from './accounts/bank-sync-status';
 import { inspectAccounts } from './accounts/inspect';
 import { inspectStartingBalancePayee } from './accounts/payees';
 import {
@@ -5099,6 +5101,25 @@ handlers['api/import-mapping-get'] = async function (arg) {
 handlers['api/rules-matches'] = async function (arg) {
   checkFileOpen();
   return findRuleMatches(arg);
+};
+function bankSyncRunners(): BankSyncRunners {
+  return {
+    single: ids => handlers['accounts-bank-sync']({ ids }),
+    simpleFin: ids => handlers['simplefin-batch-sync']({ ids }),
+    status: {
+      goCardless: () => handlers['gocardless-status'](),
+      simpleFin: () => handlers['simplefin-status'](),
+      pluggyai: () => handlers['pluggyai-status'](),
+    },
+  };
+}
+handlers['api/bank-sync-status'] = async function () {
+  checkFileOpen();
+  return bankSyncStatus(bankSyncRunners());
+};
+handlers['api/bank-sync-refresh'] = async function (arg) {
+  checkFileOpen();
+  return bankSyncRefresh(arg, bankSyncRunners());
 };
 handlers['api/checkup-data-quality'] = async function (arg) {
   checkFileOpen();

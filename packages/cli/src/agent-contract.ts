@@ -88,6 +88,8 @@ const READ_OPERATIONS = new Set([
   'reports.net-worth',
   'checkup.data-quality',
   'changes.inspect',
+  'bank-sync.status',
+  'bank-sync.results',
   'server.version',
   'server.get-id',
   'rules.payee-rules',

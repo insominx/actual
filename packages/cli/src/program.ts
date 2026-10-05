@@ -9,6 +9,7 @@ import { AgentError, beginAgentOutput, flushAgentOutput } from './agent-output';
 import { registerAccountGroupsCommand } from './commands/account-groups';
 import { registerAccountsCommand } from './commands/accounts';
 import { registerBackupsCommand } from './commands/backups';
+import { registerBankSyncCommand } from './commands/bank-sync';
 import { registerBudgetsCommand } from './commands/budgets';
 import { registerCashPlanningCommand } from './commands/cash-planning';
 import { registerCategoriesCommand } from './commands/categories';
@@ -175,6 +176,7 @@ export function createProgram(
   registerReconcileCommand(program);
   registerReportsCommand(program);
   registerCheckupCommand(program);
+  registerBankSyncCommand(program);
   registerImportsCommand(program);
   registerRulesCommand(program);
   registerSchedulesCommand(program);
