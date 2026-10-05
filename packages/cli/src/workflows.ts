@@ -977,7 +977,9 @@ export async function advanceRun(
             !(
               u.step === step.id &&
               u.code === item.code &&
-              u.message === item.message
+              u.message === item.message &&
+              u.accountId === item.accountId &&
+              JSON.stringify(u.evidence) === JSON.stringify(item.evidence)
             ),
         );
         run.unresolved.push({ step: step.id, ...item });
