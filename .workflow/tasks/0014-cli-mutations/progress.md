@@ -1,7 +1,7 @@
 # Task Progress: Preview, apply, receipts, and safe retry protocol
 
 Current status: partial; active
-Current phase: guarded transaction/split/transfer, allocation/carryover/hold/reset, budget lifecycle/publication, account, category and category-group checkpoints are verified locally on Windows; payee and tag catalog adapters are verified locally on Linux. The remaining 10 existing adapters (transactions add/import/full update/delete, rules, schedules) and complete task acceptance remain required.
+Current phase: guarded transaction/split/transfer, allocation/carryover/hold/reset, budget lifecycle/publication, account, category and category-group checkpoints are verified locally on Windows; payee and tag catalog adapters are verified locally on Linux. The remaining existing adapters are transactions.add and transactions.import, plus the D57 transaction update exclusions, and complete task acceptance remain required.
 
 ## Dependencies
 
@@ -283,3 +283,15 @@ Guarded payee creation verified locally on Linux (2026-10-05). Work moved from W
 ## Payee and tag catalog checkpoint (Linux, 2026-10-05)
 
 Guarded payees.update, payees.delete, payees.merge, tags.create, tags.update and tags.delete pass on Linux. Core apply boilerplate moved into one shared envelope (guarded-proposal.ts, D49); read-only plans and writer calls sit with their owners (payees/guarded.ts, tags/guarded.ts) and writers still call the canonical db/tag owners and verify the raw rows they promised. Guarded validation choices D50 to D53 are recorded as assumptions for review (name-only payee updates, transfer payee no-ops kept, merge rejects target-in-sources and missing ids, tag name rule and live-duplicate rejection). Evidence: new API cases 7/7 (red before registration: handlers did not exist), API 104/104, CLI 263/263 (new direct operation-ID and tag retention tests), core tags/payees 6/6, root types pass, typed lint/format pass for touched files, packaged 23/23 in verification-catalog-linux-integration.txt (12 regular online/offline cases for the six operations, exact interruption boundaries for merge and tag creation, and the payee creation suite rerun). Interruption cases for the single-row update/delete operations were not added because they exercise the same executor path already proven for payee creation and category updates. Inventory 10. Next: rules.create/update/delete.
+
+## Rule and schedule checkpoint (Linux, 2026-10-05)
+
+Guarded rules.create/update/delete (D54) and schedules.create/update/delete (D55) pass on Linux through the shared D49 envelope. The legacy schedule update field mapping now lives in schedules/api-fields.ts and is shared with the guarded plan. Evidence: new API cases 4/4 (rules and schedules), API full suite, CLI unit, core rules/schedules 228/228, root types, typed lint/format on touched files (remaining lint errors are pre-existing floating-promise findings in untouched integration files), packaged rules 9/9 (verification-rules-linux-integration.txt) and schedules (verification-schedules-linux-integration.txt). Inventory 4. Next: transactions.delete, then transactions.add/import and the full transactions.update scope.
+
+## Transaction deletion and classification checkpoint (Linux, 2026-10-05)
+
+Guarded transactions.delete (D56) and category/payee transaction updates (D57) pass. A first packaged run passed while the plan read the wrong raw column names (transfer and child detection were inactive); the API case caught it (single-child deletion was not rejected), the plan now reads isChild/transferred_id, and the packaged suite was rerun. Evidence: API transaction cases 3/3 including split and transfer cascades, verification-transaction-delete-linux-integration.txt, and the changes.test.mjs transaction regression rerun.
+
+Guarded transactions.add (D58) wired through core, API and CLI (opt-in direct version 2 `transactions add --operation-id` and `changes preview transactions.add <account-id>`). Verified by API/CLI unit suites, typecheck and lint; a packaged integration suite for addition is still outstanding.
+
+Checkpoint 2026-10-04 23:30 PT: committed rules, schedules, transactions.delete, transactions.update scope and transactions.add together. API 111/111, CLI unit 268/268, core rules/schedules 228/228, typecheck and lint pass; the packaged rules (9/9) and schedules (9/9) suites passed earlier. The first packaged changes.test.mjs rerun exposed that a mandatory --operation-id on version 2 transactions add broke existing fixtures, so guarded add became opt-in (D58); the packaged rerun after that fix is the next step.

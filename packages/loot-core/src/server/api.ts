@@ -104,11 +104,7 @@ import {
   scheduleModel,
   tagModel,
 } from './api-models';
-import type {
-  AmountOPType,
-  APIAccountEntity,
-  APIScheduleEntity,
-} from './api-models';
+import type { APIAccountEntity, APIScheduleEntity } from './api-models';
 import { aqlQuery } from './aql';
 import {
   inspectBudgetAmount,
@@ -154,6 +150,23 @@ import {
   preparePayeeUpdate,
 } from './payees/guarded';
 import * as prefs from './prefs';
+import {
+  performRuleCreation,
+  performRuleDeletion,
+  performRuleUpdate,
+  prepareRuleCreation,
+  prepareRuleDeletion,
+  prepareRuleUpdate,
+} from './rules/guarded';
+import { applyApiScheduleFields } from './schedules/api-fields';
+import {
+  performScheduleCreation,
+  performScheduleDeletion,
+  performScheduleUpdate,
+  prepareScheduleCreation,
+  prepareScheduleDeletion,
+  prepareScheduleUpdate,
+} from './schedules/guarded';
 import { getServer } from './server-config';
 import * as sheet from './sheet';
 import { batchMessages, getSyncStatus, setSyncingMode } from './sync';
@@ -165,6 +178,14 @@ import {
   prepareTagDeletion,
   prepareTagUpdate,
 } from './tags/guarded';
+import {
+  performTransactionAddition,
+  prepareTransactionAddition,
+} from './transactions/guarded-add';
+import {
+  performTransactionDeletion,
+  prepareTransactionDeletion,
+} from './transactions/guarded-delete';
 import { planLinkedTransferUpdate } from './transactions/linked-transfer-plan';
 import {
   getTransferredAccount,
@@ -2113,6 +2134,54 @@ async function inspectTransactionReferences(transactions: TransactionEntity[]) {
   );
 }
 
+// Category and payee edits stay inside the existing transfer-free plan: a
+// payee change that would link or unlink a transfer, a category on a transfer,
+// split parent or off-budget row, and unknown or deleted references are
+// rejected before any plan is built.
+async function inspectGuardedClassification(
+  transaction: TransactionEntity,
+  fields: TransactionUpdateRequest['fields'],
+) {
+  if (fields.category !== undefined) {
+    if (transaction.is_parent || transaction.transfer_id) {
+      throw APIError(
+        'Category edits are not supported on split parents or transfers',
+      );
+    }
+    const account = await db.first<Pick<db.DbAccount, 'offbudget'>>(
+      'SELECT offbudget FROM accounts WHERE id = ?',
+      [transaction.account],
+    );
+    if (fields.category !== null && account?.offbudget) {
+      throw APIError('Off-budget transactions cannot carry a category');
+    }
+    if (
+      fields.category !== null &&
+      !(await db.first(
+        'SELECT id FROM categories WHERE id = ? AND tombstone = 0',
+        [fields.category],
+      ))
+    ) {
+      throw APIError('Category does not exist');
+    }
+  }
+  if (fields.payee !== undefined) {
+    if (transaction.transfer_id) {
+      throw APIError('Changing a transfer payee requires a repair operation');
+    }
+    const payee = await db.first<Pick<db.DbPayee, 'transfer_acct'>>(
+      'SELECT transfer_acct FROM payees WHERE id = ? AND tombstone = 0',
+      [fields.payee],
+    );
+    if (!payee) {
+      throw APIError('Payee does not exist');
+    }
+    if (payee.transfer_acct) {
+      throw APIError('Transfer linking requires a separate repair operation');
+    }
+  }
+}
+
 async function prepareTransactionUpdate(
   request: TransactionUpdateRequest,
 ): Promise<TransactionUpdateProposal> {
@@ -2138,6 +2207,10 @@ async function prepareTransactionUpdate(
           return !Number.isSafeInteger(value);
         case 'cleared':
           return typeof value !== 'boolean';
+        case 'category':
+          return value !== null && (typeof value !== 'string' || !value);
+        case 'payee':
+          return typeof value !== 'string' || !value;
         case 'date':
           return (
             typeof value !== 'string' ||
@@ -2151,7 +2224,7 @@ async function prepareTransactionUpdate(
     })
   ) {
     throw APIError(
-      'This guarded update supports notes, amount, date, and cleared only',
+      'This guarded update supports notes, amount, date, cleared, category, and payee only',
     );
   }
   const { data } = await aqlQuery(
@@ -2163,6 +2236,7 @@ async function prepareTransactionUpdate(
   const transactions = ungroupTransactions(data);
   const transaction = transactions.find(row => row.id === request.id);
   if (!transaction) throw APIError('Transaction not found');
+  await inspectGuardedClassification(transaction, request.fields);
   const splitReferences = await inspectTransactionReferences(transactions);
   const linked = new Map<
     string,
@@ -3172,6 +3246,94 @@ function guardedCatalogHandlers<
   );
   handlers['api/tag-preview-deletion'] = tagDeletion.preview;
   handlers['api/tag-apply-deletion'] = tagDeletion.apply;
+  const transactionAddition = guardedCatalogHandlers(
+    prepareTransactionAddition,
+    guardedApply({
+      operation: 'transactions.add',
+      noun: 'Transaction addition',
+      prepare: prepareTransactionAddition,
+      perform: performTransactionAddition,
+    }),
+  );
+  handlers['api/transactions-preview-addition'] = transactionAddition.preview;
+  handlers['api/transactions-apply-addition'] = transactionAddition.apply;
+  const transactionDeletion = guardedCatalogHandlers(
+    prepareTransactionDeletion,
+    guardedApply({
+      operation: 'transactions.delete',
+      noun: 'Transaction deletion',
+      prepare: prepareTransactionDeletion,
+      perform: performTransactionDeletion,
+    }),
+  );
+  handlers['api/transaction-preview-deletion'] = transactionDeletion.preview;
+  handlers['api/transaction-apply-deletion'] = transactionDeletion.apply;
+  const scheduleCreation = guardedCatalogHandlers(
+    prepareScheduleCreation,
+    guardedApply({
+      operation: 'schedules.create',
+      noun: 'Schedule creation',
+      prepare: prepareScheduleCreation,
+      perform: performScheduleCreation,
+    }),
+  );
+  handlers['api/schedule-preview-creation'] = scheduleCreation.preview;
+  handlers['api/schedule-apply-creation'] = scheduleCreation.apply;
+  const scheduleUpdate = guardedCatalogHandlers(
+    prepareScheduleUpdate,
+    guardedApply({
+      operation: 'schedules.update',
+      noun: 'Schedule update',
+      prepare: prepareScheduleUpdate,
+      perform: performScheduleUpdate,
+    }),
+  );
+  handlers['api/schedule-preview-update'] = scheduleUpdate.preview;
+  handlers['api/schedule-apply-update'] = scheduleUpdate.apply;
+  const scheduleDeletion = guardedCatalogHandlers(
+    prepareScheduleDeletion,
+    guardedApply({
+      operation: 'schedules.delete',
+      noun: 'Schedule deletion',
+      prepare: prepareScheduleDeletion,
+      perform: performScheduleDeletion,
+    }),
+  );
+  handlers['api/schedule-preview-deletion'] = scheduleDeletion.preview;
+  handlers['api/schedule-apply-deletion'] = scheduleDeletion.apply;
+  const ruleCreation = guardedCatalogHandlers(
+    prepareRuleCreation,
+    guardedApply({
+      operation: 'rules.create',
+      noun: 'Rule creation',
+      prepare: prepareRuleCreation,
+      perform: performRuleCreation,
+    }),
+  );
+  handlers['api/rule-preview-creation'] = ruleCreation.preview;
+  handlers['api/rule-apply-creation'] = ruleCreation.apply;
+  const ruleUpdate = guardedCatalogHandlers(
+    prepareRuleUpdate,
+    guardedApply({
+      operation: 'rules.update',
+      noun: 'Rule update',
+      prepare: prepareRuleUpdate,
+      perform: performRuleUpdate,
+    }),
+  );
+  handlers['api/rule-preview-update'] = ruleUpdate.preview;
+  handlers['api/rule-apply-update'] = ruleUpdate.apply;
+  const ruleDeletion = guardedCatalogHandlers(
+    prepareRuleDeletion,
+    guardedApply({
+      operation: 'rules.delete',
+      noun: 'Rule deletion',
+      prepare: prepareRuleDeletion,
+      perform: performRuleDeletion,
+    }),
+  );
+  handlers['api/rule-preview-deletion'] = ruleDeletion.preview;
+  handlers['api/rule-apply-deletion'] = ruleDeletion.apply;
 }
 
 async function prepareGuardedCategoryGroupCreation(
@@ -4668,120 +4830,7 @@ handlers['api/schedule-update'] = withMutation(async function ({
   }
 
   const sched = data[0] as ScheduleEntity;
-  let conditionsUpdated = false;
-  // Find all indices to avoid direct assignment
-  const payeeIndex = sched._conditions.findIndex(c => c.field === 'payee');
-  const accountIndex = sched._conditions.findIndex(c => c.field === 'account');
-  const dateIndex = sched._conditions.findIndex(c => c.field === 'date');
-  const amountIndex = sched._conditions.findIndex(c => c.field === 'amount');
-
-  for (const key in fields) {
-    const typedKey = key as keyof APIScheduleEntity;
-    const value = fields[typedKey];
-
-    switch (typedKey) {
-      case 'name': {
-        const newName = String(value);
-        const { data: existing } = await aqlQuery(
-          q('schedules').filter({ name: newName }).select('*'),
-        );
-        if (!existing || existing.length === 0 || existing[0].id === sched.id) {
-          sched.name = newName;
-          conditionsUpdated = true;
-        } else {
-          throw APIError(`There is already a schedule named: ${newName}`);
-        }
-        break;
-      }
-      case 'next_date':
-      case 'completed': {
-        throw APIError(
-          `Field ${typedKey} is system-managed and not user-editable.`,
-        );
-      }
-      case 'posts_transaction': {
-        sched.posts_transaction = Boolean(value);
-        conditionsUpdated = true;
-        break;
-      }
-      case 'payee': {
-        if (payeeIndex !== -1) {
-          sched._conditions[payeeIndex].value = value;
-          conditionsUpdated = true;
-        } else {
-          sched._conditions.push({
-            field: 'payee',
-            op: 'is',
-            value: String(value),
-          });
-          conditionsUpdated = true;
-        }
-        break;
-      }
-      case 'account': {
-        if (accountIndex !== -1) {
-          sched._conditions[accountIndex].value = value;
-          conditionsUpdated = true;
-        } else {
-          sched._conditions.push({
-            field: 'account',
-            op: 'is',
-            value: String(value),
-          });
-          conditionsUpdated = true;
-        }
-        break;
-      }
-      case 'amountOp': {
-        if (amountIndex !== -1) {
-          let convertedOp: AmountOPType;
-          switch (value) {
-            case 'is':
-              convertedOp = 'is';
-              break;
-            case 'isapprox':
-              convertedOp = 'isapprox';
-              break;
-            case 'isbetween':
-              convertedOp = 'isbetween';
-              break;
-            default:
-              throw APIError(
-                `Invalid amount operator: ${String(value)}. Expected: is, isapprox, or isbetween`,
-              );
-          }
-          sched._conditions[amountIndex].op = convertedOp;
-          conditionsUpdated = true;
-        } else {
-          throw APIError(`Ammount can not be found. There is a bug here`);
-        }
-        break;
-      }
-      case 'amount': {
-        if (amountIndex !== -1) {
-          sched._conditions[amountIndex].value = value;
-          conditionsUpdated = true;
-        } else {
-          throw APIError(`Ammount can not be found. There is a bug here`);
-        }
-        break;
-      }
-      case 'date': {
-        if (dateIndex !== -1) {
-          sched._conditions[dateIndex].value = value;
-          conditionsUpdated = true;
-        } else {
-          throw APIError(
-            `Date can not be found. Schedules can not be created without a date there is a bug here`,
-          );
-        }
-        break;
-      }
-      default: {
-        throw APIError(`Unhandled field: ${typedKey}`);
-      }
-    }
-  }
+  const conditionsUpdated = await applyApiScheduleFields(sched, fields);
 
   if (conditionsUpdated) {
     return handlers['schedule/update']({

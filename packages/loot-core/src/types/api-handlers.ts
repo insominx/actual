@@ -71,6 +71,20 @@ import type {
   PayeeMergeRequest,
   PayeeUpdateProposal,
   PayeeUpdateRequest,
+  RuleCreationOutcome,
+  RuleCreationProposal,
+  RuleCreationRequest,
+  RuleDeletionProposal,
+  RuleDeletionRequest,
+  RuleUpdateProposal,
+  RuleUpdateRequest,
+  ScheduleCreationOutcome,
+  ScheduleCreationProposal,
+  ScheduleCreationRequest,
+  ScheduleDeletionProposal,
+  ScheduleDeletionRequest,
+  ScheduleUpdateProposal,
+  ScheduleUpdateRequest,
   TagCreationOutcome,
   TagCreationProposal,
   TagCreationRequest,
@@ -78,6 +92,11 @@ import type {
   TagDeletionRequest,
   TagUpdateProposal,
   TagUpdateRequest,
+  TransactionAdditionOutcome,
+  TransactionAdditionProposal,
+  TransactionAdditionRequest,
+  TransactionDeletionProposal,
+  TransactionDeletionRequest,
   TransactionUpdateOutcome,
   TransactionUpdateProposal,
   TransactionUpdateRequest,
@@ -219,6 +238,54 @@ export type ApiHandlers = {
   'api/tag-apply-deletion': (
     arg: TagDeletionProposal,
   ) => Promise<TransactionUpdateOutcome>;
+  'api/rule-preview-creation': (
+    arg: RuleCreationRequest,
+  ) => Promise<RuleCreationProposal>;
+  'api/rule-apply-creation': (
+    arg: RuleCreationProposal,
+  ) => Promise<RuleCreationOutcome>;
+  'api/rule-preview-update': (
+    arg: RuleUpdateRequest,
+  ) => Promise<RuleUpdateProposal>;
+  'api/rule-apply-update': (
+    arg: RuleUpdateProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/rule-preview-deletion': (
+    arg: RuleDeletionRequest,
+  ) => Promise<RuleDeletionProposal>;
+  'api/rule-apply-deletion': (
+    arg: RuleDeletionProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/schedule-preview-creation': (
+    arg: ScheduleCreationRequest,
+  ) => Promise<ScheduleCreationProposal>;
+  'api/schedule-apply-creation': (
+    arg: ScheduleCreationProposal,
+  ) => Promise<ScheduleCreationOutcome>;
+  'api/schedule-preview-update': (
+    arg: ScheduleUpdateRequest,
+  ) => Promise<ScheduleUpdateProposal>;
+  'api/schedule-apply-update': (
+    arg: ScheduleUpdateProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/schedule-preview-deletion': (
+    arg: ScheduleDeletionRequest,
+  ) => Promise<ScheduleDeletionProposal>;
+  'api/schedule-apply-deletion': (
+    arg: ScheduleDeletionProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/transaction-preview-deletion': (
+    arg: TransactionDeletionRequest,
+  ) => Promise<TransactionDeletionProposal>;
+  'api/transaction-apply-deletion': (
+    arg: TransactionDeletionProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/transactions-preview-addition': (
+    arg: TransactionAdditionRequest,
+  ) => Promise<TransactionAdditionProposal>;
+  'api/transactions-apply-addition': (
+    arg: TransactionAdditionProposal,
+  ) => Promise<TransactionAdditionOutcome>;
   'api/category-group-preview-creation': (
     arg: CategoryGroupCreationRequest,
   ) => Promise<CategoryGroupCreationProposal>;

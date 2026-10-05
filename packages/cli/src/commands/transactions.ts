@@ -1,7 +1,12 @@
 import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
+import { AgentError } from '#agent-output';
 import { withConnection } from '#connection';
+import {
+  executeCatalogChange,
+  executeTransactionAddition,
+} from '#guarded-changes';
 import { readJsonInput } from '#input';
 import { printOutput } from '#output';
 
@@ -43,8 +48,30 @@ export function registerTransactionsCommand(program: Command) {
     )
     .option('--learn-categories', 'Learn category assignments', false)
     .option('--run-transfers', 'Process transfers', false)
+    .option(
+      '--operation-id <id>',
+      'Version 2 only: run the guarded addition with this durable retry ID',
+    )
     .action(async cmdOpts => {
       const opts = program.opts();
+      if (opts.outputVersion === '2' && cmdOpts.operationId) {
+        if (cmdOpts.learnCategories || cmdOpts.runTransfers) {
+          throw new AgentError(
+            'INVALID_INPUT',
+            'Guarded transaction addition does not run transfers or learn categories; omit --operation-id to use the unguarded path for those.',
+          );
+        }
+        printOutput(
+          await executeTransactionAddition(opts, cmdOpts.operationId, {
+            accountId: cmdOpts.account,
+            transactions: readJsonInput(cmdOpts) as Array<
+              Record<string, unknown>
+            >,
+          }),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {
@@ -120,8 +147,22 @@ export function registerTransactionsCommand(program: Command) {
   transactions
     .command('delete <id>')
     .description('Delete a transaction')
-    .action(async (id: string) => {
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
+    .action(async (id: string, cmdOpts: { operationId?: string }) => {
       const opts = program.opts();
+      if (opts.outputVersion === '2') {
+        printOutput(
+          await executeCatalogChange(
+            opts,
+            cmdOpts.operationId,
+            'transactions.delete',
+            id,
+            {},
+          ),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {

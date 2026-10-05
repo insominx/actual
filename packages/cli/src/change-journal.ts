@@ -21,7 +21,10 @@ import type {
   ChangeProposal,
   PayeeCreationOutcome,
   PayeeMergeOutcome,
+  RuleCreationOutcome,
+  ScheduleCreationOutcome,
   TagCreationOutcome,
+  TransactionAdditionOutcome,
   TransactionUpdateOutcome,
 } from '@actual-app/api';
 
@@ -51,6 +54,9 @@ export type ChangeReceipt = {
     | PayeeCreationOutcome
     | PayeeMergeOutcome
     | TagCreationOutcome
+    | RuleCreationOutcome
+    | ScheduleCreationOutcome
+    | TransactionAdditionOutcome
     | AccountCreationOutcome
     | AccountDeletionOutcome
     | AccountCloseOutcome;
@@ -199,6 +205,53 @@ function canExpireTagCreation(receipt: ChangeReceipt) {
     Boolean(outcome.tagCreation.tagId) &&
     outcome.affectedIds.length === 1 &&
     outcome.affectedIds[0] === outcome.tagCreation.tagId
+  );
+}
+
+function canExpireRuleCreation(receipt: ChangeReceipt) {
+  if (receipt.proposal.operation !== 'rules.create') return true;
+  const outcome = receipt.outcome;
+  return (
+    outcome?.status === 'committed-local' &&
+    'ruleCreation' in outcome &&
+    isRecord(outcome.ruleCreation) &&
+    typeof outcome.ruleCreation.ruleId === 'string' &&
+    Boolean(outcome.ruleCreation.ruleId) &&
+    outcome.affectedIds.length === 1 &&
+    outcome.affectedIds[0] === outcome.ruleCreation.ruleId
+  );
+}
+
+function canExpireScheduleCreation(receipt: ChangeReceipt) {
+  if (receipt.proposal.operation !== 'schedules.create') return true;
+  const outcome = receipt.outcome;
+  return (
+    outcome?.status === 'committed-local' &&
+    'scheduleCreation' in outcome &&
+    isRecord(outcome.scheduleCreation) &&
+    typeof outcome.scheduleCreation.scheduleId === 'string' &&
+    Boolean(outcome.scheduleCreation.scheduleId) &&
+    typeof outcome.scheduleCreation.ruleId === 'string' &&
+    Boolean(outcome.scheduleCreation.ruleId) &&
+    outcome.affectedIds.length === 1 &&
+    outcome.affectedIds[0] === outcome.scheduleCreation.scheduleId
+  );
+}
+
+function canExpireTransactionAddition(receipt: ChangeReceipt) {
+  if (receipt.proposal.operation !== 'transactions.add') return true;
+  const outcome = receipt.outcome;
+  return (
+    outcome?.status === 'committed-local' &&
+    'transactionAddition' in outcome &&
+    isRecord(outcome.transactionAddition) &&
+    Array.isArray(outcome.transactionAddition.transactionIds) &&
+    outcome.transactionAddition.transactionIds.length > 0 &&
+    outcome.transactionAddition.transactionIds.every(
+      id => typeof id === 'string' && Boolean(id),
+    ) &&
+    stableJson(outcome.affectedIds) ===
+      stableJson(outcome.transactionAddition.transactionIds)
   );
 }
 
@@ -480,6 +533,9 @@ export class ChangeJournal {
             canExpireGroupCreation(row) &&
             canExpirePayeeCreation(row) &&
             canExpireTagCreation(row) &&
+            canExpireRuleCreation(row) &&
+            canExpireScheduleCreation(row) &&
+            canExpireTransactionAddition(row) &&
             canExpireCategoryCreation(row) &&
             (row.proposal.operation !== 'accounts.create' ||
               (row.outcome?.status === 'committed-local' &&

@@ -112,3 +112,6 @@ Known baseline: prior cash-planning verification recorded repository-wide format
 
 2026-10-05 checkpoint: guarded payee creation passes five-case local Linux acceptance. Task 0014 remains partial with 16 existing write adapters outstanding.
 2026-10-05 checkpoint: guarded payee update/delete/merge and tag create/update/delete pass local Linux packaged acceptance. Task 0014 remains partial with 10 existing write adapters outstanding.
+2026-10-05 checkpoint: guarded rule create/update/delete pass local Linux packaged acceptance. Task 0014 remains partial with 7 existing write adapters outstanding.
+2026-10-05 checkpoint: guarded schedule create/update/delete pass local Linux packaged acceptance. Task 0014 remains partial with 4 existing write adapters outstanding (transactions add/import/full update/delete).
+2026-10-05 checkpoint: guarded transaction deletion and category/payee updates pass local Linux acceptance. transactions.add and transactions.import remain.

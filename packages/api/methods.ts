@@ -62,12 +62,28 @@ import type {
   PayeeMergeRequest,
   PayeeUpdateProposal,
   PayeeUpdateRequest,
+  RuleCreationProposal,
+  RuleCreationRequest,
+  RuleDeletionProposal,
+  RuleDeletionRequest,
+  RuleUpdateProposal,
+  RuleUpdateRequest,
+  ScheduleCreationProposal,
+  ScheduleCreationRequest,
+  ScheduleDeletionProposal,
+  ScheduleDeletionRequest,
+  ScheduleUpdateProposal,
+  ScheduleUpdateRequest,
   TagCreationProposal,
   TagCreationRequest,
   TagDeletionProposal,
   TagDeletionRequest,
   TagUpdateProposal,
   TagUpdateRequest,
+  TransactionAdditionProposal,
+  TransactionAdditionRequest,
+  TransactionDeletionProposal,
+  TransactionDeletionRequest,
   TransactionUpdateProposal,
   TransactionUpdateRequest,
 } from '@actual-app/core/types/change-proposals';
@@ -82,6 +98,25 @@ import type { SyncedPrefs } from '@actual-app/core/types/prefs';
 export { q } from './app/query';
 export type {
   CategoryCreationOutcome,
+  TransactionAdditionRequest,
+  TransactionAdditionProposal,
+  TransactionAdditionOutcome,
+  TransactionDeletionRequest,
+  TransactionDeletionProposal,
+  ScheduleCreationRequest,
+  ScheduleUpdateRequest,
+  ScheduleDeletionRequest,
+  ScheduleCreationProposal,
+  ScheduleUpdateProposal,
+  ScheduleDeletionProposal,
+  ScheduleCreationOutcome,
+  RuleCreationRequest,
+  RuleUpdateRequest,
+  RuleDeletionRequest,
+  RuleCreationProposal,
+  RuleUpdateProposal,
+  RuleDeletionProposal,
+  RuleCreationOutcome,
   PayeeUpdateRequest,
   PayeeUpdateProposal,
   PayeeDeletionRequest,
@@ -277,6 +312,62 @@ export function previewTagDeletion(request: TagDeletionRequest) {
 }
 export function applyTagDeletion(proposal: TagDeletionProposal) {
   return send('api/tag-apply-deletion', proposal);
+}
+export function previewRuleCreation(request: RuleCreationRequest) {
+  return send('api/rule-preview-creation', request);
+}
+export function applyRuleCreation(proposal: RuleCreationProposal) {
+  return send('api/rule-apply-creation', proposal);
+}
+export function previewRuleUpdate(request: RuleUpdateRequest) {
+  return send('api/rule-preview-update', request);
+}
+export function applyRuleUpdate(proposal: RuleUpdateProposal) {
+  return send('api/rule-apply-update', proposal);
+}
+export function previewRuleDeletion(request: RuleDeletionRequest) {
+  return send('api/rule-preview-deletion', request);
+}
+export function applyRuleDeletion(proposal: RuleDeletionProposal) {
+  return send('api/rule-apply-deletion', proposal);
+}
+export function previewScheduleCreation(request: ScheduleCreationRequest) {
+  return send('api/schedule-preview-creation', request);
+}
+export function applyScheduleCreation(proposal: ScheduleCreationProposal) {
+  return send('api/schedule-apply-creation', proposal);
+}
+export function previewScheduleUpdate(request: ScheduleUpdateRequest) {
+  return send('api/schedule-preview-update', request);
+}
+export function applyScheduleUpdate(proposal: ScheduleUpdateProposal) {
+  return send('api/schedule-apply-update', proposal);
+}
+export function previewScheduleDeletion(request: ScheduleDeletionRequest) {
+  return send('api/schedule-preview-deletion', request);
+}
+export function applyScheduleDeletion(proposal: ScheduleDeletionProposal) {
+  return send('api/schedule-apply-deletion', proposal);
+}
+export function previewTransactionDeletion(
+  request: TransactionDeletionRequest,
+) {
+  return send('api/transaction-preview-deletion', request);
+}
+export function applyTransactionDeletion(
+  proposal: TransactionDeletionProposal,
+) {
+  return send('api/transaction-apply-deletion', proposal);
+}
+export function previewTransactionAddition(
+  request: TransactionAdditionRequest,
+) {
+  return send('api/transactions-preview-addition', request);
+}
+export function applyTransactionAddition(
+  proposal: TransactionAdditionProposal,
+) {
+  return send('api/transactions-apply-addition', proposal);
 }
 export function previewCategoryGroupCreation(
   request: CategoryGroupCreationRequest,

@@ -35,3 +35,6 @@ Version 2 category-group deletion now previews child tombstones, forwarding mapp
 
 Version 2 payee creation now uses guarded previews and durable receipts with actual generated payee and mapping IDs. Exact names and existing duplicate behavior are preserved, and uncertain creations never replay.
 Version 2 payee updates, deletions and merges and tag creation, updates and deletions now use guarded previews and durable receipts through their existing owners.
+Version 2 rule creation, updates and deletions now use guarded previews and durable receipts; schedule-owned rules stay with their schedule.
+Version 2 schedule creation, updates and deletions now use guarded previews and durable receipts that bind the linked rule.
+Version 2 transaction deletion is guarded with exact split and transfer cascades, and guarded transaction updates now cover category and payee.

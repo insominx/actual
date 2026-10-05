@@ -140,7 +140,7 @@ export function updateConditions(conditions, newConditions) {
 //     the `action.op === 'set'` check below.
 //
 // Returns `null` when nothing changed, so callers can avoid a redundant write.
-function updateActions(
+export function updateActions(
   conditions: RuleConditionEntity[],
   actions: RuleActionEntity[],
 ): RuleActionEntity[] | null {
@@ -270,7 +270,7 @@ export async function setNextDate({
 
 // Methods
 
-async function checkIfScheduleExists(name, scheduleId) {
+export async function checkIfScheduleExists(name, scheduleId) {
   const idForName = await db.first<Pick<db.DbSchedule, 'id'>>(
     'SELECT id from schedules WHERE tombstone = 0 AND name = ?',
     [name],
@@ -285,7 +285,7 @@ async function checkIfScheduleExists(name, scheduleId) {
   return true;
 }
 
-function normalizeScheduleName(name) {
+export function normalizeScheduleName(name) {
   const trimmedName = name?.trim();
   return trimmedName || null;
 }

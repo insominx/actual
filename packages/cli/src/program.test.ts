@@ -72,6 +72,27 @@ describe('registered agent commands', () => {
     ['tags.create', ['tags', 'create', '--tag', 'groceries']],
     ['tags.update', ['tags', 'update', 'tag-id', '--color', 'red']],
     ['tags.delete', ['tags', 'delete', 'tag-id']],
+    [
+      'rules.create',
+      [
+        'rules',
+        'create',
+        '--data',
+        '{"stage":"pre","conditionsOp":"and","conditions":[],"actions":[]}',
+      ],
+    ],
+    [
+      'rules.update',
+      [
+        'rules',
+        'update',
+        '--data',
+        '{"id":"rule-id","stage":"pre","conditionsOp":"and","conditions":[],"actions":[]}',
+      ],
+    ],
+    ['rules.delete', ['rules', 'delete', 'rule-id']],
+    ['schedules.delete', ['schedules', 'delete', 'schedule-id']],
+    ['transactions.delete', ['transactions', 'delete', 'transaction-id']],
   ])(
     'requires a %s operation ID before connecting and advertises it',
     async (command, args) => {
@@ -308,7 +329,7 @@ describe('registered agent commands', () => {
     expect(preview.data.capabilities.mutates).toBe(false);
     expect(preview.data.capabilities.preview).toBe(false);
     expect(Object.keys(preview.data.payloadSchema.anyOf[0].properties)).toEqual(
-      ['notes', 'amount', 'date', 'cleared'],
+      ['notes', 'amount', 'date', 'cleared', 'category', 'payee'],
     );
     const inventory = await run(['schema', 'changes.list']);
     expect(inventory.data.inputSchema.properties.limit).toMatchObject({

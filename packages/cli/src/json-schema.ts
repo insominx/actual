@@ -66,6 +66,12 @@ const transactionUpdate = object({
   schedule: string,
 });
 delete transactionUpdate.properties?.payee_name;
+const ruleFields = {
+  stage: { enum: ['pre', 'post', 'default', null] },
+  conditionsOp: { enum: ['and', 'or'] },
+  conditions: { type: 'array', items: { type: 'object' } },
+  actions: { type: 'array', items: { type: 'object' } },
+} satisfies Record<string, JsonSchema>;
 const rule = object(
   {
     id: string,
@@ -98,7 +104,14 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
     case 'changes.preview':
       return {
         anyOf: [
-          object({ notes: string, amount: money, date, cleared: boolean }),
+          object({
+            notes: string,
+            amount: money,
+            date,
+            cleared: boolean,
+            category: nullableId,
+            payee: string,
+          }),
           object({ transferAccount: string, transferCategory: string }),
           object({ transferCategoryId: string }),
           object(
@@ -173,6 +186,17 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
           object({ name: string }, ['name']),
           object({ name: string, transfer_acct: string }, ['name']),
           object({ mergeIds: { type: 'array', items: string } }, ['mergeIds']),
+          object(ruleFields, [
+            'stage',
+            'conditionsOp',
+            'conditions',
+            'actions',
+          ]),
+          object(ruleFields),
+          object({ fields: { type: 'object' }, resetNextDate: boolean }, [
+            'fields',
+          ]),
+          { ...schedule, required: ['date', 'amountOp', 'posts_transaction'] },
           object(
             {
               tag: string,

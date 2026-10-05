@@ -1,9 +1,12 @@
-import type { TransactionEntity } from './models';
+import type { NewRuleEntity, TransactionEntity } from './models';
 
 export type TransactionUpdateRequest = {
   id: string;
   fields: Partial<
-    Pick<TransactionEntity, 'notes' | 'amount' | 'date' | 'cleared'>
+    Pick<
+      TransactionEntity,
+      'notes' | 'amount' | 'date' | 'cleared' | 'category' | 'payee'
+    >
   >;
 };
 
@@ -133,6 +136,104 @@ export type TagDeletionProposal = CatalogProposal<
   { tag: Record<string, unknown> },
   { action: 'tombstone' }
 >;
+
+export type RuleFieldsRequest = Omit<NewRuleEntity, 'stage' | 'tombstone'> & {
+  stage: NewRuleEntity['stage'] | 'default';
+};
+export type RuleCreationRequest = RuleFieldsRequest;
+export type RuleCreationProposal = CatalogProposal<
+  'rules.create',
+  RuleCreationRequest,
+  object,
+  { rule: Record<string, unknown> }
+>;
+export type RuleCreationOutcome = CatalogCommit<{
+  ruleCreation: { ruleId: string };
+}>;
+
+export type RuleUpdateRequest = {
+  id: string;
+  fields: Partial<RuleFieldsRequest>;
+};
+export type RuleUpdateProposal = CatalogProposal<
+  'rules.update',
+  RuleUpdateRequest,
+  { rule: Record<string, unknown> },
+  { rule: Record<string, unknown> }
+>;
+
+export type RuleDeletionRequest = { id: string };
+export type RuleDeletionProposal = CatalogProposal<
+  'rules.delete',
+  RuleDeletionRequest,
+  { rule: Record<string, unknown> },
+  { action: 'tombstone' }
+>;
+
+export type ScheduleCreationRequest = {
+  name?: string | null;
+  posts_transaction: boolean;
+  payee: string;
+  account: string;
+  amount?: number | { num1: number; num2: number };
+  amountOp: 'is' | 'isapprox' | 'isbetween';
+  date: unknown;
+};
+export type ScheduleCreationProposal = CatalogProposal<
+  'schedules.create',
+  ScheduleCreationRequest,
+  object,
+  { schedule: Record<string, unknown>; rule: Record<string, unknown> }
+>;
+export type ScheduleCreationOutcome = CatalogCommit<{
+  scheduleCreation: { scheduleId: string; ruleId: string };
+}>;
+
+export type ScheduleUpdateRequest = {
+  id: string;
+  fields: Record<string, unknown>;
+  resetNextDate?: boolean;
+};
+export type ScheduleUpdateProposal = CatalogProposal<
+  'schedules.update',
+  ScheduleUpdateRequest,
+  { schedule: Record<string, unknown>; rule: Record<string, unknown> },
+  { schedule: Record<string, unknown>; rule: Record<string, unknown> }
+>;
+
+export type ScheduleDeletionRequest = { id: string };
+export type ScheduleDeletionProposal = CatalogProposal<
+  'schedules.delete',
+  ScheduleDeletionRequest,
+  { schedule: Record<string, unknown>; rule: Record<string, unknown> },
+  { action: 'tombstone'; ruleId: string }
+>;
+
+export type TransactionDeletionRequest = { id: string };
+export type TransactionDeletionProposal = CatalogProposal<
+  'transactions.delete',
+  TransactionDeletionRequest,
+  { transaction: Record<string, unknown> },
+  {
+    deletedIds: string[];
+    transferDeletedIds: string[];
+    transferUnlinkedIds: string[];
+  }
+>;
+
+export type TransactionAdditionRequest = {
+  accountId: string;
+  transactions: Array<Record<string, unknown>>;
+};
+export type TransactionAdditionProposal = CatalogProposal<
+  'transactions.add',
+  TransactionAdditionRequest,
+  object,
+  { rows: Array<Record<string, unknown>> }
+>;
+export type TransactionAdditionOutcome = CatalogCommit<{
+  transactionAddition: { transactionIds: string[] };
+}>;
 
 export type CategoryGroupUpdateRequest = {
   id: string;
@@ -524,6 +625,14 @@ export type ChangeProposal =
   | TagCreationProposal
   | TagUpdateProposal
   | TagDeletionProposal
+  | RuleCreationProposal
+  | RuleUpdateProposal
+  | RuleDeletionProposal
+  | ScheduleCreationProposal
+  | ScheduleUpdateProposal
+  | ScheduleDeletionProposal
+  | TransactionDeletionProposal
+  | TransactionAdditionProposal
   | CategoryGroupCreationProposal
   | CategoryCreationProposal
   | CategoryGroupDeletionProposal

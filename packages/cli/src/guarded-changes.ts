@@ -585,7 +585,12 @@ export async function executeCatalogChange(
     | 'payees.delete'
     | 'payees.merge'
     | 'tags.update'
-    | 'tags.delete',
+    | 'tags.delete'
+    | 'rules.update'
+    | 'rules.delete'
+    | 'schedules.update'
+    | 'schedules.delete'
+    | 'transactions.delete',
   id: string,
   payload: Record<string, unknown>,
 ) {
@@ -639,6 +644,104 @@ export async function executeTagCreation(
     );
   }
   return { id: receipt.outcome.tagCreation.tagId, receipt };
+}
+
+export async function executeTransactionAddition(
+  opts: CliGlobalOpts,
+  operationId: string,
+  request: api.TransactionAdditionRequest,
+) {
+  const prepared = await previewGuardedChange(
+    opts,
+    'transactions.add',
+    request.accountId,
+    { operationId, data: JSON.stringify(request.transactions) },
+  );
+  const receipt = await applyGuardedChange(opts, operationId, {
+    token: prepared.token,
+  });
+  if (
+    receipt.outcome?.status !== 'committed-local' ||
+    !('transactionAddition' in receipt.outcome)
+  ) {
+    throw new AgentError(
+      'PARTIAL_COMPLETION',
+      'Transaction addition has no acknowledged engine identities.',
+      false,
+      { operationId },
+    );
+  }
+  return { ids: receipt.outcome.transactionAddition.transactionIds, receipt };
+}
+
+export async function executeScheduleCreation(
+  opts: CliGlobalOpts,
+  operationId: string | undefined,
+  request: api.ScheduleCreationRequest,
+) {
+  if (!operationId) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      'Version 2 schedule creation requires --operation-id for durable retry.',
+      false,
+      { field: 'operationId' },
+    );
+  }
+  const prepared = await previewGuardedChange(
+    opts,
+    'schedules.create',
+    undefined,
+    { operationId, data: JSON.stringify(request) },
+  );
+  const receipt = await applyGuardedChange(opts, operationId, {
+    token: prepared.token,
+  });
+  if (
+    receipt.outcome?.status !== 'committed-local' ||
+    !('scheduleCreation' in receipt.outcome)
+  ) {
+    throw new AgentError(
+      'PARTIAL_COMPLETION',
+      'Schedule creation has no acknowledged engine identity.',
+      false,
+      { operationId },
+    );
+  }
+  return { id: receipt.outcome.scheduleCreation.scheduleId, receipt };
+}
+
+export async function executeRuleCreation(
+  opts: CliGlobalOpts,
+  operationId: string | undefined,
+  request: api.RuleCreationRequest,
+) {
+  if (!operationId) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      'Version 2 rule creation requires --operation-id for durable retry.',
+      false,
+      { field: 'operationId' },
+    );
+  }
+  const prepared = await previewGuardedChange(opts, 'rules.create', undefined, {
+    operationId,
+    data: JSON.stringify(request),
+  });
+  const receipt = await applyGuardedChange(opts, operationId, {
+    token: prepared.token,
+  });
+  if (
+    receipt.outcome?.status !== 'committed-local' ||
+    !('ruleCreation' in receipt.outcome)
+  ) {
+    throw new AgentError(
+      'PARTIAL_COMPLETION',
+      'Rule creation has no acknowledged engine identity.',
+      false,
+      { operationId },
+    );
+  }
+  return { id: receipt.outcome.ruleCreation.ruleId, receipt };
 }
 
 export async function executeCategoryDeletion(
@@ -1088,6 +1191,42 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
     preview: r => api.previewTagDeletion(r as api.TagDeletionRequest),
     apply: p => api.applyTagDeletion(p as api.TagDeletionProposal),
   },
+  'rules.create': {
+    preview: r => api.previewRuleCreation(r as api.RuleCreationRequest),
+    apply: p => api.applyRuleCreation(p as api.RuleCreationProposal),
+  },
+  'rules.update': {
+    preview: r => api.previewRuleUpdate(r as api.RuleUpdateRequest),
+    apply: p => api.applyRuleUpdate(p as api.RuleUpdateProposal),
+  },
+  'rules.delete': {
+    preview: r => api.previewRuleDeletion(r as api.RuleDeletionRequest),
+    apply: p => api.applyRuleDeletion(p as api.RuleDeletionProposal),
+  },
+  'schedules.create': {
+    preview: r => api.previewScheduleCreation(r as api.ScheduleCreationRequest),
+    apply: p => api.applyScheduleCreation(p as api.ScheduleCreationProposal),
+  },
+  'schedules.update': {
+    preview: r => api.previewScheduleUpdate(r as api.ScheduleUpdateRequest),
+    apply: p => api.applyScheduleUpdate(p as api.ScheduleUpdateProposal),
+  },
+  'schedules.delete': {
+    preview: r => api.previewScheduleDeletion(r as api.ScheduleDeletionRequest),
+    apply: p => api.applyScheduleDeletion(p as api.ScheduleDeletionProposal),
+  },
+  'transactions.delete': {
+    preview: r =>
+      api.previewTransactionDeletion(r as api.TransactionDeletionRequest),
+    apply: p =>
+      api.applyTransactionDeletion(p as api.TransactionDeletionProposal),
+  },
+  'transactions.add': {
+    preview: r =>
+      api.previewTransactionAddition(r as api.TransactionAdditionRequest),
+    apply: p =>
+      api.applyTransactionAddition(p as api.TransactionAdditionProposal),
+  },
   'accounts.close': {
     preview: r => api.previewAccountClosure(r as api.AccountCloseRequest),
     apply: p => api.applyAccountClosure(p as api.AccountCloseProposal),
@@ -1166,6 +1305,14 @@ function changeRequest(
   | api.TagCreationRequest
   | api.TagUpdateRequest
   | api.TagDeletionRequest
+  | api.RuleCreationRequest
+  | api.RuleUpdateRequest
+  | api.RuleDeletionRequest
+  | api.ScheduleCreationRequest
+  | api.ScheduleUpdateRequest
+  | api.ScheduleDeletionRequest
+  | api.TransactionDeletionRequest
+  | api.TransactionAdditionRequest
   | api.CategoryGroupDeletionRequest
   | api.CategoryDeletionRequest
   | api.CategoryUpdateRequest
@@ -1230,7 +1377,61 @@ function changeRequest(
     }
     return { targetId: id, mergeIds: payload.mergeIds as string[] };
   }
-  if (operation === 'payees.delete' || operation === 'tags.delete') {
+  if (operation === 'transactions.add') {
+    if (!Array.isArray(payload)) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Transaction addition takes a transactions array; the account is the change ID.',
+      );
+    }
+    return {
+      accountId: id,
+      transactions: payload as Array<Record<string, unknown>>,
+    };
+  }
+  if (operation === 'schedules.create') {
+    return payload as api.ScheduleCreationRequest;
+  }
+  if (operation === 'schedules.update') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['fields', 'resetNextDate'].includes(key),
+      ) ||
+      !isRecord(payload.fields)
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Schedule update takes { fields, resetNextDate? }; the schedule is the change ID.',
+      );
+    }
+    return {
+      id,
+      fields: payload.fields,
+      ...(payload.resetNextDate === undefined
+        ? {}
+        : { resetNextDate: payload.resetNextDate as boolean }),
+    };
+  }
+  if (operation === 'rules.create') {
+    return payload as api.RuleCreationRequest;
+  }
+  if (operation === 'rules.update') {
+    if (!isRecord(payload) || 'id' in payload) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Rule update takes rule fields; the rule is the change ID.',
+      );
+    }
+    return { id, fields: payload as api.RuleUpdateRequest['fields'] };
+  }
+  if (
+    operation === 'payees.delete' ||
+    operation === 'tags.delete' ||
+    operation === 'rules.delete' ||
+    operation === 'schedules.delete' ||
+    operation === 'transactions.delete'
+  ) {
     if (isRecord(payload) && Object.keys(payload).length) {
       throw new AgentError(
         'INVALID_INPUT',

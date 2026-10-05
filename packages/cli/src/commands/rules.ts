@@ -1,7 +1,9 @@
 import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
+import { AgentError } from '#agent-output';
 import { withConnection } from '#connection';
+import { executeCatalogChange, executeRuleCreation } from '#guarded-changes';
 import { readJsonInput } from '#input';
 import { printOutput } from '#output';
 
@@ -45,8 +47,28 @@ export function registerRulesCommand(program: Command) {
     .description('Create a new rule')
     .option('--data <json>', 'Rule definition as JSON')
     .option('--file <path>', 'Read rule from JSON file (use - for stdin)')
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
     .action(async cmdOpts => {
       const opts = program.opts();
+      if (opts.outputVersion === '2') {
+        if (!cmdOpts.operationId) {
+          throw new AgentError(
+            'INVALID_INPUT',
+            'Version 2 rule creation requires --operation-id for durable retry.',
+            false,
+            { field: 'operationId' },
+          );
+        }
+        printOutput(
+          await executeRuleCreation(
+            opts,
+            cmdOpts.operationId,
+            readJsonInput(cmdOpts) as api.RuleCreationRequest,
+          ),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {
@@ -65,8 +87,39 @@ export function registerRulesCommand(program: Command) {
     .description('Update a rule')
     .option('--data <json>', 'Rule data as JSON (must include id)')
     .option('--file <path>', 'Read rule from JSON file (use - for stdin)')
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
     .action(async cmdOpts => {
       const opts = program.opts();
+      if (opts.outputVersion === '2') {
+        if (!cmdOpts.operationId) {
+          throw new AgentError(
+            'INVALID_INPUT',
+            'Version 2 rule update requires --operation-id for durable retry.',
+            false,
+            { field: 'operationId' },
+          );
+        }
+        const input = readJsonInput(cmdOpts);
+        if (
+          typeof input !== 'object' ||
+          input === null ||
+          typeof (input as { id?: unknown }).id !== 'string'
+        ) {
+          throw new AgentError('INVALID_INPUT', 'Rule update requires an id.');
+        }
+        const { id, ...fields } = input as Record<string, unknown>;
+        printOutput(
+          await executeCatalogChange(
+            opts,
+            cmdOpts.operationId,
+            'rules.update',
+            id as string,
+            fields,
+          ),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {
@@ -83,8 +136,22 @@ export function registerRulesCommand(program: Command) {
   rules
     .command('delete <id>')
     .description('Delete a rule')
-    .action(async (id: string) => {
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
+    .action(async (id: string, cmdOpts: { operationId?: string }) => {
       const opts = program.opts();
+      if (opts.outputVersion === '2') {
+        printOutput(
+          await executeCatalogChange(
+            opts,
+            cmdOpts.operationId,
+            'rules.delete',
+            id,
+            {},
+          ),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {

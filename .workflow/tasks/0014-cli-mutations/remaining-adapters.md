@@ -6,25 +6,25 @@ Task 0014 requires version 2 lifecycle and existing mutation adapters to use the
 
 Sources: current command modules under `packages/cli/src/commands`, `packages/api/methods.ts`, `packages/loot-core/src/server/api.ts`, and task 0014 plan sections 4 and 8. Public methods dispatch to the listed core API handlers. Those handlers remain the mutation owners; extract shared canonical functions as needed rather than reproducing writers in the CLI.
 
-| Command               | Public API and core handler                       | Guarded support now                                                                  |
-| --------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `payees.create`       | `createPayee` -> `api/payee-create`               | Guarded; verified locally on Linux (2026-10-05).                                     |
-| `payees.update`       | `updatePayee` -> `api/payee-update`               | Guarded; verified locally on Linux (2026-10-05).                                     |
-| `payees.delete`       | `deletePayee` -> `api/payee-delete`               | Guarded; verified locally on Linux (2026-10-05).                                     |
-| `payees.merge`        | `mergePayees` -> `api/payees-merge`               | Guarded; verified locally on Linux (2026-10-05).                                     |
-| `tags.create`         | `createTag` -> `api/tag-create`                   | Guarded; verified locally on Linux (2026-10-05).                                     |
-| `tags.update`         | `updateTag` -> `api/tag-update`                   | Guarded; verified locally on Linux (2026-10-05).                                     |
-| `tags.delete`         | `deleteTag` -> `api/tag-delete`                   | Guarded; verified locally on Linux (2026-10-05).                                     |
-| `transactions.add`    | `addTransactions` -> `api/transactions-add`       | No domain proposal/receipt adapter yet.                                              |
-| `transactions.import` | `importTransactions` -> `api/transactions-import` | No domain proposal/receipt adapter yet.                                              |
-| `transactions.update` | `updateTransaction` -> `api/transaction-update`   | Guarded notes/amount/date/cleared exists; full direct update fields remain required. |
-| `transactions.delete` | `deleteTransaction` -> `api/transaction-delete`   | No domain proposal/receipt adapter yet.                                              |
-| `rules.create`        | `createRule` -> `api/rule-create`                 | No domain proposal/receipt adapter yet.                                              |
-| `rules.update`        | `updateRule` -> `api/rule-update`                 | No domain proposal/receipt adapter yet.                                              |
-| `rules.delete`        | `deleteRule` -> `api/rule-delete`                 | No domain proposal/receipt adapter yet.                                              |
-| `schedules.create`    | `createSchedule` -> `api/schedule-create`         | No domain proposal/receipt adapter yet.                                              |
-| `schedules.update`    | `updateSchedule` -> `api/schedule-update`         | No domain proposal/receipt adapter yet.                                              |
-| `schedules.delete`    | `deleteSchedule` -> `api/schedule-delete`         | No domain proposal/receipt adapter yet.                                              |
+| Command               | Public API and core handler                       | Guarded support now                                                                             |
+| --------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `payees.create`       | `createPayee` -> `api/payee-create`               | Guarded; verified locally on Linux (2026-10-05).                                                |
+| `payees.update`       | `updatePayee` -> `api/payee-update`               | Guarded; verified locally on Linux (2026-10-05).                                                |
+| `payees.delete`       | `deletePayee` -> `api/payee-delete`               | Guarded; verified locally on Linux (2026-10-05).                                                |
+| `payees.merge`        | `mergePayees` -> `api/payees-merge`               | Guarded; verified locally on Linux (2026-10-05).                                                |
+| `tags.create`         | `createTag` -> `api/tag-create`                   | Guarded; verified locally on Linux (2026-10-05).                                                |
+| `tags.update`         | `updateTag` -> `api/tag-update`                   | Guarded; verified locally on Linux (2026-10-05).                                                |
+| `tags.delete`         | `deleteTag` -> `api/tag-delete`                   | Guarded; verified locally on Linux (2026-10-05).                                                |
+| `transactions.add`    | `addTransactions` -> `api/transactions-add`       | No domain proposal/receipt adapter yet.                                                         |
+| `transactions.import` | `importTransactions` -> `api/transactions-import` | No domain proposal/receipt adapter yet.                                                         |
+| `transactions.update` | `updateTransaction` -> `api/transaction-update`   | Guarded notes/amount/date/cleared/category/payee (D57); account and transfer edits stay legacy. |
+| `transactions.delete` | `deleteTransaction` -> `api/transaction-delete`   | Guarded; verified locally on Linux (2026-10-05).                                                |
+| `rules.create`        | `createRule` -> `api/rule-create`                 | Guarded; verified locally on Linux (2026-10-05).                                                |
+| `rules.update`        | `updateRule` -> `api/rule-update`                 | Guarded; verified locally on Linux (2026-10-05).                                                |
+| `rules.delete`        | `deleteRule` -> `api/rule-delete`                 | Guarded; verified locally on Linux (2026-10-05).                                                |
+| `schedules.create`    | `createSchedule` -> `api/schedule-create`         | Guarded; verified locally on Linux (2026-10-05).                                                |
+| `schedules.update`    | `updateSchedule` -> `api/schedule-update`         | Guarded; verified locally on Linux (2026-10-05).                                                |
+| `schedules.delete`    | `deleteSchedule` -> `api/schedule-delete`         | Guarded; verified locally on Linux (2026-10-05).                                                |
 
 ## Sequencing and proof
 
@@ -101,3 +101,17 @@ Guarded payees.create passes on Linux (box, Node 24.18.1). The core/API proposal
 ## Payee and tag catalog checkpoint (Linux, 2026-10-05)
 
 payees.update, payees.delete, payees.merge, tags.create, tags.update and tags.delete are guarded through the shared core envelope (D49) with owner-level plans in payees/guarded.ts and tags/guarded.ts. Guarded validation decisions are D50 to D53. Packaged proof: verification-catalog-linux-integration.txt. Inventory is now 10: transactions.add, transactions.import, transactions.update (full direct scope), transactions.delete, rules.create/update/delete and schedules.create/update/delete.
+
+## Rule checkpoint (Linux, 2026-10-05)
+
+rules.create, rules.update and rules.delete are guarded (D54). Packaged proof: verification-rules-linux-integration.txt. Inventory is now 7: transactions.add, transactions.import, transactions.update (full direct scope), transactions.delete and schedules.create/update/delete.
+
+## Schedule checkpoint (Linux, 2026-10-05)
+
+schedules.create, schedules.update and schedules.delete are guarded (D55). Packaged proof: verification-schedules-linux-integration.txt. Inventory is now 4: transactions.add, transactions.import, transactions.update (full direct scope) and transactions.delete.
+
+## Transaction deletion and classification checkpoint (Linux, 2026-10-05)
+
+transactions.delete is guarded (D56) and the guarded transactions.update scope now includes category and payee (D57). Packaged proof: verification-transaction-delete-linux-integration.txt; the existing changes.test.mjs transaction update suite was rerun. Inventory is now 2 open (transactions.add, transactions.import) plus the documented D57 exclusions.
+
+transactions.add is guarded (D58) with API and CLI unit coverage; no dedicated packaged suite yet. Inventory: transactions.import remains open, plus the D57 and D58 exclusions.

@@ -997,11 +997,10 @@ export async function matchTransactions(
 
 // This is similar to `reconcileTransactions` except much simpler: it
 // does not try to match any transactions. It just adds them
-export async function addTransactions(
-  acctId,
-  transactions,
-  { runTransfers = true, learnCategories = false } = {},
-) {
+// Read-only planning half of addTransactions: normalizes input, runs rules
+// and expands splits. Generated transaction and payee ids are fresh on every
+// call; nothing is written. Shared with guarded transaction additions.
+export async function planAddedTransactions(acctId, transactions) {
   const added = [];
 
   const { normalized, payeesToCreate } = await normalizeTransactions(
@@ -1035,6 +1034,19 @@ export async function addTransactions(
       added.push(finalTransaction);
     }
   }
+
+  return { added, payeesToCreate };
+}
+
+export async function addTransactions(
+  acctId,
+  transactions,
+  { runTransfers = true, learnCategories = false } = {},
+) {
+  const { added, payeesToCreate } = await planAddedTransactions(
+    acctId,
+    transactions,
+  );
 
   await createNewPayees(payeesToCreate, added);
 
