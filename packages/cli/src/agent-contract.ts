@@ -4,6 +4,7 @@ import { AgentError } from './agent-output';
 import { DIRECT_GUARDED_COMMANDS } from './guarded-operations';
 import { operationPayloadSchema } from './json-schema';
 import type { JsonSchema } from './json-schema';
+import { REVERSIBLE_OPERATIONS } from './reversal';
 
 type PropertySchema = {
   type: 'string' | 'integer' | 'boolean';
@@ -86,6 +87,7 @@ const READ_OPERATIONS = new Set([
   'reports.categories',
   'reports.net-worth',
   'checkup.data-quality',
+  'changes.inspect',
   'server.version',
   'server.get-id',
   'rules.payee-rules',
@@ -169,7 +171,7 @@ export function discoverOperations(root: Command) {
     capabilities: {
       mutates: boolean;
       preview: false;
-      reversal: false;
+      reversal: boolean;
       destructive: boolean;
     };
     examples: string[];
@@ -211,7 +213,7 @@ export function discoverOperations(root: Command) {
       capabilities: {
         mutates,
         preview: false,
-        reversal: false,
+        reversal: (REVERSIBLE_OPERATIONS as readonly string[]).includes(name),
         destructive: ['delete', 'merge', 'close', 'prune'].includes(verb),
       },
       examples: [`actual ${name.replaceAll('.', ' ')} --help`],

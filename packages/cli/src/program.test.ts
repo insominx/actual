@@ -649,5 +649,7 @@ describe('registered agent commands', () => {
     expect(result.data.payloadSchema.type).toBe('array');
     expect(result.data.capabilities.preview).toBe(false);
     expect(result.data.capabilities.reversal).toBe(false);
+    const reversible = await run(['schema', 'transactions.categorize']);
+    expect(reversible.data.capabilities.reversal).toBe(true);
   });
 });
