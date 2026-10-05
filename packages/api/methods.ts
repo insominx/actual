@@ -53,11 +53,15 @@ import type {
   BudgetHoldRequest,
   BudgetMetadataProposal,
   BudgetMetadataRequest,
+  BudgetMoveProposal,
+  BudgetMoveRequest,
   BudgetPublicationOutcome,
   BudgetPublicationProposal,
   BudgetPublicationRequest,
   BudgetRestoreProposal,
   BudgetRestoreRequest,
+  BudgetTemplatesProposal,
+  BudgetTemplatesRequest,
   CashPlanSaveProposal,
   CashPlanSaveRequest,
   CategoryCreationProposal,
@@ -173,6 +177,14 @@ export type {
   SchedulePostOutcome,
   ScheduleSkipProposal,
   ScheduleSkipOutcome,
+  BudgetMoveRequest,
+  BudgetMoveCell,
+  BudgetMoveProposal,
+  BudgetMoveOutcome,
+  BudgetTemplatesRequest,
+  BudgetTemplateRow,
+  BudgetTemplatesProposal,
+  BudgetTemplatesOutcome,
   TransferMatchRequest,
   TransferMatchProposal,
   TransferUnmatchRequest,
@@ -553,6 +565,34 @@ export function testRules(request: RuleTestRequest) {
  */
 export function inspectSchedules(request: ScheduleInspectionRequest = {}) {
   return send('api/schedules-inspect', request);
+}
+/**
+ * Prepare moving an allocation between two categories, or between To
+ * Budget and a category, in one month. Read-only.
+ */
+export function previewBudgetMove(request: BudgetMoveRequest) {
+  return send('api/budget-preview-move', request);
+}
+export function applyBudgetMove(proposal: BudgetMoveProposal) {
+  return send('api/budget-move', proposal);
+}
+/** Prepare applying budget templates for a month. Read-only. */
+export function previewTemplateApplication(request: BudgetTemplatesRequest) {
+  return send('api/budget-preview-templates', request);
+}
+export function applyTemplateApplication(proposal: BudgetTemplatesProposal) {
+  return send('api/budget-apply-templates', proposal);
+}
+/** The templates the engine would apply, with validation errors. Read-only. */
+export function inspectBudgetTemplates() {
+  return send('api/budget-templates', undefined);
+}
+/**
+ * Reservation breakdown for the current month (experimental; requires the
+ * budgetReservations feature flag). Read-only.
+ */
+export function getBudgetReservations(month?: string) {
+  return send('api/budget-reservations', month === undefined ? {} : { month });
 }
 /** Prepare posting a schedule's next occurrence. Read-only. */
 export function previewSchedulePost(request: ScheduleOccurrenceRequest) {
@@ -939,6 +979,7 @@ export type {
   RuleTestRequest,
   RuleTestResult,
 } from '@actual-app/core/server/rules/evaluate';
+export type { TemplateInspection } from '@actual-app/core/server/budget/guarded-allocation';
 export type {
   ScheduleInspection,
   ScheduleInspectionRequest,

@@ -13,6 +13,7 @@ import type {
   APIScheduleEntity,
   APITagEntity,
 } from '#server/api-models';
+import type { TemplateInspection } from '#server/budget/guarded-allocation';
 import type { BudgetFileHandlers } from '#server/budgetfiles/app';
 import type {
   CatalogInspectKind,
@@ -42,6 +43,7 @@ import type {
   CashPlanInspection,
   CashPlanInspectRequest,
 } from '#types/models/cash-planning';
+import type { ReservationsResult } from '#types/models/reservations';
 
 import type {
   AccountCloseOutcome,
@@ -76,11 +78,17 @@ import type {
   BudgetHoldRequest,
   BudgetMetadataProposal,
   BudgetMetadataRequest,
+  BudgetMoveOutcome,
+  BudgetMoveProposal,
+  BudgetMoveRequest,
   BudgetPublicationOutcome,
   BudgetPublicationProposal,
   BudgetPublicationRequest,
   BudgetRestoreProposal,
   BudgetRestoreRequest,
+  BudgetTemplatesOutcome,
+  BudgetTemplatesProposal,
+  BudgetTemplatesRequest,
   CashPlanSaveProposal,
   CashPlanSaveRequest,
   CategoryCreationOutcome,
@@ -365,6 +373,20 @@ export type ApiHandlers = {
   'api/import-mapping-apply-save': (
     arg: ImportMappingSaveProposal,
   ) => Promise<TransactionUpdateOutcome>;
+  'api/budget-preview-move': (
+    arg: BudgetMoveRequest,
+  ) => Promise<BudgetMoveProposal>;
+  'api/budget-move': (arg: BudgetMoveProposal) => Promise<BudgetMoveOutcome>;
+  'api/budget-preview-templates': (
+    arg: BudgetTemplatesRequest,
+  ) => Promise<BudgetTemplatesProposal>;
+  'api/budget-apply-templates': (
+    arg: BudgetTemplatesProposal,
+  ) => Promise<BudgetTemplatesOutcome>;
+  'api/budget-templates': () => Promise<TemplateInspection>;
+  'api/budget-reservations': (arg: {
+    month?: string;
+  }) => Promise<ReservationsResult>;
   'api/schedules-inspect': (
     arg: ScheduleInspectionRequest,
   ) => Promise<ScheduleInspectionResult>;

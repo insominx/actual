@@ -581,6 +581,58 @@ export type RuleApplyOutcome = CatalogCommit<{
   ruleApplication: { updatedIds: string[]; createdIds: string[] };
 }>;
 
+export type BudgetMoveRequest = {
+  month: string;
+  from: string;
+  to: string;
+  amount: number;
+  allowOverspend?: boolean;
+};
+export type BudgetMoveCell = {
+  id: string;
+  name: string | null;
+  budgeted: number | null;
+  balance: number;
+};
+export type BudgetMoveProposal = CatalogProposal<
+  'budgets.move',
+  BudgetMoveRequest,
+  { from: BudgetMoveCell; to: BudgetMoveCell; toBudget: number | null },
+  {
+    from: BudgetMoveCell;
+    to: BudgetMoveCell;
+    toBudget: number | null;
+    totalBudgetedChange: number;
+  }
+>;
+export type BudgetMoveOutcome = CatalogCommit<{
+  budgetMove: { month: string; amount: number };
+}>;
+export type BudgetTemplatesRequest = {
+  month: string;
+  categoryIds?: string[];
+  force?: boolean;
+};
+export type BudgetTemplateRow = {
+  categoryId: string;
+  name: string;
+  before: { budgeted: number; goal: number | null };
+  after: { budgeted: number; goal: number | null; longGoal: boolean };
+};
+export type BudgetTemplatesProposal = CatalogProposal<
+  'budgets.apply-templates',
+  BudgetTemplatesRequest,
+  object,
+  {
+    rows: BudgetTemplateRow[];
+    clearedGoals: string[];
+    toBudget: number | null;
+  }
+>;
+export type BudgetTemplatesOutcome = CatalogCommit<{
+  templateApplication: { categoryIds: string[] };
+}>;
+
 export type ScheduleOccurrenceRequest = {
   id: string;
   date: string;
@@ -1033,6 +1085,8 @@ export type ChangeProposal =
   | ImportFileProposal
   | RuleApplyProposal
   | SchedulePostProposal
+  | BudgetMoveProposal
+  | BudgetTemplatesProposal
   | ScheduleSkipProposal
   | CategoryGroupCreationProposal
   | CategoryCreationProposal

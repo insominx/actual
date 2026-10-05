@@ -49,11 +49,13 @@ import type {
   BudgetHoldRequest,
   BudgetMetadataProposal,
   BudgetMetadataRequest,
+  BudgetMoveRequest,
   BudgetPublicationOutcome,
   BudgetPublicationProposal,
   BudgetPublicationRequest,
   BudgetRestoreProposal,
   BudgetRestoreRequest,
+  BudgetTemplatesRequest,
   CategoryCreationOutcome,
   CategoryCreationProposal,
   CategoryCreationRequest,
@@ -135,6 +137,14 @@ import {
   prepareCategoryGroupUpdate,
   prepareCategoryUpdate,
 } from './budget/app';
+import {
+  budgetReservations,
+  inspectTemplates,
+  performBudgetMove,
+  performTemplateApplication,
+  prepareBudgetMove,
+  prepareTemplateApplication,
+} from './budget/guarded-allocation';
 import {
   copySourceIgnoredTables,
   inspectCopySource,
@@ -3502,6 +3512,36 @@ function guardedCatalogHandlers<
   );
   handlers['api/schedules-preview-skip'] = scheduleSkip.preview;
   handlers['api/schedules-skip'] = scheduleSkip.apply;
+  const prepareMoveInMonth = async (request: BudgetMoveRequest) => {
+    if (typeof request?.month === 'string') await validateMonth(request.month);
+    return prepareBudgetMove(request);
+  };
+  const budgetMove = guardedCatalogHandlers(
+    prepareMoveInMonth,
+    guardedApply({
+      operation: 'budgets.move',
+      noun: 'Allocation move',
+      prepare: prepareMoveInMonth,
+      perform: performBudgetMove,
+    }),
+  );
+  handlers['api/budget-preview-move'] = budgetMove.preview;
+  handlers['api/budget-move'] = budgetMove.apply;
+  const prepareTemplatesInMonth = async (request: BudgetTemplatesRequest) => {
+    if (typeof request?.month === 'string') await validateMonth(request.month);
+    return prepareTemplateApplication(request);
+  };
+  const templateApplication = guardedCatalogHandlers(
+    prepareTemplatesInMonth,
+    guardedApply({
+      operation: 'budgets.apply-templates',
+      noun: 'Template application',
+      prepare: prepareTemplatesInMonth,
+      perform: performTemplateApplication,
+    }),
+  );
+  handlers['api/budget-preview-templates'] = templateApplication.preview;
+  handlers['api/budget-apply-templates'] = templateApplication.apply;
   const transferMatch = guardedCatalogHandlers(
     prepareTransferMatch,
     guardedApply({
@@ -5024,6 +5064,14 @@ handlers['api/import-mapping-get'] = async function (arg) {
 handlers['api/rules-matches'] = async function (arg) {
   checkFileOpen();
   return findRuleMatches(arg);
+};
+handlers['api/budget-templates'] = async function () {
+  checkFileOpen();
+  return inspectTemplates();
+};
+handlers['api/budget-reservations'] = async function (arg) {
+  checkFileOpen();
+  return budgetReservations(arg ?? {});
 };
 handlers['api/schedules-inspect'] = async function (arg) {
   checkFileOpen();
