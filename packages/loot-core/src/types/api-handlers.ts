@@ -1,4 +1,6 @@
 import type { ImportTransactionsResult } from '#server/accounts/app';
+// @ts-strict-ignore
+import type { AccountInspection } from '#server/accounts/inspect';
 import type { PayeeNameNormalization } from '#server/accounts/sync';
 import type {
   APIAccountEntity,
@@ -12,7 +14,6 @@ import type {
   APITagEntity,
 } from '#server/api-models';
 import type { BudgetFileHandlers } from '#server/budgetfiles/app';
-// @ts-strict-ignore
 import type {
   CatalogInspectKind,
   CatalogInspectRow,
@@ -263,6 +264,10 @@ export type ApiHandlers = {
   'api/preference-apply-set': (
     arg: PreferenceSetProposal,
   ) => Promise<TransactionUpdateOutcome>;
+  'api/accounts-inspect': (arg: {
+    cutoff?: string;
+    includeClosed?: boolean;
+  }) => Promise<AccountInspection>;
   'api/catalog-inspect': (arg: {
     kind: CatalogInspectKind;
     includeDeleted?: boolean;

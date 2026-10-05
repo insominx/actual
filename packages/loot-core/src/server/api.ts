@@ -90,6 +90,7 @@ import {
   makeAccountClosingTransaction,
   performAccountClosure,
 } from './accounts/app';
+import { inspectAccounts } from './accounts/inspect';
 import { inspectStartingBalancePayee } from './accounts/payees';
 import { addTransactions } from './accounts/sync';
 import {
@@ -4738,6 +4739,13 @@ handlers['api/preferences-inspect'] = async function ({ key } = {}) {
 handlers['api/catalog-inspect'] = async function (arg) {
   checkFileOpen();
   return inspectCatalog(arg);
+};
+
+// Read-only account inspection: engine balances split by cleared, reconciled
+// and future activity, on/off-budget totals and duplicate names.
+handlers['api/accounts-inspect'] = async function (arg) {
+  checkFileOpen();
+  return inspectAccounts(arg);
 };
 
 handlers['api/note-update'] = withMutation(async function ({ id, note }) {

@@ -51,20 +51,27 @@ const noteSet = {
       });
     },
   }),
-  laterEdit: (_f, ctx) => [
-    'notes',
-    'set',
-    '--account',
-    ctx.id,
-    '--note',
-    'Later note',
-    '--operation-id',
-    'note-later-edit',
-  ],
+  laterEdit: (_f, ctx) => {
+    // Only the regular flow edits later; interruption cases keep the plan.
+    ctx.laterEdited = true;
+    return [
+      'notes',
+      'set',
+      '--account',
+      ctx.id,
+      '--note',
+      'Later note',
+      '--operation-id',
+      'note-later-edit',
+    ];
+  },
   independent: (_f, ctx) => ({
     args: ['notes', 'get', '--account', ctx.id],
     check(result) {
-      assert.equal(result.note, 'Later note');
+      assert.equal(
+        result.note,
+        ctx.laterEdited ? 'Later note' : 'Planned note',
+      );
       assert.deepEqual(result.target, {
         kind: 'account',
         id: ctx.id,

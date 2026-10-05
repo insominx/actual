@@ -1035,6 +1035,18 @@ export function inspectPreferences(key?: string) {
 }
 
 /**
+ * Inspect accounts as of a cutoff day (default today): engine balances split
+ * into cleared, uncleared, reconciled and future activity, on-budget and
+ * off-budget totals, groups, duplicate names, and closed accounts with a
+ * balance that were not listed. Read-only.
+ */
+export function inspectAccounts(
+  options: { cutoff?: string; includeClosed?: boolean } = {},
+) {
+  return send('api/accounts-inspect', options);
+}
+
+/**
  * Inspect categories or payees with stable IDs, hidden/deleted status, the
  * row a deleted entry now resolves to, live transaction counts through the
  * canonical mappings, and other rows sharing the same name. Read-only.

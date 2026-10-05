@@ -4917,6 +4917,63 @@ describe('typed synced preferences', () => {
   });
 });
 
+describe('account inspection', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('signs totals, separates future and off-budget activity, and discloses closed balances', async () => {
+    const before = (await api.inspectAccounts({ cutoff: '2026-10-15' })).totals;
+    const cash = await api.createAccount(
+      { name: 'Cash', offbudget: false },
+      1000000,
+    );
+    const card = await api.createAccount(
+      { name: 'Card', offbudget: false },
+      -200000,
+    );
+    const equity = await api.createAccount(
+      { name: 'Equity', offbudget: true },
+      5000000,
+    );
+    const dup = await api.createAccount({ name: 'cash ', offbudget: false });
+    await api.addTransactions(cash, [
+      { date: '2026-10-01', amount: -1000, cleared: true },
+      { date: '2026-12-01', amount: -2500 },
+    ]);
+    const inspection = await api.inspectAccounts({ cutoff: '2026-10-15' });
+    const byId = (id: string) =>
+      inspection.accounts.find(account => account.id === id);
+    expect(byId(cash)?.balances).toMatchObject({
+      ledger: 999000,
+      future: -2500,
+      futureTransactionCount: 1,
+    });
+    expect(byId(cash)?.balances.cleared).toBe(
+      (byId(cash)?.balances.ledger ?? 0) -
+        (byId(cash)?.balances.uncleared ?? 0),
+    );
+    expect(byId(cash)?.sameNameIds).toEqual([dup]);
+    expect(byId(card)?.balances.ledger).toBe(-200000);
+    expect(byId(equity)?.offbudget).toBe(true);
+    expect(inspection.totals.onBudget - before.onBudget).toBe(799000);
+    expect(inspection.totals.offBudget - before.offBudget).toBe(5000000);
+
+    await api.closeAccount(card, cash);
+    const closed = await api.inspectAccounts({ cutoff: '2026-10-15' });
+    expect(closed.accounts.some(account => account.id === card)).toBe(false);
+    const withClosed = await api.inspectAccounts({
+      cutoff: '2026-12-31',
+      includeClosed: true,
+    });
+    expect(
+      withClosed.accounts.find(account => account.id === card)?.closed,
+    ).toBe(true);
+    await expect(
+      api.inspectAccounts({ cutoff: '2026-02-30' }),
+    ).rejects.toThrow();
+  });
+});
+
 describe('catalog inspection', () => {
   beforeEach(async () => {
     await api.loadBudget(budgetName);
