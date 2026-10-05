@@ -1,6 +1,10 @@
 import type { ImportTransactionsResult } from '#server/accounts/app';
 // @ts-strict-ignore
 import type { AccountInspection } from '#server/accounts/inspect';
+import type {
+  ReconciliationStatus,
+  ReconciliationStatusRequest,
+} from '#server/accounts/reconcile';
 import type { PayeeNameNormalization } from '#server/accounts/sync';
 import type {
   APIAccountEntity,
@@ -125,6 +129,12 @@ import type {
   PayeeUpdateRequest,
   PreferenceSetProposal,
   PreferenceSetRequest,
+  ReconcileAdjustOutcome,
+  ReconcileAdjustProposal,
+  ReconcileAdjustRequest,
+  ReconcileFinishOutcome,
+  ReconcileFinishProposal,
+  ReconcileFinishRequest,
   RuleApplyOutcome,
   RuleApplyProposal,
   RuleApplyRequest,
@@ -373,6 +383,21 @@ export type ApiHandlers = {
   'api/import-mapping-apply-save': (
     arg: ImportMappingSaveProposal,
   ) => Promise<TransactionUpdateOutcome>;
+  'api/reconcile-status': (
+    arg: ReconciliationStatusRequest,
+  ) => Promise<ReconciliationStatus>;
+  'api/reconcile-preview-finish': (
+    arg: ReconcileFinishRequest,
+  ) => Promise<ReconcileFinishProposal>;
+  'api/reconcile-finish': (
+    arg: ReconcileFinishProposal,
+  ) => Promise<ReconcileFinishOutcome>;
+  'api/reconcile-preview-adjust': (
+    arg: ReconcileAdjustRequest,
+  ) => Promise<ReconcileAdjustProposal>;
+  'api/reconcile-adjust': (
+    arg: ReconcileAdjustProposal,
+  ) => Promise<ReconcileAdjustOutcome>;
   'api/budget-preview-move': (
     arg: BudgetMoveRequest,
   ) => Promise<BudgetMoveProposal>;

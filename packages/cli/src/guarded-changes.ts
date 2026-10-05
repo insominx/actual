@@ -635,6 +635,8 @@ export async function executeScopedChange(
     | 'schedules.skip'
     | 'budgets.move'
     | 'budgets.apply-templates'
+    | 'reconcile.finish'
+    | 'reconcile.adjust'
     | 'transactions.merge'
     | 'cash-planning.save',
   payload: Record<string, unknown>,
@@ -1398,6 +1400,14 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
       api.previewTemplateApplication(r as api.BudgetTemplatesRequest),
     apply: p => api.applyTemplateApplication(p as api.BudgetTemplatesProposal),
   },
+  'reconcile.finish': {
+    preview: r => api.previewReconcileFinish(r as api.ReconcileFinishRequest),
+    apply: p => api.applyReconcileFinish(p as api.ReconcileFinishProposal),
+  },
+  'reconcile.adjust': {
+    preview: r => api.previewReconcileAdjust(r as api.ReconcileAdjustRequest),
+    apply: p => api.applyReconcileAdjust(p as api.ReconcileAdjustProposal),
+  },
   'imports.file': {
     preview: r => api.previewFileImport(r as api.ImportFileRequest),
     apply: p => api.applyFileImport(p as api.ImportFileProposal),
@@ -1536,6 +1546,8 @@ function changeRequest(
   | api.ScheduleOccurrenceRequest
   | api.BudgetMoveRequest
   | api.BudgetTemplatesRequest
+  | api.ReconcileFinishRequest
+  | api.ReconcileAdjustRequest
   | api.TransferUnmatchRequest
   | api.TransferRepairRequest
   | api.TransactionMergeRequest
@@ -1694,6 +1706,59 @@ function changeRequest(
       format: payload.format,
       ...(payload.settings === undefined ? {} : { settings: payload.settings }),
       ...(payload.reset === undefined ? {} : { reset: payload.reset }),
+    };
+  }
+  if (operation === 'reconcile.finish') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key =>
+          !['accountId', 'statementBalance', 'statementDate', 'ids'].includes(
+            key,
+          ),
+      ) ||
+      typeof payload.accountId !== 'string' ||
+      !Number.isSafeInteger(payload.statementBalance) ||
+      !(
+        payload.statementDate === undefined ||
+        typeof payload.statementDate === 'string'
+      ) ||
+      !Array.isArray(payload.ids) ||
+      !payload.ids.every(value => typeof value === 'string')
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Reconciliation finish takes accountId, statementBalance (integer cents), ids (candidate IDs) and optional statementDate.',
+      );
+    }
+    return {
+      accountId: payload.accountId,
+      statementBalance: payload.statementBalance as number,
+      ...(payload.statementDate === undefined
+        ? {}
+        : { statementDate: payload.statementDate }),
+      ids: payload.ids as string[],
+    };
+  }
+  if (operation === 'reconcile.adjust') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['accountId', 'amount', 'date'].includes(key),
+      ) ||
+      typeof payload.accountId !== 'string' ||
+      !Number.isSafeInteger(payload.amount) ||
+      !(payload.date === undefined || typeof payload.date === 'string')
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Reconciliation adjustment takes accountId, amount (integer cents) and optional date.',
+      );
+    }
+    return {
+      accountId: payload.accountId,
+      amount: payload.amount as number,
+      ...(payload.date === undefined ? {} : { date: payload.date }),
     };
   }
   if (operation === 'budgets.move') {

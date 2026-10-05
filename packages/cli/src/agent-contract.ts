@@ -81,6 +81,7 @@ const READ_OPERATIONS = new Set([
   'schedules.upcoming',
   'budgets.templates',
   'budgets.reservations',
+  'reconcile.status',
   'server.version',
   'server.get-id',
   'rules.payee-rules',

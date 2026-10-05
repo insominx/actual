@@ -142,6 +142,11 @@ describe('registered agent commands', () => {
       'budgets.apply-templates',
       ['budgets', 'apply-templates', '--month', '2026-01'],
     ],
+    [
+      'reconcile.finish',
+      ['reconcile', 'finish', 'a', '--balance', '1', '--ids', 'x'],
+    ],
+    ['reconcile.adjust', ['reconcile', 'adjust', 'a', '--amount', '1']],
     ['cash-planning.reset', ['cash-planning', 'reset']],
     [
       'cash-planning.set-target',

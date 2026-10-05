@@ -21,6 +21,7 @@ import { registerPayeesCommand } from './commands/payees';
 import { registerPreferencesCommand } from './commands/preferences';
 import { registerProfilesCommand } from './commands/profiles';
 import { registerQueryCommand } from './commands/query';
+import { registerReconcileCommand } from './commands/reconcile';
 import { registerRulesCommand } from './commands/rules';
 import { registerSchedulesCommand } from './commands/schedules';
 import { registerServerCommand } from './commands/server';
@@ -169,6 +170,7 @@ export function createProgram(
   registerPreferencesCommand(program);
   registerCashPlanningCommand(program);
   registerTransfersCommand(program);
+  registerReconcileCommand(program);
   registerImportsCommand(program);
   registerRulesCommand(program);
   registerSchedulesCommand(program);

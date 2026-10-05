@@ -395,6 +395,11 @@ export async function prepareTemplateApplication(
       },
     });
   }
+  const check = await checkTemplateNotes();
+  const templateErrors =
+    check.message === 'template-errors' && check.pre
+      ? check.pre.split('\n\n')
+      : [];
   const tracking = isTrackingBudget();
   const toBudget = tracking
     ? null
@@ -414,6 +419,7 @@ export async function prepareTemplateApplication(
         rows,
         clearedGoals: orphanGoals.map(goal => goal.category),
         toBudget,
+        templateErrors,
       },
       references: {},
       sideEffects: [

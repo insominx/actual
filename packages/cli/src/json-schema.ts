@@ -262,6 +262,19 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
           ),
           object(
             {
+              accountId: string,
+              statementBalance: { type: 'integer' },
+              statementDate: string,
+              ids: { type: 'array', items: string },
+            },
+            ['accountId', 'statementBalance', 'ids'],
+          ),
+          object(
+            { accountId: string, amount: { type: 'integer' }, date: string },
+            ['accountId', 'amount'],
+          ),
+          object(
+            {
               month: string,
               categoryIds: { type: 'array', items: string },
               force: boolean,

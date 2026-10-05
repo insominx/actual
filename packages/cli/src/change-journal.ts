@@ -37,6 +37,8 @@ import type {
   ScheduleSkipOutcome,
   BudgetMoveOutcome,
   BudgetTemplatesOutcome,
+  ReconcileFinishOutcome,
+  ReconcileAdjustOutcome,
 } from '@actual-app/api';
 
 import { AgentError } from './agent-output';
@@ -81,7 +83,9 @@ export type ChangeReceipt = {
     | SchedulePostOutcome
     | ScheduleSkipOutcome
     | BudgetMoveOutcome
-    | BudgetTemplatesOutcome;
+    | BudgetTemplatesOutcome
+    | ReconcileFinishOutcome
+    | ReconcileAdjustOutcome;
   artifact?: { path: string; timeout: number };
 };
 

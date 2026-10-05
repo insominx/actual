@@ -102,6 +102,13 @@ import {
 } from './accounts/app';
 import { inspectAccounts } from './accounts/inspect';
 import { inspectStartingBalancePayee } from './accounts/payees';
+import {
+  performReconcileAdjust,
+  performReconcileFinish,
+  prepareReconcileAdjust,
+  prepareReconcileFinish,
+  reconciliationStatus,
+} from './accounts/reconcile';
 import { addTransactions } from './accounts/sync';
 import {
   accountGroupModel,
@@ -3526,6 +3533,28 @@ function guardedCatalogHandlers<
     }),
   );
   handlers['api/budget-preview-move'] = budgetMove.preview;
+  const reconcileFinish = guardedCatalogHandlers(
+    prepareReconcileFinish,
+    guardedApply({
+      operation: 'reconcile.finish',
+      noun: 'Reconciliation',
+      prepare: prepareReconcileFinish,
+      perform: performReconcileFinish,
+    }),
+  );
+  handlers['api/reconcile-preview-finish'] = reconcileFinish.preview;
+  handlers['api/reconcile-finish'] = reconcileFinish.apply;
+  const reconcileAdjust = guardedCatalogHandlers(
+    prepareReconcileAdjust,
+    guardedApply({
+      operation: 'reconcile.adjust',
+      noun: 'Reconciliation adjustment',
+      prepare: prepareReconcileAdjust,
+      perform: performReconcileAdjust,
+    }),
+  );
+  handlers['api/reconcile-preview-adjust'] = reconcileAdjust.preview;
+  handlers['api/reconcile-adjust'] = reconcileAdjust.apply;
   handlers['api/budget-move'] = budgetMove.apply;
   const prepareTemplatesInMonth = async (request: BudgetTemplatesRequest) => {
     if (typeof request?.month === 'string') await validateMonth(request.month);
@@ -5064,6 +5093,10 @@ handlers['api/import-mapping-get'] = async function (arg) {
 handlers['api/rules-matches'] = async function (arg) {
   checkFileOpen();
   return findRuleMatches(arg);
+};
+handlers['api/reconcile-status'] = async function (arg) {
+  checkFileOpen();
+  return reconciliationStatus(arg);
 };
 handlers['api/budget-templates'] = async function () {
   checkFileOpen();

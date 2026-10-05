@@ -581,6 +581,36 @@ export type RuleApplyOutcome = CatalogCommit<{
   ruleApplication: { updatedIds: string[]; createdIds: string[] };
 }>;
 
+export type ReconcileFinishRequest = {
+  accountId: string;
+  statementBalance: number;
+  statementDate?: string;
+  ids: string[];
+};
+export type ReconcileFinishProposal = CatalogProposal<
+  'reconcile.finish',
+  ReconcileFinishRequest,
+  { clearedBalance: number; lastReconciled: string | null },
+  { lockedIds: string[]; difference: 0; setsLastReconciled: true }
+>;
+export type ReconcileFinishOutcome = CatalogCommit<{
+  reconciliation: { lockedIds: string[]; lastReconciled: string };
+}>;
+export type ReconcileAdjustRequest = {
+  accountId: string;
+  amount: number;
+  date?: string;
+};
+export type ReconcileAdjustProposal = CatalogProposal<
+  'reconcile.adjust',
+  ReconcileAdjustRequest,
+  { clearedBalance: number },
+  { rows: Array<Record<string, unknown>>; clearedBalance: number }
+>;
+export type ReconcileAdjustOutcome = CatalogCommit<{
+  adjustment: { transactionIds: string[] };
+}>;
+
 export type BudgetMoveRequest = {
   month: string;
   from: string;
@@ -627,6 +657,7 @@ export type BudgetTemplatesProposal = CatalogProposal<
     rows: BudgetTemplateRow[];
     clearedGoals: string[];
     toBudget: number | null;
+    templateErrors: string[];
   }
 >;
 export type BudgetTemplatesOutcome = CatalogCommit<{
@@ -1086,6 +1117,8 @@ export type ChangeProposal =
   | RuleApplyProposal
   | SchedulePostProposal
   | BudgetMoveProposal
+  | ReconcileFinishProposal
+  | ReconcileAdjustProposal
   | BudgetTemplatesProposal
   | ScheduleSkipProposal
   | CategoryGroupCreationProposal

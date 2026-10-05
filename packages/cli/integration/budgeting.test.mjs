@@ -72,25 +72,8 @@ void test('allocation moves preserve the total, refuse insufficient funds and su
     await cli(['accounts', 'list']);
     const fun = await newCategory(f, 'Fun');
     const dining = f.fixture.dining;
-    const incomeGroup = (
-      await legacy(f, [
-        'category-groups',
-        'create',
-        '--name',
-        'Income',
-        '--is-income',
-      ])
-    ).id;
-    const salary = (
-      await legacy(f, [
-        'categories',
-        'create',
-        '--name',
-        'Salary',
-        '--group-id',
-        incomeGroup,
-        '--is-income',
-      ])
+    const salary = (await legacy(f, ['categories', 'list'])).find(
+      c => c.is_income,
     ).id;
     await legacy(f, [
       'transactions',
@@ -283,8 +266,8 @@ void test('template preview matches apply without writing and invalid templates 
     const inspected = await cli(['budgets', 'templates']);
     assert.equal(inspected.valid, true);
     assert.deepEqual(
-      inspected.categories.map(c => c.id).sort(),
-      [fixed, scheduled].sort(),
+      new Set(inspected.categories.map(c => c.id)),
+      new Set([fixed, scheduled]),
     );
     assert.equal(
       inspected.categories.find(c => c.id === fixed).templates[0].type,
@@ -359,7 +342,8 @@ void test('template preview matches apply without writing and invalid templates 
       12000,
     );
 
-    // An invalid template line is reported and blocks preview.
+    // An invalid template line is reported; the engine skips it, as the
+    // app does, and the preview lists the error beside the rows.
     const broken = await newCategory(f, 'Broken');
     await cli([
       'notes',
@@ -374,15 +358,34 @@ void test('template preview matches apply without writing and invalid templates 
     const invalid = await cli(['budgets', 'templates']);
     assert.equal(invalid.valid, false);
     assert.ok(invalid.errors.some(line => line.startsWith('Broken')));
+    const withErrors = await cli([
+      'changes',
+      'preview',
+      'budgets.apply-templates',
+      '--operation-id',
+      'templates-broken',
+      '--data',
+      JSON.stringify({ month, force: true }),
+    ]);
+    assert.ok(
+      withErrors.proposal.after.templateErrors.some(line =>
+        line.startsWith('Broken'),
+      ),
+    );
+    assert.ok(
+      !withErrors.proposal.after.rows.some(row => row.categoryId === broken),
+    );
+    // Listing a category without templates is a precise input error.
     assert.equal(
       await errorCode(f, [
         'budgets',
         'apply-templates',
         '--month',
         month,
-        '--force',
+        '--categories',
+        f.fixture.dining,
         '--operation-id',
-        'templates-broken',
+        'templates-none',
       ]),
       'INVALID_INPUT',
     );

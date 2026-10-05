@@ -1,4 +1,5 @@
 import { send } from '@actual-app/core/platform/client/connection';
+import type { ReconciliationStatusRequest } from '@actual-app/core/server/accounts/reconcile';
 import type {
   APIAccountEntity,
   APIAccountGroupEntity,
@@ -92,6 +93,10 @@ import type {
   PayeeUpdateRequest,
   PreferenceSetProposal,
   PreferenceSetRequest,
+  ReconcileAdjustProposal,
+  ReconcileAdjustRequest,
+  ReconcileFinishProposal,
+  ReconcileFinishRequest,
   RuleApplyProposal,
   RuleApplyRequest,
   RuleCreationProposal,
@@ -185,6 +190,12 @@ export type {
   BudgetTemplateRow,
   BudgetTemplatesProposal,
   BudgetTemplatesOutcome,
+  ReconcileFinishRequest,
+  ReconcileFinishProposal,
+  ReconcileFinishOutcome,
+  ReconcileAdjustRequest,
+  ReconcileAdjustProposal,
+  ReconcileAdjustOutcome,
   TransferMatchRequest,
   TransferMatchProposal,
   TransferUnmatchRequest,
@@ -565,6 +576,28 @@ export function testRules(request: RuleTestRequest) {
  */
 export function inspectSchedules(request: ScheduleInspectionRequest = {}) {
   return send('api/schedules-inspect', request);
+}
+/**
+ * Reconciliation status for an account: cleared balance (optionally cut off
+ * at a statement date), difference from a statement balance and the
+ * cleared, unreconciled candidates a finish would lock. Read-only.
+ */
+export function getReconciliationStatus(request: ReconciliationStatusRequest) {
+  return send('api/reconcile-status', request);
+}
+/** Prepare locking the frozen cleared set when the difference is zero. */
+export function previewReconcileFinish(request: ReconcileFinishRequest) {
+  return send('api/reconcile-preview-finish', request);
+}
+export function applyReconcileFinish(proposal: ReconcileFinishProposal) {
+  return send('api/reconcile-finish', proposal);
+}
+/** Prepare an explicit reconciliation balance adjustment. Read-only. */
+export function previewReconcileAdjust(request: ReconcileAdjustRequest) {
+  return send('api/reconcile-preview-adjust', request);
+}
+export function applyReconcileAdjust(proposal: ReconcileAdjustProposal) {
+  return send('api/reconcile-adjust', proposal);
 }
 /**
  * Prepare moving an allocation between two categories, or between To
@@ -980,6 +1013,10 @@ export type {
   RuleTestResult,
 } from '@actual-app/core/server/rules/evaluate';
 export type { TemplateInspection } from '@actual-app/core/server/budget/guarded-allocation';
+export type {
+  ReconciliationStatus,
+  ReconciliationStatusRequest,
+} from '@actual-app/core/server/accounts/reconcile';
 export type {
   ScheduleInspection,
   ScheduleInspectionRequest,
