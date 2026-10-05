@@ -211,6 +211,7 @@ Example `.actualrc.json`:
 | `transfers`       | Review, match and repair transfers                                   |
 | `imports`         | Inspect, preview and import files; saved mappings and import history |
 | `rules`           | Manage transaction rules                                             |
+| `reconcile`       | Reconcile an account against a statement; finish; adjust             |
 | `schedules`       | Manage schedules; list upcoming occurrences; post or skip the next   |
 | `query`           | Run an ActualQL query                                                |
 | `server`          | Server utilities and lookups                                         |

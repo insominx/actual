@@ -439,6 +439,21 @@ actual transfers repair <id> [--allow-reconciled]
 
 `transfers unmatch` unlinks a healthy transfer and keeps both rows as ordinary transactions with no payee, since a transfer payee would relink them on the next edit; delete an unwanted leg with `transactions delete`. `transfers inspect` reports `missing-counterpart`, `not-reciprocal`, `amount-mismatch`, `payee-mismatch`, `same-account` and `unlinked-transfer-payee`, plus the repair that applies: `unlink` removes a broken link from this row only, `resync` makes the counterpart follow this row through the engine's linked transfer update, and `relink` recreates a missing counterpart through the engine's transfer creation (this adds one transaction, disclosed in the preview).
 
+### Reconcile
+
+```bash
+# Cleared balance, difference and the candidates a finish would lock (read-only)
+actual reconcile status <account-id> [--balance 123456] [--date 2026-09-30]
+
+# Lock the candidates when the difference is zero (guarded)
+actual reconcile finish <account-id> --balance 123456 [--date 2026-09-30] --ids <id,id,...> --operation-id <unique-id>
+
+# Explicit balance adjustment (guarded)
+actual reconcile adjust <account-id> --amount -700 [--date 2026-09-30] --operation-id <unique-id>
+```
+
+`reconcile status` uses the app's cleared balance (cleared top-level transactions, so splits count once). `--date` is an explicit statement cutoff: later rows are excluded from the balance and candidates and counted in `clearedAfterCutoffCount`; without it the result matches the app's reconcile bar. `difference` is the statement balance minus the cleared balance, and `candidateIds` are the cleared, unreconciled transactions a finish would lock. `reconcile finish` requires a zero difference and exactly those IDs, so a transaction cleared or edited after the status read makes the request invalid or the preview stale; it locks the candidates and their split children (never the other side of a transfer) and sets the account's last reconciled time. Nothing is ever added to force a match: `reconcile adjust` is a separate, explicit cleared "Reconciliation balance adjustment" transaction (rules run, as in the app). To change a reconciled transaction, unlock it with `actual transactions clear --ids <id> --unlock --operation-id <unique-id>`. Actual keeps no in-progress reconciliation, so there is nothing to cancel: reads and previews write nothing.
+
 ### Imports
 
 ```bash

@@ -165,7 +165,7 @@
       "stage": "Domain tools",
       "mode": "AFK",
       "dependencies": ["0021-cli-imports", "0019-cli-transfers"],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-rules",
@@ -197,7 +197,7 @@
         "0024-cli-schedules",
         "0014-cli-mutations"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-cash-planning",

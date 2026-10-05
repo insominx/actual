@@ -15,8 +15,8 @@ Sources: current command modules under `packages/cli/src/commands`, `packages/ap
 | `tags.create`         | `createTag` -> `api/tag-create`                   | Guarded; verified locally on Linux (2026-10-04).                                                |
 | `tags.update`         | `updateTag` -> `api/tag-update`                   | Guarded; verified locally on Linux (2026-10-04).                                                |
 | `tags.delete`         | `deleteTag` -> `api/tag-delete`                   | Guarded; verified locally on Linux (2026-10-04).                                                |
-| `transactions.add`    | `addTransactions` -> `api/transactions-add`       | Guarded (D58), opt-in on direct version 2 with --operation-id. |
-| `transactions.import` | `importTransactions` -> `api/transactions-import` | Guarded (D59), opt-in on direct version 2 with --operation-id. |
+| `transactions.add`    | `addTransactions` -> `api/transactions-add`       | Guarded (D58), opt-in on direct version 2 with --operation-id.                                  |
+| `transactions.import` | `importTransactions` -> `api/transactions-import` | Guarded (D59), opt-in on direct version 2 with --operation-id.                                  |
 | `transactions.update` | `updateTransaction` -> `api/transaction-update`   | Guarded notes/amount/date/cleared/category/payee (D57); account and transfer edits stay legacy. |
 | `transactions.delete` | `deleteTransaction` -> `api/transaction-delete`   | Guarded; verified locally on Linux (2026-10-04).                                                |
 | `rules.create`        | `createRule` -> `api/rule-create`                 | Guarded; verified locally on Linux (2026-10-04).                                                |

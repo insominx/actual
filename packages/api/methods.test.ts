@@ -6919,3 +6919,53 @@ describe('allocation moves', () => {
     expect((await api.applyBudgetMove(allowed)).status).toBe('committed-local');
   });
 });
+
+describe('reconciliation', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('finishes only a zero difference over the frozen cleared set', async () => {
+    const account = await api.createAccount({ name: 'Reconcile' }, 0);
+    await api.addTransactions(account, [
+      { date: '2017-01-05', amount: -1000, cleared: true },
+      { date: '2017-01-25', amount: -500, cleared: true },
+    ]);
+    const all = await api.getReconciliationStatus({ accountId: account });
+    const cut = await api.getReconciliationStatus({
+      accountId: account,
+      statementDate: '2017-01-10',
+      statementBalance: all.clearedBalance + 500,
+    });
+    expect(cut.difference).toBe(0);
+    expect(cut.clearedAfterCutoffCount).toBeGreaterThanOrEqual(1);
+    await expect(
+      api.previewReconcileFinish({
+        accountId: account,
+        statementDate: '2017-01-10',
+        statementBalance: all.clearedBalance,
+        ids: cut.candidateIds,
+      }),
+    ).rejects.toThrow(/does not match/);
+    const proposal = await api.previewReconcileFinish({
+      accountId: account,
+      statementDate: '2017-01-10',
+      statementBalance: cut.statementBalance!,
+      ids: cut.candidateIds,
+    });
+    expect((await api.applyReconcileFinish(proposal)).status).toBe(
+      'committed-local',
+    );
+    const after = await api.getReconciliationStatus({ accountId: account });
+    expect(after.account.lastReconciled).not.toBeNull();
+    expect(after.candidateIds.length).toBe(cut.clearedAfterCutoffCount);
+    const adjust = await api.previewReconcileAdjust({
+      accountId: account,
+      amount: 250,
+      date: '2017-01-26',
+    });
+    expect(adjust.after.clearedBalance).toBe(after.clearedBalance + 250);
+    expect((await api.applyReconcileAdjust(adjust)).status).toBe(
+      'committed-local',
+    );
+  });
+});

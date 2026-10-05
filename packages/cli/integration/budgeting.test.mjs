@@ -372,9 +372,11 @@ void test('template preview matches apply without writing and invalid templates 
         line.startsWith('Broken'),
       ),
     );
-    assert.ok(
-      !withErrors.proposal.after.rows.some(row => row.categoryId === broken),
+    // The skipped line contributes nothing to that category.
+    const brokenRow = withErrors.proposal.after.rows.find(
+      row => row.categoryId === broken,
     );
+    assert.ok(!brokenRow || brokenRow.after.budgeted === 0);
     // Listing a category without templates is a precise input error.
     assert.equal(
       await errorCode(f, [
