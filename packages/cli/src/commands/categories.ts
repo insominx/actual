@@ -108,14 +108,18 @@ export function registerCategoriesCommand(program: Command) {
     .option('--operation-id <id>', 'Required for version 2; durable retry ID')
     .option('--name <name>', 'New category name')
     .option('--hidden <bool>', 'Set hidden status')
+    .option('--group-id <id>', 'Move the category to this category group')
     .action(async (id: string, cmdOpts) => {
       const fields: api.CategoryUpdateRequest['fields'] = {};
       if (cmdOpts.name !== undefined) fields.name = cmdOpts.name;
+      if (cmdOpts.groupId !== undefined) fields.group_id = cmdOpts.groupId;
       if (cmdOpts.hidden !== undefined) {
         fields.hidden = parseBoolFlag(cmdOpts.hidden, '--hidden');
       }
       if (Object.keys(fields).length === 0) {
-        throw new Error('No update fields provided. Use --name or --hidden.');
+        throw new Error(
+          'No update fields provided. Use --name, --hidden or --group-id.',
+        );
       }
       const opts = program.opts();
       if (opts.outputVersion === '2') {

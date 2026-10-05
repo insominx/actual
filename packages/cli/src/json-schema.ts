@@ -113,6 +113,8 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
             payee: string,
           }),
           { type: 'array', items: object(importProperties, ['date']) },
+          object({ note: string }, ['note']),
+          object({ value: nullableId }, ['value']),
           object({ transferAccount: string, transferCategory: string }),
           object({ transferCategoryId: string }),
           object(

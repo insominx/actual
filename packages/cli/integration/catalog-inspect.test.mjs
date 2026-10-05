@@ -107,6 +107,21 @@ void test('catalog inspection discloses duplicates, deleted targets and moved to
     assert.equal(byId(merged, shop).transactionCount, 3);
     assert.equal(byId(merged, shop2).mappedTo, shop);
 
+    // A guarded move changes only the group and keeps the totals.
+    const moved = await cli([
+      'categories',
+      'update',
+      keep,
+      '--group-id',
+      groupB,
+      '--operation-id',
+      'move-dup',
+    ]);
+    assert.equal(moved.receipt.outcome.status, 'committed-local');
+    const afterMove = byId(await cli(['categories', 'inspect']), keep);
+    assert.deepEqual(afterMove.group, { id: groupB, name: 'Inspect B' });
+    assert.equal(afterMove.transactionCount, 3);
+
     // Totals are preserved: the three amounts now resolve to the kept rows.
     const fresh = await f.cli(
       ['--require-fresh', 'categories', 'inspect', '--name', 'dup'],
