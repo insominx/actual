@@ -19,6 +19,7 @@ import { registerCheckupCommand } from './commands/checkup';
 import { registerDiagnosticsCommand } from './commands/diagnostics';
 import { registerImportsCommand } from './commands/imports';
 import { registerJobsCommand } from './commands/jobs';
+import { registerMcpCommand } from './commands/mcp';
 import { registerNotesCommand } from './commands/notes';
 import { registerPayeesCommand } from './commands/payees';
 import { registerPreferencesCommand } from './commands/preferences';
@@ -181,6 +182,7 @@ export function createProgram(
   registerBankSyncCommand(program);
   registerWorkflowCommand(program);
   registerJobsCommand(program);
+  registerMcpCommand(program, version);
   registerImportsCommand(program);
   registerRulesCommand(program);
   registerSchedulesCommand(program);

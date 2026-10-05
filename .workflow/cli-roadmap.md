@@ -150,3 +150,5 @@ Known baseline: prior cash-planning verification recorded repository-wide format
 Checkpoint 2026-10-05 03:50 PT: 0031 workflows completed locally on Linux. `workflow setup|intake|weekly-checkup|monthly-close|goal-review` run fixed steps over existing reads and guarded changes with resumable run records (`workflow run list|inspect|resume|cancel`); packaged 2/2, unit 325. Windows rerun pending. Decisions D4, D5 and D7 are for Michael.
 
 Checkpoint 2026-10-05 03:54 PT: 0032 automation completed locally on Linux. `jobs create|list|status|run|disable|enable|schedule` import stable routed inbox files through resumable intake runs with dedupe, overlap locking, local results and printed scheduler recipes; packaged 1/1, unit 327. Windows Task Scheduler execution pending. Decisions D3, D4 and D10 are for Michael.
+
+Checkpoint 2026-10-05 03:58 PT: 0033 MCP completed locally on Linux. `actual mcp serve` exposes registry-generated domain tools and resources over stdio and runs each call through the CLI; packaged 2/2 including the official SDK client, unit 331. Live MCP host E2E blocked (no host app or credentials). Decisions D2 and D4 are for Michael.

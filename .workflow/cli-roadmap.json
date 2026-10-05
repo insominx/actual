@@ -302,7 +302,7 @@
       "stage": "Optional interface",
       "mode": "AFK",
       "dependencies": ["0007-cli-contract", "0031-cli-workflows"],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-distribution",

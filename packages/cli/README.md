@@ -216,6 +216,7 @@ Example `.actualrc.json`:
 | `checkup`         | Data-quality findings, month coverage and statement evidence           |
 | `bank-sync`       | Bank sync status, refresh of linked accounts and run results           |
 | `jobs`            | Saved intake automation; run, status, disable; scheduler recipes       |
+| `mcp`             | Optional MCP stdio server exposing the operations as tools             |
 | `workflow`        | Setup, intake, weekly checkup, monthly close, goal review; run records |
 | `schedules`       | Manage schedules; list upcoming occurrences; post or skip the next     |
 | `query`           | Run an ActualQL query                                                  |

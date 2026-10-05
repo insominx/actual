@@ -542,6 +542,29 @@ actual jobs schedule nightly [--every 15] [--executable actual]
 
 A job runs the `intake` workflow with only the mutations it lists (`imports.file`). Each `jobs run` first resumes an interrupted run, then scans the inbox: files named like downloads in progress (`.part`, `.tmp`, `.crdownload`) or modified within `--stable-seconds` stay pending, files without a route stay in the inbox, and content already imported with the same account and settings moves to processed as a duplicate without importing. The same content routed to another account waits for `--allow-cross-account`. Imported files move to processed, failed ones to error; the three directories must be separate. Only one run of a job is active at a time; an overlapping invocation fails with a retryable `job-active` error. Every run writes a local JSON result under `jobs/<name>/results/` in the CLI data directory; external alerts are yours to configure. Job records contain no credentials.
 
+### MCP (optional)
+
+```bash
+# Serve MCP over stdio for an agent host (protocol on stdout, diagnostics on stderr)
+actual --sync-id <id> mcp serve [--domains accounts,transactions,changes,workflow]
+```
+
+Example host configuration:
+
+```json
+{
+  "mcpServers": {
+    "actual": {
+      "command": "actual",
+      "args": ["--sync-id", "<sync-id>", "mcp", "serve"],
+      "env": { "ACTUAL_SERVER_URL": "http://localhost:5006" }
+    }
+  }
+}
+```
+
+Every registered CLI operation is one tool (`accounts list` is `accounts_list`, `cash-planning inspect` is `cash-planning_inspect`) with the same input schema as `actual schema <operation>`, positional arguments as properties, and read-only and destructive annotations. There is no generic execute tool, and `server init/start/stop/logs/bootstrap`, `sync watch` and `profiles set/use` stay CLI-only. Each call runs the CLI with version 2 output and returns its envelope as `structuredContent`, so results, guarded changes, receipts and workflow runs are exactly the CLI's. Unknown tools and invalid inputs fail before anything runs. Resources: `actual://domains`, `actual://operations`, `actual://schema/{tool}`. Cancelling a call stops its process; guarded changes and workflow runs keep their recorded state. Budget selection and credentials come from the serve command's options or environment (prefer `ACTUAL_PASSWORD` or a profile over arguments); tools never take credentials. MCP is optional: nothing in the CLI depends on it.
+
 ### Checkup
 
 ```bash
