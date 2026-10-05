@@ -91,3 +91,117 @@ void test(
     }
   },
 );
+
+void test(
+  'version 2 query pages tie-break equal dates by id and disclose concurrent changes',
+  { timeout: 180000 },
+  async () => {
+    const f = await createFixture();
+    try {
+      const created = await f.cli(['accounts', 'create', '--name', 'Paging'], {
+        version: '1',
+      });
+      assert.equal(created.code, 0, created.stdout + created.stderr);
+      const account = JSON.parse(created.stdout).id;
+      const added = await f.cli(
+        [
+          'transactions',
+          'add',
+          '--account',
+          account,
+          '--data',
+          JSON.stringify(
+            [1, 2, 3, 4, 5].map(n => ({
+              date: '2026-10-02',
+              amount: -n,
+              notes: `same day ${n}`,
+            })),
+          ),
+        ],
+        { version: '1' },
+      );
+      assert.equal(added.code, 0, added.stdout + added.stderr);
+      const base = [
+        'query',
+        'run',
+        '--table',
+        'transactions',
+        '--select',
+        'id,date,amount',
+        '--filter',
+        JSON.stringify({ account }),
+        '--order-by',
+        'date',
+        '--limit',
+        '2',
+      ];
+      const seen = [];
+      let cursor;
+      let pages = 0;
+      do {
+        const result = await f.cli([
+          ...base,
+          ...(cursor ? ['--cursor', cursor] : []),
+        ]);
+        assert.equal(result.code, 0, result.stdout + result.stderr);
+        const body = parse(result);
+        assert.equal(body.data.page.tieBreaker, 'id');
+        assert.deepEqual(body.data.page.orderBy, ['date', { id: 'asc' }]);
+        assert.equal(
+          body.data.snapshot.changedSinceCursor,
+          cursor ? false : null,
+        );
+        assert.deepEqual(body.warnings, []);
+        seen.push(...body.data.rows.map(row => row.id));
+        cursor = body.data.page.nextCursor;
+        assert.equal(body.data.page.truncated, Boolean(cursor));
+        pages += 1;
+      } while (cursor);
+      assert.equal(pages, 3);
+      assert.equal(seen.length, 5);
+      assert.deepEqual(
+        seen,
+        [...seen].sort((a, b) => a.localeCompare(b)),
+      );
+
+      // A change from another client between pages is disclosed.
+      const first = parse(await f.cli(base));
+      const change = await f.cli(
+        [
+          'transactions',
+          'add',
+          '--account',
+          account,
+          '--data',
+          JSON.stringify([{ date: '2026-10-02', amount: -9 }]),
+        ],
+        { version: '1', client: 'b' },
+      );
+      assert.equal(change.code, 0, change.stdout + change.stderr);
+      // Reads use the local cache unless freshness is required.
+      const second = await f.cli([
+        '--require-fresh',
+        ...base,
+        '--cursor',
+        first.data.page.nextCursor,
+      ]);
+      assert.equal(second.code, 0, second.stdout + second.stderr);
+      const body = parse(second);
+      assert.equal(body.data.snapshot.changedSinceCursor, true);
+      assert.equal(body.warnings.length, 1);
+
+      const otherQuery = await f.cli([
+        'query',
+        'run',
+        '--table',
+        'accounts',
+        '--cursor',
+        first.data.page.nextCursor,
+      ]);
+      assert.equal(otherQuery.code, 2, otherQuery.stdout);
+      assert.equal(parse(otherQuery).error.details.field, 'cursor');
+    } finally {
+      await f.dispose();
+    }
+  },
+);

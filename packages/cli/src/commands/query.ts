@@ -241,6 +241,74 @@ export function planPage(
   };
 }
 
+// Entity lookup for agents. Matching is by exact id, then case-insensitive
+// exact name, then case-insensitive substring; several matches are reported
+// as ambiguous instead of guessing.
+export const RESOLVE_TABLES: Record<
+  string,
+  { nameField: string; select: string[] }
+> = {
+  accounts: {
+    nameField: 'name',
+    select: ['id', 'name', 'closed', 'offbudget'],
+  },
+  payees: { nameField: 'name', select: ['id', 'name', 'transfer_acct'] },
+  categories: {
+    nameField: 'name',
+    select: ['id', 'name', 'is_income', 'hidden', 'group.name'],
+  },
+  category_groups: {
+    nameField: 'name',
+    select: ['id', 'name', 'is_income', 'hidden'],
+  },
+  schedules: {
+    nameField: 'name',
+    select: ['id', 'name', 'completed', 'next_date'],
+  },
+  tags: { nameField: 'tag', select: ['id', 'tag'] },
+};
+export const RESOLVE_MATCH_LIMIT = 50;
+
+export function resolveMatches(
+  rows: Array<Record<string, unknown>>,
+  text: string,
+  nameField: string,
+) {
+  const needle = text.trim().toLowerCase();
+  const name = (row: Record<string, unknown>) =>
+    typeof row[nameField] === 'string'
+      ? (row[nameField] as string).trim().toLowerCase()
+      : '';
+  let matchedBy: 'id' | 'exact-name' | 'partial-name' | null = null;
+  let matches = rows.filter(row => row.id === text.trim());
+  if (matches.length) matchedBy = 'id';
+  if (!matches.length && needle) {
+    matches = rows.filter(row => name(row) === needle);
+    if (matches.length) matchedBy = 'exact-name';
+  }
+  if (!matches.length && needle) {
+    matches = rows.filter(row => name(row).includes(needle));
+    if (matches.length) matchedBy = 'partial-name';
+  }
+  matches.sort((a, b) =>
+    name(a) === name(b)
+      ? String(a.id).localeCompare(String(b.id))
+      : name(a).localeCompare(name(b)),
+  );
+  return {
+    status:
+      matches.length === 0
+        ? 'none'
+        : matches.length === 1
+          ? 'unique'
+          : 'ambiguous',
+    matchedBy,
+    total: matches.length,
+    truncated: matches.length > RESOLVE_MATCH_LIMIT,
+    matches: matches.slice(0, RESOLVE_MATCH_LIMIT),
+  };
+}
+
 const LAST_DEFAULT_SELECT = [
   'date',
   'account.name',
@@ -602,5 +670,50 @@ export function registerQueryCommand(program: Command) {
         ...(info.ref ? { ref: info.ref } : {}),
       }));
       printOutput(fields, opts.format);
+    });
+
+  query
+    .command('resolve <table> <text>')
+    .description(
+      'Find entities by id or name; reports ambiguous matches instead of guessing',
+    )
+    .action(async (table: string, text: string) => {
+      const opts = program.opts();
+      const config = RESOLVE_TABLES[table];
+      if (!config) {
+        throw new AgentError(
+          'INVALID_INPUT',
+          `Entity lookup supports: ${Object.keys(RESOLVE_TABLES).join(', ')}.`,
+          false,
+          { field: 'table' },
+        );
+      }
+      if (!text.trim()) {
+        throw new AgentError('INVALID_INPUT', 'Lookup text is empty.', false, {
+          field: 'text',
+        });
+      }
+      await withConnection(
+        opts,
+        async () => {
+          const result = await api.aqlQuery(api.q(table).select(config.select));
+          if (!isRecord(result) || !Array.isArray(result.data)) {
+            throw new Error('Query result missing data');
+          }
+          printOutput(
+            {
+              table,
+              text,
+              ...resolveMatches(
+                result.data as Array<Record<string, unknown>>,
+                text,
+                config.nameField,
+              ),
+            },
+            opts.format,
+          );
+        },
+        { mutates: false },
+      );
     });
 }

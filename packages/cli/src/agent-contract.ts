@@ -58,6 +58,7 @@ const READ_OPERATIONS = new Set([
   'query.run',
   'query.tables',
   'query.fields',
+  'query.resolve',
   'server.version',
   'server.get-id',
   'rules.payee-rules',

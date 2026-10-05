@@ -7,3 +7,11 @@
 - CLI: `packages/cli/src/commands/query.ts` version 2 tables/fields/run as described in progress.md; `integration/query.test.mjs` is the packaged proof.
 
 Verification so far: core 4/4, CLI unit 273/273, API/core/CLI typecheck clean, oxlint clean on touched paths.
+
+## Slice 2: paging and entity lookup (A2)
+
+- `planPage`, `encodeCursor`, `decodeCursor` and `resolveMatches` in `packages/cli/src/commands/query.ts`; unit proof in `query-paging.test.ts` (5) and `query-resolve.test.ts` (4).
+- Core `api/query-snapshot` and public `getQuerySnapshot()` provide the change marker.
+- Packaged proof: `integration/query.test.mjs` (2/2), evidence `verification-query-linux-integration.txt`.
+
+Decision audit: D1-D5 in execution-decisions.md.

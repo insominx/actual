@@ -19,7 +19,7 @@ None to review this planned contract. This request creates tasks only; implement
 ## Implementation checklist
 
 - [x] Expose read-only schema metadata through the public API and replace TABLE_SCHEMA consumers (version 1 tables/fields output kept verbatim, see D1).
-- [ ] Add bounded query execution, stable sorting/paging, and context-aware entity lookup with ambiguity results.
+- [x] Add bounded query execution, stable sorting/paging, and context-aware entity lookup with ambiguity results.
 - [ ] Add documented aggregate recipes and tests; explicitly reject SQL writes and avoid deriving cash-planning formulas here.
 - [ ] Run section 12 checks, record limitations and evidence, and update dependent task readiness.
 
@@ -27,8 +27,8 @@ None to review this planned contract. This request creates tasks only; implement
 
 | ID  | Required outcome                                                                                                                                       | Evidence      | Status  |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- | ------- |
-| A1  | All exposed fields/operators validate against core schema; unsupported expressions return structured errors.                                           | Not collected | Pending |
-| A2  | Pagination with equal dates has deterministic ID tie-breaking and discloses concurrent snapshot changes.                                               | Not collected | Pending |
+| A1  | All exposed fields/operators validate against core schema; unsupported expressions return structured errors.                                           | schema-metadata.test.ts; verification-query-linux-integration.txt | Verified on Linux |
+| A2  | Pagination with equal dates has deterministic ID tie-breaking and discloses concurrent snapshot changes.                                               | query-paging.test.ts; verification-query-linux-integration.txt | Verified on Linux |
 | A3  | A split, refund, uncategorized transaction, opening balance, and transfer aggregate matches engine fixtures; query execution creates no ledger writes. | Not collected | Pending |
 
 ## Execution decision ledger
@@ -39,5 +39,6 @@ Create `execution-decisions.md` only for material choices/departures during impl
 
 - 2026-10-02: Created the sequenced task contract. No production implementation or feature verification performed.
 
-- 2026-10-05 00:45 PT: Slice 1. Core `server/aql/schema-metadata.ts` derives table/field metadata from the AQL schema and exposes the compiler's operator and function lists; `validateQuery` compiles without executing. Public API `getQuerySchema()` and `validateQuery(query)` are pure and need no loaded budget. CLI version 2 `query tables`/`query fields` use core metadata; version 2 `query run` compiles against the core schema before connecting and returns INVALID_INPUT with `details.field = "query"`. Evidence: core schema-metadata 4/4, CLI query unit 31/31 (CLI 273/273), api/core/CLI types clean, lint clean. Packaged evidence in implementation.md when captured.
-- 2026-10-05 00:05 PT: Slice 2 paging. Version 2 `query run` returns `{ rows, page, snapshot }`: pages default to 1000 rows (maximum 10000), fetch one extra row to report `truncated`, append an `id` tie-breaker to non-aggregate queries, and return `nextCursor`. A cursor binds the next offset to a hash of the query and to the `api/query-snapshot` marker (CRDT message count and latest timestamp); a changed marker sets `snapshot.changedSinceCursor` and adds a warning. Evidence: CLI unit 278/278 including query-paging 5/5; CLI types clean. Packaged proof pending.
+- 2026-10-04 23:40 PT: Slice 1. Core `server/aql/schema-metadata.ts` derives table/field metadata from the AQL schema and exposes the compiler's operator and function lists; `validateQuery` compiles without executing. Public API `getQuerySchema()` and `validateQuery(query)` are pure and need no loaded budget. CLI version 2 `query tables`/`query fields` use core metadata; version 2 `query run` compiles against the core schema before connecting and returns INVALID_INPUT with `details.field = "query"`. Evidence: core schema-metadata 4/4, CLI query unit 31/31 (CLI 273/273), api/core/CLI types clean, lint clean. Packaged evidence in implementation.md when captured.
+- 2026-10-04 23:43 PT: Slice 2 paging. Version 2 `query run` returns `{ rows, page, snapshot }`: pages default to 1000 rows (maximum 10000), fetch one extra row to report `truncated`, append an `id` tie-breaker to non-aggregate queries, and return `nextCursor`. A cursor binds the next offset to a hash of the query and to the `api/query-snapshot` marker (CRDT message count and latest timestamp); a changed marker sets `snapshot.changedSinceCursor` and adds a warning. Evidence: CLI unit 278/278 including query-paging 5/5; CLI types clean. Packaged proof pending.
+- 2026-10-04 23:55 PT: Entity lookup `query resolve <table> <text>` (accounts, payees, categories, category_groups, schedules, tags) matches exact id, then case-insensitive exact name, then substring, and reports `unique`, `ambiguous` or `none` with context fields; deleted rows are excluded by the engine. Packaged A1/A2 proof passes 2/2 (verification-query-linux-integration.txt): core-schema discovery, pre-connection INVALID_INPUT for unknown operator/field/path, legacy version 1 tables unchanged, five equal-date rows paged 2+2+1 in id order with no duplicates, and a change from a second client disclosed on the next page with --require-fresh. CLI unit 282/282.
