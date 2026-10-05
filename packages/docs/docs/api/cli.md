@@ -380,6 +380,22 @@ actual preferences reset dateFormat --operation-id <unique-id>
 
 Only synced budget preferences are covered; device-local settings never sync and budget metadata such as the name belongs to `budgets rename`. Settable keys are display settings (`dateFormat`, `numberFormat`, `hideFraction`, `isPrivacyEnabled`, `defaultCurrencyCode`, `currencySymbolPosition`, `currencySpaceBetweenAmountAndSymbol`, `firstDayOfWeekIdx`, `upcomingScheduledTransactionLength`, `show-hidden-tags`) and `flags.<feature>` experimental flags, each with validated values. Domain-owned keys are listed with their owner and rejected here: `budgetType`, `cashPlanning` (its typed tool), import mappings and bank sync options. Unknown keys fail. Inspection never writes, and an unset key reports `null` with the app default alongside. `reset` clears the stored value so the app falls back to its default. Changes run the guarded `preferences.set` change (`actual changes preview preferences.set <key> --data '{"value":"..."}'`, or `{"value":null}` to reset).
 
+### Cash Planning
+
+```bash
+# Balances, history averages, category totals, projections and goal dates (read-only)
+actual cash-planning inspect [--start 2026-08-01] [--end 2026-09-30] [--scenario '{"categoryTargets":{"<id>":50000},"goal":{"balance":2000000,"deadline":"2027-06-30"}}']
+
+# Guarded saves of the synced cashPlanning preference (each requires --operation-id)
+actual cash-planning save --data '{"startDate":"2026-08-01","endDate":"2026-09-30","categoryTargets":{},"forecastEndDate":"2027-12-31"}'
+actual cash-planning set-target --category <id> --amount 50000
+actual cash-planning reset-target --category <id>
+actual cash-planning set-goal --balance 2000000 [--deadline 2027-06-30] | --clear
+actual cash-planning reset
+```
+
+`cash-planning inspect` uses the same calculation functions as the Cash planning report. It returns included on-budget balances, history months as calendar fractions, income, outflow and external-movement averages, category totals, the historical and target projections (goal state, completion, depletion and deadline gaps) and the chart points. `--start`, `--end` and `--scenario` are transient: they override the saved plan for this call only and are never stored. With no history in the range, projections are `null` with a warning. Saves validate the whole plan the way the report reads it back and write only the `cashPlanning` preference; transactions, allocations, templates and schedules are unchanged. Removing a target restores that category's unrounded historical average. The edit helpers read the saved plan first, so a concurrent change before apply makes the preview stale rather than being overwritten.
+
 ### Rules
 
 ```bash

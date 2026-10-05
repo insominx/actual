@@ -207,6 +207,7 @@ Example `.actualrc.json`:
 | `tags`            | Manage tags                    |
 | `notes`           | Read and change notes          |
 | `preferences`     | Inspect and change preferences |
+| `cash-planning`   | Inspect and save cash plans    |
 | `rules`           | Manage transaction rules       |
 | `schedules`       | Manage scheduled transactions  |
 | `query`           | Run an ActualQL query          |
