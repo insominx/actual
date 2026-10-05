@@ -53,7 +53,7 @@ Defect found and fixed: workflow findings with identical messages collapsed into
 | Packed CLI and API tarball install (`ACTUAL_TEST_PACKED=1`)                          | 3/3 (0034)                             |
 | CLI integration suites per task                                                      | See each task's verification file      |
 | Browser interop (`integration/browser-*.test.mjs`, built desktop client in Chromium) | 4/4 (`verification-browser-linux.txt`) |
-| Desktop/mobile Playwright suites (`packages/desktop-client/e2e`)                     | Not run in full (D9)                   |
+| Desktop/mobile Playwright suites (`packages/desktop-client/e2e`)                     | Functional **167/167** Linux (D10); VRT not run |
 
 ## Performance baseline (A3)
 
@@ -74,5 +74,5 @@ The query page returns at most 100 rows with a truncation flag, data-quality hon
 - Windows: install, PowerShell tutorial and Task Scheduler jobs not executed.
 - Live bank sync and a live MCP host app not exercised (fake provider and official SDK client only).
 - Opening balances from `workflow setup` are dated on the setup day (D3); back-filled history needs them moved.
-- Full desktop/mobile Playwright suites not run (D9).
+- Functional Playwright completed on Linux 167/167 (D10); VRT screenshot baselines not asserted.
 - Performance figures are single-host baselines, not claims.

@@ -1,0 +1,23 @@
+Command: E2E_USE_BUILD=1 E2E_WORKERS=2 yarn e2e
+VRT: unset (toMatchThemeScreenshots no-op)
+Build: existing packages/desktop-client/build (Create test file present)
+Host: Linux box, Chromium headless (Playwright 1.61.1)
+
+Initial run (before locator fix):
+  152 passed, 1 failed, 14 did not run (serial skip after failure), ~5.7m
+  Failure: e2e/reports.test.ts › loads cash flow graph and checks visuals
+  Root cause: ReportsPage.goToCashFlowPage used getByRole('button', { name: /^Cash/ }),
+  which matched both "Cash planning" (fork) and "Cash Flow …". Strict-mode violation.
+  Evidence log: evidence/playwright-functional-linux.txt
+
+Fix: packages/desktop-client/e2e/page-models/reports-page.ts
+  /^Cash/ → /^Cash Flow/
+
+Reports-only verification after fix:
+  yarn playwright test --browser=chromium e2e/reports.test.ts → 19 passed (1.2m)
+
+Full functional rerun after fix:
+  167 passed (6.0m), EXIT 0
+  Evidence log: evidence/playwright-functional-linux-rerun.txt
+
+VRT screenshot baselines were not updated or asserted (VRT unset).

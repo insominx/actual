@@ -21,7 +21,9 @@ export class ReportsPage {
   }
 
   async goToCashFlowPage() {
-    await this.pageContent.getByRole('button', { name: /^Cash/ }).click();
+    await this.pageContent
+      .getByRole('button', { name: /^Cash Flow/ })
+      .click();
     return new ReportsPage(this.page);
   }
 

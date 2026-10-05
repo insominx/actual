@@ -34,3 +34,9 @@ Acceptance mapping:
 - A3: met on Linux; baseline recorded without thresholds; MCP parity in 0033.
 
 Windows rerun pending.
+
+## Linux functional Playwright (D10)
+
+- Command: `E2E_USE_BUILD=1 E2E_WORKERS=2 yarn e2e` (VRT unset).
+- Fix: `e2e/page-models/reports-page.ts` Cash Flow locator `/^Cash Flow/` (Cash planning collision).
+- Result: **167 passed** (`verification-playwright-functional-linux.txt`).
