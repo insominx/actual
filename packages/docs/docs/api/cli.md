@@ -233,7 +233,23 @@ actual budgets hold-next-month --month 2026-03 --amount 10000
 
 # Reset held funds
 actual budgets reset-hold --month 2026-03
+
+# Move an allocation (guarded; from/to are category IDs or to-budget)
+actual budgets move --month 2026-03 --from <id> --to <id> --amount 10000 [--allow-overspend] --operation-id <unique-id>
+
+# Templates: what the engine would apply, then apply them (guarded)
+actual budgets templates
+actual budgets apply-templates --month 2026-03 [--force | --categories <id,id>] --operation-id <unique-id>
+
+# Reservation breakdown for the current month (experimental, read-only)
+actual budgets reservations
 ```
+
+`budgets move` is the app's "Transfer to category" (or allocating from To Budget) as a guarded change. The preview shows both sides' budgeted amounts and balances before and after, To Budget, and `totalBudgetedChange` (zero for category to category moves, so the total budgeted is preserved). A move that would leave the source category with a negative balance is refused unless `--allow-overspend` is given, and a move from To Budget larger than To Budget is always refused (the app would silently clamp it). Category moves also add the app's movement line to the month's budget notes. Tracking budgets have no To Budget to move.
+
+`budgets templates` lists the templates the engine would use after its own refresh from category notes (note-managed and UI-managed categories), and the validation errors the app's "Check templates" reports. `budgets apply-templates` previews the per-category allocations and goals the template engine computes, then applies them through the same engine: without flags it fills templated categories that are still at zero, `--force` overwrites every templated category, and `--categories` overwrites only the listed ones. Invalid templates block the preview. The app's template refresh (storing parsed note templates) runs at apply and is listed as a side effect. Cash-planning targets are never written by allocation tools.
+
+`budgets reservations` returns the reservation breakdown for the current month. It is experimental and requires `flags.budgetReservations` (`actual preferences set flags.budgetReservations true --operation-id ...`); envelope budgets only.
 
 ### Categories
 

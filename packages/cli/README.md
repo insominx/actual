@@ -199,7 +199,7 @@ Example `.actualrc.json`:
 | ----------------- | -------------------------------------------------------------------- |
 | `accounts`        | Manage accounts                                                      |
 | `account-groups`  | Manage account groups                                                |
-| `budgets`         | Manage budgets and allocations                                       |
+| `budgets`         | Manage budgets, allocations, moves, templates and reservations       |
 | `categories`      | Manage categories                                                    |
 | `category-groups` | Manage category groups                                               |
 | `transactions`    | Manage transactions                                                  |

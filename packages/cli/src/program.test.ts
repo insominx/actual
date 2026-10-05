@@ -123,6 +123,25 @@ describe('registered agent commands', () => {
     ['rules.apply', ['rules', 'apply', 'r', '--ids', 'a']],
     ['schedules.post', ['schedules', 'post', 's', '--date', '2026-01-01']],
     ['schedules.skip', ['schedules', 'skip', 's', '--date', '2026-01-01']],
+    [
+      'budgets.move',
+      [
+        'budgets',
+        'move',
+        '--month',
+        '2026-01',
+        '--from',
+        'a',
+        '--to',
+        'b',
+        '--amount',
+        '1',
+      ],
+    ],
+    [
+      'budgets.apply-templates',
+      ['budgets', 'apply-templates', '--month', '2026-01'],
+    ],
     ['cash-planning.reset', ['cash-planning', 'reset']],
     [
       'cash-planning.set-target',

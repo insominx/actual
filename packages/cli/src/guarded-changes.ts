@@ -633,6 +633,8 @@ export async function executeScopedChange(
     | 'rules.apply'
     | 'schedules.post'
     | 'schedules.skip'
+    | 'budgets.move'
+    | 'budgets.apply-templates'
     | 'transactions.merge'
     | 'cash-planning.save',
   payload: Record<string, unknown>,
@@ -1387,6 +1389,15 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
     preview: r => api.previewScheduleSkip(r as api.ScheduleOccurrenceRequest),
     apply: p => api.applyScheduleSkip(p as api.ScheduleSkipProposal),
   },
+  'budgets.move': {
+    preview: r => api.previewBudgetMove(r as api.BudgetMoveRequest),
+    apply: p => api.applyBudgetMove(p as api.BudgetMoveProposal),
+  },
+  'budgets.apply-templates': {
+    preview: r =>
+      api.previewTemplateApplication(r as api.BudgetTemplatesRequest),
+    apply: p => api.applyTemplateApplication(p as api.BudgetTemplatesProposal),
+  },
   'imports.file': {
     preview: r => api.previewFileImport(r as api.ImportFileRequest),
     apply: p => api.applyFileImport(p as api.ImportFileProposal),
@@ -1522,6 +1533,9 @@ function changeRequest(
   | api.ImportMappingSaveRequest
   | api.ImportFileRequest
   | api.RuleApplyRequest
+  | api.ScheduleOccurrenceRequest
+  | api.BudgetMoveRequest
+  | api.BudgetTemplatesRequest
   | api.TransferUnmatchRequest
   | api.TransferRepairRequest
   | api.TransactionMergeRequest
@@ -1680,6 +1694,64 @@ function changeRequest(
       format: payload.format,
       ...(payload.settings === undefined ? {} : { settings: payload.settings }),
       ...(payload.reset === undefined ? {} : { reset: payload.reset }),
+    };
+  }
+  if (operation === 'budgets.move') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key =>
+          !['month', 'from', 'to', 'amount', 'allowOverspend'].includes(key),
+      ) ||
+      typeof payload.month !== 'string' ||
+      typeof payload.from !== 'string' ||
+      typeof payload.to !== 'string' ||
+      !Number.isSafeInteger(payload.amount) ||
+      !(
+        payload.allowOverspend === undefined ||
+        typeof payload.allowOverspend === 'boolean'
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Allocation move takes month, from, to (category IDs or to-budget), amount (integer cents) and optional allowOverspend.',
+      );
+    }
+    return {
+      month: payload.month,
+      from: payload.from,
+      to: payload.to,
+      amount: payload.amount as number,
+      ...(payload.allowOverspend === undefined
+        ? {}
+        : { allowOverspend: payload.allowOverspend }),
+    };
+  }
+  if (operation === 'budgets.apply-templates') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['month', 'categoryIds', 'force'].includes(key),
+      ) ||
+      typeof payload.month !== 'string' ||
+      !(
+        payload.categoryIds === undefined ||
+        (Array.isArray(payload.categoryIds) &&
+          payload.categoryIds.every(value => typeof value === 'string'))
+      ) ||
+      !(payload.force === undefined || typeof payload.force === 'boolean')
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Template application takes month, optional categoryIds and optional force.',
+      );
+    }
+    return {
+      month: payload.month,
+      ...(payload.categoryIds === undefined
+        ? {}
+        : { categoryIds: payload.categoryIds as string[] }),
+      ...(payload.force === undefined ? {} : { force: payload.force }),
     };
   }
   if (operation === 'schedules.post' || operation === 'schedules.skip') {

@@ -6877,3 +6877,45 @@ describe('schedule occurrences', () => {
     ).rejects.toThrow(/no occurrence after/);
   });
 });
+
+describe('allocation moves', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('moves allocations with explicit insufficient funds', async () => {
+    const month = '2017-01';
+    const groups = await api.getCategoryGroups();
+    const group = groups.find(g => !g.is_income)!;
+    const from = await api.createCategory({
+      name: 'Move from',
+      group_id: group.id,
+    });
+    const to = await api.createCategory({
+      name: 'Move to',
+      group_id: group.id,
+    });
+    await api.setBudgetAmount(month, from, 30000);
+    const proposal = await api.previewBudgetMove({
+      month,
+      from,
+      to,
+      amount: 10000,
+    });
+    expect(proposal.after.totalBudgetedChange).toBe(0);
+    expect((await api.applyBudgetMove(proposal)).status).toBe(
+      'committed-local',
+    );
+    await expect(
+      api.previewBudgetMove({ month, from, to, amount: 50000 }),
+    ).rejects.toThrow(/Insufficient funds/);
+    const allowed = await api.previewBudgetMove({
+      month,
+      from,
+      to,
+      amount: 25000,
+      allowOverspend: true,
+    });
+    expect(allowed.after.from.budgeted).toBe(-5000);
+    expect((await api.applyBudgetMove(allowed)).status).toBe('committed-local');
+  });
+});

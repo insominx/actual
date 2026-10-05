@@ -252,6 +252,24 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
           object({ id: string, date: string, today: boolean }, ['id', 'date']),
           object(
             {
+              month: string,
+              from: string,
+              to: string,
+              amount: { type: 'integer' },
+              allowOverspend: boolean,
+            },
+            ['month', 'from', 'to', 'amount'],
+          ),
+          object(
+            {
+              month: string,
+              categoryIds: { type: 'array', items: string },
+              force: boolean,
+            },
+            ['month'],
+          ),
+          object(
+            {
               subtransactions: {
                 type: 'array',
                 items: object(

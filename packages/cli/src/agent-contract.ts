@@ -79,6 +79,8 @@ const READ_OPERATIONS = new Set([
   'rules.matches',
   'schedules.inspect',
   'schedules.upcoming',
+  'budgets.templates',
+  'budgets.reservations',
   'server.version',
   'server.get-id',
   'rules.payee-rules',

@@ -18,6 +18,7 @@ import {
   executeBudgetHold,
   executeBudgetMetadata,
   executeBudgetPublication,
+  executeScopedChange,
 } from '#guarded-changes';
 import { acquireExclusive } from '#lock';
 import { printOutput } from '#output';
@@ -591,6 +592,107 @@ export function registerBudgetsCommand(program: Command) {
         },
         { mutates: true },
       );
+    });
+
+  budgets
+    .command('move')
+    .description(
+      'Move an allocation between two categories, or between To Budget and a category, in one month through a guarded change (the total budgeted is preserved for category moves)',
+    )
+    .option('--operation-id <id>', 'Required; durable retry ID')
+    .requiredOption('--month <month>', 'Budget month (YYYY-MM)')
+    .requiredOption('--from <id>', 'Source category ID or to-budget')
+    .requiredOption('--to <id>', 'Destination category ID or to-budget')
+    .requiredOption('--amount <amount>', 'Positive amount in cents')
+    .option(
+      '--allow-overspend',
+      'Allow the move to leave the source category with a negative balance',
+    )
+    .action(async cmdOpts => {
+      const amount = parseIntFlag(cmdOpts.amount, '--amount');
+      const opts = program.opts();
+      printOutput(
+        await executeScopedChange(opts, cmdOpts.operationId, 'budgets.move', {
+          month: cmdOpts.month,
+          from: cmdOpts.from,
+          to: cmdOpts.to,
+          amount,
+          ...(cmdOpts.allowOverspend ? { allowOverspend: true } : {}),
+        }),
+        opts.format,
+      );
+    });
+
+  const readEngine = async (read: () => Promise<unknown>) => {
+    const opts = program.opts();
+    await withConnection(
+      opts,
+      async () => {
+        let result;
+        try {
+          result = await read();
+        } catch (error) {
+          throw new AgentError(
+            'INVALID_INPUT',
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+        printOutput(result, opts.format);
+      },
+      { mutates: false },
+    );
+  };
+
+  budgets
+    .command('templates')
+    .description(
+      'Show the budget templates the engine would apply (note-managed and UI-managed) with validation errors; read-only',
+    )
+    .action(async () => {
+      await readEngine(() => api.inspectBudgetTemplates());
+    });
+
+  budgets
+    .command('apply-templates')
+    .description(
+      "Apply budget templates for a month through a guarded change: fill zero allocations, overwrite all (--force), or overwrite listed categories (--categories), as the app's template menus do",
+    )
+    .option('--operation-id <id>', 'Required; durable retry ID')
+    .requiredOption('--month <month>', 'Budget month (YYYY-MM)')
+    .option('--categories <ids>', 'Comma-separated category IDs')
+    .option('--force', 'Overwrite existing allocations of templated categories')
+    .action(async cmdOpts => {
+      const opts = program.opts();
+      printOutput(
+        await executeScopedChange(
+          opts,
+          cmdOpts.operationId,
+          'budgets.apply-templates',
+          {
+            month: cmdOpts.month,
+            ...(cmdOpts.categories
+              ? {
+                  categoryIds: String(cmdOpts.categories)
+                    .split(',')
+                    .map(id => id.trim())
+                    .filter(Boolean),
+                }
+              : {}),
+            ...(cmdOpts.force ? { force: true } : {}),
+          },
+        ),
+        opts.format,
+      );
+    });
+
+  budgets
+    .command('reservations')
+    .description(
+      'Reservation breakdown for the current month (experimental: requires flags.budgetReservations; envelope budgets only); read-only',
+    )
+    .option('--month <month>', 'Budget month (YYYY-MM); only the current month')
+    .action(async cmdOpts => {
+      await readEngine(() => api.getBudgetReservations(cmdOpts.month));
     });
 
   budgets
