@@ -5993,13 +5993,9 @@ describe('guarded split edits', () => {
     expect(parent.amount).toBe(-1000);
     expect(parent.error ?? null).toBeNull();
     expect(
-      parent.subtransactions!.map(row => [row.amount, row.category]).sort(),
-    ).toEqual(
-      [
-        [-400, food],
-        [-600, home],
-      ].sort(),
-    );
+      parent.subtransactions!.map(row => `${row.amount}:${row.category}`),
+    ).toEqual(expect.arrayContaining([`-400:${food}`, `-600:${home}`]));
+    expect(parent.subtransactions).toHaveLength(2);
     expect(await api.applyTransactionSplit(proposal)).toMatchObject({
       code: 'STALE_PREVIEW',
     });
