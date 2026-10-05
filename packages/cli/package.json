@@ -26,6 +26,7 @@
     "#backup-retention": "./src/backup-retention.ts",
     "#budget-snapshot": "./src/budget-snapshot.ts",
     "#budget-comparison": "./src/budget-comparison.ts",
+    "#report-export": "./src/report-export.ts",
     "#server-http": "./src/server-http.ts",
     "#sync-watch": "./src/sync-watch.ts",
     "#server-runtime": "./src/server-runtime.ts",
