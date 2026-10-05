@@ -219,6 +219,10 @@ import {
   performTransactionMerge,
   prepareTransactionMerge,
 } from './transactions/guarded-merge';
+import {
+  performTransactionSplit,
+  prepareTransactionSplit,
+} from './transactions/guarded-split';
 import { planLinkedTransferUpdate } from './transactions/linked-transfer-plan';
 import {
   getTransferredAccount,
@@ -3399,6 +3403,17 @@ function guardedCatalogHandlers<
   );
   handlers['api/transactions-preview-merge'] = transactionMerge.preview;
   handlers['api/transactions-apply-merge'] = transactionMerge.apply;
+  const transactionSplit = guardedCatalogHandlers(
+    prepareTransactionSplit,
+    guardedApply({
+      operation: 'transactions.split',
+      noun: 'Transaction split',
+      prepare: prepareTransactionSplit,
+      perform: performTransactionSplit,
+    }),
+  );
+  handlers['api/transactions-preview-split'] = transactionSplit.preview;
+  handlers['api/transactions-apply-split'] = transactionSplit.apply;
   const scheduleCreation = guardedCatalogHandlers(
     prepareScheduleCreation,
     guardedApply({

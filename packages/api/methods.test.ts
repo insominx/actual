@@ -5943,3 +5943,113 @@ describe('guarded duplicate merge', () => {
     }
   });
 });
+
+describe('guarded split edits', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('splits and re-splits while preserving the parent amount and rejects invalid sums before writes', async () => {
+    const group = await api.createCategoryGroup({ name: 'Split group' });
+    const food = await api.createCategory({
+      name: 'Split food',
+      group_id: group,
+    });
+    const home = await api.createCategory({
+      name: 'Split home',
+      group_id: group,
+    });
+    const account = await api.createAccount({ name: 'Split checking' }, 0);
+    await api.addTransactions(account, [
+      { date: '2026-08-10', amount: -1000, notes: 'to split', category: food },
+    ]);
+    const list = () => api.getTransactions(account, '2026-08-01', '2026-08-31');
+    const before = await list();
+    const target = before.find(row => row.notes === 'to split')!;
+
+    await expect(
+      api.previewTransactionSplit({
+        id: target.id,
+        subtransactions: [{ amount: -400 }, { amount: -500 }],
+      }),
+    ).rejects.toThrow(/sum/);
+    expect(await list()).toEqual(before);
+
+    const proposal = await api.previewTransactionSplit({
+      id: target.id,
+      subtransactions: [
+        { amount: -400, category: food, notes: 'groceries' },
+        { amount: -600, category: home },
+      ],
+    });
+    expect(proposal.after.removedChildIds).toEqual([]);
+    expect(await list()).toEqual(before);
+    const applied = await api.applyTransactionSplit(proposal);
+    if (applied.status !== 'committed-local') {
+      throw new Error('Expected committed split');
+    }
+    expect(applied.transactionSplit.childIds).toHaveLength(2);
+    let parent = (await list()).find(row => row.id === target.id)!;
+    expect(parent.is_parent).toBe(true);
+    expect(parent.amount).toBe(-1000);
+    expect(parent.error ?? null).toBeNull();
+    expect(
+      parent.subtransactions!.map(row => [row.amount, row.category]).sort(),
+    ).toEqual(
+      [
+        [-400, food],
+        [-600, home],
+      ].sort(),
+    );
+    expect(await api.applyTransactionSplit(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+
+    const resplit = await api.previewTransactionSplit({
+      id: target.id,
+      subtransactions: [
+        { amount: -100, category: home },
+        { amount: -200, category: home },
+        { amount: -700, category: food },
+      ],
+    });
+    expect([...resplit.after.removedChildIds].sort()).toEqual(
+      [...applied.transactionSplit.childIds].sort(),
+    );
+    expect(await api.applyTransactionSplit(resplit)).toMatchObject({
+      status: 'committed-local',
+    });
+    parent = (await list()).find(row => row.id === target.id)!;
+    expect(parent.amount).toBe(-1000);
+    expect(parent.subtransactions).toHaveLength(3);
+    expect(
+      parent.subtransactions!.reduce((sum, row) => sum + row.amount, 0),
+    ).toBe(-1000);
+
+    const child = parent.subtransactions![0];
+    for (const request of [
+      { id: child.id, subtransactions: [{ amount: child.amount }] },
+      { id: target.id, subtransactions: [] },
+      {
+        id: target.id,
+        subtransactions: [{ amount: -1000, category: 'missing' }],
+      },
+      { id: target.id, subtransactions: [{ amount: -1000, extra: 1 }] },
+      { id: 'missing', subtransactions: [{ amount: -1 }] },
+    ]) {
+      await expect(
+        api.previewTransactionSplit(
+          request as unknown as Parameters<
+            typeof api.previewTransactionSplit
+          >[0],
+        ),
+      ).rejects.toThrow();
+    }
+    await api.updateTransaction(target.id, { reconciled: true });
+    await expect(
+      api.previewTransactionSplit({
+        id: target.id,
+        subtransactions: [{ amount: -1000, category: food }],
+      }),
+    ).rejects.toThrow(/reconciled/);
+  });
+});

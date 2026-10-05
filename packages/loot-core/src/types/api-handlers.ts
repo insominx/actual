@@ -122,6 +122,9 @@ import type {
   TransactionMergeOutcome,
   TransactionMergeProposal,
   TransactionMergeRequest,
+  TransactionSplitOutcome,
+  TransactionSplitProposal,
+  TransactionSplitRequest,
   TransactionUpdateOutcome,
   TransactionUpdateProposal,
   TransactionUpdateRequest,
@@ -359,6 +362,12 @@ export type ApiHandlers = {
   'api/transactions-apply-merge': (
     arg: TransactionMergeProposal,
   ) => Promise<TransactionMergeOutcome>;
+  'api/transactions-preview-split': (
+    arg: TransactionSplitRequest,
+  ) => Promise<TransactionSplitProposal>;
+  'api/transactions-apply-split': (
+    arg: TransactionSplitProposal,
+  ) => Promise<TransactionSplitOutcome>;
   'api/transactions-preview-addition': (
     arg: TransactionAdditionRequest,
   ) => Promise<TransactionAdditionProposal>;

@@ -108,6 +108,8 @@ import type {
   TransactionImportRequest,
   TransactionMergeProposal,
   TransactionMergeRequest,
+  TransactionSplitProposal,
+  TransactionSplitRequest,
   TransactionUpdateProposal,
   TransactionUpdateRequest,
 } from '@actual-app/core/types/change-proposals';
@@ -135,6 +137,9 @@ export type {
   TransactionMergeRequest,
   TransactionMergeProposal,
   TransactionMergeOutcome,
+  TransactionSplitRequest,
+  TransactionSplitProposal,
+  TransactionSplitOutcome,
   ScheduleCreationRequest,
   ScheduleUpdateRequest,
   ScheduleDeletionRequest,
@@ -446,6 +451,12 @@ export function previewTransactionMerge(request: TransactionMergeRequest) {
 }
 export function applyTransactionMerge(proposal: TransactionMergeProposal) {
   return send('api/transactions-apply-merge', proposal);
+}
+export function previewTransactionSplit(request: TransactionSplitRequest) {
+  return send('api/transactions-preview-split', request);
+}
+export function applyTransactionSplit(proposal: TransactionSplitProposal) {
+  return send('api/transactions-apply-split', proposal);
 }
 export function previewTransactionDeletion(
   request: TransactionDeletionRequest,

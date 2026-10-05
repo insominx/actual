@@ -107,6 +107,10 @@ describe('registered agent commands', () => {
       ['transactions', 'categorize', '--ids', 'a,b', '--category', 'none'],
     ],
     ['transactions.merge', ['transactions', 'merge', '--ids', 'a,b']],
+    [
+      'transactions.split',
+      ['transactions', 'split', 'transaction-id', '--data', '[{"amount":-1}]'],
+    ],
   ])(
     'requires a %s operation ID before connecting and advertises it',
     async (command, args) => {

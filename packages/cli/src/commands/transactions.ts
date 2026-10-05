@@ -268,6 +268,66 @@ export function registerTransactionsCommand(program: Command) {
     );
 
   transactions
+    .command('split <id>')
+    .description(
+      'Split a transaction, or replace its split children, through a guarded change',
+    )
+    .option('--operation-id <id>', 'Required; durable retry ID')
+    .option(
+      '--data <json>',
+      'Children as JSON: [{"amount":-500,"category":"<id>","notes":"..."}]',
+    )
+    .option('--file <path>', 'Read children from JSON file (use - for stdin)')
+    .option(
+      '--allow-reconciled',
+      'Allow splitting a reconciled transaction',
+      false,
+    )
+    .action(
+      async (
+        id: string,
+        cmdOpts: {
+          operationId?: string;
+          data?: string;
+          file?: string;
+          allowReconciled: boolean;
+        },
+      ) => {
+        const opts = program.opts();
+        if (!cmdOpts.operationId) {
+          throw new AgentError(
+            'INVALID_INPUT',
+            'Version 2 transactions.split requires --operation-id for durable retry.',
+            false,
+            { field: 'operationId' },
+          );
+        }
+        const subtransactions = readJsonInput(cmdOpts);
+        if (!Array.isArray(subtransactions)) {
+          throw new AgentError(
+            'INVALID_INPUT',
+            'Split children must be a JSON array.',
+            false,
+            { field: 'data' },
+          );
+        }
+        printOutput(
+          await executeCatalogChange(
+            opts,
+            cmdOpts.operationId,
+            'transactions.split',
+            id,
+            {
+              subtransactions,
+              ...(cmdOpts.allowReconciled ? { allowReconciled: true } : {}),
+            },
+          ),
+          opts.format,
+        );
+      },
+    );
+
+  transactions
     .command('delete <id>')
     .description('Delete a transaction')
     .option('--operation-id <id>', 'Required for version 2; durable retry ID')

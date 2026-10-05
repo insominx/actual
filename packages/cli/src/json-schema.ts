@@ -204,6 +204,24 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
             },
             ['ids'],
           ),
+          object(
+            {
+              subtransactions: {
+                type: 'array',
+                items: object(
+                  {
+                    amount: money,
+                    category: nullableId,
+                    notes: { anyOf: [string, { type: 'null' }] },
+                    payee: nullableId,
+                  },
+                  ['amount'],
+                ),
+              },
+              allowReconciled: boolean,
+            },
+            ['subtransactions'],
+          ),
           object(ruleFields, [
             'stage',
             'conditionsOp',

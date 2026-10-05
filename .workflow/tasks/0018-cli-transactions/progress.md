@@ -39,4 +39,4 @@ Create `execution-decisions.md` only for material choices/departures during impl
 
 - 2026-10-02: Created the sequenced task contract. No production implementation or feature verification performed.
 - 2026-10-05 00:40 PT: guarded `transactions.categorize` (core `server/transactions/guarded-categorize.ts`, public preview/apply, CLI `transactions categorize`, changes payload schema). Decisions D1-D5.
-- 2026-10-05 00:55 PT: guarded `transactions.merge` (core `server/transactions/guarded-merge.ts`, public preview/apply, CLI `transactions merge`). Packaged 6/6. Decisions D6-D7.
+- 2026-10-05 00:49 PT: guarded `transactions.merge` (core `server/transactions/guarded-merge.ts`, public preview/apply, CLI `transactions merge`). Packaged 6/6. Decisions D6-D7.

@@ -594,7 +594,8 @@ export async function executeCatalogChange(
     | 'rules.delete'
     | 'schedules.update'
     | 'schedules.delete'
-    | 'transactions.delete',
+    | 'transactions.delete'
+    | 'transactions.split',
   id: string,
   payload: Record<string, unknown>,
 ) {
@@ -1355,6 +1356,10 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
     preview: r => api.previewTransactionMerge(r as api.TransactionMergeRequest),
     apply: p => api.applyTransactionMerge(p as api.TransactionMergeProposal),
   },
+  'transactions.split': {
+    preview: r => api.previewTransactionSplit(r as api.TransactionSplitRequest),
+    apply: p => api.applyTransactionSplit(p as api.TransactionSplitProposal),
+  },
   'transactions.add': {
     preview: r =>
       api.previewTransactionAddition(r as api.TransactionAdditionRequest),
@@ -1458,6 +1463,7 @@ function changeRequest(
   | api.TransactionDeletionRequest
   | api.TransactionCategorizationRequest
   | api.TransactionMergeRequest
+  | api.TransactionSplitRequest
   | api.TransactionAdditionRequest
   | api.TransactionImportRequest
   | api.CategoryGroupDeletionRequest
@@ -1523,6 +1529,32 @@ function changeRequest(
       );
     }
     return { targetId: id, mergeIds: payload.mergeIds as string[] };
+  }
+  if (operation === 'transactions.split') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['subtransactions', 'allowReconciled'].includes(key),
+      ) ||
+      !Array.isArray(payload.subtransactions) ||
+      !(
+        payload.allowReconciled === undefined ||
+        typeof payload.allowReconciled === 'boolean'
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Split takes a subtransactions array and optional allowReconciled; the transaction is the change ID.',
+      );
+    }
+    return {
+      id,
+      subtransactions:
+        payload.subtransactions as api.TransactionSplitRequest['subtransactions'],
+      ...(payload.allowReconciled === undefined
+        ? {}
+        : { allowReconciled: payload.allowReconciled }),
+    };
   }
   if (operation === 'transactions.merge') {
     if (

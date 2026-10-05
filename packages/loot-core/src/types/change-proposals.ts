@@ -324,6 +324,38 @@ export type TransactionMergeOutcome = CatalogCommit<{
   transactionMerge: { keptId: string };
 }>;
 
+export type TransactionSplitRequest = {
+  id: string;
+  subtransactions: Array<{
+    amount: number;
+    category?: string | null;
+    notes?: string | null;
+    payee?: string | null;
+  }>;
+  allowReconciled?: boolean;
+};
+export type TransactionSplitProposal = CatalogProposal<
+  'transactions.split',
+  TransactionSplitRequest,
+  {
+    transaction: Record<string, unknown>;
+    children: Array<{ id: string; amount: number; category: string | null }>;
+  },
+  {
+    amount: number;
+    children: Array<{
+      amount: number;
+      category: string | null;
+      notes: string | null;
+      payee: string | null;
+    }>;
+    removedChildIds: string[];
+  }
+>;
+export type TransactionSplitOutcome = CatalogCommit<{
+  transactionSplit: { childIds: string[] };
+}>;
+
 export type TransactionAdditionRequest = {
   accountId: string;
   transactions: Array<Record<string, unknown>>;
@@ -764,6 +796,7 @@ export type ChangeProposal =
   | TransactionDeletionProposal
   | TransactionCategorizationProposal
   | TransactionMergeProposal
+  | TransactionSplitProposal
   | TransactionAdditionProposal
   | TransactionImportProposal
   | CategoryGroupCreationProposal

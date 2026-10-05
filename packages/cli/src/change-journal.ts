@@ -28,6 +28,7 @@ import type {
   TransactionAdditionOutcome,
   TransactionImportOutcome,
   TransactionMergeOutcome,
+  TransactionSplitOutcome,
   TransactionUpdateOutcome,
 } from '@actual-app/api';
 
@@ -65,7 +66,8 @@ export type ChangeReceipt = {
     | AccountDeletionOutcome
     | AccountCloseOutcome
     | AccountGroupCreationOutcome
-    | TransactionMergeOutcome;
+    | TransactionMergeOutcome
+    | TransactionSplitOutcome;
   artifact?: { path: string; timeout: number };
 };
 
