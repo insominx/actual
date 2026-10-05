@@ -24,6 +24,10 @@ import type {
   CatalogInspectRow,
 } from '#server/catalog-inspect';
 import type {
+  dataQualityCheckup,
+  DataQualityRequest,
+} from '#server/checkup/data-quality';
+import type {
   cashFlowReport,
   categoryReport,
   netWorthReport,
@@ -389,6 +393,9 @@ export type ApiHandlers = {
   'api/import-mapping-apply-save': (
     arg: ImportMappingSaveProposal,
   ) => Promise<TransactionUpdateOutcome>;
+  'api/checkup-data-quality': (
+    arg: DataQualityRequest,
+  ) => ReturnType<typeof dataQualityCheckup>;
   'api/reports-cash-flow': (
     arg: ReportRequest,
   ) => ReturnType<typeof cashFlowReport>;

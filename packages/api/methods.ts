@@ -19,6 +19,7 @@ import type {
   QuerySchemaMetadata,
   QueryValidation,
 } from '@actual-app/core/server/aql/schema-metadata';
+import type { DataQualityRequest } from '@actual-app/core/server/checkup/data-quality';
 import type { ImportableBudgetType } from '@actual-app/core/server/importers/index';
 import type { ReportRequest } from '@actual-app/core/server/reports/ledger-reports';
 import type { RuleTestRequest } from '@actual-app/core/server/rules/evaluate';
@@ -579,6 +580,14 @@ export function inspectSchedules(request: ScheduleInspectionRequest = {}) {
   return send('api/schedules-inspect', request);
 }
 /**
+ * Read-only data-quality checkup: uncategorized rows, deleted categories,
+ * duplicate candidates, transfer link problems, statement discrepancies and
+ * month coverage. Never repairs anything.
+ */
+export function getDataQualityCheckup(request: DataQualityRequest) {
+  return send('api/checkup-data-quality', request);
+}
+/**
  * Monthly cash flow of on-budget accounts (income, expense, net and
  * transfers to off-budget accounts) with declared scope. Read-only.
  */
@@ -1029,6 +1038,15 @@ export type {
   RuleTestResult,
 } from '@actual-app/core/server/rules/evaluate';
 export type { TemplateInspection } from '@actual-app/core/server/budget/guarded-allocation';
+export type {
+  CoverageMonth,
+  CoverageStatus,
+  DataQualityFinding,
+  DataQualityRequest,
+  FindingCode,
+  FindingSeverity,
+  StatementEvidence,
+} from '@actual-app/core/server/checkup/data-quality';
 export type {
   ReportCompleteness,
   ReportDetailRow,

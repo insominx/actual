@@ -162,6 +162,7 @@ import {
   prepareCashPlanSave,
 } from './cash-planning/plan';
 import { inspectCatalog } from './catalog-inspect';
+import { dataQualityCheckup } from './checkup/data-quality';
 import * as cloudStorage from './cloud-storage';
 import type { RemoteFile } from './cloud-storage';
 import * as db from './db';
@@ -5098,6 +5099,10 @@ handlers['api/import-mapping-get'] = async function (arg) {
 handlers['api/rules-matches'] = async function (arg) {
   checkFileOpen();
   return findRuleMatches(arg);
+};
+handlers['api/checkup-data-quality'] = async function (arg) {
+  checkFileOpen();
+  return dataQualityCheckup(arg);
 };
 handlers['api/reports-cash-flow'] = async function (arg) {
   checkFileOpen();
