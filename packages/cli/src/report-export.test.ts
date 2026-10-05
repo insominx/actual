@@ -17,7 +17,10 @@ describe('report export', () => {
   it('neutralizes formula-like text and quotes CSV cells', () => {
     expect(csvCell('=HYPERLINK("x")')).toBe(`"'=HYPERLINK(""x"")"`);
     expect(csvCell('+1')).toBe(`"'+1"`);
-    expect(csvCell('-2')).toBe(`"'-2"`);
+    expect(csvCell('-2')).toBe('-2');
+    expect(csvCell('-167.00')).toBe('-167.00');
+    expect(csvCell('-2+3')).toBe(`"'-2+3"`);
+    expect(csvCell('-1e5')).toBe(`"'-1e5"`);
     expect(csvCell('@SUM(A1)')).toBe(`"'@SUM(A1)"`);
     expect(csvCell('\tcmd')).toBe(`"'\tcmd"`);
     expect(csvCell('a,b')).toBe('"a,b"');

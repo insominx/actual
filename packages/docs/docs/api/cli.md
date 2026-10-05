@@ -454,6 +454,24 @@ actual reconcile adjust <account-id> --amount -700 [--date 2026-09-30] --operati
 
 `reconcile status` uses the app's cleared balance (cleared top-level transactions, so splits count once). `--date` is an explicit statement cutoff: later rows are excluded from the balance and candidates and counted in `clearedAfterCutoffCount`; without it the result matches the app's reconcile bar. `difference` is the statement balance minus the cleared balance, and `candidateIds` are the cleared, unreconciled transactions a finish would lock. `reconcile finish` requires a zero difference and exactly those IDs, so a transaction cleared or edited after the status read makes the request invalid or the preview stale; it locks the candidates and their split children (never the other side of a transfer) and sets the account's last reconciled time. Nothing is ever added to force a match: `reconcile adjust` is a separate, explicit cleared "Reconciliation balance adjustment" transaction (rules run, as in the app). To change a reconciled transaction, unlock it with `actual transactions clear --ids <id> --unlock --operation-id <unique-id>`. Actual keeps no in-progress reconciliation, so there is nothing to cancel: reads and previews write nothing.
 
+### Reports
+
+```bash
+# Monthly on-budget income, expense and net (read-only)
+actual reports cash-flow --from-month 2026-01 --to-month 2026-09 [--accounts <id,id>] [--include-future] [--details]
+
+# Income and spending by category per month (read-only)
+actual reports categories --from-month 2026-01 --to-month 2026-09 [--details]
+
+# Net worth, net cash and tracking balances at each month end (read-only)
+actual reports net-worth --from-month 2026-01 --to-month 2026-09 [--accounts <id,id>]
+
+# Write a self-contained CSV or HTML file instead of printing (never overwrites)
+actual reports cash-flow --from-month 2026-01 --to-month 2026-09 --details --export csv --out ./cash-flow.csv
+```
+
+Every report returns `scope` (range, cutoff, accounts, transfer, split and opening-balance treatment, future-dated handling, currency and integer cents) and `completeness`; when no transaction exists before the range start, `completeness.note` says that earlier periods are unknown, not zero. Ranges are at most 60 months. Future-dated transactions are excluded (the cutoff is today) unless `--include-future` is passed. `cash-flow` and `categories` use on-budget accounts and count split children instead of their parent; transfers between accounts are excluded, and `cash-flow` lists transfers to off-budget accounts separately as `transfersOffBudget`. `categories` nets refunds against their category, keeps deleted categories (flagged `deleted`) and reports uncategorized amounts separately. Both list `contributingIds` (at most 1000, with `contributingTruncated`) and, with `--details`, the contributing rows. `net-worth` reports every account at each month end: `netCash` covers on-budget accounts, `tracking` covers off-budget accounts and `netWorth` is their sum. To compare periods, run a report twice. CSV exports keep cents next to a decimal column, quote every field that needs it and prefix text starting with `=`, `+`, `-`, `@`, a tab or a carriage return with `'` so spreadsheets do not evaluate it; HTML exports escape all text and load nothing external. PDF is not produced; print the HTML instead.
+
 ### Imports
 
 ```bash

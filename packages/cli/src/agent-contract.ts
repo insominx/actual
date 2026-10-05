@@ -37,7 +37,7 @@ const NONNEGATIVE = new Set([
   'lockTimeout',
 ]);
 const DATES = new Set(['start', 'end', 'cutoff']);
-const MONTHS = new Set(['month']);
+const MONTHS = new Set(['month', 'fromMonth', 'toMonth']);
 const BOOLEANS = new Set(['offbudget', 'hidden', 'carryover']);
 const WATCH_RANGES: Record<string, { minimum: number; maximum: number }> = {
   interval: { minimum: 1, maximum: 300 },

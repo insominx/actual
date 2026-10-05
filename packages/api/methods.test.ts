@@ -6969,3 +6969,54 @@ describe('reconciliation', () => {
     );
   });
 });
+
+describe('ledger reports', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('scope accounts, separate tracking from net cash and reject bad ranges', async () => {
+    const cash = await api.createAccount({ name: 'Report cash' }, 0);
+    const tracked = await api.createAccount(
+      { name: 'Report tracking', offbudget: true },
+      0,
+    );
+    await api.addTransactions(cash, [
+      { date: '2017-03-05', amount: 5000 },
+      { date: '2017-03-06', amount: -2000, notes: '=SUM(A1)' },
+    ]);
+    await api.addTransactions(tracked, [{ date: '2017-03-07', amount: 10000 }]);
+    // The test environment clock is fixed, so include rows after it.
+    const request = {
+      start: '2017-03',
+      end: '2017-03',
+      accountIds: [cash],
+      includeFuture: true,
+    };
+    const flow = await api.getCashFlowReport({ ...request, details: true });
+    expect(flow.totals).toEqual({
+      income: 5000,
+      expense: -2000,
+      net: 3000,
+      transfersOffBudget: 0,
+    });
+    expect(flow.details?.map(d => d.notes)).toContain('=SUM(A1)');
+    expect(flow.scope.amounts).toBe('integer cents');
+    const cats = await api.getCategoryReport(request);
+    expect(cats.totals.uncategorized).toBe(3000);
+    const worth = await api.getNetWorthReport({
+      start: '2017-03',
+      end: '2017-03',
+      accountIds: [cash, tracked],
+      includeFuture: true,
+    });
+    expect(worth.months[0].netCash).toBe(3000);
+    expect(worth.months[0].tracking).toBe(10000);
+    expect(worth.months[0].netWorth).toBe(13000);
+    await expect(
+      api.getCashFlowReport({ start: '2017-04', end: '2017-03' }),
+    ).rejects.toThrow(/Invalid report request/);
+    await expect(
+      api.getNetWorthReport({ start: '2010-01', end: '2017-03' }),
+    ).rejects.toThrow(/at most 60 months/);
+  });
+});

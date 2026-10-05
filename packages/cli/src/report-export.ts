@@ -16,6 +16,8 @@ export type ExportDocument = {
 };
 
 const FORMULA_START = /^[=+\-@\t\r]/;
+// A plain signed decimal (such as centsToDecimal output) is data, not a formula.
+const PLAIN_NUMBER = /^-?\d+(\.\d+)?$/;
 
 /** Decimal rendering of integer cents without floating point drift. */
 export function centsToDecimal(cents: number): string {
@@ -33,7 +35,10 @@ export function csvCell(value: string | number | boolean | null): string {
   if (typeof value === 'number' || typeof value === 'boolean') {
     return String(value);
   }
-  const text = FORMULA_START.test(value) ? `'${value}` : value;
+  const text =
+    FORMULA_START.test(value) && !PLAIN_NUMBER.test(value)
+      ? `'${value}`
+      : value;
   return /[",\r\n]/.test(text) || text !== value
     ? `"${text.replace(/"/g, '""')}"`
     : text;

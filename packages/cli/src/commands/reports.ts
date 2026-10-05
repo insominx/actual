@@ -16,8 +16,8 @@ type NetWorth = Awaited<ReturnType<typeof api.getNetWorthReport>>;
 type AnyReport = CashFlow | Categories | NetWorth;
 
 type ReportOpts = {
-  start: string;
-  end: string;
+  fromMonth: string;
+  toMonth: string;
   accounts?: string;
   includeFuture?: boolean;
   details?: boolean;
@@ -204,8 +204,11 @@ function addReport(
   reports
     .command(name)
     .description(description)
-    .requiredOption('--start <month>', 'First month YYYY-MM')
-    .requiredOption('--end <month>', 'Last month YYYY-MM (at most 60 months)')
+    .requiredOption('--from-month <month>', 'First month YYYY-MM')
+    .requiredOption(
+      '--to-month <month>',
+      'Last month YYYY-MM (at most 60 months)',
+    )
     .option('--accounts <ids>', 'Comma-separated account IDs to include')
     .option('--include-future', 'Include future-dated transactions')
     .option('--details', 'Include contributing transaction rows')
@@ -229,8 +232,8 @@ function addReport(
         throw new AgentError('INVALID_INPUT', '--out requires --export');
       }
       const request: api.ReportRequest = {
-        start: cmdOpts.start,
-        end: cmdOpts.end,
+        start: cmdOpts.fromMonth,
+        end: cmdOpts.toMonth,
         ...(cmdOpts.accounts === undefined
           ? {}
           : {
