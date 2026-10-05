@@ -20,7 +20,7 @@
 | API      | `yarn workspace @actual-app/api exec vitest run -t "transfer"` | 2/2 (`transfer review`, `guarded transfer match, unmatch and repair`) |
 | CLI unit | `yarn workspace @actual-app/cli test`                          | 301/301                                                               |
 | Types    | `npx tsc -b packages/loot-core`, API and CLI `tsc`             | clean                                                                 |
-| Packaged | `node --test integration/transfers.test.mjs`                   | see `verification-transfers-linux.txt`                                |
+| Packaged | `node --test integration/transfers.test.mjs`                   | 6/6 incl. three process kills (`verification-transfers-linux.txt`)    |
 
 Limitations: Windows not run. No browser check (the browser reads the same engine rows; browser-sync covers the transport).
 
