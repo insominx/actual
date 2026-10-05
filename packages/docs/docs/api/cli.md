@@ -307,6 +307,22 @@ actual tags update <id> [--tag "trip"] [--color "#00ff00"]
 actual tags delete <id>
 ```
 
+### Notes
+
+```bash
+# Read a note (prints the live target and the text, or null when there is no note)
+actual notes get --account <account-id>
+actual notes get --category <category-id> [--month 2026-10]
+actual notes get --group <group-id>
+actual notes get --month 2026-10
+
+# Replace a note through a guarded change (an operation ID is always required)
+actual notes set --account <account-id> --note "Statement closes on the 3rd" --operation-id <unique-id>
+actual notes set --month 2026-10 --clear --operation-id <unique-id>
+```
+
+Note IDs follow the app: `account-<id>`, a category or group ID, `budget-<YYYY-MM>` for a month and `<category-id>-<YYYY-MM>` for a category's month note; a raw ID can be passed instead of a flag. Targets must be live, so a typo or deleted entity is rejected instead of creating an orphan note. Reading a missing note returns `null` and writes nothing. `notes set` runs the guarded `notes.set` change (`actual changes preview notes.set <note-id> --data '{"note":"text"}'` works too), rejects stale previews and returns a receipt. Category notes can carry `#template` and `#goal` lines, so the preview warns that budget templates reading notes will use the new text.
+
 ### Rules
 
 ```bash

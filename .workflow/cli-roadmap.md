@@ -110,11 +110,11 @@ Known baseline: prior cash-planning verification recorded repository-wide format
 
 2026-10-04 checkpoint: guarded category-group deletion passes final nine-case local Windows acceptance. Task 0014 remains partial with 17 existing write adapters outstanding.
 
-2026-10-05 checkpoint: guarded payee creation passes five-case local Linux acceptance. Task 0014 remains partial with 16 existing write adapters outstanding.
-2026-10-05 checkpoint: guarded payee update/delete/merge and tag create/update/delete pass local Linux packaged acceptance. Task 0014 remains partial with 10 existing write adapters outstanding.
-2026-10-05 checkpoint: guarded rule create/update/delete pass local Linux packaged acceptance. Task 0014 remains partial with 7 existing write adapters outstanding.
-2026-10-05 checkpoint: guarded schedule create/update/delete pass local Linux packaged acceptance. Task 0014 remains partial with 4 existing write adapters outstanding (transactions add/import/full update/delete).
-2026-10-05 checkpoint: guarded transaction deletion and category/payee updates pass local Linux acceptance. transactions.add and transactions.import remain.
-2026-10-05 checkpoint: 0017-cli-query started (its prerequisites 0009 and 0012 are complete; it does not wait on 0014). Slice 1, core schema metadata and pre-execution query validation, is implemented.
+2026-10-04 checkpoint: guarded payee creation passes five-case local Linux acceptance. Task 0014 remains partial with 16 existing write adapters outstanding.
+2026-10-04 checkpoint: guarded payee update/delete/merge and tag create/update/delete pass local Linux packaged acceptance. Task 0014 remains partial with 10 existing write adapters outstanding.
+2026-10-04 checkpoint: guarded rule create/update/delete pass local Linux packaged acceptance. Task 0014 remains partial with 7 existing write adapters outstanding.
+2026-10-04 checkpoint: guarded schedule create/update/delete pass local Linux packaged acceptance. Task 0014 remains partial with 4 existing write adapters outstanding (transactions add/import/full update/delete).
+2026-10-04 checkpoint: guarded transaction deletion and category/payee updates pass local Linux acceptance. transactions.add and transactions.import remain.
+2026-10-04 checkpoint: 0017-cli-query started (its prerequisites 0009 and 0012 are complete; it does not wait on 0014). Slice 1, core schema metadata and pre-execution query validation, is implemented.
 
 2026-10-04 23:53 PT checkpoint: 0017-cli-query is completed locally on Linux (A1-A3 verified with unit and packaged evidence; Windows rerun pending). Dependents 0018, 0020, 0026 and 0027 no longer wait on 0017 but remain held on 0014 and their other prerequisites.

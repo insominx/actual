@@ -1,0 +1,8 @@
+# Execution decisions: 0016 cli-catalog-settings
+
+- D1 (ASSUMPTION for Michael to review, 2026-10-04): implementation started while 0014 is completed locally on Linux only. Every existing write adapter is guarded and the full Linux regression passed, but the newest adapters still need a Windows packaged rerun. 0016 reuses the shared guarded executor as it exists; if the Windows rerun changes that contract, this task adopts the change.
+- D2 (2026-10-04): note IDs follow the app's conventions (`account-<id>`, category ID, group ID, `budget-<YYYY-MM>`, `<category-id>-<YYYY-MM>`). Core resolves the ID to a live target before reading or writing, so unknown or deleted targets are rejected and a typo cannot create an orphan note. Hidden categories and closed accounts stay valid targets.
+- D3 (ASSUMPTION for Michael to review, 2026-10-04): `notes set` is a new command, so it has no legacy unguarded path; it always requires `--operation-id` and runs `notes.set` through the guarded executor in both output versions. The existing public `updateNote` API is unchanged.
+- D4 (ASSUMPTION for Michael to review, 2026-10-04): `--clear` stores empty text instead of deleting the notes row, matching what the app saves when a note is erased. The notes owner has no delete operation.
+- D5 (2026-10-04): note text is limited to 100000 characters per change to reject accidental file payloads. The app has no limit; the bound only applies to the guarded path.
+- D6 (2026-10-04): category and category-month note previews disclose that `#template` and `#goal` lines feed budget templates. The tool does not parse or validate template syntax; template tooling belongs to 0025.
