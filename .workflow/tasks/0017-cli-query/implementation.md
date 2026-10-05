@@ -21,7 +21,7 @@ Decision audit: D1-D5 in execution-decisions.md.
 - `packages/cli/src/commands/query-aggregate.ts` (`combineAggregate`, `registerQueryAggregate`); unit proof `query-aggregate.test.ts` (2). Packaged proof: third case of `integration/query.test.mjs`.
 - Core validateQuery multi-operator rejection with tests in `schema-metadata.test.ts` (5 total).
 
-## Closeout verification (Linux, 2026-10-05)
+## Closeout verification (Linux, 2026-10-04)
 
 | Check       | Command                                                             | Result                                           |
 | ----------- | ------------------------------------------------------------------- | ------------------------------------------------ |

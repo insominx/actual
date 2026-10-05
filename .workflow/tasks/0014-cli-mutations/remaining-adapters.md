@@ -94,23 +94,23 @@ Guarded category-group updates pass final nine-case Windows acceptance. Full pub
 
 Guarded category-group deletion passes final nine-case Windows acceptance. Shared group owners transfer only live child allocations for both income and expense groups, while deleting all children and forwarding mappings, including tombstoned children. Raw source allocations and ledger rows remain preserved. Rich regular/interruption cases prove durable acknowledgement, no replay, later-edit retries, collisions, independent sync and legacy output. Five raw-owner assertions fail under deliberate inversion and pass after exact restoration. API/core/CLI 94/77/254, types/builds/browser and typed lint/format/diff pass. This removes one adapter, leaving 17. Payee creation is next; task 0014 and the remaining roadmap stay incomplete.
 
-## Payee creation checkpoint (Linux, 2026-10-05)
+## Payee creation checkpoint (Linux, 2026-10-04)
 
 Guarded payees.create passes on Linux (box, Node 24.18.1). The core/API proposal and apply handlers were already on master; the missing pieces were the CLI adapter, receipt decoding, retention and discovery. Master also failed the API declaration build because methods.ts used PayeeCreationRequest/PayeeCreationProposal without importing them; that import is fixed. Preview binds the full copied source and creates nothing; apply calls the canonical createPayee owner and acknowledges the actual payee and self-mapping IDs. Names keep exact spelling, duplicates and empty names follow the legacy owner, and a supplied transfer_acct keeps its existing ignored semantics. Packaged proof in verification-payee-creation-linux-integration.txt passes 5/5: rich encrypted online/offline regular cases (raw preservation, retry after a later legacy rename, collision, direct version 2 command, independent sync) and all three exact interruption boundaries without replay. The journal decoder/retention unit test is red against the previous journal (verification-payee-creation-journal-red.txt). API 97, CLI 256, root types, CLI/API/server builds and typed lint/format pass. Inventory is now 16. The executor now dispatches through an explicit per-operation adapter table (D48) instead of nested ternaries.
 
-## Payee and tag catalog checkpoint (Linux, 2026-10-05)
+## Payee and tag catalog checkpoint (Linux, 2026-10-04)
 
 payees.update, payees.delete, payees.merge, tags.create, tags.update and tags.delete are guarded through the shared core envelope (D49) with owner-level plans in payees/guarded.ts and tags/guarded.ts. Guarded validation decisions are D50 to D53. Packaged proof: verification-catalog-linux-integration.txt. Inventory is now 10: transactions.add, transactions.import, transactions.update (full direct scope), transactions.delete, rules.create/update/delete and schedules.create/update/delete.
 
-## Rule checkpoint (Linux, 2026-10-05)
+## Rule checkpoint (Linux, 2026-10-04)
 
 rules.create, rules.update and rules.delete are guarded (D54). Packaged proof: verification-rules-linux-integration.txt. Inventory is now 7: transactions.add, transactions.import, transactions.update (full direct scope), transactions.delete and schedules.create/update/delete.
 
-## Schedule checkpoint (Linux, 2026-10-05)
+## Schedule checkpoint (Linux, 2026-10-04)
 
 schedules.create, schedules.update and schedules.delete are guarded (D55). Packaged proof: verification-schedules-linux-integration.txt. Inventory is now 4: transactions.add, transactions.import, transactions.update (full direct scope) and transactions.delete.
 
-## Transaction deletion and classification checkpoint (Linux, 2026-10-05)
+## Transaction deletion and classification checkpoint (Linux, 2026-10-04)
 
 transactions.delete is guarded (D56) and the guarded transactions.update scope now includes category and payee (D57). Packaged proof: verification-transaction-delete-linux-integration.txt; the existing changes.test.mjs transaction update suite was rerun. Inventory is now 2 open (transactions.add, transactions.import) plus the documented D57 exclusions.
 
