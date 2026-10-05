@@ -401,6 +401,28 @@ actual cash-planning reset
 
 `cash-planning inspect` uses the same calculation functions as the Cash planning report. It returns included on-budget balances, history months as calendar fractions, income, outflow and external-movement averages, category totals, the historical and target projections (goal state, completion, depletion and deadline gaps) and the chart points. `--start`, `--end` and `--scenario` are transient: they override the saved plan for this call only and are never stored. With no history in the range, projections are `null` with a warning. Saves validate the whole plan the way the report reads it back and write only the `cashPlanning` preference; transactions, allocations, templates and schedules are unchanged. Removing a target restores that category's unrounded historical average. The edit helpers read the saved plan first, so a concurrent change before apply makes the preview stale rather than being overwritten.
 
+### Transfers
+
+```bash
+# Unlinked opposite entries in different accounts within a date window (read-only)
+actual transfers candidates [--account <id>] [--start 2026-10-01] [--end 2026-10-31] [--days 3] [--limit 200]
+
+# One transaction's link checked from both sides, and a budget-wide link audit (read-only)
+actual transfers inspect <id>
+actual transfers check [--account <id>]
+
+# Guarded link changes (each requires --operation-id)
+actual transfers match --ids <id>,<id> [--allow-reconciled]
+actual transfers unmatch <id> [--allow-reconciled]
+actual transfers repair <id> [--allow-reconciled]
+```
+
+`transfers candidates` pairs unlinked leaf transactions whose amounts cancel, in different accounts, at most `--days` apart. Each pair carries both legs (account, date, payee, imported, cleared and reconciled state), the date gap, a classification and `ambiguous` with the alternative IDs when either leg has more than one candidate. Classifications follow the engine's transfer rule: `internal` (two on-budget accounts, including card payments; net budget cash is unchanged and the category is cleared), `off-budget-internal`, and `budget-boundary` (on-budget to off-budget, such as cash to equity; it moves money out of or into the budget once and keeps its category). Rows whose payee is already a transfer payee are reported by `inspect` and `check`, not offered as candidates.
+
+`transfers match` links two existing entries without adding or deleting a transaction: both get the other account's transfer payee and the link, amounts and dates stay as recorded, and categories are cleared only for internal transfers. Ambiguity is never resolved for you; match the pair you choose, and a leg that is already linked is refused. Split rows are refused (set the child's payee to a transfer payee with `transactions split`), and reconciled rows need `--allow-reconciled`. To record a new transfer, add a transaction with the destination account's transfer payee; the engine creates the counterpart.
+
+`transfers unmatch` unlinks a healthy transfer and keeps both rows as ordinary transactions with no payee, since a transfer payee would relink them on the next edit; delete an unwanted leg with `transactions delete`. `transfers inspect` reports `missing-counterpart`, `not-reciprocal`, `amount-mismatch`, `payee-mismatch`, `same-account` and `unlinked-transfer-payee`, plus the repair that applies: `unlink` removes a broken link from this row only, `resync` makes the counterpart follow this row through the engine's linked transfer update, and `relink` recreates a missing counterpart through the engine's transfer creation (this adds one transaction, disclosed in the preview).
+
 ### Rules
 
 ```bash

@@ -195,24 +195,25 @@ Example `.actualrc.json`:
 
 ## Commands
 
-| Command           | Description                    |
-| ----------------- | ------------------------------ |
-| `accounts`        | Manage accounts                |
-| `account-groups`  | Manage account groups          |
-| `budgets`         | Manage budgets and allocations |
-| `categories`      | Manage categories              |
-| `category-groups` | Manage category groups         |
-| `transactions`    | Manage transactions            |
-| `payees`          | Manage payees                  |
-| `tags`            | Manage tags                    |
-| `notes`           | Read and change notes          |
-| `preferences`     | Inspect and change preferences |
-| `cash-planning`   | Inspect and save cash plans    |
-| `rules`           | Manage transaction rules       |
-| `schedules`       | Manage scheduled transactions  |
-| `query`           | Run an ActualQL query          |
-| `server`          | Server utilities and lookups   |
-| `sync`            | Refresh or inspect local cache |
+| Command           | Description                        |
+| ----------------- | ---------------------------------- |
+| `accounts`        | Manage accounts                    |
+| `account-groups`  | Manage account groups              |
+| `budgets`         | Manage budgets and allocations     |
+| `categories`      | Manage categories                  |
+| `category-groups` | Manage category groups             |
+| `transactions`    | Manage transactions                |
+| `payees`          | Manage payees                      |
+| `tags`            | Manage tags                        |
+| `notes`           | Read and change notes              |
+| `preferences`     | Inspect and change preferences     |
+| `cash-planning`   | Inspect and save cash plans        |
+| `transfers`       | Review, match and repair transfers |
+| `rules`           | Manage transaction rules           |
+| `schedules`       | Manage scheduled transactions      |
+| `query`           | Run an ActualQL query              |
+| `server`          | Server utilities and lookups       |
+| `sync`            | Refresh or inspect local cache     |
 
 Run `actual <command> --help` for subcommands and options.
 
