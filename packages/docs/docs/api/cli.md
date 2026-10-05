@@ -499,7 +499,19 @@ actual schedules update <id> --data '{"name":"Updated Rent"}' [--reset-next-date
 
 # Delete a schedule
 actual schedules delete <id>
+
+# Occurrences in a window (default today through 30 days), with status
+actual schedules upcoming [--start 2026-10-01 --end 2026-12-31] [--account <id>] [--include-completed]
+actual schedules inspect <id> [--start ... --end ...]
+
+# Post or skip the next occurrence (guarded; version 2)
+actual schedules post <id> --date <next-date> [--today] --operation-id <unique-id>
+actual schedules skip <id> --date <next-date> --operation-id <unique-id>
 ```
+
+Schedules record bills; these commands never pay anything. `schedules upcoming` and `schedules inspect` compute occurrences with the engine's recurrence helpers (the ones that advance `next_date`), so month-end patterns, leap days, weekday patterns and weekend skipping match the app. Each schedule reports its status (`missed`, `due`, `upcoming`, `paid`, `scheduled`, `completed`), whether it posts automatically (`postsTransaction`), its account, payee, transfer account and category, the amount rule, the occurrences in the window (at most 100, `occurrencesTruncated` when cut) and transactions already posted for it in the window. The window is at most three years.
+
+`schedules post` adds the next occurrence's transaction exactly as the app's "Post transaction" does: rules run and a transfer schedule creates the counterpart. `--date` must be the schedule's current next date, and an occurrence that already has a linked transaction is rejected, so a retry with a new operation ID cannot post twice (the same ID replays the receipt). Posting does not change `next_date`; as in the app, the schedule shows the occurrence as paid. `schedules skip` advances `next_date` past the named occurrence with the same recurrence and adds nothing. Both are also available as `changes preview schedules.post|schedules.skip --data '{"id":"...","date":"YYYY-MM-DD"}'`. Editing or deleting a schedule never changes transactions already posted for it.
 
 ### Query (ActualQL)
 

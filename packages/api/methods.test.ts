@@ -6834,3 +6834,46 @@ describe('rule tests and historical rule application', () => {
     ).rejects.toThrow(/Rule does not exist/);
   });
 });
+
+describe('schedule occurrences', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('inspects a schedule and posts its occurrence once', async () => {
+    const account = await api.createAccount({ name: 'Schedule post' }, 0);
+    const payee = await api.createPayee({ name: 'Schedule payee' });
+    const id = await api.createSchedule({
+      name: 'One-off bill',
+      posts_transaction: false,
+      payee,
+      account,
+      amount: -2500,
+      amountOp: 'is',
+      date: '2030-01-15',
+    });
+    const inspected = await api.inspectSchedules({
+      id,
+      start: '2030-01-01',
+      end: '2030-03-31',
+    });
+    expect(inspected.schedules[0].occurrences).toEqual(['2030-01-15']);
+    await expect(
+      api.previewSchedulePost({ id, date: '2030-02-15' }),
+    ).rejects.toThrow(/not the next occurrence/);
+    const proposal = await api.previewSchedulePost({ id, date: '2030-01-15' });
+    expect(proposal.after.rows[0].amount).toBe(-2500);
+    const outcome = await api.applySchedulePost(proposal);
+    expect(outcome.status).toBe('committed-local');
+    const rows = await api.getTransactions(account, '2030-01-01', '2030-01-31');
+    expect(rows).toHaveLength(1);
+    expect(rows[0].schedule).toBe(id);
+    await expect(
+      api.previewSchedulePost({ id, date: '2030-01-15' }),
+    ).rejects.toThrow(/already has transaction/);
+    // A one-off schedule has no later occurrence to skip to. Recurring
+    // skips are covered by the packaged CLI proof (see 0024 implementation.md).
+    await expect(
+      api.previewScheduleSkip({ id, date: '2030-01-15' }),
+    ).rejects.toThrow(/no occurrence after/);
+  });
+});

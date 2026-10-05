@@ -249,6 +249,7 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
             },
             ['ruleId', 'ids'],
           ),
+          object({ id: string, date: string, today: boolean }, ['id', 'date']),
           object(
             {
               subtransactions: {

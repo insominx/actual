@@ -183,7 +183,7 @@
       "stage": "Domain tools",
       "mode": "AFK",
       "dependencies": ["0018-cli-transactions", "0019-cli-transfers"],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-budgeting",

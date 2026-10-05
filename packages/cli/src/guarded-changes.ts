@@ -631,6 +631,8 @@ export async function executeScopedChange(
     | 'imports.mapping-save'
     | 'imports.file'
     | 'rules.apply'
+    | 'schedules.post'
+    | 'schedules.skip'
     | 'transactions.merge'
     | 'cash-planning.save',
   payload: Record<string, unknown>,
@@ -1377,6 +1379,14 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
     preview: r => api.previewRuleApply(r as api.RuleApplyRequest),
     apply: p => api.applyRuleApply(p as api.RuleApplyProposal),
   },
+  'schedules.post': {
+    preview: r => api.previewSchedulePost(r as api.ScheduleOccurrenceRequest),
+    apply: p => api.applySchedulePost(p as api.SchedulePostProposal),
+  },
+  'schedules.skip': {
+    preview: r => api.previewScheduleSkip(r as api.ScheduleOccurrenceRequest),
+    apply: p => api.applyScheduleSkip(p as api.ScheduleSkipProposal),
+  },
   'imports.file': {
     preview: r => api.previewFileImport(r as api.ImportFileRequest),
     apply: p => api.applyFileImport(p as api.ImportFileProposal),
@@ -1670,6 +1680,33 @@ function changeRequest(
       format: payload.format,
       ...(payload.settings === undefined ? {} : { settings: payload.settings }),
       ...(payload.reset === undefined ? {} : { reset: payload.reset }),
+    };
+  }
+  if (operation === 'schedules.post' || operation === 'schedules.skip') {
+    const post = operation === 'schedules.post';
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['id', 'date', ...(post ? ['today'] : [])].includes(key),
+      ) ||
+      typeof payload.id !== 'string' ||
+      typeof payload.date !== 'string' ||
+      !(
+        payload.today === undefined ||
+        (post && typeof payload.today === 'boolean')
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        post
+          ? 'Schedule post takes id, date (the next occurrence) and optional today.'
+          : 'Schedule skip takes id and date (the next occurrence).',
+      );
+    }
+    return {
+      id: payload.id,
+      date: payload.date,
+      ...(payload.today === undefined ? {} : { today: payload.today }),
     };
   }
   if (operation === 'rules.apply') {

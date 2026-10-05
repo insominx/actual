@@ -33,6 +33,8 @@ import type {
   TransferRepairOutcome,
   ImportFileOutcome,
   RuleApplyOutcome,
+  SchedulePostOutcome,
+  ScheduleSkipOutcome,
 } from '@actual-app/api';
 
 import { AgentError } from './agent-output';
@@ -73,7 +75,9 @@ export type ChangeReceipt = {
     | TransactionSplitOutcome
     | TransferRepairOutcome
     | ImportFileOutcome
-    | RuleApplyOutcome;
+    | RuleApplyOutcome
+    | SchedulePostOutcome
+    | ScheduleSkipOutcome;
   artifact?: { path: string; timeout: number };
 };
 

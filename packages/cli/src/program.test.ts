@@ -121,6 +121,8 @@ describe('registered agent commands', () => {
     ],
     ['imports.apply', ['imports', 'apply', 'f.csv', '--account', 'a']],
     ['rules.apply', ['rules', 'apply', 'r', '--ids', 'a']],
+    ['schedules.post', ['schedules', 'post', 's', '--date', '2026-01-01']],
+    ['schedules.skip', ['schedules', 'skip', 's', '--date', '2026-01-01']],
     ['cash-planning.reset', ['cash-planning', 'reset']],
     [
       'cash-planning.set-target',
