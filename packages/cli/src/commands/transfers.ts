@@ -3,6 +3,7 @@ import type { Command } from 'commander';
 
 import { AgentError } from '#agent-output';
 import { withConnection } from '#connection';
+import { executeScopedChange } from '#guarded-changes';
 import { printOutput } from '#output';
 
 function parseInteger(value: string, field: string) {
@@ -100,4 +101,88 @@ export function registerTransfersCommand(program: Command) {
         { mutates: false },
       );
     });
+
+  transfers
+    .command('match')
+    .description(
+      'Link two existing opposite transactions in different accounts as one transfer (guarded; adds no transaction)',
+    )
+    .option('--operation-id <id>', 'Required; durable retry ID')
+    .requiredOption('--ids <ids>', 'The two transaction IDs, comma-separated')
+    .option(
+      '--allow-reconciled',
+      'Allow linking reconciled transactions',
+      false,
+    )
+    .action(
+      async (cmdOpts: {
+        operationId?: string;
+        ids: string;
+        allowReconciled: boolean;
+      }) => {
+        const opts = program.opts();
+        const ids = cmdOpts.ids
+          .split(',')
+          .map(id => id.trim())
+          .filter(Boolean);
+        if (ids.length !== 2) {
+          throw new Error(
+            'Invalid --ids: provide exactly two transaction IDs.',
+          );
+        }
+        printOutput(
+          await executeScopedChange(
+            opts,
+            cmdOpts.operationId,
+            'transfers.match',
+            {
+              ids,
+              ...(cmdOpts.allowReconciled ? { allowReconciled: true } : {}),
+            },
+          ),
+          opts.format,
+        );
+      },
+    );
+
+  for (const [verb, description] of [
+    [
+      'unmatch',
+      'Unlink a transfer; both transactions stay as ordinary transactions without a payee (guarded; deletes nothing)',
+    ],
+    [
+      'repair',
+      'Repair one broken transfer link: unlink a missing or non-reciprocal link, resync a drifted counterpart, or recreate a missing counterpart (guarded)',
+    ],
+  ] as const) {
+    transfers
+      .command(`${verb} <id>`)
+      .description(description)
+      .option('--operation-id <id>', 'Required; durable retry ID')
+      .option(
+        '--allow-reconciled',
+        'Allow changing reconciled transactions',
+        false,
+      )
+      .action(
+        async (
+          id: string,
+          cmdOpts: { operationId?: string; allowReconciled: boolean },
+        ) => {
+          const opts = program.opts();
+          printOutput(
+            await executeScopedChange(
+              opts,
+              cmdOpts.operationId,
+              `transfers.${verb}`,
+              {
+                id,
+                ...(cmdOpts.allowReconciled ? { allowReconciled: true } : {}),
+              },
+            ),
+            opts.format,
+          );
+        },
+      );
+  }
 }

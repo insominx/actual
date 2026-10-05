@@ -6359,21 +6359,33 @@ describe('guarded transfer match, unmatch and repair', () => {
       {
         date: '2026-08-01',
         amount: -50000,
+        account: checking,
         imported_id: 'tm-out',
         category: food,
       },
       {
         date: '2026-08-05',
         amount: -70000,
+        account: checking,
         imported_id: 'tm-eq',
         category: food,
       },
     ]);
     await api.importTransactions(savings, [
-      { date: '2026-08-02', amount: 50000, imported_id: 'tm-in' },
+      {
+        date: '2026-08-02',
+        amount: 50000,
+        account: savings,
+        imported_id: 'tm-in',
+      },
     ]);
     await api.importTransactions(equity, [
-      { date: '2026-08-05', amount: 70000, imported_id: 'tm-eq-in' },
+      {
+        date: '2026-08-05',
+        amount: 70000,
+        account: equity,
+        imported_id: 'tm-eq-in',
+      },
     ]);
     const all = async () => [
       ...(await api.getTransactions(checking, '2026-08-01', '2026-08-31')),

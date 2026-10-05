@@ -212,6 +212,7 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
             },
             ['ids', 'cleared'],
           ),
+          object({ id: string, allowReconciled: boolean }, ['id']),
           object(
             {
               subtransactions: {

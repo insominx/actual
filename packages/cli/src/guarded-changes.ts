@@ -625,6 +625,9 @@ export async function executeScopedChange(
   operation:
     | 'transactions.categorize'
     | 'transactions.clear'
+    | 'transfers.match'
+    | 'transfers.unmatch'
+    | 'transfers.repair'
     | 'transactions.merge'
     | 'cash-planning.save',
   payload: Record<string, unknown>,
@@ -1362,6 +1365,18 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
     apply: p =>
       api.applyTransactionClearing(p as api.TransactionClearingProposal),
   },
+  'transfers.match': {
+    preview: r => api.previewTransferMatch(r as api.TransferMatchRequest),
+    apply: p => api.applyTransferMatch(p as api.TransferMatchProposal),
+  },
+  'transfers.unmatch': {
+    preview: r => api.previewTransferUnmatch(r as api.TransferUnmatchRequest),
+    apply: p => api.applyTransferUnmatch(p as api.TransferUnmatchProposal),
+  },
+  'transfers.repair': {
+    preview: r => api.previewTransferRepair(r as api.TransferRepairRequest),
+    apply: p => api.applyTransferRepair(p as api.TransferRepairProposal),
+  },
   'transactions.merge': {
     preview: r => api.previewTransactionMerge(r as api.TransactionMergeRequest),
     apply: p => api.applyTransactionMerge(p as api.TransactionMergeProposal),
@@ -1477,6 +1492,9 @@ function changeRequest(
   | api.TransactionDeletionRequest
   | api.TransactionCategorizationRequest
   | api.TransactionClearingRequest
+  | api.TransferMatchRequest
+  | api.TransferUnmatchRequest
+  | api.TransferRepairRequest
   | api.TransactionMergeRequest
   | api.TransactionSplitRequest
   | api.CashPlanSaveRequest
@@ -1607,6 +1625,56 @@ function changeRequest(
     }
     return {
       ids: [payload.ids[0], payload.ids[1]] as [string, string],
+      ...(payload.allowReconciled === undefined
+        ? {}
+        : { allowReconciled: payload.allowReconciled }),
+    };
+  }
+  if (operation === 'transfers.match') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['ids', 'allowReconciled'].includes(key),
+      ) ||
+      !Array.isArray(payload.ids) ||
+      payload.ids.length !== 2 ||
+      !payload.ids.every(value => typeof value === 'string') ||
+      !(
+        payload.allowReconciled === undefined ||
+        typeof payload.allowReconciled === 'boolean'
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Transfer match takes ids (two transaction IDs) and optional allowReconciled.',
+      );
+    }
+    return {
+      ids: payload.ids as string[],
+      ...(payload.allowReconciled === undefined
+        ? {}
+        : { allowReconciled: payload.allowReconciled }),
+    };
+  }
+  if (operation === 'transfers.unmatch' || operation === 'transfers.repair') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['id', 'allowReconciled'].includes(key),
+      ) ||
+      typeof payload.id !== 'string' ||
+      !(
+        payload.allowReconciled === undefined ||
+        typeof payload.allowReconciled === 'boolean'
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Transfer unmatch and repair take id and optional allowReconciled.',
+      );
+    }
+    return {
+      id: payload.id,
       ...(payload.allowReconciled === undefined
         ? {}
         : { allowReconciled: payload.allowReconciled }),
