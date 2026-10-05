@@ -97,7 +97,7 @@
       "stage": "Domain tools",
       "mode": "AFK",
       "dependencies": ["0014-cli-mutations"],
-      "status": "partially-implemented"
+      "status": "completed-locally"
     },
     {
       "key": "cli-query",
@@ -120,7 +120,7 @@
         "0016-cli-catalog-settings",
         "0017-cli-query"
       ],
-      "status": "partially-implemented"
+      "status": "completed-locally"
     },
     {
       "key": "cli-transfers",
@@ -210,7 +210,7 @@
         "0016-cli-catalog-settings",
         "0014-cli-mutations"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-reports",

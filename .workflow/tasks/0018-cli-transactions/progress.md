@@ -41,4 +41,4 @@ Create `execution-decisions.md` only for material choices/departures during impl
 - 2026-10-05 00:40 PT: guarded `transactions.categorize` (core `server/transactions/guarded-categorize.ts`, public preview/apply, CLI `transactions categorize`, changes payload schema). Decisions D1-D5.
 - 2026-10-05 00:49 PT: guarded `transactions.merge` (core `server/transactions/guarded-merge.ts`, public preview/apply, CLI `transactions merge`). Packaged 6/6. Decisions D6-D7.
 - 2026-10-05 00:56 PT: guarded `transactions.split` (core `server/transactions/guarded-split.ts`) packaged 6/6; read-only `transactions get <id>`.
-- 2026-10-05 01:15 PT: guarded `transactions clear` (core `server/transactions/guarded-clear.ts`, public `previewTransactionClearing`/`applyTransactionClearing`, CLI `transactions clear --ids [--uncleared] [--unlock]`). Decisions D10-D11. Completed locally on Linux.
+- 2026-10-05 01:14 PT: guarded `transactions clear` (core `server/transactions/guarded-clear.ts`, public `previewTransactionClearing`/`applyTransactionClearing`, CLI `transactions clear --ids [--uncleared] [--unlock]`). Decisions D10-D11. Completed locally on Linux.
