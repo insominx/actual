@@ -72,6 +72,8 @@ import type {
   PayeeMergeRequest,
   PayeeUpdateProposal,
   PayeeUpdateRequest,
+  PreferenceSetProposal,
+  PreferenceSetRequest,
   RuleCreationProposal,
   RuleCreationRequest,
   RuleDeletionProposal,
@@ -147,6 +149,8 @@ export type {
   NoteSetRequest,
   NoteSetProposal,
   NoteTarget,
+  PreferenceSetRequest,
+  PreferenceSetProposal,
   PayeeMergeOutcome,
   TagCreationOutcome,
   PayeeCreationOutcome,
@@ -336,6 +340,12 @@ export function previewNoteSet(request: NoteSetRequest) {
 }
 export function applyNoteSet(proposal: NoteSetProposal) {
   return send('api/note-apply-set', proposal);
+}
+export function previewPreferenceSet(request: PreferenceSetRequest) {
+  return send('api/preference-preview-set', request);
+}
+export function applyPreferenceSet(proposal: PreferenceSetProposal) {
+  return send('api/preference-apply-set', proposal);
 }
 export function previewRuleCreation(request: RuleCreationRequest) {
   return send('api/rule-preview-creation', request);
@@ -1013,6 +1023,15 @@ export function getServerVersion() {
 /** Read the budget's synced preferences (number format, currency, etc.). */
 export function getPreferences(): Promise<SyncedPrefs> {
   return send('preferences/get');
+}
+
+/**
+ * Typed synced-preference catalog: scope, authority, whether the key is
+ * settable here, allowed values, app default and current value (null when
+ * unset). Pass a key to inspect one preference. Read-only.
+ */
+export function inspectPreferences(key?: string) {
+  return send('api/preferences-inspect', key === undefined ? {} : { key });
 }
 
 export function setPreference<T extends keyof SyncedPrefs>(

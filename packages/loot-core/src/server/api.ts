@@ -155,6 +155,11 @@ import {
   preparePayeeMerge,
   preparePayeeUpdate,
 } from './payees/guarded';
+import {
+  inspectPreferences,
+  performPreferenceSet,
+  preparePreferenceSet,
+} from './preferences/catalog';
 import * as prefs from './prefs';
 import {
   performRuleCreation,
@@ -3275,6 +3280,17 @@ function guardedCatalogHandlers<
   );
   handlers['api/note-preview-set'] = noteSet.preview;
   handlers['api/note-apply-set'] = noteSet.apply;
+  const preferenceSet = guardedCatalogHandlers(
+    preparePreferenceSet,
+    guardedApply({
+      operation: 'preferences.set',
+      noun: 'Preference change',
+      prepare: preparePreferenceSet,
+      perform: performPreferenceSet,
+    }),
+  );
+  handlers['api/preference-preview-set'] = preferenceSet.preview;
+  handlers['api/preference-apply-set'] = preferenceSet.apply;
   const transactionImport = guardedCatalogHandlers(
     prepareTransactionImport,
     guardedApply({
@@ -4707,6 +4723,13 @@ handlers['api/note-target'] = async function ({ id }) {
   const target = await resolveNoteTarget(id);
   const row = await readNote(id);
   return { target, note: row?.note ?? null };
+};
+
+// Read-only typed preference catalog with current values; unset keys report
+// null and nothing is written.
+handlers['api/preferences-inspect'] = async function ({ key } = {}) {
+  checkFileOpen();
+  return inspectPreferences(key);
 };
 
 handlers['api/note-update'] = withMutation(async function ({ id, note }) {

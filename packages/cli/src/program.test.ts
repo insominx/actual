@@ -73,6 +73,8 @@ describe('registered agent commands', () => {
     ['tags.update', ['tags', 'update', 'tag-id', '--color', 'red']],
     ['tags.delete', ['tags', 'delete', 'tag-id']],
     ['notes.set', ['notes', 'set', '--account', 'a1', '--note', 'x']],
+    ['preferences.set', ['preferences', 'set', 'dateFormat', 'yyyy-MM-dd']],
+    ['preferences.reset', ['preferences', 'reset', 'dateFormat']],
     [
       'rules.create',
       [

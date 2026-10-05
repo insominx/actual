@@ -61,6 +61,7 @@ const READ_OPERATIONS = new Set([
   'query.resolve',
   'query.aggregate',
   'notes.get',
+  'preferences.inspect',
   'server.version',
   'server.get-id',
   'rules.payee-rules',

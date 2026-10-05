@@ -44,7 +44,7 @@ app.method('save-prefs', saveMetadataPrefs);
 app.method('load-prefs', loadMetadataPrefs);
 app.method('save-server-prefs', saveServerPrefs);
 
-async function saveSyncedPrefs({
+export async function saveSyncedPrefs({
   id,
   value,
 }: {

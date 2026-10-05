@@ -61,6 +61,9 @@ import type {
   CategoryGroupUpdateRequest,
   CategoryUpdateProposal,
   CategoryUpdateRequest,
+  NoteSetProposal,
+  NoteSetRequest,
+  NoteTarget,
   PayeeCreationOutcome,
   PayeeCreationProposal,
   PayeeCreationRequest,
@@ -71,6 +74,8 @@ import type {
   PayeeMergeRequest,
   PayeeUpdateProposal,
   PayeeUpdateRequest,
+  PreferenceSetProposal,
+  PreferenceSetRequest,
   RuleCreationOutcome,
   RuleCreationProposal,
   RuleCreationRequest,
@@ -89,9 +94,6 @@ import type {
   TagCreationProposal,
   TagCreationRequest,
   TagDeletionProposal,
-  NoteSetProposal,
-  NoteSetRequest,
-  NoteTarget,
   TagDeletionRequest,
   TagUpdateProposal,
   TagUpdateRequest,
@@ -251,6 +253,15 @@ export type ApiHandlers = {
   'api/note-target': (arg: {
     id: string;
   }) => Promise<{ target: NoteTarget; note: string | null }>;
+  'api/preference-preview-set': (
+    arg: PreferenceSetRequest,
+  ) => Promise<PreferenceSetProposal>;
+  'api/preference-apply-set': (
+    arg: PreferenceSetProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/preferences-inspect': (arg: {
+    key?: string;
+  }) => Promise<Array<Record<string, unknown> & { key: string }>>;
   'api/rule-preview-creation': (
     arg: RuleCreationRequest,
   ) => Promise<RuleCreationProposal>;

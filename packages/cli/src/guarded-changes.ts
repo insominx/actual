@@ -587,6 +587,7 @@ export async function executeCatalogChange(
     | 'tags.update'
     | 'tags.delete'
     | 'notes.set'
+    | 'preferences.set'
     | 'rules.update'
     | 'rules.delete'
     | 'schedules.update'
@@ -1224,6 +1225,10 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
     preview: r => api.previewNoteSet(r as api.NoteSetRequest),
     apply: p => api.applyNoteSet(p as api.NoteSetProposal),
   },
+  'preferences.set': {
+    preview: r => api.previewPreferenceSet(r as api.PreferenceSetRequest),
+    apply: p => api.applyPreferenceSet(p as api.PreferenceSetProposal),
+  },
   'rules.create': {
     preview: r => api.previewRuleCreation(r as api.RuleCreationRequest),
     apply: p => api.applyRuleCreation(p as api.RuleCreationProposal),
@@ -1344,6 +1349,7 @@ function changeRequest(
   | api.TagUpdateRequest
   | api.TagDeletionRequest
   | api.NoteSetRequest
+  | api.PreferenceSetRequest
   | api.RuleCreationRequest
   | api.RuleUpdateRequest
   | api.RuleDeletionRequest
@@ -1497,6 +1503,19 @@ function changeRequest(
       );
     }
     return { id, fields: payload as api.TagUpdateRequest['fields'] };
+  }
+  if (operation === 'preferences.set') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(key => key !== 'value') ||
+      !(typeof payload.value === 'string' || payload.value === null)
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Preference change takes {"value":"<text>"} or {"value":null} to reset; the key is the change ID.',
+      );
+    }
+    return { id, value: payload.value };
   }
   if (operation === 'notes.set') {
     if (

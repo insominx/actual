@@ -15,6 +15,7 @@ import { registerChangesCommand } from './commands/changes';
 import { registerDiagnosticsCommand } from './commands/diagnostics';
 import { registerNotesCommand } from './commands/notes';
 import { registerPayeesCommand } from './commands/payees';
+import { registerPreferencesCommand } from './commands/preferences';
 import { registerProfilesCommand } from './commands/profiles';
 import { registerQueryCommand } from './commands/query';
 import { registerRulesCommand } from './commands/rules';
@@ -160,6 +161,7 @@ export function createProgram(
   registerPayeesCommand(program);
   registerTagsCommand(program);
   registerNotesCommand(program);
+  registerPreferencesCommand(program);
   registerRulesCommand(program);
   registerSchedulesCommand(program);
   registerQueryCommand(program);

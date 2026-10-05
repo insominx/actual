@@ -153,6 +153,17 @@ export type NoteSetProposal = CatalogProposal<
   { target: NoteTarget; note: { id: string; note: string } }
 >;
 
+export type PreferenceSetRequest = { id: string; value: string | null };
+export type PreferenceSetProposal = CatalogProposal<
+  'preferences.set',
+  PreferenceSetRequest,
+  { preference: { id: string; value: string | null } | null },
+  {
+    description: Record<string, unknown>;
+    preference: { id: string; value: string | null };
+  }
+>;
+
 export type RuleFieldsRequest = Omit<NewRuleEntity, 'stage' | 'tombstone'> & {
   stage: NewRuleEntity['stage'] | 'default';
 };
@@ -664,6 +675,7 @@ export type ChangeProposal =
   | TagUpdateProposal
   | TagDeletionProposal
   | NoteSetProposal
+  | PreferenceSetProposal
   | RuleCreationProposal
   | RuleUpdateProposal
   | RuleDeletionProposal

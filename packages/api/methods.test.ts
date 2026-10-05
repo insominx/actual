@@ -4823,6 +4823,100 @@ describe('guarded note changes', () => {
   });
 });
 
+describe('typed synced preferences', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('inspects without writing and routes domain keys to their owners', async () => {
+    const before = await api.getPreferences();
+    const catalog = await api.inspectPreferences();
+    expect(await api.getPreferences()).toEqual(before);
+    const dateFormat = catalog.find(row => row.key === 'dateFormat');
+    expect(dateFormat).toMatchObject({
+      scope: 'synced',
+      authority: 'setting',
+      settable: true,
+      appDefault: 'MM/dd/yyyy',
+    });
+    expect(catalog.find(row => row.key === 'cashPlanning')).toMatchObject({
+      authority: 'cash-planning',
+      settable: false,
+      owner: '0026-cli-cash-planning',
+    });
+    expect(await api.inspectPreferences('csv-mappings-acct')).toEqual([
+      expect.objectContaining({
+        authority: 'import-mapping',
+        settable: false,
+        value: null,
+      }),
+    ]);
+    await expect(api.inspectPreferences('not-a-pref')).rejects.toThrow();
+  });
+  test('sets and resets allowlisted preferences with validated values', async () => {
+    const proposal = await api.previewPreferenceSet({
+      id: 'dateFormat',
+      value: 'yyyy-MM-dd',
+    });
+    expect((await api.getPreferences()).dateFormat).toBeUndefined();
+    expect(await api.applyPreferenceSet(proposal)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+      affectedIds: ['dateFormat'],
+    });
+    expect((await api.getPreferences()).dateFormat).toBe('yyyy-MM-dd');
+    expect(await api.applyPreferenceSet(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    const custom = await api.previewPreferenceSet({
+      id: 'upcomingScheduledTransactionLength',
+      value: '2-week',
+    });
+    expect(await api.applyPreferenceSet(custom)).toMatchObject({
+      changed: true,
+    });
+    const reset = await api.previewPreferenceSet({
+      id: 'dateFormat',
+      value: null,
+    });
+    expect(await api.applyPreferenceSet(reset)).toMatchObject({
+      changed: true,
+    });
+    expect(await api.inspectPreferences('dateFormat')).toEqual([
+      expect.objectContaining({ value: null }),
+    ]);
+    const unsetReset = await api.previewPreferenceSet({
+      id: 'firstDayOfWeekIdx',
+      value: null,
+    });
+    expect(await api.applyPreferenceSet(unsetReset)).toMatchObject({
+      changed: false,
+    });
+    expect('firstDayOfWeekIdx' in (await api.getPreferences())).toBe(false);
+  });
+  test('rejects unknown keys, domain-owned keys and invalid values', async () => {
+    for (const request of [
+      {},
+      { id: 'dateFormat' },
+      { id: 'dateFormat', value: 'dd/mm/yy' },
+      { id: 'dateFormat', value: 1 },
+      { id: 'dateFormat', value: 'yyyy-MM-dd', extra: true },
+      { id: 'hideFraction', value: 'yes' },
+      { id: 'upcomingScheduledTransactionLength', value: '0-day' },
+      { id: 'defaultCurrencyCode', value: 'XYZ' },
+      { id: 'cashPlanning', value: '{}' },
+      { id: 'budgetType', value: 'tracking' },
+      { id: 'csv-mappings-acct', value: '{}' },
+      { id: 'not-a-pref', value: 'x' },
+    ]) {
+      await expect(
+        api.previewPreferenceSet(
+          request as unknown as Parameters<typeof api.previewPreferenceSet>[0],
+        ),
+      ).rejects.toThrow();
+    }
+  });
+});
+
 describe('guarded rule creation, updates and deletions', () => {
   const ruleFields = {
     stage: 'pre' as const,
