@@ -10,6 +10,14 @@ import type {
   APIScheduleEntity,
   APITagEntity,
 } from '@actual-app/core/server/api-models';
+import {
+  describeQuerySchema,
+  validateQuery as validateCoreQuery,
+} from '@actual-app/core/server/aql/schema-metadata';
+import type {
+  QuerySchemaMetadata,
+  QueryValidation,
+} from '@actual-app/core/server/aql/schema-metadata';
 import type { ImportableBudgetType } from '@actual-app/core/server/importers/index';
 import type { Query } from '@actual-app/core/shared/query';
 import type { ImportTransactionsOpts } from '@actual-app/core/types/api-handlers';
@@ -649,6 +657,24 @@ export function runQuery(query: Query) {
 export function aqlQuery(query: Query) {
   return send('api/query', { query: query.serialize() });
 }
+
+/**
+ * Read-only table, field, operator and function metadata from the core AQL
+ * schema. Does not require a loaded budget.
+ */
+export function getQuerySchema(): QuerySchemaMetadata {
+  return describeQuerySchema();
+}
+
+/**
+ * Compiles a query against the core schema without executing it and reports
+ * unsupported tables, fields, operators or functions.
+ */
+export function validateQuery(query: Query): QueryValidation {
+  return validateCoreQuery(query.serialize());
+}
+
+export type { QuerySchemaMetadata, QueryValidation };
 
 export function getBudgetMonths() {
   return send('api/budget-months');

@@ -115,3 +115,4 @@ Known baseline: prior cash-planning verification recorded repository-wide format
 2026-10-05 checkpoint: guarded rule create/update/delete pass local Linux packaged acceptance. Task 0014 remains partial with 7 existing write adapters outstanding.
 2026-10-05 checkpoint: guarded schedule create/update/delete pass local Linux packaged acceptance. Task 0014 remains partial with 4 existing write adapters outstanding (transactions add/import/full update/delete).
 2026-10-05 checkpoint: guarded transaction deletion and category/payee updates pass local Linux acceptance. transactions.add and transactions.import remain.
+2026-10-05 checkpoint: 0017-cli-query started (its prerequisites 0009 and 0012 are complete; it does not wait on 0014). Slice 1, core schema metadata and pre-execution query validation, is implemented.

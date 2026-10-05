@@ -1,7 +1,7 @@
 # Task Progress: Read-only query metadata, search, paging, and aggregation
 
-Current status: active
-Current phase: planned; prerequisite hold
+Current status: partial; active
+Current phase: slice 1 (core schema metadata and pre-execution validation) implemented on Linux; slices 2 (paging, entity lookup) and 3 (aggregate recipes) pending.
 
 ## Dependencies
 
@@ -13,12 +13,12 @@ None to review this planned contract. This request creates tasks only; implement
 
 ## Agent next actions
 
-- [ ] Confirm prerequisite acceptance and reread produced APIs/schemas before review-plan.
-- [ ] Review this contract, then implement its first complete operation path.
+- [x] Confirm prerequisite acceptance and reread produced APIs/schemas before review-plan. Prerequisites 0009 and 0012 are completed-locally; this task does not depend on 0014.
+- [x] Review this contract, then implement its first complete operation path.
 
 ## Implementation checklist
 
-- [ ] Expose read-only schema metadata through the public API and replace TABLE_SCHEMA consumers.
+- [x] Expose read-only schema metadata through the public API and replace TABLE_SCHEMA consumers (version 1 tables/fields output kept verbatim, see D1).
 - [ ] Add bounded query execution, stable sorting/paging, and context-aware entity lookup with ambiguity results.
 - [ ] Add documented aggregate recipes and tests; explicitly reject SQL writes and avoid deriving cash-planning formulas here.
 - [ ] Run section 12 checks, record limitations and evidence, and update dependent task readiness.
@@ -38,3 +38,5 @@ Create `execution-decisions.md` only for material choices/departures during impl
 ## Execution log
 
 - 2026-10-02: Created the sequenced task contract. No production implementation or feature verification performed.
+
+- 2026-10-05 00:45 PT: Slice 1. Core `server/aql/schema-metadata.ts` derives table/field metadata from the AQL schema and exposes the compiler's operator and function lists; `validateQuery` compiles without executing. Public API `getQuerySchema()` and `validateQuery(query)` are pure and need no loaded budget. CLI version 2 `query tables`/`query fields` use core metadata; version 2 `query run` compiles against the core schema before connecting and returns INVALID_INPUT with `details.field = "query"`. Evidence: core schema-metadata 4/4, CLI query unit 31/31 (CLI 273/273), api/core/CLI types clean, lint clean. Packaged evidence in implementation.md when captured.

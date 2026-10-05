@@ -18,6 +18,29 @@ vi.mock('@actual-app/api', () => {
   return {
     q: vi.fn().mockReturnValue(queryObj),
     aqlQuery: vi.fn().mockResolvedValue({ data: [] }),
+    getQuerySchema: vi.fn().mockReturnValue({
+      tables: [
+        {
+          name: 'transactions',
+          fields: [
+            { name: 'id', type: 'id', required: false },
+            { name: 'payee', type: 'id', ref: 'payees', required: false },
+          ],
+        },
+        { name: 'accounts', fields: [] },
+        { name: 'categories', fields: [] },
+        { name: 'payees', fields: [] },
+        { name: 'notes', fields: [] },
+      ],
+      filterOperators: ['$eq'],
+      logicalOperators: ['$and', '$or'],
+      functions: ['$sum'],
+    }),
+    validateQuery: vi.fn().mockReturnValue({
+      valid: true,
+      table: 'transactions',
+      aggregate: false,
+    }),
   };
 });
 
@@ -38,6 +61,7 @@ function createProgram(): Command {
   program.option('--sync-id <id>');
   program.option('--data-dir <dir>');
   program.option('--verbose');
+  program.option('--output-version <version>');
   program.exitOverride();
   registerQueryCommand(program);
   return program;
@@ -360,6 +384,71 @@ describe('query commands', () => {
       await expect(run(['query', 'fields', 'unknown'])).rejects.toThrow(
         'Unknown table "unknown"',
       );
+    });
+  });
+
+  describe('version 2 core schema metadata', () => {
+    it('lists core tables with operators and functions', async () => {
+      await run(['--output-version', '2', 'query', 'tables']);
+      expect(printOutput).toHaveBeenCalledWith(
+        expect.objectContaining({
+          source: 'core-schema',
+          tables: expect.arrayContaining([
+            { name: 'transactions', fieldCount: 2 },
+            { name: 'notes', fieldCount: 0 },
+          ]),
+          filterOperators: ['$eq'],
+        }),
+        undefined,
+      );
+    });
+
+    it('lists core fields with refs', async () => {
+      await run(['--output-version', '2', 'query', 'fields', 'transactions']);
+      expect(printOutput).toHaveBeenCalledWith(
+        expect.objectContaining({
+          table: 'transactions',
+          fields: expect.arrayContaining([
+            { name: 'payee', type: 'id', ref: 'payees', required: false },
+          ]),
+        }),
+        undefined,
+      );
+    });
+
+    it('accepts a core table missing from the legacy list', async () => {
+      await run(['query', 'run', '--table', 'notes']);
+      expect(api.aqlQuery).toHaveBeenCalled();
+    });
+
+    it('rejects an invalid version 2 query before connecting', async () => {
+      vi.mocked(api.validateQuery).mockReturnValueOnce({
+        valid: false,
+        table: 'transactions',
+        message: 'Unknown operator: $between',
+      });
+      await expect(
+        run([
+          '--output-version',
+          '2',
+          'query',
+          'run',
+          '--table',
+          'transactions',
+          '--filter',
+          '{"amount":{"$between":[1,2]}}',
+        ]),
+      ).rejects.toMatchObject({
+        code: 'INVALID_INPUT',
+        message: 'Unknown operator: $between',
+      });
+      expect(api.aqlQuery).not.toHaveBeenCalled();
+    });
+
+    it('rejects malformed filter JSON as invalid input', async () => {
+      await expect(
+        run(['query', 'run', '--table', 'transactions', '--filter', '{bad']),
+      ).rejects.toMatchObject({ code: 'INVALID_INPUT' });
     });
   });
 });

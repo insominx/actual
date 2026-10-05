@@ -644,6 +644,40 @@ const compileFunction = saveStack('function', (state, func) => {
   }
 });
 
+// Public operator and function names accepted by this compiler. Keep these
+// lists in step with compileOp and compileFunction; schema-metadata tests
+// compile every entry.
+export const AQL_FILTER_OPERATORS = [
+  '$eq',
+  '$ne',
+  '$lt',
+  '$lte',
+  '$gt',
+  '$gte',
+  '$oneof',
+  '$like',
+  '$notlike',
+  '$regexp',
+] as const;
+export const AQL_LOGICAL_OPERATORS = ['$and', '$or'] as const;
+export const AQL_FUNCTIONS = [
+  '$sum',
+  '$sumOver',
+  '$count',
+  '$substr',
+  '$lower',
+  '$neg',
+  '$abs',
+  '$idiv',
+  '$id',
+  '$day',
+  '$month',
+  '$year',
+  '$condition',
+  '$nocase',
+  '$literal',
+] as const;
+
 const compileOp = saveStack('op', (state, fieldRef, opData) => {
   const { $transform, ...opExpr } = opData;
   const [op] = Object.keys(opExpr);

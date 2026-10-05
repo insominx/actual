@@ -4956,6 +4956,28 @@ describe('guarded schedule creation, updates and deletions', () => {
   });
 });
 
+describe('query metadata', () => {
+  test('exposes core schema metadata and validates without executing', () => {
+    const metadata = api.getQuerySchema();
+    const transactions = metadata.tables.find(
+      table => table.name === 'transactions',
+    );
+    expect(transactions?.fields).toContainEqual({
+      name: 'payee',
+      type: 'id',
+      ref: 'payees',
+      required: false,
+    });
+    expect(metadata.filterOperators).toContain('$oneof');
+    expect(api.validateQuery(api.q('transactions').select(['amount']))).toEqual(
+      { valid: true, table: 'transactions', aggregate: false },
+    );
+    expect(
+      api.validateQuery(api.q('transactions').select(['missing_field'])),
+    ).toMatchObject({ valid: false, table: 'transactions' });
+  });
+});
+
 describe('guarded transaction addition', () => {
   beforeEach(async () => {
     await api.loadBudget(budgetName);
