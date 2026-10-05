@@ -156,7 +156,7 @@
         "0019-cli-transfers",
         "0014-cli-mutations"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-reconciliation",

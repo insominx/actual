@@ -343,6 +343,125 @@ void test('file import handles invalid rows explicitly and rejects changed sourc
   }
 });
 
+void test('batch file import previews overlap, commits per file, reviews transfers and stops at the first failure', async () => {
+  const f = await createFixture({ encrypted: true });
+  try {
+    await strict(f)(['accounts', 'list']);
+    const bank = (await legacy(f, ['accounts', 'create', '--name', 'Bank'])).id;
+    const savings = (
+      await legacy(f, ['accounts', 'create', '--name', 'Savings'])
+    ).id;
+    await writeFile(
+      join(f.root, 'bank-1.ofx'),
+      ofx([
+        ['2026-10-03', '-100.00', 'fit-a', 'Transfer To Savings'],
+        ['2026-10-04', '-5.00', 'fit-b', 'Shop'],
+      ]),
+    );
+    await writeFile(
+      join(f.root, 'savings.ofx'),
+      ofx([['2026-10-03', '100.00', 'fit-c', 'Transfer From Bank']]),
+    );
+    await writeFile(
+      join(f.root, 'bank-2.ofx'),
+      ofx([
+        ['2026-10-04', '-5.00', 'fit-b', 'Shop'],
+        ['2026-10-06', '-7.00', 'fit-d', 'Cafe'],
+      ]),
+    );
+    const manifest = join(f.root, 'batch.json');
+    await writeFile(
+      manifest,
+      JSON.stringify([
+        { file: 'bank-1.ofx', account: bank },
+        { file: 'savings.ofx', account: savings },
+        { file: 'bank-2.ofx', account: bank },
+      ]),
+    );
+    const before = await readRaw(f);
+    const dry = await strict(f)(['imports', 'batch', manifest, '--dry-run']);
+    assert.deepEqual(await readRaw(f), before, 'dry run wrote state');
+    assert.deepEqual(
+      dry.files.map(file => file.status),
+      ['previewed', 'previewed', 'previewed'],
+    );
+    assert.deepEqual(dry.overlaps, [
+      {
+        file: 2,
+        index: 0,
+        earlierFile: 0,
+        earlierIndex: 1,
+        key: 'imported_id',
+      },
+    ]);
+
+    const run = ['imports', 'batch', manifest, '--operation-id', 'batch-1'];
+    const applied = await strict(f)(run);
+    assert.deepEqual(
+      applied.files.map(file => [file.status, file.operationId]),
+      [
+        ['committed', 'batch-1-1'],
+        ['committed', 'batch-1-2'],
+        ['committed', 'batch-1-3'],
+      ],
+    );
+    // The third file was planned after the first committed.
+    assert.equal(applied.files[2].summary.duplicate, 1);
+    assert.equal(applied.files[2].summary.add, 1);
+    const pair = applied.transferReview.candidates;
+    assert.equal(pair.length, 1);
+    assert.deepEqual(
+      [pair[0].from.id, pair[0].to.id].sort(),
+      [applied.files[0].addedIds[0], applied.files[1].addedIds[0]].sort(),
+    );
+    const afterApply = await readRaw(f);
+    // Retrying the batch returns the stored receipts without writing.
+    const retried = await strict(f)(run);
+    assert.deepEqual(
+      retried.files.map(file => file.addedIds),
+      applied.files.map(file => file.addedIds),
+    );
+    assert.deepEqual(await readRaw(f), afterApply);
+
+    // A failing file stops the batch: earlier files stay committed and later
+    // ones are reported as not attempted.
+    await writeFile(
+      join(f.root, 'bank-3.ofx'),
+      ofx([['2026-10-08', '-9.00', 'fit-e', 'Kiosk']]),
+    );
+    const partial = join(f.root, 'partial.json');
+    await writeFile(
+      partial,
+      JSON.stringify([
+        { file: 'bank-3.ofx', account: bank },
+        { file: 'missing.ofx', account: bank },
+        { file: 'savings.ofx', account: savings },
+      ]),
+    );
+    const failed = await f.cli([
+      'imports',
+      'batch',
+      partial,
+      '--operation-id',
+      'batch-2',
+    ]);
+    assert.equal(failed.code, 6, failed.stdout + failed.stderr);
+    const error = JSON.parse(failed.stdout).error;
+    assert.equal(error.code, 'PARTIAL_COMPLETION');
+    assert.deepEqual(
+      error.details.files.map(file => file.status),
+      ['committed', 'failed', 'not-attempted'],
+    );
+    const bankRows = await legacy(f, listArgs(bank));
+    assert.deepEqual(
+      bankRows.map(row => row.amount).sort((a, b) => a - b),
+      [-10000, -900, -700, -500],
+    );
+  } finally {
+    await f.dispose();
+  }
+});
+
 // Guarded protocol cases: acknowledged retries, ID collisions, offline
 // commits with later sync, and kills at every phase (including after the
 // local commit and before sync) never replay the import.
