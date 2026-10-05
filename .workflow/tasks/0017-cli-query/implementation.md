@@ -20,3 +20,16 @@ Decision audit: D1-D5 in execution-decisions.md.
 
 - `packages/cli/src/commands/query-aggregate.ts` (`combineAggregate`, `registerQueryAggregate`); unit proof `query-aggregate.test.ts` (2). Packaged proof: third case of `integration/query.test.mjs`.
 - Core validateQuery multi-operator rejection with tests in `schema-metadata.test.ts` (5 total).
+
+## Closeout verification (Linux, 2026-10-05)
+
+| Check       | Command                                                             | Result                                           |
+| ----------- | ------------------------------------------------------------------- | ------------------------------------------------ |
+| API unit    | `yarn workspace @actual-app/api test`                               | 117/117                                          |
+| CLI unit    | `yarn workspace @actual-app/cli test`                               | 284/284                                          |
+| Core AQL    | `yarn workspace @actual-app/core exec vitest run src/server/aql`    | see progress.md                                  |
+| Types       | `yarn typecheck`                                                    | see progress.md                                  |
+| Packaged    | `node --test integration/query.test.mjs` after CLI and server build | 3/3 (`verification-query-linux-integration.txt`) |
+| Lint/format | verify.json lint and format entries                                 | clean                                            |
+
+Limitations: Windows not run; no browser check (read-only surface).

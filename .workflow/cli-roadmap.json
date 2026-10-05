@@ -106,7 +106,7 @@
       "stage": "Domain tools",
       "mode": "AFK",
       "dependencies": ["0009-cli-sessions", "0012-cli-sync"],
-      "status": "partially-implemented"
+      "status": "completed-locally"
     },
     {
       "key": "cli-transactions",
