@@ -472,6 +472,18 @@ actual reports cash-flow --from-month 2026-01 --to-month 2026-09 --details --exp
 
 Every report returns `scope` (range, cutoff, accounts, transfer, split and opening-balance treatment, future-dated handling, currency and integer cents) and `completeness`; when no transaction exists before the range start, `completeness.note` says that earlier periods are unknown, not zero. Ranges are at most 60 months. Future-dated transactions are excluded (the cutoff is today) unless `--include-future` is passed. `cash-flow` and `categories` use on-budget accounts and count split children instead of their parent; transfers between accounts are excluded, and `cash-flow` lists transfers to off-budget accounts separately as `transfersOffBudget`. `categories` nets refunds against their category, keeps deleted categories (flagged `deleted`) and reports uncategorized amounts separately. Both list `contributingIds` (at most 1000, with `contributingTruncated`) and, with `--details`, the contributing rows. `net-worth` reports every account at each month end: `netCash` covers on-budget accounts, `tracking` covers off-budget accounts and `netWorth` is their sum. To compare periods, run a report twice. CSV exports keep cents next to a decimal column, quote every field that needs it and prefix text starting with `=`, `+`, `-`, `@`, a tab or a carriage return with `'` so spreadsheets do not evaluate it; HTML exports escape all text and load nothing external. PDF is not produced; print the HTML instead.
 
+### Reversal and recovery
+
+```bash
+# Diagnose a receipt: state, what it means, safe next steps and reversal support (read-only)
+actual changes inspect <operation-id>
+
+# Compensate a committed change with a new guarded change (retry with the same new ID)
+actual changes reverse <operation-id> --operation-id <new-id> [--preview]
+```
+
+`changes reverse` supports `transactions.categorize` (all changed rows must have had one prior category), `budgets.move` and `cash-planning.save` (including `set-target` and `reset-target`). It builds the inverse from the receipt's before-values, prepares it as a new guarded change under the new operation ID, and refuses with `STALE_PREVIEW` and the list of `conflicts` when the records no longer hold the original after-values (for example a later recategorization, an edited amount, a transfer leg changed through its counterpart, or changed budgeted amounts). Engine refusals, such as a transaction reconciled since, are `INVALID_INPUT`. `--preview` stops after preparing; apply it with `actual changes apply <new-id> --token <token>`. Retrying with the same new ID returns the same receipt and never writes twice. Merges, deletions, imports, added rows, reconciliation finishes, uncertain receipts and changes that were never applied are not reversed: the error explains why and lists backup recovery steps (`backups list`, `backups restore` into a new local budget, `budgets compare`, then explicit changes). A restore never replaces the live budget. `capabilities.reversal` in `actual schema <operation>` is `true` for the reversible operations.
+
 ### Checkup
 
 ```bash

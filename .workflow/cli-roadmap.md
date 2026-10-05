@@ -142,3 +142,5 @@ Known baseline: prior cash-planning verification recorded repository-wide format
 2026-10-05 03:02 PT checkpoint: 0027-cli-reports is completed locally on Linux: read-only `reports cash-flow|categories|net-worth` from a core report owner with declared scope, completeness and contributing IDs, plus CSV/HTML export with formula-safe escaping (packaged 3/3, API 1/1; D1-D10). 0028-cli-data-quality now has every prerequisite completed locally.
 
 2026-10-05 03:10 PT checkpoint: 0028-cli-data-quality is completed locally on Linux: read-only `checkup data-quality` (stable finding codes with evidence, uncertainty and suggested operations; coverage that stays unknown without statement evidence) and device-local `checkup statement add|list|remove` (packaged 3/3, API 1/1; D1-D9).
+
+2026-10-05 03:21 PT checkpoint: 0029-cli-reversal is completed locally on Linux: `changes inspect` (receipt diagnosis, next steps, backup recovery) and guarded `changes reverse` for `transactions.categorize`, `budgets.move` and `cash-planning.save`, refusing with conflicts when records changed and never reversing merges, deletions or imports (packaged 3/3, unit 5/5; D1-D9).

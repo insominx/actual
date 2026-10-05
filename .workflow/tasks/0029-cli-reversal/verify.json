@@ -1,0 +1,30 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        { "id": "cli-unit", "command": "yarn workspace @actual-app/cli test" },
+        { "id": "root-types", "command": "yarn typecheck" },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "reversal-integration",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/reversal.test.mjs"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src/reversal.ts packages/cli/src/commands/changes.ts packages/cli/src/agent-contract.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src/reversal.ts packages/cli/src/reversal.test.ts packages/cli/src/commands/changes.ts packages/cli/integration/reversal.test.mjs"
+        }
+      ]
+    }
+  }
+}

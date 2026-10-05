@@ -14,6 +14,16 @@ export const REVERSIBLE_OPERATIONS = [
   'cash-planning.save',
 ] as const;
 
+// CLI commands whose receipts are reversible (capability discovery).
+export const REVERSIBLE_COMMANDS: readonly string[] = [
+  'transactions.categorize',
+  'budgets.move',
+  'cash-planning.save',
+  'cash-planning.set-target',
+  'cash-planning.reset-target',
+  'cash-planning.reset',
+];
+
 export type ReversibleOperation = (typeof REVERSIBLE_OPERATIONS)[number];
 
 export const BACKUP_RECOVERY = [

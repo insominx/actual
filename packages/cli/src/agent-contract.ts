@@ -4,7 +4,7 @@ import { AgentError } from './agent-output';
 import { DIRECT_GUARDED_COMMANDS } from './guarded-operations';
 import { operationPayloadSchema } from './json-schema';
 import type { JsonSchema } from './json-schema';
-import { REVERSIBLE_OPERATIONS } from './reversal';
+import { REVERSIBLE_COMMANDS } from './reversal';
 
 type PropertySchema = {
   type: 'string' | 'integer' | 'boolean';
@@ -213,7 +213,7 @@ export function discoverOperations(root: Command) {
       capabilities: {
         mutates,
         preview: false,
-        reversal: (REVERSIBLE_OPERATIONS as readonly string[]).includes(name),
+        reversal: REVERSIBLE_COMMANDS.includes(name),
         destructive: ['delete', 'merge', 'close', 'prune'].includes(verb),
       },
       examples: [`actual ${name.replaceAll('.', ' ')} --help`],
