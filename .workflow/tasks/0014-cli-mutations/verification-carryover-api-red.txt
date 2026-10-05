@@ -1,0 +1,128 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/api
+
+11:18:15 PM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/chevrotain/lib/src/api.js.
+Error: An error occurred while trying to read the map file at api.js.map
+Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\node_modules\chevrotain\lib\src\api.js.map'
+    at Object.readFileSync (node:fs:436:20)
+    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13
+    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)
+    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)
+    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)
+    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)
+    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)
+ ❯ methods.test.ts (61 tests | 2 failed | 58 skipped) 2472ms
+   ↓ API setup and teardown (1)
+     ↓ successfully loads budget
+   ↓ API budget import/export (22)
+     ↓ createBudget loads a local budget and preserves currency after reload
+     ↓ guarded creation previews without changing budgets and rejects changed name availability
+     ↓ guarded creation rejects malformed proposals and a concurrently occupied name
+     ↓ guarded creation works without a loaded budget and serializes competing applies
+     ↓ guarded restore preview preserves source files and binds the archive before creating a new identity
+     ↓ guarded restore rejects changed archive, occupied name and invalid SQLite without a destination
+     ↓ guarded restore works without a loaded budget and competing applies create one destination
+     ↓ restoreBudget creates a new identity without replacing its source
+     ↓ restore removes invalid SQLite archives and incomplete writes without modifying existing budgets
+     ↓ restore never cleans up a directory when exclusive creation failed
+     ↓ creation validates before closing the selected budget
+     ↓ creation removes incomplete files when the database copy fails
+     ↓ cloneBudget preserves ledger and preferences with a separate local identity
+     ↓ guarded clone preview preserves source files and reload accepts the same copied state
+     ↓ guarded clone rejects source edits and wrong identities before creating a destination
+     ↓ creation reports incomplete cleanup instead of inviting a blind retry
+     ↓ cloneBudget removes incomplete copies when copying the database fails
+     ↓ renaming preserves identity and local archiving is reversible
+     ↓ sync status reports local unpublished writes without synchronizing or changing them
+     ↓ exportBudget returns bytes that importBudget loads back
+     ↓ importBudget imports from a file path
+     ↓ importBudget rejects with an Error on failure
+   ↓ API CRUD operations (18)
+     ↓ getBudgets
+     ↓ CategoryGroups: successfully update category groups
+     ↓ Categories: successfully update categories
+     ↓ Budgets: successfully update budgets
+     ↓ Accounts: successfully complete account operators
+     ↓ Payees: successfully update payees
+     ↓ Tags: successfully complete tag operations
+     ↓ Tags: create tag with minimal fields
+     ↓ Tags: update single field only
+     ↓ Tags: handle null values correctly
+     ↓ Tags: clear optional field
+     ↓ Notes: successfully get and update note
+     ↓ Rules: successfully update rules
+     ↓ Transactions: successfully update transactions
+     ↓ Transactions: successfully merge two transactions
+     ↓ Transactions: import notes are preserved when importing
+     ↓ Transactions: reimportDeleted=false prevents reimporting deleted transactions
+     ↓ Transactions: reimportDeleted=true reimports deleted transactions
+   ↓ Schedules: successfully complete schedules operations
+   ↓ Preferences: successfully read synced preferences
+   ↓ API preferences: setPreference (5)
+     ↓ successfully sets a single preference
+     ↓ can set multiple preferences
+     ↓ can set feature flag preferences
+     ↓ can set account-specific preferences
+     ↓ can set CSV import preferences
+   ↓ guarded transaction changes (4)
+     ↓ previews without writing, applies exact state, and rejects a stale repeat
+     ↓ rejects edited state, another budget, and invalid fields before a write
+     ↓ previews the full split and applies parent inheritance without preview writes
+     ↓ updates a split child with canonical error recalculation and rejects sibling changes
+   ↓ guarded linked transfer changes (3)
+     ↓ preserves cross-budget categories and rejects changed account references or missing links
+     ↓ previews both sides without writes, mirrors canonical fields, and rejects counterpart edits
+     ↓ includes the counterpart split and recalculates its error through the transfer owner
+   ↓ guarded budget metadata changes (2)
+     ↓ previews rename without writes and rejects stale or wrong-budget metadata
+     ↓ archives only local metadata, preserves pending messages, and supports a zero-write no-op
+   ❯ guarded allocation changes (4)
+     × carryover preview preserves rows and applies the complete future month range 848ms
+     × carryover rejects changed future rows and validates its entire proposal 791ms
+     ✓ previews a canonical allocation without writes and preserves carryover when applying 831ms
+     ↓ rejects invalid inputs, changed allocation state, and another budget before a write
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  methods.test.ts > guarded allocation changes > carryover preview preserves rows and applies the complete future month range
+TypeError: handler is not a function
+ ❯ runHandler ../loot-core/src/server/mutators.ts:67:19
+     65|   }
+     66|
+     67|   const promise = handler(args);
+       |                   ^
+     68|   runningMethods.add(promise);
+     69|   // Remove on rejection too — a stale promise poisons every later flu…
+ ❯ Object.send ../loot-core/src/server/main.ts:379:23
+ ❯ send ../loot-core/src/platform/client/connection/index.api.ts:19:14
+ ❯ Module.previewBudgetCarryover methods.ts:134:10
+ ❯ methods.test.ts:2428:32
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  methods.test.ts > guarded allocation changes > carryover rejects changed future rows and validates its entire proposal
+TypeError: handler is not a function
+ ❯ runHandler ../loot-core/src/server/mutators.ts:67:19
+     65|   }
+     66|
+     67|   const promise = handler(args);
+       |                   ^
+     68|   runningMethods.add(promise);
+     69|   // Remove on rejection too — a stale promise poisons every later flu…
+ ❯ Object.send ../loot-core/src/server/main.ts:379:23
+ ❯ send ../loot-core/src/platform/client/connection/index.api.ts:19:14
+ ❯ Module.previewBudgetCarryover methods.ts:134:10
+ ❯ methods.test.ts:2442:32
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed | 58 skipped (61)
+   Start at  23:18:09
+   Duration  12.68s (transform 65%, tests 20%, import 15%)
+
+  Transform  transforming modules took 8.19s · 65% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+

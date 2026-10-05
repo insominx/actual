@@ -1,0 +1,81 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+ ❯ src/server/main.test.ts (27 tests | 1 failed | 26 skipped) 60ms
+   ↓ Budgets (2)
+     ↓ budget is successfully loaded
+     ↓ budget detects out of sync migrations
+   ❯ Accounts (20)
+     × forced closure rejects a missing transfer counterpart before unlinking 59ms
+     ↓ closure outcome discloses provider removal: acknowledged
+     ↓ closure outcome discloses provider removal: uncertain
+     ↓ closure acknowledges exact generated transfers and its bound date
+     ↓ forced closure acknowledges deleted rows and preserves transfer counterpart amount
+     ↓ remote unlink keeps provider removal scope: last linked account
+     ↓ remote unlink keeps provider removal scope: other linked account
+     ↓ remote unlink keeps provider removal scope: no token
+     ↓ invalid remote unlink preserves account: missing bank
+     ↓ invalid remote unlink preserves account: missing server
+     ↓ account closure inspection is read-only and includes future split balances
+     ↓ invalid account closure preserves provider and ledger: missing required destination
+     ↓ invalid account closure preserves provider and ledger: self transfer
+     ↓ invalid account closure preserves provider and ledger: missing destination
+     ↓ invalid account closure preserves provider and ledger: deleted destination
+     ↓ invalid account closure preserves provider and ledger: missing destination payee
+     ↓ invalid account closure preserves provider and ledger: missing closing category
+     ↓ invalid account closure preserves provider and ledger: missing deletion payee
+     ↓ invalid account closure preserves provider and ledger: missing closing payee
+     ↓ Transfers are properly updated
+   ↓ Budget (2)
+     ↓ new budgets should be created
+     ↓ budget updates when changing a category
+   ↓ Categories (3)
+     ↓ can be deleted
+     ↓ transfers properly when deleted
+     ↓ do not count as overspent when deleted
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/main.test.ts > Accounts > forced closure rejects a missing transfer counterpart before unlinking
+AssertionError: promise resolved "{ action: 'deleted', …(6) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "accountId": "id2",
++   "action": "deleted",
++   "addedTransactionIds": [],
++   "deletedPayeeIds": [
++     "id3",
++   ],
++   "deletedTransactionIds": [
++     "broken-transfer",
++   ],
++   "unlink": {
++     "localChanged": true,
++     "remoteStatus": "not-required",
++   },
++   "updatedTransactionIds": [
++     "missing-counterpart",
++   ],
+  }
+
+ ❯ src/server/main.test.ts:145:6
+    143|     await expect(
+    144|       runMutator(() => performAccountClosure({ id, forced: true })),
+    145|     ).rejects.toThrow('Transfer counterpart');
+       |      ^
+    146|     expect(await capture()).toEqual(before);
+    147|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 26 skipped (27)
+   Start at  13:10:54
+   Duration  3.14s (setup 63%, transform 35%, tests 2%, import 1%)
+

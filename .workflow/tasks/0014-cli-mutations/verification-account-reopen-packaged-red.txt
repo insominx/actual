@@ -1,0 +1,159 @@
+✖ killed apply at before-engine (accounts.reopen) preserves its durable outcome and never replays (35093.8463ms)
+✖ killed apply at after-engine (accounts.reopen) preserves its durable outcome and never replays (35967.0412ms)
+✖ killed apply at before-sync (accounts.reopen) preserves its durable outcome and never replays (34607.2661ms)
+✖ guarded account reopening preserves provider fields and retries retain later closure (online) (5526.6241ms)
+✖ guarded account reopening preserves provider fields and retries retain later closure (offline) (5194.9939ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 0
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 116466.9415
+
+✖ failing tests:
+
+test at packages\cli\integration\changes.test.mjs:1356:3
+✖ killed apply at before-engine (accounts.reopen) preserves its durable outcome and never replays (35093.8463ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+      balance: 976000,
+  +   closed: true,
+  -   closed: false,
+      id: '41d87c3e-5c36-4083-a92d-304e3696b36d',
+      name: 'Checking',
+      offbudget: false
+    }
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1592:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { id: '41d87c3e-5c36-4083-a92d-304e3696b36d', name: 'Checking', offbudget: false, closed: true, balance: 976000 },
+    expected: { id: '41d87c3e-5c36-4083-a92d-304e3696b36d', name: 'Checking', offbudget: false, closed: false, balance: 976000 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:1356:3
+✖ killed apply at after-engine (accounts.reopen) preserves its durable outcome and never replays (35967.0412ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+      balance: 976000,
+  +   closed: false,
+  -   closed: true,
+      id: '88a91be0-726e-4c87-a088-3b371be3bcd9',
+      name: 'Checking',
+      offbudget: false
+    }
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1592:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { id: '88a91be0-726e-4c87-a088-3b371be3bcd9', name: 'Checking', offbudget: false, closed: false, balance: 976000 },
+    expected: { id: '88a91be0-726e-4c87-a088-3b371be3bcd9', name: 'Checking', offbudget: false, closed: true, balance: 976000 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:1356:3
+✖ killed apply at before-sync (accounts.reopen) preserves its durable outcome and never replays (34607.2661ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+      balance: 976000,
+  +   closed: false,
+  -   closed: true,
+      id: 'e1f29b09-a74a-4d78-a62f-cd0155b0df9d',
+      name: 'Checking',
+      offbudget: false
+    }
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1592:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { id: 'e1f29b09-a74a-4d78-a62f-cd0155b0df9d', name: 'Checking', offbudget: false, closed: false, balance: 976000 },
+    expected: { id: 'e1f29b09-a74a-4d78-a62f-cd0155b0df9d', name: 'Checking', offbudget: false, closed: true, balance: 976000 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:2091:3
+✖ guarded account reopening preserves provider fields and retries retain later closure (online) (5526.6241ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+  
+    [
+      {
+        account_group_id: null,
+        account_id: 'synthetic-provider-account',
+        account_sync_source: 'simplefin',
+  ...
+        bank_sync_status: null,
+  +     closed: 0,
+  -     closed: 1,
+        id: 'ccd53401-9745-4dba-9a16-31e8de42bda8',
+        last_reconciled: null,
+        last_sync: null,
+        mask: '4321',
+        name: 'Checking',
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:2203:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ { id: 'ccd53401-9745-4dba-9a16-31e8de42bda8', account_id: 'synthetic-provider-account', name: 'Checking', balance_current: 3333, balance_available: null, balance_limit: null, mask: '4321', official_name: null, subtype: null, bank: 'synthetic-bank', offbudget: 0, closed: 0, tombstone: 0, sort_order: 16384, type: null, account_sync_source: 'simplefin', last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null }, { id: 'd3d82218-1f3a-44e8-b8a8-afa12060e682', account_id: null, name: 'Equity', balance_current: null, balance_available: null, balance_limit: null, mask: null, official_name: null, subtype: null, bank: null, offbudget: 1, closed: 0, tombstone: 0, sort_order: 16384, type: null, account_sync_source: null, last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null }, { id: 'df6bf099-c975-4283-874a-0ed8f7cc8400', account_id: null, name: 'Closed cash', balance_current: null, balance_available: null, balance_limit: null, mask: null, official_name: null, subtype: null, bank: null, offbudget: 0, closed: 1, tombstone: 0, sort_order: 65536, type: null, account_sync_source: null, last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null }, { id: 'f179e50b-c8bb-4f2c-8d36-fa5bcdc0fe22', account_id: null, name: 'Savings', balance_current: null, balance_available: null, balance_limit: null, mask: null, official_name: null, subtype: null, bank: null, offbudget: 0, closed: 0, tombstone: 0, sort_order: 49152, type: null, account_sync_source: null, last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null }, { id: 'fd9fe281-657e-4cd4-990b-2096b0f8029d', account_id: null, name: 'Card', balance_current: null, balance_available: null, balance_limit: null, mask: null, official_name: null, subtype: null, bank: null, offbudget: 0, closed: 0, tombstone: 0, sort_order: 32768, type: null, account_sync_source: null, last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null } ],
+    expected: [ { id: 'ccd53401-9745-4dba-9a16-31e8de42bda8', account_id: 'synthetic-provider-account', name: 'Checking', balance_current: 3333, balance_available: null, balance_limit: null, mask: '4321', official_name: null, subtype: null, bank: 'synthetic-bank', offbudget: 0, closed: 1, tombstone: 0, sort_order: 16384, type: null, account_sync_source: 'simplefin', last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null }, { id: 'd3d82218-1f3a-44e8-b8a8-afa12060e682', account_id: null, name: 'Equity', balance_current: null, balance_available: null, balance_limit: null, mask: null, official_name: null, subtype: null, bank: null, offbudget: 1, closed: 0, tombstone: 0, sort_order: 16384, type: null, account_sync_source: null, last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null }, { id: 'df6bf099-c975-4283-874a-0ed8f7cc8400', account_id: null, name: 'Closed cash', balance_current: null, balance_available: null, balance_limit: null, mask: null, official_name: null, subtype: null, bank: null, offbudget: 0, closed: 1, tombstone: 0, sort_order: 65536, type: null, account_sync_source: null, last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null }, { id: 'f179e50b-c8bb-4f2c-8d36-fa5bcdc0fe22', account_id: null, name: 'Savings', balance_current: null, balance_available: null, balance_limit: null, mask: null, official_name: null, subtype: null, bank: null, offbudget: 0, closed: 0, tombstone: 0, sort_order: 49152, type: null, account_sync_source: null, last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null }, { id: 'fd9fe281-657e-4cd4-990b-2096b0f8029d', account_id: null, name: 'Card', balance_current: null, balance_available: null, balance_limit: null, mask: null, official_name: null, subtype: null, bank: null, offbudget: 0, closed: 0, tombstone: 0, sort_order: 32768, type: null, account_sync_source: null, last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null } ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:2091:3
+✖ guarded account reopening preserves provider fields and retries retain later closure (offline) (5194.9939ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+  
+    [
+      {
+        account_group_id: null,
+        account_id: null,
+        account_sync_source: null,
+  ...
+        bank_sync_status: null,
+  +     closed: 0,
+  -     closed: 1,
+        id: '8a917d72-7e74-4eb0-a962-0ba7e73d5d88',
+        last_reconciled: null,
+        last_sync: null,
+        mask: '4321',
+        name: 'Checking',
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:2203:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ { id: '12887cea-b3d7-40e7-9202-f4725ef0876f', account_id: null, name: 'Savings', balance_current: null, balance_available: null, balance_limit: null, mask: null, official_name: null, subtype: null, bank: null, offbudget: 0, closed: 0, tombstone: 0, sort_order: 49152, type: null, account_sync_source: null, last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null }, { id: '28abf598-1ac3-43db-8578-a75b640d4168', account_id: null, name: 'Closed cash', balance_current: null, balance_available: null, balance_limit: null, mask: null, official_name: null, subtype: null, bank: null, offbudget: 0, closed: 1, tombstone: 0, sort_order: 65536, type: null, account_sync_source: null, last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null }, { id: '624623b3-eab9-4c7f-9835-604eac125134', account_id: null, name: 'Card', balance_current: null, balance_available: null, balance_limit: null, mask: null, official_name: null, subtype: null, bank: null, offbudget: 0, closed: 0, tombstone: 0, sort_order: 32768, type: null, account_sync_source: null, last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null }, { id: '8a917d72-7e74-4eb0-a962-0ba7e73d5d88', account_id: 'synthetic-provider-account', name: 'Checking', balance_current: 3333, balance_available: null, balance_limit: null, mask: '4321', official_name: null, subtype: null, bank: 'synthetic-bank', offbudget: 0, closed: 0, tombstone: 0, sort_order: 16384, type: null, account_sync_source: 'simplefin', last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null }, { id: 'e529f7b4-329c-47ce-9dd7-6d29b06c9ac7', account_id: null, name: 'Equity', balance_current: null, balance_available: null, balance_limit: null, mask: null, official_name: null, subtype: null, bank: null, offbudget: 1, closed: 0, tombstone: 0, sort_order: 16384, type: null, account_sync_source: null, last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null } ],
+    expected: [ { id: '12887cea-b3d7-40e7-9202-f4725ef0876f', account_id: null, name: 'Savings', balance_current: null, balance_available: null, balance_limit: null, mask: null, official_name: null, subtype: null, bank: null, offbudget: 0, closed: 0, tombstone: 0, sort_order: 49152, type: null, account_sync_source: null, last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null }, { id: '28abf598-1ac3-43db-8578-a75b640d4168', account_id: null, name: 'Closed cash', balance_current: null, balance_available: null, balance_limit: null, mask: null, official_name: null, subtype: null, bank: null, offbudget: 0, closed: 1, tombstone: 0, sort_order: 65536, type: null, account_sync_source: null, last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null }, { id: '624623b3-eab9-4c7f-9835-604eac125134', account_id: null, name: 'Card', balance_current: null, balance_available: null, balance_limit: null, mask: null, official_name: null, subtype: null, bank: null, offbudget: 0, closed: 0, tombstone: 0, sort_order: 32768, type: null, account_sync_source: null, last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null }, { id: '8a917d72-7e74-4eb0-a962-0ba7e73d5d88', account_id: 'synthetic-provider-account', name: 'Checking', balance_current: 3333, balance_available: null, balance_limit: null, mask: '4321', official_name: null, subtype: null, bank: 'synthetic-bank', offbudget: 0, closed: 1, tombstone: 0, sort_order: 16384, type: null, account_sync_source: 'simplefin', last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null }, { id: 'e529f7b4-329c-47ce-9dd7-6d29b06c9ac7', account_id: null, name: 'Equity', balance_current: null, balance_available: null, balance_limit: null, mask: null, official_name: null, subtype: null, bank: null, offbudget: 1, closed: 0, tombstone: 0, sort_order: 16384, type: null, account_sync_source: null, last_sync: null, last_reconciled: null, bank_sync_status: null, account_group_id: null } ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

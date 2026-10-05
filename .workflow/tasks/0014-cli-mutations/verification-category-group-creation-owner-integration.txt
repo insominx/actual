@@ -1,0 +1,14 @@
+✔ guarded category updates preserve raw domains and acknowledged retries (online) (6379.1154ms)
+✔ guarded category updates preserve raw domains and acknowledged retries (offline) (5802.4259ms)
+✔ guarded category creation acknowledges mapping and sibling shoves without replay (online) (7102.6693ms)
+✔ guarded category creation acknowledges mapping and sibling shoves without replay (offline) (6363.3465ms)
+✔ guarded category deletion preserves raw domains and never replays acknowledged transfers (online) (8763.8895ms)
+✔ guarded category deletion preserves raw domains and never replays acknowledged transfers (offline) (7863.7779ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 42352.5112

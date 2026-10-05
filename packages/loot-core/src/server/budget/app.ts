@@ -1,5 +1,5 @@
 import { createApp } from '#server/app';
-import { aqlQuery } from '#server/aql';
+import { aqlQuery, convertForUpdate, schema, schemaConfig } from '#server/aql';
 import * as db from '#server/db';
 import { APIError } from '#server/errors';
 import { categoryGroupModel, categoryModel } from '#server/models';
@@ -309,37 +309,60 @@ async function trackingBudgetMonth({ month }: { month: string }) {
   return values;
 }
 
-async function createCategory({
-  name,
-  groupId,
-  isIncome,
-  hidden,
-}: {
+type CategoryCreationInput = {
   name: string;
   groupId: CategoryGroupEntity['id'];
   isIncome?: boolean;
   hidden?: boolean;
-}): Promise<CategoryEntity['id']> {
+};
+
+function makeCategoryCreationInput({
+  name,
+  groupId,
+  isIncome,
+  hidden,
+}: CategoryCreationInput) {
   if (!groupId) {
     throw APIError('Creating a category: groupId is required');
   }
-
-  return await db.insertCategory({
+  return {
     name: name.trim(),
     cat_group: groupId,
     is_income: isIncome ? 1 : 0,
     hidden: hidden ? 1 : 0,
-  });
+  } satisfies Partial<db.DbCategory>;
 }
 
-async function updateCategory(category: CategoryEntity): Promise<void> {
-  try {
-    await db.updateCategory(
-      categoryModel.toDb({
+export async function inspectCategoryCreation(input: CategoryCreationInput) {
+  return db.inspectCategoryInsertion(makeCategoryCreationInput(input));
+}
+
+export async function createCategory(
+  input: CategoryCreationInput,
+): Promise<CategoryEntity['id']> {
+  return db.insertCategory(makeCategoryCreationInput(input));
+}
+
+export function prepareCategoryUpdate(
+  category: Pick<CategoryEntity, 'id'> & Partial<CategoryEntity>,
+) {
+  return categoryModel.validate(
+    {
+      ...convertForUpdate(schema, schemaConfig, 'categories', {
         ...category,
-        name: category.name.trim(),
+        ...(category.name === undefined ? {} : { name: category.name.trim() }),
       }),
-    );
+      id: category.id,
+    },
+    { update: true },
+  );
+}
+
+export async function updateCategory(
+  category: Pick<CategoryEntity, 'id'> & Partial<CategoryEntity>,
+): Promise<void> {
+  try {
+    await db.updateCategory(prepareCategoryUpdate(category));
   } catch (e) {
     if (
       e instanceof Error &&
@@ -368,48 +391,47 @@ async function moveCategory({
   });
 }
 
-async function deleteCategory({
-  id,
-  transferId,
-}: {
+type CategoryDeletionInput = {
   id: CategoryEntity['id'];
   transferId?: CategoryEntity['id'] | null;
-}): Promise<void> {
+};
+
+export async function inspectCategoryDeletion({
+  id,
+  transferId,
+}: CategoryDeletionInput) {
+  const category = await db.getCategory(id);
+  if (!category) {
+    throw new Error(`Category with id ${id} not found.`);
+  }
+  const transfer = transferId ? await db.getCategory(transferId) : null;
+  if (transferId && !transfer) {
+    throw new Error(`Transfer category with id ${transferId} not found.`);
+  }
+  if (transfer && category.is_income !== transfer.is_income) {
+    throw new Error('Cannot transfer between income and expense categories.');
+  }
+  return {
+    category,
+    transfer,
+    // Preserve the owner's existing income behavior, including tracking budgets.
+    budgetTransfers:
+      category.is_income === 0 && transferId
+        ? budget.inspectBudgetTransfer([id], transferId)
+        : [],
+    deletion: await db.inspectCategoryDeletion({ id }, transferId),
+  };
+}
+
+export async function deleteCategory({
+  id,
+  transferId,
+}: CategoryDeletionInput): Promise<void> {
   await batchMessages(async () => {
-    const row = await db.first<Pick<db.DbCategory, 'is_income'>>(
-      'SELECT is_income FROM categories WHERE id = ?',
-      [id],
-    );
-    if (!row) {
-      throw new Error(`Category with id ${id} not found.`);
+    const plan = await inspectCategoryDeletion({ id, transferId });
+    if (plan.category.is_income === 0 && transferId) {
+      await budget.doTransfer([id], transferId);
     }
-
-    const transfer =
-      transferId &&
-      (await db.first<Pick<db.DbCategory, 'is_income'>>(
-        'SELECT is_income FROM categories WHERE id = ?',
-        [transferId],
-      ));
-
-    if (transferId && !transfer) {
-      throw new Error(`Transfer category with id ${transferId} not found.`);
-    } else if (
-      transferId &&
-      row &&
-      transfer &&
-      row.is_income !== transfer.is_income
-    ) {
-      throw new Error('Cannot transfer between income and expense categories.');
-    }
-
-    // Update spreadsheet values if it's an expense category
-    // TODO: We should do this for income too if it's a tracking budget
-    if (row.is_income === 0) {
-      if (transferId) {
-        await budget.doTransfer([id], transferId);
-      }
-    }
-
     await db.deleteCategory({ id }, transferId);
   });
 }
@@ -429,24 +451,56 @@ async function getCategoryGroups({ hidden }: { hidden?: boolean } = {}) {
   }));
 }
 
-async function createCategoryGroup({
-  name,
-  isIncome,
-  hidden,
-}: {
+type CategoryGroupCreationInput = {
   name: CategoryGroupEntity['name'];
   isIncome?: CategoryGroupEntity['is_income'];
   hidden?: CategoryGroupEntity['hidden'];
-}): Promise<CategoryGroupEntity['id']> {
-  return await db.insertCategoryGroup({
+};
+
+function makeCategoryGroupCreationInput({
+  name,
+  isIncome,
+  hidden,
+}: CategoryGroupCreationInput) {
+  return {
     name,
     is_income: isIncome ? 1 : 0,
     hidden: hidden ? 1 : 0,
-  });
+  } satisfies Partial<db.DbCategoryGroup>;
 }
 
-async function updateCategoryGroup(group: CategoryGroupEntity) {
-  await db.updateCategoryGroup(categoryGroupModel.toDb(group));
+export async function inspectCategoryGroupCreation(
+  input: CategoryGroupCreationInput,
+) {
+  return db.inspectCategoryGroupInsertion(
+    makeCategoryGroupCreationInput(input),
+  );
+}
+
+export async function createCategoryGroup(
+  input: CategoryGroupCreationInput,
+): Promise<CategoryGroupEntity['id']> {
+  return db.insertCategoryGroup(makeCategoryGroupCreationInput(input));
+}
+
+export function prepareCategoryGroupUpdate(
+  group: Pick<CategoryGroupEntity, 'id'> & Partial<CategoryGroupEntity>,
+) {
+  // Nested categories are read metadata. Group updates never update children.
+  const { categories: _categories, ...fields } = group;
+  return categoryGroupModel.validate(
+    {
+      ...convertForUpdate(schema, schemaConfig, 'category_groups', fields),
+      id: group.id,
+    },
+    { update: true },
+  );
+}
+
+export async function updateCategoryGroup(
+  group: Pick<CategoryGroupEntity, 'id'> & Partial<CategoryGroupEntity>,
+) {
+  await db.updateCategoryGroup(prepareCategoryGroupUpdate(group));
 }
 
 async function moveCategoryGroup({
@@ -461,22 +515,55 @@ async function moveCategoryGroup({
   });
 }
 
-async function deleteCategoryGroup({
+type CategoryGroupDeletionInput = {
+  id: CategoryGroupEntity['id'];
+  transferId?: CategoryEntity['id'] | null;
+};
+
+export async function inspectCategoryGroupDeletion({
   id,
   transferId,
-}: {
-  id: CategoryGroupEntity['id'];
-  transferId?: CategoryGroupEntity['id'] | null;
-}): Promise<void> {
-  const groupCategories = await db.all<Pick<CategoryEntity, 'id'>>(
-    'SELECT id FROM categories WHERE cat_group = ? AND tombstone = 0',
+}: CategoryGroupDeletionInput) {
+  const group = await db.first<db.DbCategoryGroup>(
+    'SELECT * FROM category_groups WHERE id = ?',
     [id],
   );
+  if (!group) {
+    throw new Error(`Category group with id ${id} not found.`);
+  }
+  const transfer = transferId ? await db.getCategory(transferId) : null;
+  if (transferId && !transfer) {
+    throw new Error(`Transfer category with id ${transferId} not found.`);
+  }
+  const groupCategories = await db.all<db.DbCategory>(
+    'SELECT * FROM categories WHERE cat_group = ? AND tombstone = 0 ORDER BY id',
+    [id],
+  );
+  return {
+    group,
+    transfer,
+    groupCategories,
+    // Unlike single-category deletion, the group owner transfers live child
+    // allocations for both income and expense groups.
+    budgetTransfers: transferId
+      ? budget.inspectBudgetTransfer(
+          groupCategories.map(category => category.id),
+          transferId,
+        )
+      : [],
+    deletion: await db.inspectCategoryGroupDeletion({ id }, transferId),
+  };
+}
 
+export async function deleteCategoryGroup({
+  id,
+  transferId,
+}: CategoryGroupDeletionInput): Promise<void> {
+  const plan = await inspectCategoryGroupDeletion({ id, transferId });
   await batchMessages(async () => {
     if (transferId) {
       await budget.doTransfer(
-        groupCategories.map(c => c.id),
+        plan.groupCategories.map(category => category.id),
         transferId,
       );
     }

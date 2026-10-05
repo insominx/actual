@@ -17,7 +17,17 @@
   ],
   "type": "module",
   "imports": {
+    "#guarded-changes": "./src/guarded-changes.ts",
+    "#change-journal": "./src/change-journal.ts",
     "#agent-output": "./src/agent-output.ts",
+    "#backup-artifacts": "./src/backup-artifacts.ts",
+    "#backup-validation": "./src/backup-validation.ts",
+    "#backup-retention": "./src/backup-retention.ts",
+    "#budget-snapshot": "./src/budget-snapshot.ts",
+    "#budget-comparison": "./src/budget-comparison.ts",
+    "#server-http": "./src/server-http.ts",
+    "#sync-watch": "./src/sync-watch.ts",
+    "#server-runtime": "./src/server-runtime.ts",
     "#profiles": "./src/profiles.ts",
     "#cache": "./src/cache.ts",
     "#commands/*": "./src/commands/*.ts",
@@ -31,7 +41,8 @@
   "scripts": {
     "build": "vite build",
     "test": "vitest --run",
-    "test:integration": "node --test integration/cli.test.mjs",
+    "test:integration": "node --test integration/cli.test.mjs integration/runtime.test.mjs integration/lifecycle.test.mjs integration/publication.test.mjs integration/publication-crash.test.mjs integration/sync.test.mjs integration/backups.test.mjs integration/changes.test.mjs",
+    "test:browser-integration": "node --test integration/browser-sync.test.mjs",
     "typecheck": "tsgo -b"
   },
   "dependencies": {
@@ -42,6 +53,7 @@
     "proper-lockfile": "^4.1.2"
   },
   "devDependencies": {
+    "@playwright/test": "1.61.1",
     "@types/node": "^22.20.1",
     "@types/proper-lockfile": "^4",
     "@typescript/native-preview": "beta",

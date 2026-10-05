@@ -22,6 +22,18 @@ function mockConfigFile(config: Record<string, unknown> | null) {
 }
 
 describe('resolveConfig', () => {
+  it('publication initialization ignores inherited budget selectors while retaining online credentials', async () => {
+    process.env.ACTUAL_BUDGET_ID = 'local';
+    process.env.ACTUAL_OFFLINE = 'true';
+    const config = await resolveConfig(
+      { offline: false, serverUrl: 'http://server', password: 'secret' },
+      { connectionOnly: true },
+    );
+    expect(config.budgetId).toBeUndefined();
+    expect(config.syncId).toBeUndefined();
+    expect(config.offline).toBeUndefined();
+    expect(config.password).toBe('secret');
+  });
   it('allows explicit offline local selection without credentials', async () => {
     const config = await resolveConfig({
       offline: true,
@@ -246,6 +258,13 @@ describe('resolveConfig', () => {
     it('sets refresh when provided on CLI opts', async () => {
       const config = await resolveConfig({ refresh: true });
       expect(config.refresh).toBe(true);
+    });
+
+    it('requires an online refresh when freshness is required', async () => {
+      expect((await resolveConfig({ requireFresh: true })).refresh).toBe(true);
+      await expect(
+        resolveConfig({ offline: true, requireFresh: true }),
+      ).rejects.toThrow('Offline access cannot request a server refresh');
     });
 
     it('sets refresh when --no-cache is passed (cliOpts.cache === false)', async () => {

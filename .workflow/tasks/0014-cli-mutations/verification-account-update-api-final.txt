@@ -1,0 +1,27 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/api
+
+11:36:33 AM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/chevrotain/lib/src/api.js.
+Error: An error occurred while trying to read the map file at api.js.map
+Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\node_modules\chevrotain\lib\src\api.js.map'
+    at Object.readFileSync (node:fs:436:20)
+    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13
+    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)
+    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)
+    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)
+    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)
+    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)
+ ✓ methods.test.ts (70 tests | 68 skipped) 1556ms
+   ✓ guarded account updates (2)
+     ✓ preview preserves ledger and references and canonical apply keeps omitted fields 807ms
+     ✓ rejects stale ledger, deleted groups, wrong identities, and tampered account consequences 747ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed | 68 skipped (70)
+   Start at  11:36:27
+   Duration  10.91s (transform 69%, import 16%, tests 14%)
+
+  Transform  transforming modules took 7.49s · 69% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+

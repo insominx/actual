@@ -9,17 +9,20 @@ import * as memory from '#platform/server/memory';
 import * as sqlite from '#platform/server/sqlite';
 import * as monthUtils from '#shared/months';
 
+import { newBudgetMetadata } from './budgetfiles/new-budget-metadata';
 import * as encryption from './encryption';
 import {
   FileDownloadError,
   FileUploadError,
   HTTPError,
   PostError,
+  withErrorCode,
 } from './errors';
 import { runMutator } from './mutators';
 import { getServerErrorReason, post } from './post';
 import * as prefs from './prefs';
 import { getServer } from './server-config';
+import { idFromBudgetName } from './util/budget-name';
 import {
   exceedsSafeUnzipLimits,
   safeUnzip,
@@ -142,7 +145,7 @@ export async function resetSyncState(newKeyState) {
   return {};
 }
 
-export async function exportBuffer() {
+export async function exportBuffer(beforeExport?: () => Promise<void>) {
   const { id, budgetName } = prefs.getPrefs();
   if (!budgetName) {
     return null;
@@ -155,6 +158,7 @@ export async function exportBuffer() {
   // sure that we get a valid snapshot of it so we want this to be
   // serialized with all other mutations.
   const { zipped, entries } = await runMutator(async () => {
+    await beforeExport?.();
     const rawDbContent = await fs.readFile(
       fs.join(budgetDir, 'db.sqlite'),
       'binary',
@@ -183,6 +187,9 @@ export async function exportBuffer() {
     );
 
     meta.resetClock = true;
+    // Device-local lifecycle state must not follow an exported or remote copy.
+    delete meta.publication;
+    delete meta.archived;
     const metaContent = Buffer.from(JSON.stringify(meta), 'utf8');
 
     const entries = {
@@ -209,7 +216,8 @@ export async function exportBuffer() {
   return { data: Buffer.from(zipped), warnings };
 }
 
-export async function importBuffer(fileData, buffer) {
+/** Read the same archive entries used by import, without writing a budget. */
+export function readBudgetArchive(buffer: Uint8Array) {
   let entries;
   try {
     entries = safeUnzip(buffer);
@@ -253,6 +261,17 @@ export async function importBuffer(fileData, buffer) {
     throw FileDownloadError('invalid-meta-file');
   }
 
+  return { dbContent, meta };
+}
+
+export async function importBuffer(
+  fileData,
+  buffer,
+  { newName }: { newName?: string } = {},
+) {
+  const { dbContent, meta: sourceMetadata } = readBudgetArchive(buffer);
+  let meta = sourceMetadata;
+
   // Update the metadata. The stored file on the server might be
   // out-of-date with a few keys
   meta = {
@@ -262,6 +281,31 @@ export async function importBuffer(fileData, buffer) {
     lastUploaded: monthUtils.currentDay(),
     encryptKeyId: fileData.encryptMeta ? fileData.encryptMeta.keyId : null,
   };
+
+  if (newName !== undefined) {
+    meta = newBudgetMetadata(meta, await idFromBudgetName(newName), newName);
+    const newDirectory = fs.getBudgetDir(meta.id);
+    // Exclusive creation must succeed before cleanup can own this directory.
+    await fs.mkdir(newDirectory);
+    try {
+      await fs.writeFile(fs.join(newDirectory, 'db.sqlite'), dbContent);
+      await fs.writeFile(
+        fs.join(newDirectory, 'metadata.json'),
+        JSON.stringify(meta),
+      );
+      return { id: meta.id };
+    } catch (error) {
+      try {
+        await fs.removeDirRecursively(newDirectory);
+      } catch {
+        throw withErrorCode(
+          new Error('Restore failed and local cleanup was incomplete'),
+          'creation-cleanup-failed',
+        );
+      }
+      throw error;
+    }
+  }
 
   const budgetDir = fs.getBudgetDir(meta.id);
 
@@ -286,13 +330,19 @@ export async function importBuffer(fileData, buffer) {
   return { id: meta.id };
 }
 
-export async function upload() {
+export async function upload(
+  initialKey?: {
+    salt: string;
+    testContent: string;
+  },
+  beforeExport?: () => Promise<void>,
+) {
   const userToken = await asyncStorage.getItem('user-token');
   if (!userToken) {
     throw FileUploadError('unauthorized');
   }
 
-  const exported = await exportBuffer();
+  const exported = await exportBuffer(beforeExport);
   if (exported == null) {
     return;
   }
@@ -344,6 +394,9 @@ export async function upload() {
           ? { 'X-ACTUAL-ENCRYPT-META': JSON.stringify(uploadMeta) }
           : null),
         ...(groupId ? { 'X-ACTUAL-GROUP-ID': groupId } : null),
+        ...(initialKey
+          ? { 'X-ACTUAL-INITIAL-KEY': JSON.stringify(initialKey) }
+          : null),
         // TODO: fix me
         // oxlint-disable-next-line typescript/no-explicit-any
       },
@@ -378,6 +431,7 @@ export async function upload() {
 }
 
 export async function possiblyUpload() {
+  if (prefs.getPrefs().publication?.status === 'prepared') return;
   const { cloudFileId, groupId, lastUploaded } = prefs.getPrefs();
 
   const threshold =

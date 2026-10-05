@@ -3,6 +3,8 @@ import { join } from 'node:path';
 
 import * as api from '@actual-app/api';
 
+import { captureBudgetSnapshot } from '../dist/budget-snapshot.js';
+
 const dataDir = process.env.ACTUAL_DATA_DIR;
 if (!dataDir || !dataDir.includes('actual-agent-cli-')) {
   throw new Error('Seed requires the disposable fixture directory.');
@@ -94,6 +96,27 @@ try {
       posts_transaction: false,
     });
   });
+  if (process.env.ACTUAL_TEST_RICH_BACKUP === '1') {
+    fixture.rule = await api.createRule({
+      stage: 'pre',
+      conditionsOp: 'and',
+      conditions: [
+        { field: 'notes', op: 'contains', value: 'Disposable rule' },
+      ],
+      actions: [{ op: 'set', field: 'category', value: fixture.dining }],
+    });
+    await api.setBudgetAmount('2026-08', fixture.dining, 25000);
+    await api.setBudgetCarryover('2026-08', fixture.dining, true);
+    await api.setPreference('flags.budgetReservations', 'true');
+    await api.setPreference(
+      'cashPlanning',
+      JSON.stringify({
+        startDate: '2026-08-01',
+        endDate: '2026-08-31',
+        categoryTargets: { [fixture.dining]: 40000 },
+      }),
+    );
+  }
   await api.sync();
   if (process.env.ACTUAL_TEST_ENCRYPTED === '1') {
     const result = await engine.send('key-make', {
@@ -109,6 +132,9 @@ try {
   }
   fixture.syncId = budget.groupId;
   fixture.budgetId = budget.id;
+  if (process.env.ACTUAL_TEST_RICH_BACKUP === '1') {
+    fixture.snapshot = await captureBudgetSnapshot();
+  }
   if (process.env.ACTUAL_TEST_ENCRYPTED !== '1') {
     await api.runImport('Second isolated budget', async () => {
       fixture.otherAccount = await api.createAccount(

@@ -1,0 +1,59 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+ ❯ src/server/db/index.test.ts (18 tests | 4 failed | 14 skipped) 181ms
+   ↓ Database (14)
+     ↓ all and first accept null params
+     ↓ inserting a category works
+     ↓ using a deleted category name works
+     ↓ transactions are sorted by date
+     ↓ transactions are sorted by starting balance flag
+     ↓ transactions are sorted by sort order
+     ↓ transactions are sorted by id as a last resort
+     ↓ schedules can be reordered
+     ↓ moving a schedule to the top uses a null targetId
+     ↓ moving a non-existent schedule throws
+     ↓ transactions get child transactions in the right order
+     ↓ transactions don't show orphaned child transactions
+     ↓ parent transactions never have a category
+     ↓ child transactions never appear if parent is deleted
+   ❯ read-only category insertion planning (4)
+     × ordinary group ordering matches the canonical writer without preview writes 52ms
+     × compact sibling shoves matches the canonical writer without preview writes 48ms
+     × global append ordering matches the canonical writer without preview writes 41ms
+     × duplicate-name rejection does not change category rows or synchronization messages 39ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/db/index.test.ts > read-only category insertion planning > ordinary group ordering matches the canonical writer without preview writes
+ FAIL  src/server/db/index.test.ts > read-only category insertion planning > compact sibling shoves matches the canonical writer without preview writes
+ FAIL  src/server/db/index.test.ts > read-only category insertion planning > global append ordering matches the canonical writer without preview writes
+TypeError: inspectCategoryInsertion is not a function
+ ❯ src/server/db/index.test.ts:410:29
+    408|         'SELECT * FROM messages_crdt ORDER BY timestamp',
+    409|       );
+    410|       const plan = await db.inspectCategoryInsertion(input, { atEnd });
+       |                             ^
+    411|       expect(plan.category.sort_order).toBe(order);
+    412|       expect(plan.updates).toHaveLength(updates);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/server/db/index.test.ts > read-only category insertion planning > duplicate-name rejection does not change category rows or synchronization messages
+TypeError: inspectCategoryInsertion is not a function
+ ❯ src/server/db/index.test.ts:453:10
+    451|     );
+    452|     await expect(
+    453|       db.inspectCategoryInsertion({ name: 'EXISTING NAME', cat_group: …
+       |          ^
+    454|     ).rejects.toThrow('already exists');
+    455|     expect(await db.all('SELECT * FROM categories ORDER BY id')).toEqu…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 14 skipped (18)
+   Start at  16:26:46
+   Duration  2.88s (setup 60%, transform 33%, tests 6%)
+

@@ -1,0 +1,35 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+ ❯ src/change-journal.test.ts (11 tests | 1 failed | 10 skipped) 36ms
+   × expires only acknowledged synchronized publication receipts 36ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/change-journal.test.ts > expires only acknowledged synchronized publication receipts
+AssertionError: expected undefined to be 'synced' // Object.is equality
+
+- Expected:
+"synced"
+
++ Received:
+undefined
+
+ ❯ src/change-journal.test.ts:80:58
+     78|       await journal.prepare('next', proposal);
+     79|       expect(await journal.read('ack')).toBeNull();
+     80|       expect((await journal.read('missing-ack'))?.state).toBe('synced'…
+       |                                                          ^
+     81|       expect((await journal.read('uncertain'))?.state).toBe('uncertain…
+     82|     });
+ ❯ withChangeJournal src/change-journal.ts:84:12
+ ❯ src/change-journal.test.ts:67:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 skipped (11)
+   Start at  22:11:00
+   Duration  213ms (transform 45%, tests 32%, import 18%, worker 4%)
+

@@ -1,0 +1,17 @@
+✔ guarded account creation acknowledges actual identities and retries one account (online) (9094.5521ms)
+✔ guarded account creation acknowledges actual identities and retries one account (offline) (8699.1993ms)
+✔ guarded category updates preserve raw domains and acknowledged retries (online) (5786.7894ms)
+✔ guarded category updates preserve raw domains and acknowledged retries (offline) (5466.5074ms)
+✔ guarded category creation acknowledges mapping and sibling shoves without replay (online) (6769.614ms)
+✔ guarded category creation acknowledges mapping and sibling shoves without replay (offline) (6218.5853ms)
+✔ killed category creation at before-engine retains its exact outcome without replay (33873.0099ms)
+✔ killed category creation at after-engine retains its exact outcome without replay (34320.0463ms)
+✔ killed category creation at before-sync retains its exact outcome without replay (36184.1214ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 146499.4594

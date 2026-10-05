@@ -1,0 +1,2 @@
+packages/loot-core/src/server/transactions/transfer.ts:9:20: error import(consistent-type-specifier-style): Prefer using a top-level type-only import instead of inline type specifiers. help: Replace inline type specifiers with a top‐level import type statement.
+packages/loot-core/src/server/transactions/transaction-rules.test.ts:1316:17: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type '{ prepare: (sql: string) => unknown; }' is more narrow than the original type.

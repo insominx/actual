@@ -45,6 +45,7 @@ import {
   startBackupService,
   stopBackupService,
 } from './backups';
+import { newBudgetMetadata } from './new-budget-metadata';
 
 const DEMO_BUDGET_ID = '_demo-budget';
 const TEST_BUDGET_ID = '_test-budget';
@@ -130,6 +131,10 @@ async function getBudgets() {
             ...(prefs.groupId ? { groupId: prefs.groupId } : {}),
             ...(prefs.owner ? { owner: prefs.owner } : {}),
             name: prefs.budgetName || '(no name)',
+            ...(prefs.archived ? { archived: true } : {}),
+            ...(prefs.publication?.serverUrl
+              ? { publicationServerUrl: prefs.publication.serverUrl }
+              : {}),
           } satisfies Budget;
         }
       }
@@ -336,18 +341,7 @@ async function duplicateBudget({
   // copy metadata from current budget
   // replace id with new budget id and budgetName with new budget name
   const metadataText = await fs.readFile(fs.join(budgetDir, 'metadata.json'));
-  const metadata = JSON.parse(metadataText);
-  metadata.id = newId;
-  metadata.budgetName = newName;
-  [
-    'cloudFileId',
-    'groupId',
-    'lastUploaded',
-    'encryptKeyId',
-    'lastSyncedTimestamp',
-  ].forEach(item => {
-    if (metadata[item]) delete metadata[item];
-  });
+  const metadata = newBudgetMetadata(JSON.parse(metadataText), newId, newName);
 
   try {
     const newBudgetDir = fs.getBudgetDir(newId);
@@ -370,7 +364,14 @@ async function duplicateBudget({
       if (await fs.exists(newBudgetDir)) {
         await fs.removeDirRecursively(newBudgetDir);
       }
-    } catch {} // Ignore cleanup errors
+    } catch {
+      throw Object.assign(
+        new Error('Clone failed and local cleanup was incomplete'),
+        {
+          code: 'creation-cleanup-failed',
+        },
+      );
+    }
     throw new Error(`Failed to duplicate budget file: ${error.message}`);
   }
 
@@ -378,7 +379,17 @@ async function duplicateBudget({
   const { error } = await _loadBudget(newId);
   if (error) {
     logger.log('Error duplicating budget: ' + error);
-    return error;
+    await closeBudget();
+    const cleanup = await deleteBudget({ id: newId });
+    if (cleanup !== 'ok') {
+      throw Object.assign(
+        new Error('Clone failed and local cleanup was incomplete'),
+        {
+          code: 'creation-cleanup-failed',
+        },
+      );
+    }
+    throw new Error('Error duplicating budget: ' + error);
   }
 
   if (cloudSync) {
@@ -434,36 +445,53 @@ async function createBudget({
   const budgetDir = fs.getBudgetDir(id);
   await fs.mkdir(budgetDir);
 
-  // Create the initial database
-  await fs.copyFile(fs.bundledDatabasePath, fs.join(budgetDir, 'db.sqlite'));
+  try {
+    // Create the initial database
+    await fs.copyFile(fs.bundledDatabasePath, fs.join(budgetDir, 'db.sqlite'));
 
-  // Create the initial prefs file
-  await fs.writeFile(
-    fs.join(budgetDir, 'metadata.json'),
-    JSON.stringify(prefs.getDefaultPrefs(id, budgetName)),
-  );
+    // Create the initial prefs file
+    await fs.writeFile(
+      fs.join(budgetDir, 'metadata.json'),
+      JSON.stringify(prefs.getDefaultPrefs(id, budgetName)),
+    );
 
-  // Load it in
-  const { error } = await _loadBudget(id);
-  if (error) {
-    logger.log('Error creating budget: ' + error);
-    return { error };
-  }
-
-  if (!avoidUpload && !testMode) {
-    try {
-      await cloudStorage.upload();
-    } catch {
-      // Ignore any errors uploading. If they are offline they should
-      // still be able to create files.
+    // Load it in
+    const { error } = await _loadBudget(id);
+    if (error) {
+      logger.log('Error creating budget: ' + error);
+      await closeBudget();
+      await fs.removeDirRecursively(budgetDir);
+      return { error };
     }
-  }
 
-  if (testMode) {
-    await createTestBudget(mainApp.handlers);
-  }
+    if (!avoidUpload && !testMode) {
+      try {
+        await cloudStorage.upload();
+      } catch {
+        // Ignore any errors uploading. If they are offline they should
+        // still be able to create files.
+      }
+    }
 
-  return {};
+    if (testMode) {
+      await createTestBudget(mainApp.handlers);
+    }
+
+    return {};
+  } catch (error) {
+    if (prefs.getPrefs()?.id === id) await closeBudget();
+    try {
+      if (await fs.exists(budgetDir)) await fs.removeDirRecursively(budgetDir);
+    } catch {
+      throw Object.assign(
+        new Error('Creation failed and local cleanup was incomplete'),
+        {
+          code: 'creation-cleanup-failed',
+        },
+      );
+    }
+    throw error;
+  }
 }
 
 async function importBudget({
@@ -571,9 +599,9 @@ async function _loadBudget(id: Budget['id']): Promise<{
     return { error: 'opening-budget' };
   }
 
-  // Older versions didn't tag the file with the current user, so do
-  // so now
-  if (!prefs.getPrefs().userId) {
+  // Backfill ownership for accepted remote files. Merely inspecting an
+  // unpublished local source must not assign publication ownership.
+  if (!prefs.getPrefs().userId && prefs.getPrefs().groupId) {
     const userId = await asyncStorage.getItem('user-token');
     await prefs.savePrefs({ userId });
   }

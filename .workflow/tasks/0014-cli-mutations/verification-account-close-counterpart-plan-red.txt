@@ -1,0 +1,32 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+ ❯ src/server/transactions/transfer.test.ts (6 tests | 1 failed) 301ms
+   ✓ Transfer (5)
+     ✓ resolves transfer accounts through the canonical view rather than a retained raw payee 50ms
+     ✓ updates a linked split child and recalculates its parent error without changing its total 52ms
+     ✓ transfers are properly inserted/updated/deleted 56ms
+     ✓ transfers are properly de-categorized 44ms
+     ✓ split transfers are retained on child transactions 45ms
+   × prepares a closing counterpart without writes and persists the same rule-owned fields 52ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/transactions/transfer.test.ts > prepares a closing counterpart without writes and persists the same rule-owned fields
+TypeError: prepareTransferTransaction is not a function
+ ❯ src/server/transactions/transfer.test.ts:317:34
+    315|   const before = await db.all('SELECT * FROM transactions ORDER BY id'…
+    316|   const messages = await db.all('SELECT * FROM messages_crdt ORDER BY …
+    317|   const planned = await transfer.prepareTransferTransaction(source, 't…
+       |                                  ^
+    318|   expect(planned).toMatchObject({ account: 'two', amount: 500, date: '…
+    319|   expect(await db.all('SELECT * FROM transactions ORDER BY id')).toEqu…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  13:52:18
+   Duration  3.43s (setup 52%, transform 39%, tests 9%)
+

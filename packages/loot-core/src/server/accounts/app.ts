@@ -25,6 +25,11 @@ import * as monthUtils from '#shared/months';
 import { amountToInteger } from '#shared/util';
 import type { ImportTransactionsOpts } from '#types/api-handlers';
 import type {
+  AccountCloseSeed,
+  AccountClosureOutcome,
+  AccountUnlinkOutcome,
+} from '#types/change-proposals';
+import type {
   AccountEntity,
   AccountGroupEntity,
   BankSyncProviderStatus,
@@ -558,11 +563,13 @@ async function createAccount({
   balance = 0,
   offBudget = false,
   closed = false,
+  openingDate,
 }: {
   name: string;
   balance?: number | undefined;
   offBudget?: boolean | undefined;
   closed?: boolean | undefined;
+  openingDate?: string;
 }) {
   const id: AccountEntity['id'] = await db.insertAccount({
     name,
@@ -583,7 +590,7 @@ async function createAccount({
       amount: amountToInteger(balance),
       category: offBudget ? null : payee.category,
       payee: payee.id,
-      date: monthUtils.currentDay(),
+      date: openingDate ?? monthUtils.currentDay(),
       cleared: true,
       starting_balance_flag: true,
     });
@@ -592,116 +599,227 @@ async function createAccount({
   return id;
 }
 
-async function closeAccount({
-  id,
-  transferAccountId,
-  categoryId,
-  forced = false,
-}: {
+export type AccountClosureRequest = {
   id: AccountEntity['id'];
   transferAccountId?: AccountEntity['id'] | undefined;
   categoryId?: CategoryEntity['id'] | undefined;
   forced?: boolean | undefined;
-}) {
-  // Unlink the account if it's linked. This makes sure to remove it from
-  // bank-sync providers. (This should not be undo-able, as it mutates the
-  // remote server and the user will have to link the account again)
-  await unlinkAccount({ id });
+};
 
-  return withUndo(async () => {
-    const account = await db.first<db.DbAccount>(
-      'SELECT * FROM accounts WHERE id = ? AND tombstone = 0',
-      [id],
-    );
+// Inspection shares the writer's complete ledger scope and never unlinks or writes.
+export async function inspectAccountClosure({
+  id,
+  transferAccountId,
+  categoryId,
+  forced = false,
+}: AccountClosureRequest) {
+  const account = await db.getAccount(id);
+  if (!account) {
+    throw new Error(`Account with ID ${id} not found.`);
+  }
+  const { balance, numTransactions } = await getAccountProperties({ id });
+  const transactions = await db.getTransactions(id);
+  const counterpartIds = [
+    ...new Set(
+      transactions.flatMap(row => (row.transfer_id ? [row.transfer_id] : [])),
+    ),
+  ];
+  const counterparts = await Promise.all(
+    counterpartIds.map(counterpartId => db.getTransaction(counterpartId)),
+  );
+  if (forced && !account.tombstone && account.closed !== 1) {
+    const missingIndex = counterparts.findIndex(row => !row);
+    if (missingIndex !== -1) {
+      throw new Error(
+        `Transfer counterpart with ID ${counterpartIds[missingIndex]} not found.`,
+      );
+    }
+  }
+  let sourceTransferPayee: db.DbPayee | null = null;
+  let destinationAccount: db.DbAccount | null = null;
+  let destinationTransferPayee: db.DbPayee | null = null;
+  let category: db.DbCategory | null = null;
 
-    // Do nothing if the account doesn't exist or it's already been
-    // closed
-    if (!account || account.closed === 1) {
+  // Closed/deleted accounts only unlink. Empty accounts only delete.
+  if (!account.tombstone && account.closed !== 1 && numTransactions > 0) {
+    if (!forced) {
+      if (balance !== 0 && transferAccountId == null) {
+        throw APIError('balance is non-zero: transferAccountId is required');
+      }
+      if (id === transferAccountId) {
+        throw APIError('transfer account can not be the account being closed');
+      }
+    }
+    if (forced || balance !== 0) {
+      sourceTransferPayee = await db.first<db.DbPayee>(
+        'SELECT * FROM payees WHERE transfer_acct = ? AND tombstone = 0',
+        [id],
+      );
+      if (!sourceTransferPayee) {
+        throw new Error(`Transfer payee with account ID ${id} not found.`);
+      }
+    }
+    if (!forced && balance !== 0 && transferAccountId) {
+      destinationAccount = await db.getAccount(transferAccountId);
+      if (!destinationAccount || destinationAccount.tombstone) {
+        throw new Error(
+          `Transfer account with ID ${transferAccountId} not found.`,
+        );
+      }
+      destinationTransferPayee = await db.first<db.DbPayee>(
+        'SELECT * FROM payees WHERE transfer_acct = ? AND tombstone = 0',
+        [transferAccountId],
+      );
+      if (!destinationTransferPayee) {
+        throw new Error(
+          `Transfer payee with account ID ${transferAccountId} not found.`,
+        );
+      }
+      if (categoryId != null) {
+        category = await db.getCategory(categoryId);
+        if (!category || category.tombstone) {
+          throw new Error(`Category with ID ${categoryId} not found.`);
+        }
+      }
+    }
+  }
+  return {
+    account,
+    balance,
+    numTransactions,
+    transactions,
+    counterparts,
+    sourceTransferPayee,
+    destinationAccount,
+    destinationTransferPayee,
+    category,
+    unlink: await inspectAccountUnlink({ id }),
+  };
+}
+
+export function makeAccountClosingTransaction(
+  inspection: Awaited<ReturnType<typeof inspectAccountClosure>>,
+  categoryId: string | undefined,
+  seed: AccountCloseSeed,
+): TransactionEntity {
+  if (!inspection.destinationTransferPayee) {
+    throw new Error('Closing transfer payee not found.');
+  }
+  return {
+    id: seed.id,
+    payee: inspection.destinationTransferPayee.id,
+    amount: -inspection.balance,
+    account: inspection.account.id,
+    date: seed.date,
+    sort_order: seed.sortOrder,
+    notes: 'Closing account',
+    category: categoryId,
+  };
+}
+
+// The canonical writer returns actual identities; legacy handlers discard the outcome.
+export async function performAccountClosure({
+  id,
+  transferAccountId,
+  categoryId,
+  forced = false,
+  closingDate,
+  closingSeed,
+}: AccountClosureRequest & {
+  closingDate?: string;
+  closingSeed?: AccountCloseSeed;
+}): Promise<AccountClosureOutcome> {
+  const inspection = await inspectAccountClosure({
+    id,
+    transferAccountId,
+    categoryId,
+    forced,
+  });
+  const unlinkResult = await performAccountUnlink({ id });
+  const outcome: AccountClosureOutcome = {
+    action: 'unchanged',
+    accountId: id,
+    unlink: {
+      localChanged: unlinkResult.localChanged,
+      remoteStatus: unlinkResult.remoteStatus,
+    },
+    addedTransactionIds: [],
+    deletedTransactionIds: [],
+    updatedTransactionIds: [],
+    deletedPayeeIds: [],
+  };
+
+  await withUndo(async () => {
+    const { account, balance, numTransactions } = inspection;
+    // Preserve the existing closed/deleted-account early return after unlink.
+    if (account.tombstone || account.closed === 1) {
       return;
     }
-
-    const { balance, numTransactions } = await getAccountProperties({ id });
-
-    // If there are no transactions, we can simply delete the account
     if (numTransactions === 0) {
       await db.deleteAccount({ id });
+      outcome.action = 'deleted';
     } else if (forced) {
-      const rows = db.runQuery<
-        Pick<db.DbViewTransaction, 'id' | 'transfer_id'>
-      >(
-        'SELECT id, transfer_id FROM v_transactions WHERE account = ?',
-        [id],
-        true,
+      const rows = [...inspection.transactions].sort((left, right) =>
+        left.id.localeCompare(right.id),
       );
-
-      const transferPayee = await db.first<Pick<db.DbPayee, 'id'>>(
-        'SELECT id FROM payees WHERE transfer_acct = ?',
-        [id],
-      );
-
+      const transferPayee = inspection.sourceTransferPayee;
       if (!transferPayee) {
         throw new Error(`Transfer payee with account ID ${id} not found.`);
       }
-
       await batchMessages(async () => {
-        // TODO: what this should really do is send a special message that
-        // automatically marks the tombstone value for all transactions
-        // within an account... or something? This is problematic
-        // because another client could easily add new data that
-        // should be marked as deleted.
-
-        rows.forEach(row => {
+        // Await each owner write before acknowledging any outcome.
+        for (const row of rows) {
           if (row.transfer_id) {
-            void db.updateTransaction({
+            await db.updateTransaction({
               id: row.transfer_id,
               payee: null,
               transfer_id: null,
             });
+            outcome.updatedTransactionIds.push(row.transfer_id);
           }
-
-          void db.deleteTransaction({ id: row.id });
-        });
-
-        void db.deleteAccount({ id });
-        void db.deleteTransferPayee({ id: transferPayee.id });
+          await db.deleteTransaction({ id: row.id });
+          outcome.deletedTransactionIds.push(row.id);
+        }
+        await db.deleteAccount({ id });
+        await db.deleteTransferPayee({ id: transferPayee.id });
+        outcome.deletedPayeeIds.push(transferPayee.id);
       });
+      outcome.action = 'deleted';
     } else {
-      if (balance !== 0 && transferAccountId == null) {
-        throw APIError('balance is non-zero: transferAccountId is required');
-      }
-
-      if (id === transferAccountId) {
-        throw APIError('transfer account can not be the account being closed');
-      }
-
       await db.update('accounts', { id, closed: 1 });
-
-      // If there is a balance we need to transfer it to the specified
-      // account (and possibly categorize it)
+      outcome.action = 'closed';
       if (balance !== 0 && transferAccountId) {
-        const transferPayee = await db.first<Pick<db.DbPayee, 'id'>>(
-          'SELECT id FROM payees WHERE transfer_acct = ?',
-          [transferAccountId],
-        );
-
+        const transferPayee = inspection.destinationTransferPayee;
         if (!transferPayee) {
           throw new Error(
             `Transfer payee with account ID ${transferAccountId} not found.`,
           );
         }
-
-        await mainApp.handlers['transaction-add']({
+        const seed = closingSeed ?? {
           id: uuidv4(),
-          payee: transferPayee.id,
-          amount: -balance,
-          account: id,
-          date: monthUtils.currentDay(),
-          notes: 'Closing account',
-          category: categoryId,
-        });
+          date: closingDate ?? monthUtils.currentDay(),
+          sortOrder: Date.now(),
+        };
+        const transactionId = seed.id;
+        await mainApp.handlers['transaction-add'](
+          makeAccountClosingTransaction(inspection, categoryId, seed),
+        );
+        const transaction = await db.getTransaction(transactionId);
+        const counterpart = transaction?.transfer_id
+          ? await db.getTransaction(transaction.transfer_id)
+          : null;
+        if (!transaction || !counterpart) {
+          throw new Error('Closing transfer acknowledgement is incomplete.');
+        }
+        outcome.addedTransactionIds.push(transaction.id, counterpart.id);
       }
     }
   });
+  return outcome;
+}
+
+async function closeAccount(request: AccountClosureRequest) {
+  await performAccountClosure(request);
 }
 
 async function reopenAccount({ id }: { id: AccountEntity['id'] }) {
@@ -1691,23 +1809,73 @@ async function importTransactions({
   }
 }
 
-async function unlinkAccount({ id }: { id: AccountEntity['id'] }) {
-  const accRow = await db.first<db.DbAccount>(
-    'SELECT * FROM accounts WHERE id = ?',
-    [id],
-  );
-
-  if (!accRow) {
+export async function inspectAccountUnlink({
+  id,
+}: {
+  id: AccountEntity['id'];
+}) {
+  const account = await db.getAccount(id);
+  if (!account) {
     throw new Error(`Account with ID ${id} not found.`);
   }
+  const bankId = account.bank;
+  const isGoCardless = account.account_sync_source === 'goCardless';
+  const hasToken = Boolean(
+    bankId && isGoCardless && (await asyncStorage.getItem('user-token')),
+  );
+  const otherAccounts =
+    bankId && isGoCardless
+      ? await db.all<db.DbAccount>(
+          'SELECT * FROM accounts WHERE bank = ? AND id != ? ORDER BY id',
+          [bankId, id],
+        )
+      : [];
+  let bank: db.DbBank | null = null;
+  let remoteRemoval: { url: string; requisitionId: string } | null = null;
 
-  const bankId = accRow.bank;
-
-  if (!bankId) {
-    return 'ok';
+  if (bankId && hasToken && otherAccounts.length === 0) {
+    bank = await db.first<db.DbBank>('SELECT * FROM banks WHERE id = ?', [
+      bankId,
+    ]);
+    if (!bank) {
+      throw new Error(`Bank with ID ${bankId} not found.`);
+    }
+    const serverConfig = getServer();
+    if (!serverConfig) {
+      throw new Error('Failed to get server config.');
+    }
+    remoteRemoval = {
+      url: serverConfig.GOCARDLESS_SERVER + '/remove-account',
+      requisitionId: bank.bank_id,
+    };
   }
+  return {
+    account,
+    isGoCardless,
+    hasToken,
+    otherAccounts,
+    bank,
+    remoteRemoval,
+  };
+}
 
-  const isGoCardless = accRow.account_sync_source === 'goCardless';
+async function performAccountUnlink({ id }: { id: AccountEntity['id'] }) {
+  const inspection = await inspectAccountUnlink({ id });
+  if (!inspection.account.bank) {
+    return {
+      localChanged: false,
+      remoteStatus: 'not-required' as const,
+      legacyResult: 'ok' as const,
+    };
+  }
+  const { isGoCardless, remoteRemoval } = inspection;
+  // Credentials stay in the writer, outside the detached inspection result.
+  const userToken = remoteRemoval
+    ? await asyncStorage.getItem('user-token')
+    : null;
+  if (remoteRemoval && !userToken) {
+    throw new Error('Bank unlink authentication is no longer available.');
+  }
 
   await db.updateAccount({
     id,
@@ -1720,55 +1888,35 @@ async function unlinkAccount({ id }: { id: AccountEntity['id'] }) {
     bank_sync_status: null,
   });
 
-  if (isGoCardless === false) {
-    return;
+  if (!isGoCardless) {
+    return {
+      localChanged: true,
+      remoteStatus: 'not-required' as const,
+      legacyResult: undefined,
+    };
   }
-
-  const accountWithBankResult = await db.first<{ count: number }>(
-    'SELECT COUNT(*) as count FROM accounts WHERE bank = ?',
-    [bankId],
-  );
-
-  // No more accounts are associated with this bank. We can remove
-  // it from GoCardless.
-  const userToken = await asyncStorage.getItem('user-token');
-  if (!userToken) {
-    return 'ok';
-  }
-
-  if (!accountWithBankResult || accountWithBankResult.count === 0) {
-    const bank = await db.first<Pick<db.DbBank, 'bank_id'>>(
-      'SELECT bank_id FROM banks WHERE id = ?',
-      [bankId],
-    );
-
-    if (!bank) {
-      throw new Error(`Bank with ID ${bankId} not found.`);
-    }
-
-    const serverConfig = getServer();
-    if (!serverConfig) {
-      throw new Error('Failed to get server config.');
-    }
-
-    const requisitionId = bank.bank_id;
-
+  let remoteStatus: AccountUnlinkOutcome['remoteStatus'] = inspection.hasToken
+    ? 'skipped-other-accounts'
+    : 'skipped-no-token';
+  if (remoteRemoval) {
     try {
       await post(
-        serverConfig.GOCARDLESS_SERVER + '/remove-account',
-        {
-          requisitionId,
-        },
-        {
-          'X-ACTUAL-TOKEN': userToken,
-        },
+        remoteRemoval.url,
+        { requisitionId: remoteRemoval.requisitionId },
+        { 'X-ACTUAL-TOKEN': userToken },
       );
+      remoteStatus = 'acknowledged';
     } catch (error) {
+      remoteStatus = 'uncertain';
       logger.log({ error });
     }
   }
 
-  return 'ok';
+  return { localChanged: true, remoteStatus, legacyResult: 'ok' as const };
+}
+
+async function unlinkAccount(request: { id: AccountEntity['id'] }) {
+  return (await performAccountUnlink(request)).legacyResult;
 }
 
 export const app = createApp<AccountHandlers>();

@@ -1,0 +1,33 @@
+✔ direct allocation receipts prevent replay after another allocation (online) (5752.3106ms)
+✖ direct allocation receipts prevent replay after another allocation (offline) (4751.0382ms)
+✔ guarded allocation preview preserves all domains and applies only its selected amount (9396.4619ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 2
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 19979.3827
+
+✖ failing tests:
+
+test at packages\cli\integration\changes.test.mjs:1725:3
+✖ direct allocation receipts prevent replay after another allocation (offline) (4751.0382ms)
+  AssertionError [ERR_ASSERTION]: error: too many arguments for 'sync'. Expected 0 arguments but got 1: run.
+  
+  
+  1 !== 0
+  
+      at cli (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1733:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1785:11)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

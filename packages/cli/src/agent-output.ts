@@ -28,7 +28,7 @@ export type AgentContext = {
   scale: 100;
   lastSyncedAt: number | null;
   freshness: 'unknown' | 'observed';
-  commit: 'none' | 'committed-local' | 'synced';
+  commit: 'none' | 'committed-local' | 'synced' | 'uncertain';
 };
 
 type Invocation = {

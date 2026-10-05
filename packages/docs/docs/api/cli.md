@@ -26,6 +26,25 @@ npm install --location=global @actual-app/cli
 
 ## Configuration
 
+### Managed server lifecycle
+
+```bash
+actual server init --server-dir /private/actual-server --port 5006
+actual server start --server-dir /private/actual-server
+actual server status --server-dir /private/actual-server
+actual --server-url http://127.0.0.1:5006 server bootstrap
+actual --server-url http://127.0.0.1:5006 connection test
+actual --server-url http://127.0.0.1:5006 doctor
+actual server logs --server-dir /private/actual-server
+actual server stop --server-dir /private/actual-server
+```
+
+The server package must be installed or built. Use `--server-entry` when it cannot be resolved. Managed services bind to loopback and use a private supervisor. Stop authenticates that supervisor and uses its original child handle; it never kills a PID from disk. Startup checks the port, executable hash, and instance-specific health. Stop the service before upgrading its executable.
+
+Set `ACTUAL_PASSWORD_FILE` to a protected password file before bootstrap. Bootstrap refuses an initialized server and never exposes a session token. Connection tests need no budget. Doctor also validates a selected budget when configured. Lifecycle logs omit raw server output. These commands use version 2 JSON by default. A lost stop response returns exit code 6; inspect status before another action.
+
+Windows lifecycle tests pass. Linux execution and headless budget creation remain pending. These commands do not install services or complete browser-dependent identity-provider authentication.
+
 Online commands require a running Actual sync server. Explicit offline commands use an existing local budget or downloaded cache. Configuration accepts CLI flags, environment variables, device-local profiles, and existing config files, in that priority order.
 
 ### Agent operation
@@ -41,11 +60,29 @@ actual --profile personal --offline --output-version 2 accounts list
 
 Discovery requires no credentials or budget. Existing commands retain their default output; `--output-version 2` returns one JSON document after completion. New discovery, context, and profile commands always use version 2. Context identifies the selected budget, currency, scale, connection mode, observed freshness, and local or synced commit status.
 
-Version 2 uses exit codes 2 for invalid input, 3 for missing context, 4 for future stale previews, 5 for engine failures, and 6 for committed changes whose push failed. After exit code 6, retry synchronization instead of the mutation. Preview, operation receipts, and reversal remain unavailable.
+Version 2 uses exit codes 2 for invalid input, 3 for missing context, 4 for stale previews, 5 for engine failures, and 6 for partial completion. After a failed push, retry synchronization. For guarded publication, retry the same operation ID to inspect remote acceptance without repeating an uncertain initial upload. Guarded previews and receipts cover the operations documented below. Reversal remains unavailable.
+
+Use `actual --offline sync status` to inspect pending engine messages without server access. The result separates messages beyond the last synchronization checkpoint from received deferred messages that require a newer schema. Offline remote freshness is unknown.
+
+Use `actual sync refresh` to synchronize existing writes without repeating their mutations. Use `--require-fresh` on a remote read to require successful synchronization before returning data. This flag rejects offline mode and fails if the server is unavailable. Failed pushes invalidate cache freshness while retaining the local commit.
+
+Use `actual sync watch --interval 5 --timeout 30 --samples 100 --retries 5` for bounded observation and reconnect. Each attempt runs in a worker with a deadline. Retries back off up to 30 seconds; the retry limit counts consecutive failures. Cancel with Ctrl+C or a `cancel` line on stdin. Progress goes to stderr; the final version 2 result includes observations, cancellation, and reconnect count. The CLI does not replay mutations. It checks budget identity and releases or recovers cache locks after workers end. Remote clients remain independent of local cache locks.
+
+Use `actual --offline backups create --directory ./backups` to create a uniquely named backup artifact. It contains an Actual zip and a versioned manifest with source identity, currency, freshness, pending messages, byte count, and SHA-256. The CLI flushes and checks the files before publishing the completed directory. It retains existing backups.
+
+Backups are plaintext even when the source budget uses encrypted synchronization. The manifest declares artifact encryption separately. Creation checks file completion and hash.
+
+Use `actual backups list --directory ./backups --limit 100` for a bounded manifest inventory. Listing does not claim archive validation. Use `actual backups validate <artifact>.actualbackup --timeout 60` to check the hash and import the archive in an isolated offline worker. Validation checks domain queries, account balances, and the manifest's source identity. It returns row counts and hashes and removes its temporary budget after the worker closes. Symbolic links are rejected. Cancel with Ctrl+C or a `cancel` line on stdin.
+
+Use `actual --offline backups restore <artifact>.actualbackup --name "Restored copy" --operation-id restore-copy` to create a new local budget after validation. The name must be unique. The result includes the new ID and domain snapshot. Restore clears remote, encryption, and publication metadata and never publishes the copy. It preserves the source and backup. Once writing starts, restore finishes or cleans up before returning. Partial completion reports incomplete cleanup or a failed final inspection; inspect the reported directory or budget ID before retrying.
+
+Use `actual --offline budgets compare <left-id> <right-id> --limit 100 --timeout 60` to compare two explicit local budgets. The command exports each budget and reads it in an isolated worker. Results contain domain table fingerprints and account balance differences by stable ID. The budgets are observed separately; the result does not represent one simultaneous snapshot. Remote freshness is unknown. Balance deltas are unavailable when currencies differ or an account is missing. Results disclose truncation.
+
+Use `actual backups prune --directory ./backups --keep 1 --limit 100 --timeout 60` to inspect retention candidates. Add `--apply` to delete older valid artifacts. The command keeps at least the requested number of newest valid backups for each source ID. It preserves corrupt artifacts, symbolic links, and directories containing extra files. A truncated inventory prevents deletion. Creation and retention share a lock on the backup directory. Apply imports every eligible archive and rechecks its manifest and hash before deletion. Each invocation computes a fresh policy; the inspection is not a reusable preview token. The timeout covers the retention operation. Partial completion identifies completed deletions and the active artifact; inspect those paths before retrying.
 
 Profiles contain `serverUrl`, a `syncId` or local `budgetId`, `dataDir`, optional `offline`, and secret file references. Use `passwordFile`, `sessionTokenFile`, and `encryptionPasswordFile`; plaintext secrets are rejected. The store defaults to `~/.actual-cli/profiles.json`. Select it with `--profile` or `ACTUAL_PROFILE`, and override its path with `--profiles-file` or `ACTUAL_PROFILES_FILE`. `profiles use <name>` selects a default without changing the budget.
 
-Offline access requires `--offline --budget-id <local-id>` or a previously cached sync ID. Explicit local and sync flags cannot be combined. Offline mode ignores server credentials and reports unknown freshness. Offline writes record sync messages and return `committed-local`; the next online access to that cached sync budget refreshes. Offline mode cannot request a server refresh. Local creation and publication remain planned.
+Offline access requires `--offline --budget-id <local-id>` or a previously cached sync ID. Explicit local and sync flags cannot be combined. Offline mode ignores server credentials and reports unknown freshness. Offline writes record sync messages and return `committed-local`; the next online access to that cached sync budget refreshes. Offline mode cannot request a server refresh. Local creation requires offline mode. Explicit publication selects a local ID and authenticates online.
 
 See the repository's `packages/cli/README.md` for the full contract and disposable verification commands.
 
@@ -484,3 +521,119 @@ Setting `NODE_TLS_REJECT_UNAUTHORIZED=0` disables all TLS certificate verificati
 - Non-zero exit codes indicate an error
 - Errors are written as plain text to stderr (e.g., `Error: message`)
 - Use `--verbose` to enable informational stderr messages for debugging
+
+## Local budget creation
+
+Create and use a budget without opening a browser:
+
+```bash
+actual --offline --data-dir ./actual-data budgets create --name "My finances" --currency USD --operation-id create-finances
+actual --offline --data-dir ./actual-data --budget-id <returned-id> --output-version 2 accounts create --name Checking --balance 10000 --operation-id create-checking
+```
+
+`budgets create` returns version 2 JSON, including the local budget ID and `published: false`. It preserves the default categories. It rejects duplicate names and removes incomplete creation files after an initialization failure. Currency is optional and uses the existing synced preference.
+
+Use the returned ID for later offline commands. Creation does not change a saved profile or publish to a configured server. The public API exposes `createBudget({ name, currency })` with the same local creation behavior.
+
+## Budget inspection, selection, and cloning
+
+```bash
+actual --offline --data-dir ./actual-data --budget-id <id> budgets inspect
+actual --data-dir ./actual-data budgets select <id> --save-profile personal
+actual --profile personal budgets clone --name "Planning copy" --operation-id clone-planning
+```
+
+These operations return version 2 JSON by default. Inspection reports local and sync identities, encryption key identity, and currency. Selection validates the local ID, saves it in the named offline profile, and selects that profile. Explicit command-line and environment configuration still take precedence.
+
+Cloning preserves ledger data and preferences under a new local ID and synchronization clock. It requires offline mode and removes the source's cloud file ID, sync ID, and encryption key identity. The copy is never published automatically. Cloning does not change a saved profile. Use its returned ID for subsequent commands. The public API exposes `inspectBudget()` and `cloneBudget({ name })`; initialize without a server before cloning.
+
+## Explicit publication, rename, and archive
+
+```bash
+actual --server-url http://localhost:5006 budgets publish <local-id> --operation-id publish-personal
+actual --offline --budget-id <local-id> budgets rename --name "Personal finances" --operation-id rename-personal
+actual --offline --budget-id <local-id> budgets archive --operation-id archive-personal
+actual --offline --budget-id <local-id> budgets archive --restore --operation-id restore-personal
+```
+
+Publication authenticates with configured credentials and selects the local ID by argument. It ignores inherited offline profiles and selectors. Explicit `--offline`, `--budget-id`, or `--sync-id` flags are rejected for publication. The result supplies the sync and cloud identities; use the sync ID for later online commands.
+
+Configure an encryption password through `ACTUAL_ENCRYPTION_PASSWORD_FILE` or a profile secret file reference to encrypt the first upload. This requires a server that advertises `encrypted-initial-publication` in `/health`. The server registers the key salt and encrypted test content with the encrypted upload. No plaintext budget snapshot is uploaded first. Without an encryption password, the budget remains unencrypted.
+
+A lost upload response reports partial completion. Inspect the budget and retry with the same server and encryption mode. Publication retains and checks one file identity, so it recovers an accepted upload without creating a duplicate. It does not silently recreate a published file that disappeared remotely. An acknowledged operation ID returns the original receipt and remote identity without uploading. Use synchronization commands for subsequent ledger changes.
+
+Rename preserves identity and uses synced budget metadata. Archive requires offline mode and sets a reversible device-local marker. `budgets list` discloses that marker. Archive retains the ledger and does not delete a remote file. Cloning and export omit local publication and archive state. Publication does not change a saved profile.
+
+The supported public methods are `publishBudget(id, { encryptionPassword })`, `renameBudget(name)`, and `archiveBudget(archived = true)`. Guarded publication adds `previewBudgetPublication`, `applyBudgetPublication`, and `recoverBudgetPublication` for source-bound proposals and recovery.
+
+### Guarded changes (initial checkpoints)
+
+Use `actual changes preview transactions.update <id> --operation-id <unique-id> --data '{"notes":"Updated","amount":-1234}'` to prepare a device-local proposal. This checkpoint supports notes, amount, date, and cleared on ordinary, split, and reciprocally linked transfer transactions. Split previews capture every parent and child row; the engine applies inheritance and recalculates split errors. Select the split parent to change inherited date and cleared values. A sibling edit makes the proposal stale. Linked transfer previews also capture the counterpart and its split, when present. Apply mirrors the canonical amount, notes, and schedule while preserving the counterpart date and cleared flag. Account references determine category clearing. Broken links require a separate repair operation. Budget creation, clone, restore, rename, and local archive use this receipt protocol. Publish and the remaining direct mutation adapters remain under implementation.
+
+Preview returns before/after values, budget identities, reference preconditions, side effects, and a token. It refreshes online state and writes only its disclosed local receipt. Use `actual changes apply <operation-id> --token <token>` to apply. Apply refreshes online state and checks the observed proposal inside the engine mutation boundary. Offline apply checks local state and reports unknown remote freshness. The local lock cannot exclude remote edits arriving after refresh. --no-lock is rejected for these commands.
+
+Receipts move from prepared to uncertain before the engine call. An acknowledged outcome becomes committed-local, then synced after successful synchronization. Unknown engine outcomes remain uncertain and never automatically replay. Repeating a committed operation retries synchronization without executing the mutation again. A rejected proposal becomes failed-before-commit; prepare a new operation ID after inspecting the changed state. Use `actual changes status <operation-id>` and `actual changes list --limit 100` to inspect receipts without synchronizing or replaying.
+
+Receipts reside in `<data-dir>/.actual-cli/changes`. They contain sensitive before/after records but no credentials. The journal retains up to 500 records and removes terminal synced/failed records and acknowledged local-only creation/clone/restore/archive records older than 30 days, or the oldest terminal entries when capacity is needed. Prepared, uncertain, and committed receipts that still require synchronization are preserved. If unresolved entries fill the journal, preparation fails before mutation. Files use private creation permissions where the platform supports them. Status inspection does not prove causation from matching ledger values. Real browser stale-edit and three process-interruption tests cover this transaction checkpoint on Windows. General version 2 mutation adapters remain required before task 0014 is complete.
+
+After forced process termination, the existing cache and journal locks can remain until their approximately 30-second stale window expires. Use `--lock-timeout 45` when inspecting the interrupted operation. An uncertain receipt stays uncertain even when current values resemble the proposal. Inspect the receipt and selected budget before preparing further work; the same ID never automatically replays.
+
+Use `actual changes preview budgets.set-amount <category-id> --operation-id <unique-id> --data '{"month":"2026-08","amount":31234}'` to prepare an allocation amount change. Amounts use integer cents. The proposal records the existing allocation row and the selected engine budget mode, category, and group. Apply rejects changed allocation or reference state and preserves carryover, goals, and settings through the canonical amount setter. A zero no-op on a missing row does not create a new allocation record. The same apply/status/list and receipt rules cover this operation. The CLI does not calculate projected budget totals itself.
+
+For direct version 2 writes, use `actual --output-version 2 budgets set-amount --month 2026-08 --category <category-id> --amount 31234 --operation-id <unique-id>`. The command uses the same preview and receipt executor and returns `success` plus `receipt`. Keep the operation ID and request unchanged on retries. A retry returns the acknowledged outcome without resetting a later allocation. Reusing an ID for a different amount, month, category, or budget rejects. Offline writes retain a local acknowledgement until synchronization. Legacy output keeps its existing command behavior.
+
+When a journal opens under its lock, it checks up to 500 `.pending` files. It removes only private staging copies whose operation ID and proposal fingerprint match a published receipt. The published state remains authoritative; a staged committed result never upgrades an uncertain receipt. Orphaned, malformed, linked, mismatched, or unmanaged staging files remain untouched. `changes list` reports their paths, reasons, count, and truncation under `staging`. These files block new proposals and uncertain apply intent before an engine write. Inspect and preserve any needed evidence before resolving the reported local files. Existing acknowledged receipts can still record synchronization outcomes. Unknown staging files are never deleted recursively or used as proof of budget commit.
+
+Budget rename and archive require `--operation-id <unique-id>`. Their version 2 results include the existing budget inspection fields and a receipt. While its receipt is retained, repeating an acknowledged operation ID returns its original outcome without repeating the write. A different request needs a new operation ID. These operations reject `--no-lock`.
+
+Use `actual changes preview budgets.rename <local-id> --operation-id <unique-id> --data '{"name":"Personal finances"}'` to preview a rename. Apply uses the same `actual changes apply <operation-id> --token <token>` command as transaction changes. The engine checks the selected budget identity, current name, archive marker, and name availability before applying.
+
+Use `actual --offline --budget-id <local-id> changes preview budgets.archive <local-id> --operation-id <unique-id> --data '{"archived":true}'` to preview a local archive. Select the same budget with `--budget-id <local-id>` when preparing and applying. Archive and archive restoration require offline mode. They change only the local archive marker and preserve the remote budget. Their receipts declare `delivery: "local-only"` and remain `committed-local` after acknowledgement. An uncertain archive receipt never automatically replays.
+
+Local budget creation requires `--operation-id <unique-id>`. Use `actual --offline --data-dir ./actual-data changes preview budgets.create --operation-id create-finances --data '{"name":"My finances","currency":"USD"}'` to prepare creation without a target ID. Preview checks name availability and preserves the budget inventory. It does not reserve the name or create a destination.
+
+Use `actual --offline --data-dir ./actual-data changes apply create-finances --token <token>` to apply. The receipt declares `budget: null` before creation and returns the actual new ID in `outcome.affectedIds` after acknowledgement. Its delivery is local-only, so it remains `committed-local`. Direct `budgets create` returns the new budget inspection and this receipt. While the receipt is retained, retries return the same destination without creating another budget. An occupied name makes an uncommitted preview stale. Unknown outcomes remain uncertain; a similarly named budget cannot prove which operation created it. Publication is a separate operation.
+
+Local cloning requires `--operation-id <unique-id>` and offline mode. Use `actual --offline --budget-id <source-id> changes preview budgets.clone <source-id> --operation-id clone-planning --data '{"name":"Planning copy"}'` to prepare a copy. Preview preserves the source and inventory. Its fingerprint covers persistent source tables, schema, and copied metadata. It excludes the engine cache and synchronization clock that the new copy recomputes or resets. A source edit or occupied destination name rejects an uncommitted preview.
+
+Apply with `actual --offline --budget-id <source-id> changes apply clone-planning --token <token>`. The local-only receipt acknowledges the actual destination ID in `outcome.affectedIds` and remains `committed-local`. Direct `budgets clone` returns inspection fields, `sourceBudgetId`, and the receipt. While the receipt is retained, retries return the original destination even if the source later changes. Uncertain outcomes never automatically replay. The copy has a separate identity and never publishes itself.
+
+Guarded restore uses `actual --offline changes preview backups.restore --operation-id <unique-id> --data '{"path":"<artifact>.actualbackup","name":"Restored copy"}'`. Restore has no existing target ID. Preview validates the backup in an isolated worker and binds its exact hash and byte count. The receipt includes an absolute artifact path and validation deadline; archive bytes stay outside the journal. Apply rechecks and validates the artifact before writing. Missing or changed input fails before commit. The engine creates a new local identity and clears remote publication state. Direct `backups restore` requires `--operation-id` in version 2 and uses the same receipt executor. Retained acknowledged retries return the original destination even if the archive was later removed. Uncertain restores never replay automatically. Restore requires offline mode and local locks. Acknowledged local-only restore receipts follow the same 30-day/capacity policy.
+
+Guarded publication uses `actual changes preview budgets.publish <local-id> --operation-id <unique-id> --data '{"encrypted":true}'`, followed by `changes apply` with the exact token. Credentials use existing secret options and never enter receipts. Direct version 2 publication requires an operation ID. Retry the same ID and server/mode after partial completion. Uncertain recovery checks the retained remote identity and encryption proof. It never initial-uploads if remote acceptance cannot be proven. Acknowledged retries reuse the original outcome.
+
+Guarded carryover uses `actual changes preview budgets.set-carryover <category-id> --operation-id <unique-id> --data '{"month":"2026-08","flag":false}'`. Version 2 direct `budgets set-carryover` also requires `--operation-id`. Its proposal records every month in the engine range from the selected month onward, with existing rows, carryover flags, category, group and budget mode. The engine rejects changed months, rows or references before applying. It preserves allocation amounts and uses the existing carryover writer, including creation of missing allocation rows. The direct command returns `success` plus `receipt`. Reuse the same ID and request for retries. An acknowledged retry preserves a later carryover change. Legacy output retains its existing behavior.
+
+Guarded holds use `actual changes preview budgets.hold-next-month --operation-id <unique-id> --data '{"month":"2026-08","amount":12345}'`. Reset uses `actual changes preview budgets.reset-hold --operation-id <unique-id> --data '{"month":"2026-08"}'`. Omit the entity ID argument. Version 2 direct `budgets hold-next-month` and `budgets reset-hold` require `--operation-id` and return `success` plus `receipt`. The preview records the existing month row, engine available funds, budget mode, persistent source fingerprint and resulting buffered amount. The engine clamps a hold to available funds and leaves it unchanged when funds are unavailable. Reset creates a missing month row when needed. Apply rejects a changed source or calculation before writing. Acknowledged retries preserve later hold/reset changes. Legacy output retains its existing behavior.
+
+Guarded account creation uses `actual changes preview accounts.create --operation-id <unique-id> --data '{"name":"Checking","offbudget":false,"initialBalance":10000}'`. Select an existing budget and omit the entity ID argument. Preview preserves the budget and records account fields, transfer payee creation, and the opening transaction date, amount, and references. It does not create a missing Starting Balance payee.
+
+Direct version 2 `accounts create` requires `--operation-id` and returns `id` plus `receipt`. The acknowledged outcome reports actual account, transfer payee, opening transaction, and Starting Balance payee IDs. A zero balance creates no opening transaction. Reuse the same ID and request for retries. An acknowledged retry returns the original ID and preserves later edits. Uncertain creation never replays automatically; matching names cannot establish its outcome. Legacy output retains its existing behavior. Synced receipts can expire only with complete acknowledged identities. Uncertain and incomplete receipts remain retained.
+
+Guarded account updates use `actual changes preview accounts.update <account-id> --operation-id <unique-id> --data '{"name":"Checking","offbudget":false}'`. Preview preserves records and shows account fields and derived transfer payee names. The shared payload also supports `closed`, nullable integer `balance_current`, and nullable `account_group_id`. A non-null group must exist. Stored bank balance differs from computed ledger balance. Changing `closed` through this update only changes the field; it does not unlink a bank or transfer a balance.
+
+Direct version 2 `accounts update` requires `--operation-id` and retains its `--name` and `--offbudget` options. It returns `success`, `id`, and `receipt`. Apply rejects changed account, ledger, or group references before using the existing writer. Renaming changes displayed transfer payee names without payee writes. Retried acknowledged updates preserve later account edits. Uncertain updates never replay automatically. Legacy output retains its existing behavior.
+
+Guarded account reopening uses `actual changes preview accounts.reopen <account-id> --operation-id <unique-id> --data '{}'`. Supply an empty payload object. Preview shows the account becoming visible and preserves its ledger and provider fields. Apply rejects changed account, ledger, or references before invoking the existing reopening writer. Reopening does not relink a bank or transfer a balance.
+
+Direct version 2 `accounts reopen` requires `--operation-id` and returns `success`, `id`, and `receipt`. An already-open account acknowledges `changed: false`. Retried acknowledged reopening preserves a later closure. Uncertain reopening never replays automatically. Legacy output retains its existing behavior.
+
+Guarded account deletion uses `actual changes preview accounts.delete <account-id> --operation-id <unique-id> --data '{}'`. Preview binds the complete ledger, split rows, transfer counterparts, transfer payee and provider references. Apply rejects stale or tampered consequences before writing. Deletion clears reciprocal transfer/payee references while preserving counterpart amounts. Empty accounts are deleted. The existing already-closed account behavior only unlinks provider fields and preserves the account and ledger.
+
+Direct version 2 `accounts delete` requires `--operation-id` and returns `success`, `id`, `providerRemovalStatus` and `receipt`. Receipts retain actual deleted/updated identities and prevent acknowledged retries from repeating deletion. Unknown engine outcomes never replay. `synced` describes budget synchronization; provider removal can remain `uncertain`, `skipped-no-token` or `skipped-other-accounts`. A provider response failure never establishes remote removal. Receipts with uncertain provider removal do not expire through normal retention. Legacy output remains unchanged.
+
+Guarded account closure uses `actual changes preview accounts.close <account-id> --operation-id <unique-id> --data '{"transferAccount":"destination-id","transferCategory":"category-id"}'`. Both payload fields are optional. A nonzero balance requires a transfer account. Preview binds the closing date and source identity, evaluates counterpart rules through the core engine, and captures ledger, rule, schedule and provider state. Apply rejects stale consequences before writing. Empty accounts are deleted; zero-balance accounts with transactions are closed; already-closed accounts retain their ledger after provider unlink.
+
+Direct version 2 `accounts close` requires `--operation-id`. Existing `--transfer-account` and `--transfer-category` options retain their meaning. The result includes `success`, `id`, `providerRemovalStatus` and `receipt`. Receipts identify the actual closing source and counterpart and prevent acknowledged retries from repeating closure. Unknown outcomes never replay. Budget synchronization and provider removal have separate outcomes; uncertain or incomplete provider acknowledgements remain retained. Legacy output remains unchanged.
+
+Guarded category updates use `actual changes preview categories.update <category-id> --operation-id <unique-id> --data '{"name":"Groceries","hidden":false,"group_id":"group-id","is_income":false}'`. Each field is optional, but the payload must contain at least one supported field. An optional `id` must match the target. Preview preserves ledger rows, allocations, templates and mappings. Apply rejects changed category/group/source references and verifies the actual category row after the canonical update.
+
+Direct version 2 `categories update` requires `--operation-id` and returns `success`, `id` and `receipt`. Its existing name and hidden options retain their meaning. Acknowledged retries preserve later edits rather than repeating the old update. Unknown outcomes never replay. Legacy output remains unchanged.
+
+Guarded category creation uses `actual changes preview categories.create --operation-id <unique-id> --data '{"name":"Groceries","group_id":"group-id","is_income":false,"hidden":false}'`. Omit the target ID argument. Name and group ID are required; both flags default to false. Preview binds the destination group, canonical sibling ordering and source state without creating rows. Apply creates the category and self mapping through the core owner and returns their actual IDs plus reordered sibling IDs.
+
+Direct version 2 `categories create` requires `--operation-id` and returns `id` and `receipt`. Acknowledged retries preserve later category edits and do not create another category. Unknown creation outcomes never replay. Receipts with missing or incomplete generated identities remain retained. Legacy output remains `{ id }`.
+
+Guarded group updates use `actual changes preview category-groups.update <group-id> --operation-id <unique-id> --data '{"name":"Income","is_income":true,"hidden":false}'`. Supply at least one group field. An optional `id` must match the target. Nested `categories` are read metadata and never update child rows. The shared owner now accepts that declared metadata instead of attempting to store it in the group table. Names retain exact spelling, and omitted fields retain their values. Preview preserves data and binds the group, children and source state. Apply rejects stale or tampered proposals and verifies the actual group row. Direct version 2 `category-groups update` requires `--operation-id`; acknowledged retries preserve later edits, and uncertain outcomes never replay.
+
+Guarded group deletion uses `actual changes preview category-groups.delete <group-id> --operation-id <unique-id> --data '{"transferCategoryId":"destination-category-id"}'`. The destination is optional. A destination must be a live category outside the deleted group. Preview preserves data and binds all children, forwarding mappings, live child allocations and source state. Apply tombstones the group and every child, including previously deleted children. With a destination, it forwards mappings and transfers live child allocations for every created month, for both income and expense groups. It preserves source allocations and raw transaction rows. Without a destination, it preserves mappings and allocations. Direct version 2 `category-groups delete` requires `--operation-id`; `--transfer-to` retains its existing meaning. Acknowledged retries preserve later destination edits and allocations, and unknown outcomes never replay.

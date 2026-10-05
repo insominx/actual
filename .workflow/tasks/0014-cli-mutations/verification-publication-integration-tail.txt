@@ -1,0 +1,30 @@
+✔ publication rejects credential-bearing server URLs before authentication or receipt preparation (4997.7799ms)
+✔ CLI keeps publication uncertain when the upload was not accepted (encrypted=false) (6780.3594ms)
+✔ CLI publication receipts acknowledge and reuse one identity (encrypted=false) (5677.6236ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=null) (3323.6521ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=before) (3358.5766ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=after) (3514.3988ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=source-race) (3297.368ms)
+✔ CLI keeps publication uncertain when the upload was not accepted (encrypted=true) (6599.7053ms)
+✔ CLI publication receipts acknowledge and reuse one identity (encrypted=true) (5610.6496ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=null) (3413.0753ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=before) (3283.986ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=after) (3373.4081ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=source-race) (3266.4012ms)
+✔ fresh server bootstraps through CLI and authenticates without a browser (2632.2686ms)
+✔ managed lifecycle checks ownership, port, executable, restart, and shutdown (6776.9567ms)
+✔ watch freezes its selected budget while profiles switch and cache identities stay separate (7781.7967ms)
+✔ watch bounds a stalled worker and a subsequent writer can reopen its cache (6484.3126ms)
+✔ encrypted watch reconnects, cancels, and releases its cache for a writer (5966.5763ms)
+✔ a failed push preserves the local write and refresh does not replay it (encrypted=false) (4506.3984ms)
+✔ a failed push preserves the local write and refresh does not replay it (encrypted=true) (4151.4729ms)
+✔ pending status is offline and refresh sends existing writes (encrypted=false) (7622.6752ms)
+✔ pending status is offline and refresh sends existing writes (encrypted=true) (7345.6826ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 56587.7075

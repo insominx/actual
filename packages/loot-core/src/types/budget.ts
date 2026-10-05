@@ -5,4 +5,6 @@ export type Budget = {
   groupId?: string;
   name: string;
   owner?: string;
+  archived?: boolean;
+  publicationServerUrl?: string;
 };

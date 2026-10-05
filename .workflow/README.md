@@ -1,6 +1,6 @@
 # Workflow queue
 
-The CLI roadmap has 30 tasks. Tasks 0007-0009 are implemented and verified locally on Windows as of 2026-10-02. The remaining 27 tasks remain planned. Task records retain plans, execution decisions, checks, and historical limits.
+The CLI roadmap has 30 tasks. Tasks 0007-0013 are implemented and verified locally on Windows, including browser/CLI convergence and bounded watch. Backups include creation, listing, isolated validation, restore-as-new, comparison, and retention. Task 0014 has verified guarded transaction, recovery, and allocation checkpoints; tasks 0015-0036 remain planned. Linux and personal adoption remain final acceptance work.
 
 | Task                                                                              | Status           | Outcome                                                                                                      |
 | --------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------ |
@@ -9,7 +9,7 @@ The CLI roadmap has 30 tasks. Tasks 0007-0009 are implemented and verified local
 | [Expense-only budget view](tasks/0003-expense-only-budget-view/progress.md)       | Complete         | Committed in `5f33b8073`; local edits, undo and leader handover verified                                     |
 | [Transaction column resizing](tasks/0004-transaction-column-resizing/progress.md) | Complete         | Committed in `5475cef91`; device-local widths; pointer, keyboard, reset and mobile checks passed             |
 | [Pay-period compatibility study](tasks/0005-pay-period-compatibility/progress.md) | Complete         | User selected no port on 2026-10-02; no follow-up feature queued                                             |
-| [Cash planning](tasks/0006-cash-planning/progress.md)                             | Complete locally | Implemented and locally verified; uncommitted; personal exports and remote-server sync remain unverified     |
+| [Cash planning](tasks/0006-cash-planning/progress.md)                             | Complete locally | Committed in `68ffdbe3b`; locally verified; personal exports and remote-server sync remain unverified        |
 
 The [fork adoption assessment](tasks/0001-actual-fork-recon/assessment.md) explains the ranking, sources and deferred candidates. [Original research](tasks/0001-actual-fork-recon/research.md) retains the broad fork scan. Deferred research candidates are not implementation tasks.
 
@@ -19,7 +19,7 @@ Verification limits: repository-wide formatting still fails on baseline files. R
 
 See the [sequenced roadmap](cli-roadmap.md), [dependency manifest](cli-roadmap.json), and [artifact validation](cli-roadmap-validation.md). Each task has plan/progress files with scope, owner paths, acceptance checks, verification, and prerequisites.
 
-Delivered locally: [CLI contract](tasks/0007-cli-contract/implementation.md), [disposable harness](tasks/0008-cli-integration-harness/implementation.md), and [profiles/offline sessions](tasks/0009-cli-sessions/implementation.md). Next reviews are 0010 runtime and 0011 budget lifecycle. Other tasks retain their prerequisites. Linux and browser interoperability remain for final acceptance. Optional MCP does not block CLI delivery; personal setup remains the final task.
+Delivered locally: [CLI contract](tasks/0007-cli-contract/implementation.md), [disposable harness](tasks/0008-cli-integration-harness/implementation.md), and [profiles/offline sessions](tasks/0009-cli-sessions/implementation.md). Runtime management is delivered: [0010 evidence](tasks/0010-cli-runtime/implementation.md). Task 0011 now includes verified publication, rename, and archive. Task 0012 has complete Windows acceptance. Task 0013 has complete Windows acceptance. Task 0014 has verified guarded transaction, recovery, and allocation checkpoints. Other tasks retain their prerequisites. Linux and broader browser interoperability remain for final acceptance. Optional MCP does not block CLI delivery; personal setup remains the final task.
 
 | Task                                                                       | Outcome                                                           | Hard prerequisites                       | Stage                  |
 | -------------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------- | ---------------------- |

@@ -1,0 +1,532 @@
+{
+  "profiles": {
+    "transaction": {
+      "commands": [
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api test methods.test.ts"
+        },
+        {
+          "id": "core-fixtures",
+          "command": "yarn workspace @actual-app/core exec vitest run src/server/main.test.ts src/server/budgetfiles/backups.test.ts src/server/util/zip.test.ts src/server/budget/actions.test.ts"
+        },
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "browser-build",
+          "command": "yarn exec lage build:browser --to=@actual-app/web"
+        },
+        {
+          "id": "real-integration",
+          "command": "yarn workspace @actual-app/cli test:integration"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/cli/vite.config.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/api-models.ts packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/vite.config.ts packages/cli/README.md packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/api-models.ts packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/docs/docs/api/cli.md .workflow/tasks/0010-cli-runtime .workflow/tasks/0011-cli-budget-lifecycle/plan.review.md .workflow/tasks/0011-cli-budget-lifecycle/execution-decisions.md .workflow/tasks/0011-cli-budget-lifecycle/verify.json upcoming-release-notes/agent-cli-runtime.md upcoming-release-notes/agent-cli-budget-creation.md packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/docs/docs/api/reference.md upcoming-release-notes/agent-cli-backups.md packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts upcoming-release-notes/agent-cli-mutations.md .workflow/tasks/0014-cli-mutations/plan.md .workflow/tasks/0014-cli-mutations/plan.review.md .workflow/tasks/0014-cli-mutations/progress.md .workflow/tasks/0014-cli-mutations/implementation.md .workflow/tasks/0014-cli-mutations/execution-decisions.md .workflow/tasks/0014-cli-mutations/verify.json"
+        }
+      ]
+    },
+    "recovery": {
+      "commands": [
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "real-integration",
+          "command": "yarn workspace @actual-app/cli test:integration"
+        },
+        {
+          "id": "browser-convergence",
+          "command": "yarn workspace @actual-app/cli test:browser-integration"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/integration"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/integration .workflow/tasks/0014-cli-mutations/verify.json"
+        }
+      ]
+    },
+    "allocation": {
+      "commands": [
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api test methods.test.ts"
+        },
+        {
+          "id": "core-fixtures",
+          "command": "yarn workspace @actual-app/core exec vitest run src/server/main.test.ts src/server/budgetfiles/backups.test.ts src/server/util/zip.test.ts src/server/budget/actions.test.ts"
+        },
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "browser-build",
+          "command": "yarn exec lage build:browser --to=@actual-app/web"
+        },
+        {
+          "id": "real-integration",
+          "command": "yarn workspace @actual-app/cli test:integration"
+        },
+        {
+          "id": "browser-convergence",
+          "command": "yarn workspace @actual-app/cli test:browser-integration"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/cli/vite.config.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/vite.config.ts packages/cli/README.md packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/docs/docs/api/cli.md .workflow/tasks/0010-cli-runtime .workflow/tasks/0011-cli-budget-lifecycle/plan.review.md .workflow/tasks/0011-cli-budget-lifecycle/execution-decisions.md .workflow/tasks/0011-cli-budget-lifecycle/verify.json upcoming-release-notes/agent-cli-runtime.md upcoming-release-notes/agent-cli-budget-creation.md packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/docs/docs/api/reference.md upcoming-release-notes/agent-cli-backups.md packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts upcoming-release-notes/agent-cli-mutations.md .workflow/tasks/0014-cli-mutations/plan.md .workflow/tasks/0014-cli-mutations/plan.review.md .workflow/tasks/0014-cli-mutations/progress.md .workflow/tasks/0014-cli-mutations/implementation.md .workflow/tasks/0014-cli-mutations/execution-decisions.md .workflow/tasks/0014-cli-mutations/verify.json packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts"
+        }
+      ]
+    },
+    "staging": {
+      "commands": [
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "real-integration",
+          "command": "yarn workspace @actual-app/cli test:integration"
+        },
+        {
+          "id": "browser-convergence",
+          "command": "yarn workspace @actual-app/cli test:browser-integration"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/cli/vite.config.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/vite.config.ts packages/cli/README.md packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/docs/docs/api/cli.md .workflow/tasks/0010-cli-runtime .workflow/tasks/0011-cli-budget-lifecycle/plan.review.md .workflow/tasks/0011-cli-budget-lifecycle/execution-decisions.md .workflow/tasks/0011-cli-budget-lifecycle/verify.json upcoming-release-notes/agent-cli-runtime.md upcoming-release-notes/agent-cli-budget-creation.md packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/docs/docs/api/reference.md upcoming-release-notes/agent-cli-backups.md packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts upcoming-release-notes/agent-cli-mutations.md .workflow/tasks/0014-cli-mutations/plan.md .workflow/tasks/0014-cli-mutations/plan.review.md .workflow/tasks/0014-cli-mutations/progress.md .workflow/tasks/0014-cli-mutations/implementation.md .workflow/tasks/0014-cli-mutations/execution-decisions.md .workflow/tasks/0014-cli-mutations/verify.json packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts"
+        }
+      ]
+    },
+    "split": {
+      "commands": [
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api test methods.test.ts"
+        },
+        {
+          "id": "core-fixtures",
+          "command": "yarn workspace @actual-app/core exec vitest run src/server/main.test.ts src/server/budgetfiles/backups.test.ts src/server/util/zip.test.ts src/server/budget/actions.test.ts"
+        },
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "browser-build",
+          "command": "yarn exec lage build:browser --to=@actual-app/web"
+        },
+        {
+          "id": "real-integration",
+          "command": "yarn workspace @actual-app/cli test:integration"
+        },
+        {
+          "id": "browser-convergence",
+          "command": "yarn workspace @actual-app/cli test:browser-integration"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/cli/vite.config.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/vite.config.ts packages/cli/README.md packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/docs/docs/api/cli.md .workflow/tasks/0010-cli-runtime .workflow/tasks/0011-cli-budget-lifecycle/plan.review.md .workflow/tasks/0011-cli-budget-lifecycle/execution-decisions.md .workflow/tasks/0011-cli-budget-lifecycle/verify.json upcoming-release-notes/agent-cli-runtime.md upcoming-release-notes/agent-cli-budget-creation.md packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/docs/docs/api/reference.md upcoming-release-notes/agent-cli-backups.md packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts upcoming-release-notes/agent-cli-mutations.md .workflow/tasks/0014-cli-mutations/plan.md .workflow/tasks/0014-cli-mutations/plan.review.md .workflow/tasks/0014-cli-mutations/progress.md .workflow/tasks/0014-cli-mutations/implementation.md .workflow/tasks/0014-cli-mutations/execution-decisions.md .workflow/tasks/0014-cli-mutations/verify.json packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts"
+        }
+      ]
+    },
+    "split-fixes": {
+      "commands": [
+        {
+          "id": "real-integration",
+          "command": "yarn workspace @actual-app/cli test:integration"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/cli/vite.config.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/vite.config.ts packages/cli/README.md packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/docs/docs/api/cli.md .workflow/tasks/0010-cli-runtime .workflow/tasks/0011-cli-budget-lifecycle/plan.review.md .workflow/tasks/0011-cli-budget-lifecycle/execution-decisions.md .workflow/tasks/0011-cli-budget-lifecycle/verify.json upcoming-release-notes/agent-cli-runtime.md upcoming-release-notes/agent-cli-budget-creation.md packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/docs/docs/api/reference.md upcoming-release-notes/agent-cli-backups.md packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts upcoming-release-notes/agent-cli-mutations.md .workflow/tasks/0014-cli-mutations/plan.md .workflow/tasks/0014-cli-mutations/plan.review.md .workflow/tasks/0014-cli-mutations/progress.md .workflow/tasks/0014-cli-mutations/implementation.md .workflow/tasks/0014-cli-mutations/execution-decisions.md .workflow/tasks/0014-cli-mutations/verify.json packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts"
+        }
+      ]
+    },
+    "transfer": {
+      "commands": [
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api test methods.test.ts"
+        },
+        {
+          "id": "core-fixtures",
+          "command": "yarn workspace @actual-app/core exec vitest run src/server/main.test.ts src/server/budgetfiles/backups.test.ts src/server/util/zip.test.ts src/server/budget/actions.test.ts"
+        },
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "browser-build",
+          "command": "yarn exec lage build:browser --to=@actual-app/web"
+        },
+        {
+          "id": "real-integration",
+          "command": "yarn workspace @actual-app/cli test:integration"
+        },
+        {
+          "id": "browser-convergence",
+          "command": "yarn workspace @actual-app/cli test:browser-integration"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/cli/vite.config.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts packages/loot-core/src/server/transactions/transfer.ts packages/loot-core/src/server/transactions/transfer.test.ts packages/loot-core/src/server/transactions/linked-transfer-plan.ts packages/loot-core/src/types/models/import-transaction.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/vite.config.ts packages/cli/README.md packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/docs/docs/api/cli.md .workflow/tasks/0010-cli-runtime .workflow/tasks/0011-cli-budget-lifecycle/plan.review.md .workflow/tasks/0011-cli-budget-lifecycle/execution-decisions.md .workflow/tasks/0011-cli-budget-lifecycle/verify.json upcoming-release-notes/agent-cli-runtime.md upcoming-release-notes/agent-cli-budget-creation.md packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/docs/docs/api/reference.md upcoming-release-notes/agent-cli-backups.md packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts upcoming-release-notes/agent-cli-mutations.md .workflow/tasks/0014-cli-mutations/plan.md .workflow/tasks/0014-cli-mutations/plan.review.md .workflow/tasks/0014-cli-mutations/progress.md .workflow/tasks/0014-cli-mutations/implementation.md .workflow/tasks/0014-cli-mutations/execution-decisions.md .workflow/tasks/0014-cli-mutations/verify.json packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts packages/loot-core/src/server/transactions/transfer.ts packages/loot-core/src/server/transactions/transfer.test.ts packages/loot-core/src/server/transactions/linked-transfer-plan.ts packages/loot-core/src/types/models/import-transaction.ts"
+        },
+        {
+          "command": "yarn workspace @actual-app/core exec vitest run src/shared/transactions.test.ts src/server/transactions/transfer.test.ts",
+          "id": "engine-transfers"
+        }
+      ]
+    },
+    "metadata": {
+      "commands": [
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api test methods.test.ts"
+        },
+        {
+          "id": "core-fixtures",
+          "command": "yarn workspace @actual-app/core exec vitest run src/server/main.test.ts src/server/budgetfiles/backups.test.ts src/server/util/zip.test.ts src/server/budget/actions.test.ts"
+        },
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "browser-build",
+          "command": "yarn exec lage build:browser --to=@actual-app/web"
+        },
+        {
+          "id": "real-integration",
+          "command": "yarn workspace @actual-app/cli test:integration"
+        },
+        {
+          "id": "browser-convergence",
+          "command": "yarn workspace @actual-app/cli test:browser-integration"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/cli/vite.config.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts packages/loot-core/src/server/transactions/transfer.ts packages/loot-core/src/server/transactions/transfer.test.ts packages/loot-core/src/server/transactions/linked-transfer-plan.ts packages/loot-core/src/types/models/import-transaction.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/vite.config.ts packages/cli/README.md packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/docs/docs/api/cli.md .workflow/tasks/0010-cli-runtime .workflow/tasks/0011-cli-budget-lifecycle/plan.review.md .workflow/tasks/0011-cli-budget-lifecycle/execution-decisions.md .workflow/tasks/0011-cli-budget-lifecycle/verify.json upcoming-release-notes/agent-cli-runtime.md upcoming-release-notes/agent-cli-budget-creation.md packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/docs/docs/api/reference.md upcoming-release-notes/agent-cli-backups.md packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts upcoming-release-notes/agent-cli-mutations.md .workflow/tasks/0014-cli-mutations/plan.md .workflow/tasks/0014-cli-mutations/plan.review.md .workflow/tasks/0014-cli-mutations/progress.md .workflow/tasks/0014-cli-mutations/implementation.md .workflow/tasks/0014-cli-mutations/execution-decisions.md .workflow/tasks/0014-cli-mutations/verify.json packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts packages/loot-core/src/server/transactions/transfer.ts packages/loot-core/src/server/transactions/transfer.test.ts packages/loot-core/src/server/transactions/linked-transfer-plan.ts packages/loot-core/src/types/models/import-transaction.ts"
+        }
+      ]
+    },
+    "metadata-fixes": {
+      "commands": [
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/cli/vite.config.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts packages/loot-core/src/server/transactions/transfer.ts packages/loot-core/src/server/transactions/transfer.test.ts packages/loot-core/src/server/transactions/linked-transfer-plan.ts packages/loot-core/src/types/models/import-transaction.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/vite.config.ts packages/cli/README.md packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/docs/docs/api/cli.md .workflow/tasks/0010-cli-runtime .workflow/tasks/0011-cli-budget-lifecycle/plan.review.md .workflow/tasks/0011-cli-budget-lifecycle/execution-decisions.md .workflow/tasks/0011-cli-budget-lifecycle/verify.json upcoming-release-notes/agent-cli-runtime.md upcoming-release-notes/agent-cli-budget-creation.md packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/docs/docs/api/reference.md upcoming-release-notes/agent-cli-backups.md packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts upcoming-release-notes/agent-cli-mutations.md .workflow/tasks/0014-cli-mutations/plan.md .workflow/tasks/0014-cli-mutations/plan.review.md .workflow/tasks/0014-cli-mutations/progress.md .workflow/tasks/0014-cli-mutations/implementation.md .workflow/tasks/0014-cli-mutations/execution-decisions.md .workflow/tasks/0014-cli-mutations/verify.json packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts packages/loot-core/src/server/transactions/transfer.ts packages/loot-core/src/server/transactions/transfer.test.ts packages/loot-core/src/server/transactions/linked-transfer-plan.ts packages/loot-core/src/types/models/import-transaction.ts"
+        }
+      ]
+    },
+    "creation": {
+      "commands": [
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api test methods.test.ts"
+        },
+        {
+          "id": "core-fixtures",
+          "command": "yarn workspace @actual-app/core exec vitest run src/server/main.test.ts src/server/budgetfiles/backups.test.ts src/server/util/zip.test.ts src/server/budget/actions.test.ts"
+        },
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "browser-build",
+          "command": "yarn exec lage build:browser --to=@actual-app/web"
+        },
+        {
+          "id": "real-integration",
+          "command": "yarn workspace @actual-app/cli test:integration"
+        },
+        {
+          "id": "browser-convergence",
+          "command": "yarn workspace @actual-app/cli test:browser-integration"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/cli/vite.config.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts packages/loot-core/src/server/transactions/transfer.ts packages/loot-core/src/server/transactions/transfer.test.ts packages/loot-core/src/server/transactions/linked-transfer-plan.ts packages/loot-core/src/types/models/import-transaction.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/vite.config.ts packages/cli/README.md packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/docs/docs/api/cli.md .workflow/tasks/0010-cli-runtime .workflow/tasks/0011-cli-budget-lifecycle/plan.review.md .workflow/tasks/0011-cli-budget-lifecycle/execution-decisions.md .workflow/tasks/0011-cli-budget-lifecycle/verify.json upcoming-release-notes/agent-cli-runtime.md upcoming-release-notes/agent-cli-budget-creation.md packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/docs/docs/api/reference.md upcoming-release-notes/agent-cli-backups.md packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts upcoming-release-notes/agent-cli-mutations.md .workflow/tasks/0014-cli-mutations/plan.md .workflow/tasks/0014-cli-mutations/plan.review.md .workflow/tasks/0014-cli-mutations/progress.md .workflow/tasks/0014-cli-mutations/implementation.md .workflow/tasks/0014-cli-mutations/execution-decisions.md .workflow/tasks/0014-cli-mutations/verify.json packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts packages/loot-core/src/server/transactions/transfer.ts packages/loot-core/src/server/transactions/transfer.test.ts packages/loot-core/src/server/transactions/linked-transfer-plan.ts packages/loot-core/src/types/models/import-transaction.ts"
+        }
+      ]
+    },
+    "clone": {
+      "commands": [
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api test methods.test.ts"
+        },
+        {
+          "id": "core-fixtures",
+          "command": "yarn workspace @actual-app/core exec vitest run src/server/main.test.ts src/server/budgetfiles/backups.test.ts src/server/util/zip.test.ts src/server/budget/actions.test.ts"
+        },
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "browser-build",
+          "command": "yarn exec lage build:browser --to=@actual-app/web"
+        },
+        {
+          "id": "real-integration",
+          "command": "yarn workspace @actual-app/cli test:integration"
+        },
+        {
+          "id": "browser-convergence",
+          "command": "yarn workspace @actual-app/cli test:browser-integration"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/cli/vite.config.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts packages/loot-core/src/server/transactions/transfer.ts packages/loot-core/src/server/transactions/transfer.test.ts packages/loot-core/src/server/transactions/linked-transfer-plan.ts packages/loot-core/src/types/models/import-transaction.ts packages/loot-core/src/server/budgetfiles/copy-source.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/vite.config.ts packages/cli/README.md packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/docs/docs/api/cli.md .workflow/tasks/0010-cli-runtime .workflow/tasks/0011-cli-budget-lifecycle/plan.review.md .workflow/tasks/0011-cli-budget-lifecycle/execution-decisions.md .workflow/tasks/0011-cli-budget-lifecycle/verify.json upcoming-release-notes/agent-cli-runtime.md upcoming-release-notes/agent-cli-budget-creation.md packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/docs/docs/api/reference.md upcoming-release-notes/agent-cli-backups.md packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts upcoming-release-notes/agent-cli-mutations.md .workflow/tasks/0014-cli-mutations/plan.md .workflow/tasks/0014-cli-mutations/plan.review.md .workflow/tasks/0014-cli-mutations/progress.md .workflow/tasks/0014-cli-mutations/implementation.md .workflow/tasks/0014-cli-mutations/execution-decisions.md .workflow/tasks/0014-cli-mutations/verify.json packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts packages/loot-core/src/server/transactions/transfer.ts packages/loot-core/src/server/transactions/transfer.test.ts packages/loot-core/src/server/transactions/linked-transfer-plan.ts packages/loot-core/src/types/models/import-transaction.ts packages/loot-core/src/server/budgetfiles/copy-source.ts"
+        }
+      ]
+    },
+    "restore": {
+      "commands": [
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api test methods.test.ts"
+        },
+        {
+          "id": "core-fixtures",
+          "command": "yarn workspace @actual-app/core exec vitest run src/server/main.test.ts src/server/budgetfiles/backups.test.ts src/server/util/zip.test.ts src/server/budget/actions.test.ts"
+        },
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "browser-build",
+          "command": "yarn exec lage build:browser --to=@actual-app/web"
+        },
+        {
+          "id": "real-integration",
+          "command": "yarn workspace @actual-app/cli test:integration"
+        },
+        {
+          "id": "browser-convergence",
+          "command": "yarn workspace @actual-app/cli test:browser-integration"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/cli/vite.config.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts packages/loot-core/src/server/transactions/transfer.ts packages/loot-core/src/server/transactions/transfer.test.ts packages/loot-core/src/server/transactions/linked-transfer-plan.ts packages/loot-core/src/types/models/import-transaction.ts packages/loot-core/src/server/budgetfiles/copy-source.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/vite.config.ts packages/cli/README.md packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/docs/docs/api/cli.md .workflow/tasks/0010-cli-runtime .workflow/tasks/0011-cli-budget-lifecycle/plan.review.md .workflow/tasks/0011-cli-budget-lifecycle/execution-decisions.md .workflow/tasks/0011-cli-budget-lifecycle/verify.json upcoming-release-notes/agent-cli-runtime.md upcoming-release-notes/agent-cli-budget-creation.md packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/docs/docs/api/reference.md upcoming-release-notes/agent-cli-backups.md packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts upcoming-release-notes/agent-cli-mutations.md .workflow/tasks/0014-cli-mutations/plan.md .workflow/tasks/0014-cli-mutations/plan.review.md .workflow/tasks/0014-cli-mutations/progress.md .workflow/tasks/0014-cli-mutations/implementation.md .workflow/tasks/0014-cli-mutations/execution-decisions.md .workflow/tasks/0014-cli-mutations/verify.json packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts packages/loot-core/src/server/transactions/transfer.ts packages/loot-core/src/server/transactions/transfer.test.ts packages/loot-core/src/server/transactions/linked-transfer-plan.ts packages/loot-core/src/types/models/import-transaction.ts packages/loot-core/src/server/budgetfiles/copy-source.ts"
+        }
+      ]
+    },
+    "publication": {
+      "commands": [
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api test methods.test.ts"
+        },
+        {
+          "id": "core-fixtures",
+          "command": "yarn workspace @actual-app/core exec vitest run src/server/main.test.ts src/server/budgetfiles/backups.test.ts src/server/util/zip.test.ts src/server/budget/actions.test.ts"
+        },
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "browser-build",
+          "command": "yarn exec lage build:browser --to=@actual-app/web"
+        },
+        {
+          "id": "real-integration",
+          "command": "node .workflow/tasks/0014-cli-mutations/run-integration.mjs"
+        },
+        {
+          "id": "browser-convergence",
+          "command": "yarn workspace @actual-app/cli test:browser-integration"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/cli/vite.config.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts packages/loot-core/src/server/transactions/transfer.ts packages/loot-core/src/server/transactions/transfer.test.ts packages/loot-core/src/server/transactions/linked-transfer-plan.ts packages/loot-core/src/types/models/import-transaction.ts packages/loot-core/src/server/budgetfiles/copy-source.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/vite.config.ts packages/cli/README.md packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/docs/docs/api/cli.md .workflow/tasks/0010-cli-runtime .workflow/tasks/0011-cli-budget-lifecycle/plan.review.md .workflow/tasks/0011-cli-budget-lifecycle/execution-decisions.md .workflow/tasks/0011-cli-budget-lifecycle/verify.json upcoming-release-notes/agent-cli-runtime.md upcoming-release-notes/agent-cli-budget-creation.md packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/docs/docs/api/reference.md upcoming-release-notes/agent-cli-backups.md packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts upcoming-release-notes/agent-cli-mutations.md .workflow/tasks/0014-cli-mutations/plan.md .workflow/tasks/0014-cli-mutations/plan.review.md .workflow/tasks/0014-cli-mutations/progress.md .workflow/tasks/0014-cli-mutations/implementation.md .workflow/tasks/0014-cli-mutations/execution-decisions.md .workflow/tasks/0014-cli-mutations/verify.json packages/loot-core/src/server/accounts/app.ts packages/loot-core/src/server/accounts/payees.ts packages/loot-core/src/server/budget/actions.ts packages/loot-core/src/server/transactions/transfer.ts packages/loot-core/src/server/transactions/transfer.test.ts packages/loot-core/src/server/transactions/linked-transfer-plan.ts packages/loot-core/src/types/models/import-transaction.ts packages/loot-core/src/server/budgetfiles/copy-source.ts"
+        }
+      ]
+    }
+  }
+}

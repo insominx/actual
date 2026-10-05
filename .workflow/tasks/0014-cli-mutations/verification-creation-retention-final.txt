@@ -1,0 +1,9 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 6 skipped (7)
+   Start at  20:06:34
+   Duration  189ms (transform 45%, tests 31%, import 19%, worker 5%)
+

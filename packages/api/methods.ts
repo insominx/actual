@@ -14,6 +14,50 @@ import type { ImportableBudgetType } from '@actual-app/core/server/importers/ind
 import type { Query } from '@actual-app/core/shared/query';
 import type { ImportTransactionsOpts } from '@actual-app/core/types/api-handlers';
 import type {
+  AccountCloseProposal,
+  AccountCloseRequest,
+  AccountCreationOutcome,
+  AccountCreationProposal,
+  AccountCreationRequest,
+  AccountDeletionProposal,
+  AccountDeletionRequest,
+  AccountReopenProposal,
+  AccountReopenRequest,
+  AccountUpdateProposal,
+  AccountUpdateRequest,
+  BudgetAmountProposal,
+  BudgetAmountRequest,
+  BudgetCarryoverProposal,
+  BudgetCarryoverRequest,
+  BudgetCloneProposal,
+  BudgetCloneRequest,
+  BudgetCreationProposal,
+  BudgetCreationRequest,
+  BudgetHoldProposal,
+  BudgetHoldRequest,
+  BudgetMetadataProposal,
+  BudgetMetadataRequest,
+  BudgetPublicationOutcome,
+  BudgetPublicationProposal,
+  BudgetPublicationRequest,
+  BudgetRestoreProposal,
+  BudgetRestoreRequest,
+  CategoryCreationProposal,
+  CategoryCreationRequest,
+  CategoryDeletionProposal,
+  CategoryDeletionRequest,
+  CategoryGroupCreationProposal,
+  CategoryGroupCreationRequest,
+  CategoryGroupDeletionProposal,
+  CategoryGroupDeletionRequest,
+  CategoryGroupUpdateProposal,
+  CategoryGroupUpdateRequest,
+  CategoryUpdateProposal,
+  CategoryUpdateRequest,
+  TransactionUpdateProposal,
+  TransactionUpdateRequest,
+} from '@actual-app/core/types/change-proposals';
+import type {
   ImportTransactionEntity,
   NoteEntity,
   RuleEntity,
@@ -22,6 +66,249 @@ import type {
 import type { SyncedPrefs } from '@actual-app/core/types/prefs';
 
 export { q } from './app/query';
+export type {
+  CategoryCreationOutcome,
+  PayeeCreationOutcome,
+  PayeeCreationProposal,
+  PayeeCreationRequest,
+  CategoryGroupCreationOutcome,
+  CategoryGroupDeletionProposal,
+  CategoryGroupDeletionRequest,
+  CategoryGroupUpdateProposal,
+  CategoryGroupUpdateRequest,
+  CategoryGroupCreationProposal,
+  CategoryGroupCreationRequest,
+  CategoryCreationProposal,
+  CategoryCreationRequest,
+  CategoryDeletionProposal,
+  CategoryDeletionRequest,
+  CategoryUpdateProposal,
+  CategoryUpdateRequest,
+  AccountCloseProposal,
+  AccountCloseRequest,
+  AccountCloseOutcome,
+  AccountCloseSeed,
+  AccountDeletionRequest,
+  AccountDeletionProposal,
+  AccountDeletionOutcome,
+  AccountCreationOutcome,
+  AccountCreationProposal,
+  AccountCreationRequest,
+  AccountUpdateProposal,
+  AccountUpdateRequest,
+  AccountReopenProposal,
+  AccountReopenRequest,
+  BudgetCloneProposal,
+  BudgetCloneRequest,
+  BudgetCreationProposal,
+  BudgetCreationRequest,
+  BudgetAmountProposal,
+  BudgetAmountRequest,
+  ChangeProposal,
+  BudgetHoldProposal,
+  BudgetHoldRequest,
+  BudgetCarryoverProposal,
+  BudgetCarryoverRequest,
+  BudgetMetadataProposal,
+  BudgetMetadataRequest,
+  BudgetRestoreProposal,
+  BudgetRestoreRequest,
+  BudgetPublicationOutcome,
+  BudgetPublicationProposal,
+  BudgetPublicationRequest,
+  TransactionUpdateRequest,
+  TransactionUpdateProposal,
+  TransactionUpdateOutcome,
+} from '@actual-app/core/types/change-proposals';
+
+/** Preview initial publication without preparing a remote identity. */
+export function previewBudgetPublication(request: BudgetPublicationRequest) {
+  return send('api/budget-preview-publication', request);
+}
+/** Publish the exact source and mode. Credentials never enter the proposal. */
+export function applyBudgetPublication(
+  proposal: BudgetPublicationProposal,
+  { encryptionPassword }: { encryptionPassword?: string } = {},
+): Promise<BudgetPublicationOutcome> {
+  return send('api/budget-apply-publication', { proposal, encryptionPassword });
+}
+/** Recover only a remotely accepted retained identity; never submit an initial upload. */
+export function recoverBudgetPublication(
+  proposal: BudgetPublicationProposal,
+  { encryptionPassword }: { encryptionPassword?: string } = {},
+): Promise<BudgetPublicationOutcome> {
+  return send('api/budget-recover-publication', {
+    proposal,
+    encryptionPassword,
+  });
+}
+
+/** Preview an archive-bound restore without creating a destination. */
+export function previewBudgetRestore(
+  input: ArrayBuffer | Uint8Array,
+  request: BudgetRestoreRequest,
+) {
+  return send('api/budget-preview-restore', {
+    buffer: toArrayBuffer(input),
+    request,
+  });
+}
+
+/** Restore the exact previewed archive as a new local identity. */
+export function applyBudgetRestore(
+  proposal: BudgetRestoreProposal,
+  input: ArrayBuffer | Uint8Array,
+) {
+  return send('api/budget-apply-restore', {
+    proposal,
+    buffer: toArrayBuffer(input),
+  });
+}
+
+/** Preview a local clone against the complete copied source state. */
+export function previewBudgetClone(request: BudgetCloneRequest) {
+  return send('api/budget-preview-clone', request);
+}
+
+/** Clone only if the selected identity and copied source still match. */
+export function applyBudgetClone(proposal: BudgetCloneProposal) {
+  return send('api/budget-apply-clone', proposal);
+}
+
+/** Preview a new local budget without creating or loading a destination. */
+export function previewBudgetCreation(request: BudgetCreationRequest) {
+  return send('api/budget-preview-creation', request);
+}
+
+/** Create the previewed local budget and acknowledge its actual new identity. */
+export function applyBudgetCreation(proposal: BudgetCreationProposal) {
+  return send('api/budget-apply-creation', proposal);
+}
+
+export function previewBudgetAmount(request: BudgetAmountRequest) {
+  return send('api/budget-preview-amount', request);
+}
+export function previewCategoryGroupDeletion(
+  request: CategoryGroupDeletionRequest,
+) {
+  return send('api/category-group-preview-deletion', request);
+}
+export function applyCategoryGroupDeletion(
+  proposal: CategoryGroupDeletionProposal,
+) {
+  return send('api/category-group-apply-deletion', proposal);
+}
+export function previewCategoryGroupUpdate(
+  request: CategoryGroupUpdateRequest,
+) {
+  return send('api/category-group-preview-update', request);
+}
+export function applyCategoryGroupUpdate(
+  proposal: CategoryGroupUpdateProposal,
+) {
+  return send('api/category-group-apply-update', proposal);
+}
+export function previewPayeeCreation(request: PayeeCreationRequest) {
+  return send('api/payee-preview-creation', request);
+}
+export function applyPayeeCreation(proposal: PayeeCreationProposal) {
+  return send('api/payee-apply-creation', proposal);
+}
+export function previewCategoryGroupCreation(
+  request: CategoryGroupCreationRequest,
+) {
+  return send('api/category-group-preview-creation', request);
+}
+export function applyCategoryGroupCreation(
+  proposal: CategoryGroupCreationProposal,
+) {
+  return send('api/category-group-apply-creation', proposal);
+}
+export function previewCategoryCreation(request: CategoryCreationRequest) {
+  return send('api/category-preview-creation', request);
+}
+export function applyCategoryCreation(proposal: CategoryCreationProposal) {
+  return send('api/category-apply-creation', proposal);
+}
+export function previewCategoryDeletion(request: CategoryDeletionRequest) {
+  return send('api/category-preview-deletion', request);
+}
+export function applyCategoryDeletion(proposal: CategoryDeletionProposal) {
+  return send('api/category-apply-deletion', proposal);
+}
+export function previewCategoryUpdate(request: CategoryUpdateRequest) {
+  return send('api/category-preview-update', request);
+}
+export function applyCategoryUpdate(proposal: CategoryUpdateProposal) {
+  return send('api/category-apply-update', proposal);
+}
+export function previewAccountClosure(request: AccountCloseRequest) {
+  return send('api/account-preview-closure', request);
+}
+export function applyAccountClosure(proposal: AccountCloseProposal) {
+  return send('api/account-apply-closure', proposal);
+}
+export function previewAccountDeletion(request: AccountDeletionRequest) {
+  return send('api/account-preview-deletion', request);
+}
+export function applyAccountDeletion(proposal: AccountDeletionProposal) {
+  return send('api/account-apply-deletion', proposal);
+}
+export function previewAccountReopen(request: AccountReopenRequest) {
+  return send('api/account-preview-reopen', request);
+}
+export function applyAccountReopen(proposal: AccountReopenProposal) {
+  return send('api/account-apply-reopen', proposal);
+}
+export function previewAccountUpdate(request: AccountUpdateRequest) {
+  return send('api/account-preview-update', request);
+}
+export function applyAccountUpdate(proposal: AccountUpdateProposal) {
+  return send('api/account-apply-update', proposal);
+}
+export function previewAccountCreation(request: AccountCreationRequest) {
+  return send('api/account-preview-creation', request);
+}
+
+export function applyAccountCreation(
+  proposal: AccountCreationProposal,
+): Promise<AccountCreationOutcome> {
+  return send('api/account-apply-creation', proposal);
+}
+export function previewBudgetCarryover(request: BudgetCarryoverRequest) {
+  return send('api/budget-preview-carryover', request);
+}
+export function previewBudgetHold(request: BudgetHoldRequest) {
+  return send('api/budget-preview-hold', request);
+}
+
+export function applyBudgetHold(proposal: BudgetHoldProposal) {
+  return send('api/budget-apply-hold', proposal);
+}
+
+export function applyBudgetCarryover(proposal: BudgetCarryoverProposal) {
+  return send('api/budget-apply-carryover', proposal);
+}
+
+export function previewBudgetMetadata(request: BudgetMetadataRequest) {
+  return send('api/budget-preview-metadata', request);
+}
+
+export function applyBudgetMetadata(proposal: BudgetMetadataProposal) {
+  return send('api/budget-apply-metadata', proposal);
+}
+
+export function applyBudgetAmount(proposal: BudgetAmountProposal) {
+  return send('api/budget-apply-amount', proposal);
+}
+
+export function previewTransactionUpdate(request: TransactionUpdateRequest) {
+  return send('api/transaction-preview-update', request);
+}
+
+export function applyTransactionUpdate(proposal: TransactionUpdateProposal) {
+  return send('api/transaction-apply-update', proposal);
+}
 
 export async function runImport(
   budgetName: APIFileEntity['name'],
@@ -55,6 +342,49 @@ export async function getBudgets() {
   return send('api/get-budgets');
 }
 
+/** Create and load a local budget. This never publishes it to a server. */
+export async function createBudget({
+  name,
+  currency,
+}: {
+  name: string;
+  currency?: string;
+}): Promise<{ id: string }> {
+  return send('api/create-budget', { name, currency });
+}
+
+/** Inspect the currently loaded budget without publishing or changing it. */
+export function inspectBudget() {
+  return send('api/inspect-budget');
+}
+
+/** Clone the loaded budget locally. Initialize without a server before cloning. */
+export function cloneBudget({
+  name,
+}: {
+  name: string;
+}): Promise<{ id: string }> {
+  return send('api/clone-budget', { name });
+}
+
+/** Rename the loaded budget through the synced metadata writer. */
+export function renameBudget(name: string) {
+  return send('api/rename-budget', { name });
+}
+
+/** Mark the loaded budget archived on this device, without deleting any files. */
+export function archiveBudget(archived = true) {
+  return send('api/archive-budget', { archived });
+}
+
+/** Explicitly publish a local budget to the authenticated server. */
+export function publishBudget(
+  id: string,
+  { encryptionPassword }: { encryptionPassword?: string } = {},
+) {
+  return send('api/publish-budget', { id, encryptionPassword });
+}
+
 /**
  * Import a budget from an exported file — an Actual `.zip` export, or a
  * YNAB4/YNAB5 export. Accepts either a path to the file on the engine's
@@ -86,6 +416,14 @@ export async function importBudget(
   return { id: result.id };
 }
 
+/** Restore an Actual archive as a new local identity without publishing it. */
+export function restoreBudget(
+  input: ArrayBuffer | Uint8Array,
+  { name }: { name: string },
+): Promise<{ id: string }> {
+  return send('api/restore-budget', { buffer: toArrayBuffer(input), name });
+}
+
 /** Export the currently-loaded budget as a zip buffer. */
 export async function exportBudget(): Promise<Uint8Array> {
   const result = await send('export-budget');
@@ -112,6 +450,11 @@ function toArrayBuffer(data: ArrayBuffer | Uint8Array): ArrayBuffer {
 
 export async function sync() {
   return send('api/sync');
+}
+
+/** Observe unsynchronized messages and deferred received messages without a network request. */
+export function getSyncStatus() {
+  return send('api/sync-status');
 }
 
 export async function runBankSync(args?: {

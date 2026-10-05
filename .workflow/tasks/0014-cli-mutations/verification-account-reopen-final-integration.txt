@@ -1,0 +1,21 @@
+✔ guarded clone preserves the rich source and receipts prevent another destination on retries (9857.8216ms)
+✔ killed apply at before-engine (accounts.update) preserves its durable outcome and never replays (36135.0981ms)
+✔ killed apply at after-engine (accounts.update) preserves its durable outcome and never replays (35659.5139ms)
+✔ killed apply at before-sync (accounts.update) preserves its durable outcome and never replays (37585.1628ms)
+✔ killed apply at before-engine (accounts.reopen) preserves its durable outcome and never replays (37050.5526ms)
+✔ killed apply at after-engine (accounts.reopen) preserves its durable outcome and never replays (37051.8909ms)
+✔ killed apply at before-sync (accounts.reopen) preserves its durable outcome and never replays (38275.0295ms)
+✔ guarded account reopening preserves provider fields and retries retain later closure (online) (10430.9425ms)
+✔ guarded account reopening preserves provider fields and retries retain later closure (offline) (10051.2144ms)
+✔ guarded account updates preserve ledger and retries retain later account edits (online) (10056.9798ms)
+✔ guarded account updates preserve ledger and retries retain later account edits (offline) (9355.8834ms)
+✔ guarded account creation acknowledges actual identities and retries one account (online) (9296.7827ms)
+✔ guarded account creation acknowledges actual identities and retries one account (offline) (8856.5166ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 289751.2714

@@ -1,0 +1,2 @@
+packages/loot-core/src/server/api.ts:112:3: error perfectionist(sort-named-imports): Expected "performCategoryCreation" to come before "performCategoryDeletion".
+packages/cli/integration/changes.test.mjs:4862:5: error eslint(curly): Expected { after 'for-of'. help: Replace `rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));` with `{rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));}`.

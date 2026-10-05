@@ -1,0 +1,41 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+5:08:39 PM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/cosmiconfig/dist/index.js.
+Error: An error occurred while trying to read the map file at index.js.map
+Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\node_modules\cosmiconfig\dist\index.js.map'
+    at Object.readFileSync (node:fs:436:20)
+    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13
+    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)
+    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)
+    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)
+    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)
+    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)
+ ❯ src/program.test.ts (32 tests | 1 failed | 31 skipped) 22ms
+   ❯ registered agent commands (32)
+     × requires a category deletion operation ID before connecting and advertises it 21ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/program.test.ts > registered agent commands > requires a category deletion operation ID before connecting and advertises it
+AssertionError: expected 'MISSING_CONTEXT' to be 'INVALID_INPUT' // Object.is equality
+
+Expected: "INVALID_INPUT"
+Received: "MISSING_CONTEXT"
+
+ ❯ src/program.test.ts:83:32
+     81|   it('requires a category deletion operation ID before connecting and …
+     82|     const missing = await run(['--output-version', '2', 'categories', …
+     83|     expect(missing.error.code).toBe('INVALID_INPUT');
+       |                                ^
+     84|     expect(missing.error.details.field).toBe('operationId');
+     85|     const schema = await run(['schema', 'categories.delete']);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 31 skipped (32)
+   Start at  17:08:38
+   Duration  469ms (transform 71%, import 22%, tests 6%, worker 1%)
+

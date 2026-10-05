@@ -1,0 +1,45 @@
+@actual-app/ci-actions typecheck … queued
+@actual-app/components typecheck … queued
+@actual-app/crdt typecheck … queued
+plugins-service typecheck … queued
+@actual-app/ci-actions typecheck ➔ start
+@actual-app/components typecheck ➔ start
+@actual-app/ci-actions typecheck » skip - a15bf2f851e791f66552eb8704bef90aaa2afe3e
+@actual-app/crdt typecheck ➔ start
+@actual-app/crdt typecheck » skip - 1842a47eb61ba5c7646b83ea6db2760c1023b597
+@actual-app/core typecheck … queued
+plugins-service typecheck ➔ start
+plugins-service typecheck » skip - 7d72e72d9e5af9dfa737dcf25809c86147dd79e6
+@actual-app/core typecheck ➔ start
+@actual-app/components typecheck » skip - cfff67e84b2e8caef320ddc03f0bf7155f809eae
+@actual-app/core typecheck ✖ fail
+
+Summary
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+@actual-app/api typecheck pending, took 0.00s, queued for 0.00s
+@actual-app/cli typecheck pending, took 0.00s, queued for 0.00s
+@actual-app/web typecheck pending, took 0.00s, queued for 0.00s
+desktop-electron typecheck pending, took 0.00s, queued for 0.00s
+@actual-app/core typecheck failed, took 1.32s, queued for 0.01s
+@actual-app/sync-server typecheck pending, took 0.00s, queued for 0.00s
+success: 0, skipped: 4, pending: 5, aborted: 0, failed: 1
+worker restarts: 0, max worker memory usage: 25.60 MB
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+[@actual-app/core typecheck] ERROR DETECTED
+
+
+
+local cache fetch: 52123cd581963c29a1d1bf5fbfd1a1e76b6681a0 false
+remote fallback fetch: 52123cd581963c29a1d1bf5fbfd1a1e76b6681a0 false
+Running yarn run typecheck, pid: 55060
+(node:100220) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+src/server/transactions/transaction-rules.test.ts(1565,9): error TS2345: Argument of type '{ id: string; sort_order: number; account: any; date: string; amount: number; } | { sort_order?: undefined; id: string; account: any; date: string; amount: number; } | { id?: undefined; sort_order?: undefined; account: any; date: string; amount: number; }' is not assignable to parameter of type 'TransactionEntity'.
+  Type '{ id?: undefined; sort_order?: undefined; account: any; date: string; amount: number; }' is not assignable to type 'TransactionEntity'.
+    Property 'id' is optional in type '{ id?: undefined; sort_order?: undefined; account: any; date: string; amount: number; }' but required in type 'TransactionEntity'.
+src/server/transactions/transaction-rules.test.ts(1587,50): error TS2345: Argument of type '{ id: string; sort_order: number; account: any; date: string; amount: number; } | { sort_order?: undefined; id: string; account: any; date: string; amount: number; } | { id?: undefined; sort_order?: undefined; account: any; date: string; amount: number; }' is not assignable to parameter of type 'TransactionEntity'.
+  Type '{ id?: undefined; sort_order?: undefined; account: any; date: string; amount: number; }' is not assignable to type 'TransactionEntity'.
+    Property 'id' is optional in type '{ id?: undefined; sort_order?: undefined; account: any; date: string; amount: number; }' but required in type 'TransactionEntity'.
+
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+Took a total of 1.52s to complete. 

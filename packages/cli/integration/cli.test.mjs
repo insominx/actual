@@ -19,6 +19,8 @@ test('packaged discovery and validation work without personal configuration', as
     '2',
     'accounts',
     'create',
+    '--operation-id',
+    'fixture-account-cli-test-1',
     '--name',
     'a',
     '--balance',
@@ -43,9 +45,20 @@ test(
       assert.equal(wrong.code, 5);
       assert.equal(JSON.parse(wrong.stdout).error.code, 'ENGINE_FAILURE');
       assert.ok(!wrong.stdout.includes('incorrect'));
+      const diagnosis = await f.cli(['doctor'], {
+        client: 'doctor-wrong-key',
+        env: { ACTUAL_ENCRYPTION_PASSWORD: 'incorrect' },
+      });
+      assert.equal(diagnosis.code, 5);
+      assert.equal(
+        JSON.parse(diagnosis.stdout).error.details.issue,
+        'encryption-failed',
+      );
       const written = await f.cli([
         'accounts',
         'create',
+        '--operation-id',
+        'fixture-account-cli-test-2',
         '--name',
         'Encrypted restart write',
       ]);
@@ -109,6 +122,8 @@ test(
           '1',
           'accounts',
           'create',
+          '--operation-id',
+          'fixture-account-cli-test-3',
           '--name',
           'Must not be created',
         ]);
@@ -123,6 +138,8 @@ test(
       const recovered = await f.cli([
         'accounts',
         'create',
+        '--operation-id',
+        'fixture-account-cli-test-4',
         '--name',
         'Recovered after killed reader',
       ]);

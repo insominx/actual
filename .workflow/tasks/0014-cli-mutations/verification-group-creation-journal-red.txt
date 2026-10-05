@@ -1,0 +1,31 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+ ❯ src/change-journal.test.ts (17 tests | 1 failed | 16 skipped) 18ms
+   × expires group creation only with a complete generated identity acknowledgement 17ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/change-journal.test.ts > expires group creation only with a complete generated identity acknowledgement
+Error: The change receipt has an unsupported schema.
+ ❯ ChangeJournal.readPath src/change-journal.ts:282:15
+    280|         ].includes(String(value.proposal.operation))
+    281|       ) {
+    282|         throw new AgentError(
+       |               ^
+    283|           'INVALID_INPUT',
+    284|           'The change receipt has an unsupported schema.',
+ ❯ ChangeJournal.list src/change-journal.ts:411:23
+ ❯ ChangeJournal.prepare src/change-journal.ts:440:21
+ ❯ src/change-journal.test.ts:846:25
+ ❯ withChangeJournal src/change-journal.ts:211:12
+ ❯ src/change-journal.test.ts:844:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 16 skipped (17)
+   Start at  18:37:59
+   Duration  173ms (transform 55%, import 21%, tests 20%, worker 5%)
+

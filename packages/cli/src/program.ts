@@ -7,9 +7,12 @@ import {
 } from './agent-contract';
 import { AgentError, beginAgentOutput, flushAgentOutput } from './agent-output';
 import { registerAccountsCommand } from './commands/accounts';
+import { registerBackupsCommand } from './commands/backups';
 import { registerBudgetsCommand } from './commands/budgets';
 import { registerCategoriesCommand } from './commands/categories';
 import { registerCategoryGroupsCommand } from './commands/category-groups';
+import { registerChangesCommand } from './commands/changes';
+import { registerDiagnosticsCommand } from './commands/diagnostics';
 import { registerPayeesCommand } from './commands/payees';
 import { registerProfilesCommand } from './commands/profiles';
 import { registerQueryCommand } from './commands/query';
@@ -27,6 +30,15 @@ import { parseNonNegativeIntFlag } from './utils';
 
 declare const __CLI_VERSION__: string;
 
+const AGENT_SERVER_COMMANDS = [
+  'bootstrap',
+  'init',
+  'start',
+  'status',
+  'stop',
+  'logs',
+];
+
 export function wantsAgentOutput(program: Command, args: string[]): boolean {
   if (
     args.some(
@@ -40,7 +52,31 @@ export function wantsAgentOutput(program: Command, args: string[]): boolean {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (!arg.startsWith('-')) {
-      return ['capabilities', 'schema', 'context', 'profiles'].includes(arg);
+      return (
+        [
+          'capabilities',
+          'schema',
+          'context',
+          'profiles',
+          'doctor',
+          'connection',
+          'backups',
+          'changes',
+        ].includes(arg) ||
+        (arg === 'server' && AGENT_SERVER_COMMANDS.includes(args[i + 1])) ||
+        (arg === 'sync' &&
+          ['status', 'refresh', 'watch'].includes(args[i + 1])) ||
+        (arg === 'budgets' &&
+          [
+            'create',
+            'inspect',
+            'select',
+            'clone',
+            'publish',
+            'rename',
+            'archive',
+          ].includes(args[i + 1]))
+      );
     }
     const option = program.options.find(
       o => o.long === arg.split('=')[0] || o.short === arg,
@@ -86,6 +122,11 @@ export function createProgram(
       value => parseNonNegativeIntFlag(value, '--cache-ttl'),
     )
     .option('--refresh', 'Force a sync on this call, ignoring the cache', false)
+    .option(
+      '--require-fresh',
+      'Require successful synchronization before reading a remote budget',
+      false,
+    )
     .option('--no-cache', 'Alias for --refresh')
     .option(
       '--lock-timeout <seconds>',
@@ -109,16 +150,19 @@ export function createProgram(
     .option('--verbose', 'Show informational messages', false);
 
   registerAccountsCommand(program);
+  registerBackupsCommand(program);
   registerBudgetsCommand(program);
   registerCategoriesCommand(program);
   registerCategoryGroupsCommand(program);
   registerTransactionsCommand(program);
+  registerChangesCommand(program);
   registerPayeesCommand(program);
   registerTagsCommand(program);
   registerRulesCommand(program);
   registerSchedulesCommand(program);
   registerQueryCommand(program);
   registerServerCommand(program);
+  registerDiagnosticsCommand(program);
   registerSyncCommand(program);
   registerProfilesCommand(program);
   program
@@ -162,8 +206,27 @@ export function createProgram(
     const opts = program.opts();
     if (
       opts.outputVersion === '2' ||
-      ['capabilities', 'schema', 'context'].includes(command.name()) ||
-      command.parent?.name() === 'profiles'
+      ['capabilities', 'schema', 'context', 'doctor'].includes(
+        command.name(),
+      ) ||
+      command.parent?.name() === 'connection' ||
+      (command.parent?.name() === 'sync' &&
+        ['status', 'refresh', 'watch'].includes(command.name())) ||
+      (command.parent?.name() === 'budgets' &&
+        [
+          'create',
+          'inspect',
+          'select',
+          'clone',
+          'publish',
+          'rename',
+          'archive',
+        ].includes(command.name())) ||
+      (command.parent?.name() === 'server' &&
+        AGENT_SERVER_COMMANDS.includes(command.name())) ||
+      command.parent?.name() === 'profiles' ||
+      command.parent?.name() === 'backups' ||
+      command.parent?.name() === 'changes'
     ) {
       beginAgentOutput(operationName(command));
       program.setOptionValue('outputVersion', '2');

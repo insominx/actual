@@ -1,0 +1,35 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+ ❯ src/change-journal.test.ts (14 tests | 1 failed) 1643ms
+   × retains uncertain or incomplete closing-transfer acknowledgements 25ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/change-journal.test.ts > retains uncertain or incomplete closing-transfer acknowledgements
+AssertionError: expected undefined to be 'synced' // Object.is equality
+
+- Expected:
+"synced"
+
++ Received:
+undefined
+
+ ❯ src/change-journal.test.ts:694:62
+    692|       await journal.prepare('next-close', proposal);
+    693|       expect(await journal.read('confirmed-close')).toBeNull();
+    694|       expect((await journal.read('uncertain-close'))?.state).toBe('syn…
+       |                                                              ^
+    695|       expect((await journal.read('incomplete-close'))?.state).toBe('sy…
+    696|     });
+ ❯ withChangeJournal src/change-journal.ts:133:12
+ ❯ src/change-journal.test.ts:681:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 passed (14)
+   Start at  14:05:25
+   Duration  1.80s (tests 96%, transform 3%, import 1%)
+

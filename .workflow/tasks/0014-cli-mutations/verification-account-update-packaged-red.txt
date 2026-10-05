@@ -1,0 +1,203 @@
+✖ killed apply at before-engine (accounts.update) preserves its durable outcome and never replays (33862.5525ms)
+✖ killed apply at after-engine (accounts.update) preserves its durable outcome and never replays (33811.4671ms)
+✖ killed apply at before-sync (accounts.update) preserves its durable outcome and never replays (34151.8206ms)
+✖ guarded account updates preserve ledger and retries retain later account edits (online) (9052.8744ms)
+✖ guarded account updates preserve ledger and retries retain later account edits (offline) (8000.552ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 0
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 118952.0959
+
+✖ failing tests:
+
+test at packages\cli\integration\changes.test.mjs:1352:3
+✖ killed apply at before-engine (accounts.update) preserves its durable outcome and never replays (33862.5525ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'Checking'
+  - 'Wrong interruption name'
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1565:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Checking',
+    expected: 'Wrong interruption name',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:1352:3
+✖ killed apply at after-engine (accounts.update) preserves its durable outcome and never replays (33811.4671ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'Interrupted account update'
+  - 'Wrong interruption name'
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1565:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Interrupted account update',
+    expected: 'Wrong interruption name',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:1352:3
+✖ killed apply at before-sync (accounts.update) preserves its durable outcome and never replays (34151.8206ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'Interrupted account update'
+  - 'Wrong interruption name'
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1565:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Interrupted account update',
+    expected: 'Wrong interruption name',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:2000:3
+✖ guarded account updates preserve ledger and retries retain later account edits (online) (9052.8744ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" not to be strictly deep-equal to:
+  
+  [
+    {
+      category: null,
+      favorite: 0,
+      id: '07e1ff60-784f-4d5b-b64d-64d2bb7dff76',
+      learn_categories: 1,
+      name: 'Starting Balance',
+      tombstone: 0,
+      transfer_acct: null
+    },
+    {
+      category: null,
+      favorite: 0,
+      id: '3401516b-3d7f-4a02-a975-003ea94bd252',
+      learn_categories: 1,
+      name: '',
+      tombstone: 0,
+      transfer_acct: '4dfc0db7-5447-4297-8ee7-7450e19c7f8c'
+    },
+    {
+      category: null,
+      favorite: 0,
+      id: '3defd038-3d58-4228-98d7-d4242039030b',
+      learn_categories: 1,
+      name: '',
+      tombstone: 0,
+      transfer_acct: '1594aaf0-e7af-4b33-a352-466a38ee1cc2'
+    },
+    {
+      category: null,
+      favorite: 0,
+      id: '4e317dd5-ac4c-4292-9584-4a898b42f414',
+      learn_categories: 1,
+      name: '',
+      tombstone: 0,
+      transfer_acct: 'e7ca7ad8-96b3-4302-b17d-ca5d9d253134'
+    },
+    {
+      category: null,
+      favorite: 0,
+      id: '50323d2c-d4dd-44da-8e2d-0ebe96ac05cc',
+      learn_categories: 1,
+      name: 'Refund',
+      tombstone: 0,
+      transfer_acct: null
+    },
+  ...
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:2130:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ { id: '07e1ff60-784f-4d5b-b64d-64d2bb7dff76', name: 'Starting Balance', category: null, tombstone: 0, transfer_acct: null, favorite: 0, learn_categories: 1 }, { id: '3401516b-3d7f-4a02-a975-003ea94bd252', name: '', category: null, tombstone: 0, transfer_acct: '4dfc0db7-5447-4297-8ee7-7450e19c7f8c', favorite: 0, learn_categories: 1 }, { id: '3defd038-3d58-4228-98d7-d4242039030b', name: '', category: null, tombstone: 0, transfer_acct: '1594aaf0-e7af-4b33-a352-466a38ee1cc2', favorite: 0, learn_categories: 1 }, { id: '4e317dd5-ac4c-4292-9584-4a898b42f414', name: '', category: null, tombstone: 0, transfer_acct: 'e7ca7ad8-96b3-4302-b17d-ca5d9d253134', favorite: 0, learn_categories: 1 }, { id: '50323d2c-d4dd-44da-8e2d-0ebe96ac05cc', name: 'Refund', category: null, tombstone: 0, transfer_acct: null, favorite: 0, learn_categories: 1 }, { id: 'e530a89a-682a-4a14-a27d-862e2abed8bd', name: '', category: null, tombstone: 0, transfer_acct: 'f11f7259-1bf8-4979-9206-28366bc0d5f7', favorite: 0, learn_categories: 1 }, { id: 'ea265dda-fe45-4922-8847-d8f7e6debd14', name: '', category: null, tombstone: 0, transfer_acct: '7433f0c4-b060-4fdd-a2b2-e73d2203e53c', favorite: 0, learn_categories: 1 } ],
+    expected: [ { id: '07e1ff60-784f-4d5b-b64d-64d2bb7dff76', name: 'Starting Balance', category: null, tombstone: 0, transfer_acct: null, favorite: 0, learn_categories: 1 }, { id: '3401516b-3d7f-4a02-a975-003ea94bd252', name: '', category: null, tombstone: 0, transfer_acct: '4dfc0db7-5447-4297-8ee7-7450e19c7f8c', favorite: 0, learn_categories: 1 }, { id: '3defd038-3d58-4228-98d7-d4242039030b', name: '', category: null, tombstone: 0, transfer_acct: '1594aaf0-e7af-4b33-a352-466a38ee1cc2', favorite: 0, learn_categories: 1 }, { id: '4e317dd5-ac4c-4292-9584-4a898b42f414', name: '', category: null, tombstone: 0, transfer_acct: 'e7ca7ad8-96b3-4302-b17d-ca5d9d253134', favorite: 0, learn_categories: 1 }, { id: '50323d2c-d4dd-44da-8e2d-0ebe96ac05cc', name: 'Refund', category: null, tombstone: 0, transfer_acct: null, favorite: 0, learn_categories: 1 }, { id: 'e530a89a-682a-4a14-a27d-862e2abed8bd', name: '', category: null, tombstone: 0, transfer_acct: 'f11f7259-1bf8-4979-9206-28366bc0d5f7', favorite: 0, learn_categories: 1 }, { id: 'ea265dda-fe45-4922-8847-d8f7e6debd14', name: '', category: null, tombstone: 0, transfer_acct: '7433f0c4-b060-4fdd-a2b2-e73d2203e53c', favorite: 0, learn_categories: 1 } ],
+    operator: 'notDeepStrictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:2000:3
+✖ guarded account updates preserve ledger and retries retain later account edits (offline) (8000.552ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" not to be strictly deep-equal to:
+  
+  [
+    {
+      category: null,
+      favorite: 0,
+      id: '05878048-0cd0-46cb-b9af-ea03d962f42a',
+      learn_categories: 1,
+      name: '',
+      tombstone: 0,
+      transfer_acct: '319d959f-61da-4fad-b67b-cdababdf92b2'
+    },
+    {
+      category: null,
+      favorite: 0,
+      id: '0d84d626-096f-4308-b093-2a854ab4a61c',
+      learn_categories: 1,
+      name: 'Starting Balance',
+      tombstone: 0,
+      transfer_acct: null
+    },
+    {
+      category: null,
+      favorite: 0,
+      id: '4ccb8b8f-f727-43f3-9c58-8bac2ea75e74',
+      learn_categories: 1,
+      name: '',
+      tombstone: 0,
+      transfer_acct: 'd3248af5-e0bf-4634-951e-b7e3df323b25'
+    },
+    {
+      category: null,
+      favorite: 0,
+      id: '8cbf0d16-b3ff-4deb-b313-8838dfa9258c',
+      learn_categories: 1,
+      name: '',
+      tombstone: 0,
+      transfer_acct: '5fbbc59a-365c-4ef1-ac0e-8dfc0648ec48'
+    },
+    {
+      category: null,
+      favorite: 0,
+      id: 'ab6ea863-eb1f-4c5c-b236-003604e35e14',
+      learn_categories: 1,
+      name: '',
+      tombstone: 0,
+      transfer_acct: 'ccfd77fa-6544-4963-8c17-ff64c04428ee'
+    },
+  ...
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:2130:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ { id: '05878048-0cd0-46cb-b9af-ea03d962f42a', name: '', category: null, tombstone: 0, transfer_acct: '319d959f-61da-4fad-b67b-cdababdf92b2', favorite: 0, learn_categories: 1 }, { id: '0d84d626-096f-4308-b093-2a854ab4a61c', name: 'Starting Balance', category: null, tombstone: 0, transfer_acct: null, favorite: 0, learn_categories: 1 }, { id: '4ccb8b8f-f727-43f3-9c58-8bac2ea75e74', name: '', category: null, tombstone: 0, transfer_acct: 'd3248af5-e0bf-4634-951e-b7e3df323b25', favorite: 0, learn_categories: 1 }, { id: '8cbf0d16-b3ff-4deb-b313-8838dfa9258c', name: '', category: null, tombstone: 0, transfer_acct: '5fbbc59a-365c-4ef1-ac0e-8dfc0648ec48', favorite: 0, learn_categories: 1 }, { id: 'ab6ea863-eb1f-4c5c-b236-003604e35e14', name: '', category: null, tombstone: 0, transfer_acct: 'ccfd77fa-6544-4963-8c17-ff64c04428ee', favorite: 0, learn_categories: 1 }, { id: 'bf5a7deb-e1fb-4f2f-8b06-96fad90bdea6', name: 'Refund', category: null, tombstone: 0, transfer_acct: null, favorite: 0, learn_categories: 1 }, { id: 'e58b8da3-2d76-4448-97e5-f3ff664feef8', name: '', category: null, tombstone: 0, transfer_acct: 'fdd39b5c-d6dd-44a2-a9b5-5d7a7aa9716e', favorite: 0, learn_categories: 1 } ],
+    expected: [ { id: '05878048-0cd0-46cb-b9af-ea03d962f42a', name: '', category: null, tombstone: 0, transfer_acct: '319d959f-61da-4fad-b67b-cdababdf92b2', favorite: 0, learn_categories: 1 }, { id: '0d84d626-096f-4308-b093-2a854ab4a61c', name: 'Starting Balance', category: null, tombstone: 0, transfer_acct: null, favorite: 0, learn_categories: 1 }, { id: '4ccb8b8f-f727-43f3-9c58-8bac2ea75e74', name: '', category: null, tombstone: 0, transfer_acct: 'd3248af5-e0bf-4634-951e-b7e3df323b25', favorite: 0, learn_categories: 1 }, { id: '8cbf0d16-b3ff-4deb-b313-8838dfa9258c', name: '', category: null, tombstone: 0, transfer_acct: '5fbbc59a-365c-4ef1-ac0e-8dfc0648ec48', favorite: 0, learn_categories: 1 }, { id: 'ab6ea863-eb1f-4c5c-b236-003604e35e14', name: '', category: null, tombstone: 0, transfer_acct: 'ccfd77fa-6544-4963-8c17-ff64c04428ee', favorite: 0, learn_categories: 1 }, { id: 'bf5a7deb-e1fb-4f2f-8b06-96fad90bdea6', name: 'Refund', category: null, tombstone: 0, transfer_acct: null, favorite: 0, learn_categories: 1 }, { id: 'e58b8da3-2d76-4448-97e5-f3ff664feef8', name: '', category: null, tombstone: 0, transfer_acct: 'fdd39b5c-d6dd-44a2-a9b5-5d7a7aa9716e', favorite: 0, learn_categories: 1 } ],
+    operator: 'notDeepStrictEqual',
+    diff: 'simple'
+  }

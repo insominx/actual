@@ -317,10 +317,17 @@ export async function getAllRuleIdsFromSchedules(
   return ruleIds;
 }
 
+// Owner-supplied new insertions only; existing rows, updates and deletions
+// remain authoritative in the persisted ledger. Context is local to one run.
+export type RuleLedgerContext = {
+  plannedTransactions?: ReadonlyArray<TransactionEntity>;
+};
+
 // Runner
 export async function runRules(
   trans,
   accounts: Map<string, db.DbAccount> | null = null,
+  { plannedTransactions = [] }: RuleLedgerContext = {},
 ) {
   await ensureFormulaPreferencesLoaded();
 
@@ -355,6 +362,7 @@ export async function runRules(
       finalTrans.balance = await getRunningBalanceBeforeTransaction(
         trans,
         trans.account,
+        plannedTransactions,
       );
       hasBalance = true;
     }
@@ -379,6 +387,7 @@ export async function runRules(
     finalTrans,
     accountsMap,
     formulaStrings,
+    plannedTransactions,
   );
 
   for (let i = 0; i < rules.length; i++) {
@@ -1050,8 +1059,9 @@ export type TransactionForRules = TransactionEntity & {
  * Running balance for `accountId` before the current transaction row (same cutoff as `balance`).
  */
 export async function getRunningBalanceBeforeTransaction(
-  trans: TransactionEntity,
+  trans: Partial<Pick<TransactionEntity, 'id' | 'date' | 'sort_order'>>,
   accountId: string,
+  plannedTransactions: ReadonlyArray<TransactionEntity> = [],
 ): Promise<number> {
   const dateBoundary = trans.date ?? currentDay();
   let query = q('transactions')
@@ -1088,13 +1098,36 @@ export async function getRunningBalanceBeforeTransaction(
       .calculate({ $sum: '$amount' }),
   );
 
-  return balance ?? 0;
+  // Planned insertions use the same account, split, date and ordering scope
+  // as the persisted query above. They never write to the ledger.
+  let plannedBalance = 0;
+  for (const row of plannedTransactions) {
+    if (
+      row.account !== accountId ||
+      row.is_parent ||
+      (trans.id && row.id === trans.id)
+    ) {
+      continue;
+    }
+    const sameDayBefore =
+      trans.sort_order != null
+        ? row.sort_order != null && row.sort_order < trans.sort_order
+        : row.sort_order != null || Boolean(trans.id && row.id < trans.id);
+    if (
+      row.date < dateBoundary ||
+      (row.date === dateBoundary && sameDayBefore)
+    ) {
+      plannedBalance += row.amount ?? 0;
+    }
+  }
+  return (balance ?? 0) + plannedBalance;
 }
 
 export async function prefetchBalanceOfForTransaction(
   trans: TransactionEntity,
   accountsMap: Map<string, db.DbAccount>,
   formulas: string[],
+  plannedTransactions: ReadonlyArray<TransactionEntity> = [],
 ): Promise<Map<string, number>> {
   const map = new Map<string, number>();
   const literals = new Set<string>();
@@ -1108,7 +1141,11 @@ export async function prefetchBalanceOfForTransaction(
     if (accountId) {
       map.set(
         literal,
-        await getRunningBalanceBeforeTransaction(trans, accountId),
+        await getRunningBalanceBeforeTransaction(
+          trans,
+          accountId,
+          plannedTransactions,
+        ),
       );
     } else {
       map.set(literal, 0);

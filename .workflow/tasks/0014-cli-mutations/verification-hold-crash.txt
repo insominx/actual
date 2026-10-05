@@ -1,0 +1,12 @@
+✔ killed apply at before-engine (budgets.hold-next-month) preserves its durable outcome and never replays (38734.148ms)
+✔ killed apply at after-engine (budgets.hold-next-month) preserves its durable outcome and never replays (37974.8115ms)
+✔ killed apply at before-engine (budgets.reset-hold) preserves its durable outcome and never replays (39106.0329ms)
+✔ killed apply at after-engine (budgets.reset-hold) preserves its durable outcome and never replays (38624.0896ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 154518.5919

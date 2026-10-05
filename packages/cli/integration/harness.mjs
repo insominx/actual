@@ -53,7 +53,7 @@ export async function runNode(
   });
 }
 
-async function unusedPort() {
+export async function unusedPort() {
   const listener = createServer();
   await new Promise(resolveReady =>
     listener.listen(0, '127.0.0.1', resolveReady),
@@ -63,7 +63,12 @@ async function unusedPort() {
   return port;
 }
 
-export async function createFixture({ encrypted = false } = {}) {
+export async function createFixture({
+  encrypted = false,
+  fresh = false,
+  browser = false,
+  richBackup = false,
+} = {}) {
   const root = await mkdtemp(join(tmpdir(), 'actual-agent-cli-'));
   const port = await unusedPort();
   const serverUrl = `http://127.0.0.1:${port}`;
@@ -74,7 +79,10 @@ export async function createFixture({ encrypted = false } = {}) {
     ACTUAL_DATA_DIR: join(root, 'server'),
     ACTUAL_PORT: String(port),
     ACTUAL_HOSTNAME: '127.0.0.1',
-    NODE_ENV: 'development',
+    NODE_ENV: browser ? 'production' : 'development',
+    ...(browser
+      ? { ACTUAL_WEB_ROOT: join(repoRoot, 'packages/desktop-client/build') }
+      : {}),
   };
   async function start() {
     server = spawn(
@@ -139,35 +147,40 @@ export async function createFixture({ encrypted = false } = {}) {
   try {
     await mkdir(serverEnv.ACTUAL_DATA_DIR, { recursive: true });
     await start();
-    const response = await fetch(`${serverUrl}/account/bootstrap`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
-    });
-    if (!response.ok) throw new Error('Disposable password bootstrap failed.');
-    const seeded = await runNode(
-      [join(repoRoot, 'packages/cli/integration/seed.mjs')],
-      {
-        cwd: root,
-        env: {
-          ACTUAL_SERVER_URL: serverUrl,
-          ACTUAL_PASSWORD: password,
-          ACTUAL_DATA_DIR: join(root, 'seed'),
-          ACTUAL_TEST_ENCRYPTED: encrypted ? '1' : '0',
+    if (!fresh) {
+      const response = await fetch(`${serverUrl}/account/bootstrap`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      if (!response.ok) {
+        throw new Error('Disposable password bootstrap failed.');
+      }
+      const seeded = await runNode(
+        [join(repoRoot, 'packages/cli/integration/seed.mjs')],
+        {
+          cwd: root,
+          env: {
+            ACTUAL_SERVER_URL: serverUrl,
+            ACTUAL_PASSWORD: password,
+            ACTUAL_DATA_DIR: join(root, 'seed'),
+            ACTUAL_TEST_ENCRYPTED: encrypted ? '1' : '0',
+            ACTUAL_TEST_RICH_BACKUP: richBackup ? '1' : '0',
+          },
         },
-      },
-    );
-    if (seeded.code !== 0) {
-      throw new Error(
-        `Disposable seed failed: ${seeded.stderr}\n${seeded.stdout}`,
       );
+      if (seeded.code !== 0) {
+        throw new Error(
+          `Disposable seed failed: ${seeded.stderr}\n${seeded.stdout}`,
+        );
+      }
     }
-    const fixture = JSON.parse(
-      await readFile(join(root, 'seed/fixture.json'), 'utf8'),
-    );
+    const fixture = fresh
+      ? {}
+      : JSON.parse(await readFile(join(root, 'seed/fixture.json'), 'utf8'));
     async function cli(
       args,
-      { client = 'a', input, version = '2', env = {} } = {},
+      { client = 'a', input, version = '2', env = {}, timeout = 30000 } = {},
     ) {
       return runNode(
         [
@@ -179,11 +192,13 @@ export async function createFixture({ encrypted = false } = {}) {
         {
           cwd: root,
           input,
+          timeout,
           env: {
             ACTUAL_SERVER_URL: serverUrl,
             ACTUAL_PASSWORD: password,
-            ACTUAL_SYNC_ID: fixture.syncId,
+            ...(fixture.syncId ? { ACTUAL_SYNC_ID: fixture.syncId } : {}),
             ACTUAL_DATA_DIR: join(root, client),
+            ACTUAL_PROFILES_FILE: join(root, 'profiles.json'),
             ...env,
             ...(encrypted && env.ACTUAL_ENCRYPTION_PASSWORD === undefined
               ? { ACTUAL_ENCRYPTION_PASSWORD: 'disposable-encryption-password' }

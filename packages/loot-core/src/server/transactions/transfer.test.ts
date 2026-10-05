@@ -1,7 +1,9 @@
 // @ts-strict-ignore
 import { expectSnapshotWithDiffer } from '#mocks/util';
 import * as db from '#server/db';
+import { loadMappings } from '#server/db/mappings';
 
+import { insertRule, loadRules, resetState } from './transaction-rules';
 import * as transfer from './transfer';
 
 beforeEach(global.emptyDatabase());
@@ -50,6 +52,76 @@ type Transaction = {
 };
 
 describe('Transfer', () => {
+  test('resolves transfer accounts through the canonical view rather than a retained raw payee', async () => {
+    await prepareDatabase();
+    const payee = await db.first<db.DbPayee>(
+      "SELECT * FROM payees WHERE transfer_acct = 'two'",
+    );
+    const transaction = {
+      id: 'source',
+      account: 'one',
+      date: '2017-01-01',
+      amount: -200,
+      payee: payee.id,
+    };
+    expect(await transfer.getTransferredAccount(transaction)).toBe('two');
+    await db.deleteAccount({ id: 'two' });
+    expect(
+      (
+        await db.first<db.DbPayee>('SELECT * FROM payees WHERE id = ?', [
+          payee.id,
+        ])
+      ).transfer_acct,
+    ).toBe('two');
+    expect(await transfer.getTransferredAccount(transaction)).toBeNull();
+  });
+
+  test('updates a linked split child and recalculates its parent error without changing its total', async () => {
+    await prepareDatabase();
+    const transferTwo = await db.first<db.DbPayee>(
+      "SELECT * FROM payees WHERE transfer_acct = 'two'",
+    );
+    const parentId = await db.insertTransaction({
+      account: 'one',
+      amount: -300,
+      date: '2017-01-01',
+      is_parent: true,
+    });
+    const childId = await db.insertTransaction({
+      account: 'one',
+      amount: -200,
+      date: '2017-01-01',
+      is_child: true,
+      parent_id: parentId,
+      payee: transferTwo.id,
+    });
+    await db.insertTransaction({
+      account: 'one',
+      amount: -100,
+      date: '2017-01-01',
+      is_child: true,
+      parent_id: parentId,
+      notes: 'sibling',
+    });
+    await transfer.onInsert(await db.getTransaction(childId));
+    const child = await db.getTransaction(childId);
+    const counterpart = await db.getTransaction(child.transfer_id);
+    await db.updateTransaction({
+      id: counterpart.id,
+      amount: 210,
+      notes: 'counterpart edit',
+    });
+    await transfer.onUpdate(await db.getTransaction(counterpart.id));
+    expect(await db.getTransaction(childId)).toMatchObject({
+      amount: -210,
+      notes: 'counterpart edit',
+    });
+    expect(await db.getTransaction(parentId)).toMatchObject({
+      amount: -300,
+      error: { type: 'SplitTransactionError', difference: 10, version: 1 },
+    });
+  });
+
   test('transfers are properly inserted/updated/deleted', async () => {
     await prepareDatabase();
 
@@ -218,4 +290,89 @@ describe('Transfer', () => {
     expect(child.transfer_id).not.toBe(parent.transfer_id);
     expect(child.payee).toBe(transferOne.id);
   });
+});
+
+test('prepares a closing counterpart without writes and persists the same rule-owned fields', async () => {
+  await prepareDatabase();
+  resetState();
+  await loadMappings();
+  await loadRules();
+  await db.insertTransaction({
+    id: 'existing-source',
+    account: 'one',
+    date: '2026-10-01',
+    amount: 1000,
+  });
+  await db.insertTransaction({
+    id: 'existing-destination',
+    account: 'two',
+    date: '2026-10-01',
+    amount: 200,
+  });
+  await insertRule({
+    stage: null,
+    conditionsOp: 'and',
+    conditions: [{ op: 'contains', field: 'notes', value: 'Closing account' }],
+    actions: [
+      {
+        op: 'set',
+        field: 'notes',
+        value: '',
+        options: {
+          formula:
+            '=CONCATENATE("source=", BALANCE_OF("one"), ";destination=", balance)',
+        },
+      },
+      { op: 'set', field: 'cleared', value: true },
+      { op: 'set', field: 'amount', value: 99999 },
+      { op: 'set', field: 'date', value: '2026-10-03' },
+    ],
+  });
+  const source = {
+    id: 'closing-source',
+    account: 'one',
+    date: '2026-10-04',
+    amount: -500,
+    notes: 'Closing account',
+    sort_order: 10,
+  };
+  const before = await db.all('SELECT * FROM transactions ORDER BY id');
+  const messages = await db.all(
+    'SELECT * FROM messages_crdt ORDER BY timestamp',
+  );
+  const planned = await transfer.prepareTransferTransaction(source, 'two', {
+    plannedTransactions: [source],
+  });
+  expect(planned).toMatchObject({
+    account: 'two',
+    amount: 500,
+    date: '2026-10-04',
+    notes: 'source=500;destination=200',
+    cleared: true,
+    transfer_id: source.id,
+  });
+  expect(await db.all('SELECT * FROM transactions ORDER BY id')).toEqual(
+    before,
+  );
+  expect(
+    await db.all('SELECT * FROM messages_crdt ORDER BY timestamp'),
+  ).toEqual(messages);
+  await db.insertTransaction(source);
+  const result = await transfer.addTransfer(source, 'two');
+  const actual = await db.getTransaction(result.transfer_id);
+  for (const [key, value] of Object.entries(planned)) {
+    if (value !== undefined) {
+      expect(actual[key]).toEqual(value);
+    }
+  }
+  const parentBefore = await db.all('SELECT * FROM transactions ORDER BY id');
+  expect(
+    await transfer.prepareTransferTransaction(
+      { ...source, is_parent: true },
+      'two',
+    ),
+  ).toBeNull();
+  expect(await db.all('SELECT * FROM transactions ORDER BY id')).toEqual(
+    parentBefore,
+  );
 });

@@ -1,0 +1,13 @@
+✔ guarded group updates preserve raw domains and acknowledged retries (online) (6489.8231ms)
+✔ guarded group updates preserve raw domains and acknowledged retries (offline) (5767.3139ms)
+✔ killed group update at before-engine retains its exact outcome without replay (34993.8917ms)
+✔ killed group update at after-engine retains its exact outcome without replay (34089.7341ms)
+✔ killed group update at before-sync retains its exact outcome without replay (35182.3271ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 116602.2158

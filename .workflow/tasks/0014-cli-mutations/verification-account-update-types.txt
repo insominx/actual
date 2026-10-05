@@ -1,0 +1,40 @@
+@actual-app/ci-actions typecheck … queued
+@actual-app/components typecheck … queued
+@actual-app/crdt typecheck … queued
+plugins-service typecheck … queued
+@actual-app/ci-actions typecheck ➔ start
+@actual-app/components typecheck ➔ start
+@actual-app/ci-actions typecheck » skip - a15bf2f851e791f66552eb8704bef90aaa2afe3e
+@actual-app/crdt typecheck ➔ start
+@actual-app/crdt typecheck » skip - 1842a47eb61ba5c7646b83ea6db2760c1023b597
+@actual-app/core typecheck … queued
+plugins-service typecheck ➔ start
+plugins-service typecheck » skip - 7d72e72d9e5af9dfa737dcf25809c86147dd79e6
+@actual-app/core typecheck ➔ start
+@actual-app/components typecheck » skip - cfff67e84b2e8caef320ddc03f0bf7155f809eae
+@actual-app/core typecheck ✖ fail
+
+Summary
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+@actual-app/api typecheck pending, took 0.00s, queued for 0.00s
+@actual-app/cli typecheck pending, took 0.00s, queued for 0.00s
+@actual-app/web typecheck pending, took 0.00s, queued for 0.00s
+desktop-electron typecheck pending, took 0.00s, queued for 0.00s
+@actual-app/core typecheck failed, took 1.16s, queued for 0.01s
+@actual-app/sync-server typecheck pending, took 0.00s, queued for 0.00s
+success: 0, skipped: 4, pending: 5, aborted: 0, failed: 1
+worker restarts: 0, max worker memory usage: 25.65 MB
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+[@actual-app/core typecheck] ERROR DETECTED
+
+
+
+local cache fetch: 525d2ee52aaf77959f841e4765cc00bb812ee393 false
+remote fallback fetch: 525d2ee52aaf77959f841e4765cc00bb812ee393 false
+Running yarn run typecheck, pid: 82016
+(node:78916) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+src/server/api.ts(2571,44): error TS2739: Type 'DbAccount' is missing the following properties from type 'AccountEntity': bankName, bankId
+
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+Took a total of 1.35s to complete. 

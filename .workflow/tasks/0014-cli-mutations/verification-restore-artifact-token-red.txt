@@ -1,0 +1,71 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+ ❯ src/change-journal.test.ts (10 tests | 1 failed | 9 skipped) 24ms
+   × binds the restore artifact locator and preserves existing receipt fingerprints 23ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/change-journal.test.ts > binds the restore artifact locator and preserves existing receipt fingerprints
+AssertionError: promise resolved "{ schemaVersion: 1, …(7) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "artifact": {
++     "path": "C:\\Users\\mlinh\\AppData\\Local\\Temp\\actual-change-journal-iYst4R\\source.actualbackup",
++     "timeout": 60,
++   },
++   "createdAt": "2026-10-04T04:22:00.697Z",
++   "operationId": "restore-token",
++   "proposal": {
++     "after": {
++       "name": "Restored",
++       "published": false,
++     },
++     "before": {
++       "bytes": 123,
++       "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
++       "sourceId": "source",
++     },
++     "budget": null,
++     "delivery": "local-only",
++     "operation": "backups.restore",
++     "references": {
++       "nameAvailable": true,
++     },
++     "request": {
++       "name": "Restored",
++     },
++     "schemaVersion": 1,
++     "sideEffects": [
++       "restore",
++     ],
++   },
++   "schemaVersion": 1,
++   "state": "prepared",
++   "token": "f1e1a331dd3a0ae06b671e47d2e44d7e72b418a1eae7d6540ce70b04bea2e7fc",
++   "updatedAt": "2026-10-04T04:22:00.697Z",
+  }
+
+ ❯ src/change-journal.test.ts:119:8
+    117|           path: join(root, 'other.actualbackup'),
+    118|         }),
+    119|       ).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+       |        ^
+    120|       const path = join(journal.directory, 'restore-token.json');
+    121|       const edited = JSON.parse(await readFile(path, 'utf8'));
+ ❯ withChangeJournal src/change-journal.ts:80:12
+ ❯ src/change-journal.test.ts:103:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 skipped (10)
+   Start at  21:22:00
+   Duration  173ms (transform 49%, tests 26%, import 20%, worker 5%)
+

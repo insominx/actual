@@ -88,6 +88,16 @@ export type MetadataPrefs = Partial<{
   resetClock: boolean;
   lastScheduleRun: string;
   userId: string; // TODO: delete this (unused)
+  archived: boolean;
+  publication: {
+    serverUrl: string;
+    cloudFileId: string;
+    encrypted: boolean;
+    guardHash?: string;
+    keySalt?: string;
+    keyTest?: string;
+    status: 'prepared' | 'published';
+  };
 }>;
 
 /**

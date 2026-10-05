@@ -1,0 +1,14 @@
+✔ guarded account reopening preserves provider fields and retries retain later closure (online) (10727.2366ms)
+✔ guarded account reopening preserves provider fields and retries retain later closure (offline) (10449.7784ms)
+✔ guarded account updates preserve ledger and retries retain later account edits (online) (9484.5353ms)
+✔ guarded account updates preserve ledger and retries retain later account edits (offline) (8979.8009ms)
+✔ guarded account creation acknowledges actual identities and retries one account (online) (9390.8809ms)
+✔ guarded account creation acknowledges actual identities and retries one account (offline) (8757.6795ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 57866.1355

@@ -1,0 +1,95 @@
+✖ guarded carryover preserves preview domains and acknowledged retries (online) (12515.7797ms)
+✖ guarded carryover preserves preview domains and acknowledged retries (offline) (10791.0799ms)
+✔ direct allocation receipts prevent replay after another allocation (online) (6534.5278ms)
+✔ direct allocation receipts prevent replay after another allocation (offline) (6135.6914ms)
+✔ guarded allocation preview preserves all domains and applies only its selected amount (9355.7474ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 3
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 45406.0075
+
+✖ failing tests:
+
+test at packages\cli\integration\changes.test.mjs:1725:3
+✖ guarded carryover preserves preview domains and acknowledged retries (online) (12515.7797ms)
+  AssertionError [ERR_ASSERTION]: {
+    "schemaVersion": 2,
+    "operation": "budgets.month",
+    "context": {
+      "budgetId": "Agent-CLI-disposable-4a38814",
+      "syncId": "58989942-f0d1-491e-987c-5255395defbe",
+      "serverUrl": "http://127.0.0.1:50079",
+      "mode": "remote-cache",
+      "currency": "USD",
+      "scale": 100,
+      "lastSyncedAt": 1791095056629,
+      "freshness": "observed",
+      "commit": "none"
+    },
+    "error": {
+      "code": "ENGINE_FAILURE",
+      "message": "The engine operation failed. Check connection, authentication, and server diagnostics.",
+      "retryable": false
+    },
+    "warnings": []
+  }
+  
+  
+  5 !== 0
+  
+      at cli (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1733:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1803:25)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 5,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:1725:3
+✖ guarded carryover preserves preview domains and acknowledged retries (offline) (10791.0799ms)
+  AssertionError [ERR_ASSERTION]: {
+    "schemaVersion": 2,
+    "operation": "budgets.month",
+    "context": {
+      "budgetId": "Agent-CLI-disposable-c0c0f0a",
+      "syncId": "dd15f35a-973d-4cee-8b87-44f5823d1d9e",
+      "serverUrl": null,
+      "mode": "offline-local",
+      "currency": "USD",
+      "scale": 100,
+      "lastSyncedAt": 0,
+      "freshness": "unknown",
+      "commit": "none"
+    },
+    "error": {
+      "code": "ENGINE_FAILURE",
+      "message": "The engine operation failed. Check connection, authentication, and server diagnostics.",
+      "retryable": false
+    },
+    "warnings": []
+  }
+  
+  
+  5 !== 0
+  
+      at cli (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1733:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1803:25)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 5,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,41 @@
+@actual-app/ci-actions typecheck … queued
+@actual-app/components typecheck … queued
+@actual-app/crdt typecheck … queued
+plugins-service typecheck … queued
+@actual-app/ci-actions typecheck ➔ start
+@actual-app/components typecheck ➔ start
+@actual-app/ci-actions typecheck » skip - a15bf2f851e791f66552eb8704bef90aaa2afe3e
+@actual-app/crdt typecheck ➔ start
+@actual-app/crdt typecheck » skip - 1842a47eb61ba5c7646b83ea6db2760c1023b597
+@actual-app/core typecheck … queued
+plugins-service typecheck ➔ start
+plugins-service typecheck » skip - 7d72e72d9e5af9dfa737dcf25809c86147dd79e6
+@actual-app/core typecheck ➔ start
+@actual-app/components typecheck » skip - cfff67e84b2e8caef320ddc03f0bf7155f809eae
+@actual-app/core typecheck » skip - da1c86c11f2cccd54509ba09392afd5a827007c0
+@actual-app/api typecheck … queued
+@actual-app/web typecheck … queued
+@actual-app/api typecheck ➔ start
+@actual-app/web typecheck ➔ start
+@actual-app/api typecheck » skip - 8b5e065b00b9a324c79c6e0a15ae5d684faa395c
+@actual-app/cli typecheck … queued
+@actual-app/cli typecheck ➔ start
+@actual-app/cli typecheck ✓ done - 1.86s
+@actual-app/web typecheck ✓ done - 15.10s
+@actual-app/sync-server typecheck … queued
+@actual-app/sync-server typecheck ➔ start
+@actual-app/sync-server typecheck ✓ done - 4.72s
+desktop-electron typecheck … queued
+desktop-electron typecheck ➔ start
+desktop-electron typecheck ✓ done - 2.08s
+
+Summary
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+@actual-app/web typecheck success, took 15.10s, queued for 0.00s
+desktop-electron typecheck success, took 2.08s, queued for 0.00s
+@actual-app/sync-server typecheck success, took 4.72s, queued for 0.00s
+@actual-app/cli typecheck success, took 1.86s, queued for 0.00s
+success: 4, skipped: 6, pending: 0, aborted: 0, failed: 0
+worker restarts: 0, max worker memory usage: 38.06 MB
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+Took a total of 22.84s to complete. 

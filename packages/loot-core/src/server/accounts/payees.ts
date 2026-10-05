@@ -15,7 +15,7 @@ export async function createPayee(description: string) {
   }
 }
 
-export async function getStartingBalancePayee() {
+export async function inspectStartingBalancePayee() {
   let category = await db.first<db.DbCategory>(`
     SELECT * FROM categories
       WHERE is_income = 1 AND
@@ -28,6 +28,15 @@ export async function getStartingBalancePayee() {
     );
   }
 
+  const payee = await db.first<db.DbPayee>(
+    `SELECT * FROM payees WHERE UNICODE_LOWER(name) = ? AND tombstone = 0`,
+    ['starting balance'],
+  );
+  return { category, payee };
+}
+
+export async function getStartingBalancePayee() {
+  const { category } = await inspectStartingBalancePayee();
   const id = await createPayee('Starting Balance');
   return {
     id,

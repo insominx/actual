@@ -1,0 +1,2773 @@
+✖ guarded group deletion preserves raw domains and acknowledged transfers (online) (6928.8728ms)
+✖ guarded group deletion preserves raw domains and acknowledged transfers (offline) (6010.3243ms)
+✖ killed group deletion at before-engine retains its exact outcome without replay (37469.7455ms)
+✖ killed group deletion at after-engine retains its exact outcome without replay (36969.4453ms)
+✖ killed group deletion at before-sync retains its exact outcome without replay (37032.4319ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 0
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 124487.5097
+
+✖ failing tests:
+
+test at packages\cli\integration\changes.test.mjs:6096:8
+✖ guarded group deletion preserves raw domains and acknowledged transfers (online) (6928.8728ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+  
+    {
+      __meta__: [
+        {
+          key: 'view-hash',
+          value: '87d8f0362e93af2e4cb9a7584b789272'
+  ...
+          template_settings: '{"source": "notes"}',
+  +       tombstone: 1
+  -       tombstone: 0
+        },
+        {
+          cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00',
+          cleanup_def: null,
+          goal_def: null,
+  ...
+          template_settings: '{"source": "notes"}',
+  +       tombstone: 1
+  -       tombstone: 0
+        },
+        {
+          cat_group: '1be2a5f1-9f4c-4618-8e56-2d293c23e406',
+          cleanup_def: null,
+          goal_def: null,
+  ...
+          sort_order: 49152,
+  +       tombstone: 1
+  -       tombstone: 0
+        },
+        {
+          hidden: 0,
+          id: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00',
+          is_income: 1,
+  ...
+          id: '336191a4-5daf-4893-8e3e-4fffeedec0ad',
+  +       transferId: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34'
+  -       transferId: 'd9dac7d7-0a7d-4dad-bf3b-c7250dff6dbe'
+        },
+        {
+          id: '3c1699a5-522a-435e-86dc-93d900a14f0e',
+          transferId: '3c1699a5-522a-435e-86dc-93d900a14f0e'
+        },
+        {
+          id: '452129e9-227e-48a8-863d-6898f14548d0',
+  +       transferId: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34'
+  -       transferId: '452129e9-227e-48a8-863d-6898f14548d0'
+        },
+        {
+          id: '506e8d9d-7ed0-4397-84e4-07a9185dc6b2',
+          transferId: '506e8d9d-7ed0-4397-84e4-07a9185dc6b2'
+        },
+  ...
+          id: '5671f480-5c16-48e0-be0e-ffbdc6834091',
+  +       transferId: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34'
+  -       transferId: '5671f480-5c16-48e0-be0e-ffbdc6834091'
+        },
+        {
+          id: '6bbd8472-25d4-4cee-8a11-5bd9f7e83d61',
+          transferId: '6bbd8472-25d4-4cee-8a11-5bd9f7e83d61'
+        },
+  ...
+          id: 'd9dac7d7-0a7d-4dad-bf3b-c7250dff6dbe',
+  +       transferId: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34'
+  -       transferId: 'd9dac7d7-0a7d-4dad-bf3b-c7250dff6dbe'
+        },
+        {
+          id: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+          transferId: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34'
+        }
+  ...
+          carryover: 0,
+  +       category: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       goal: null,
+  +       id: '202605-f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       long_goal: null,
+  +       month: 202605
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'd9dac7d7-0a7d-4dad-bf3b-c7250dff6dbe',
+          goal: null,
+          id: '202606-d9dac7d7-0a7d-4dad-bf3b-c7250dff6dbe',
+          long_goal: null,
+          month: 202606
+  ...
+          carryover: 0,
+  +       category: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       goal: null,
+  +       id: '202606-f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       long_goal: null,
+  +       month: 202606
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'd9dac7d7-0a7d-4dad-bf3b-c7250dff6dbe',
+          goal: null,
+          id: '202607-d9dac7d7-0a7d-4dad-bf3b-c7250dff6dbe',
+          long_goal: null,
+          month: 202607
+        },
+        {
+  +       amount: 0,
+  +       carryover: 0,
+  +       category: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       goal: null,
+  +       id: '202607-f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       long_goal: null,
+  +       month: 202607
+  +     },
+  +     {
+          amount: 700,
+          carryover: 0,
+          category: '452129e9-227e-48a8-863d-6898f14548d0',
+          goal: null,
+          id: '202608-452129e9-227e-48a8-863d-6898f14548d0',
+  ...
+        {
+  +       amount: 800,
+  -       amount: 200,
+          carryover: 0,
+          category: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+          goal: null,
+          id: '202608-f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       goal: null,
+  +       id: '202609-f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       long_goal: null,
+  +       month: 202609
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '5671f480-5c16-48e0-be0e-ffbdc6834091',
+          goal: null,
+          id: '202610-5671f480-5c16-48e0-be0e-ffbdc6834091',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       goal: null,
+  +       id: '202610-f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       long_goal: null,
+  +       month: 202610
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '5671f480-5c16-48e0-be0e-ffbdc6834091',
+          goal: null,
+          id: '202611-5671f480-5c16-48e0-be0e-ffbdc6834091',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       goal: null,
+  +       id: '202611-f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       long_goal: null,
+  +       month: 202611
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '5671f480-5c16-48e0-be0e-ffbdc6834091',
+          goal: null,
+          id: '202612-5671f480-5c16-48e0-be0e-ffbdc6834091',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       goal: null,
+  +       id: '202612-f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       long_goal: null,
+  +       month: 202612
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '5671f480-5c16-48e0-be0e-ffbdc6834091',
+          goal: null,
+          id: '202701-5671f480-5c16-48e0-be0e-ffbdc6834091',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       goal: null,
+  +       id: '202701-f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       long_goal: null,
+  +       month: 202701
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '5671f480-5c16-48e0-be0e-ffbdc6834091',
+          goal: null,
+          id: '202702-5671f480-5c16-48e0-be0e-ffbdc6834091',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       goal: null,
+  +       id: '202702-f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       long_goal: null,
+  +       month: 202702
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '5671f480-5c16-48e0-be0e-ffbdc6834091',
+          goal: null,
+          id: '202703-5671f480-5c16-48e0-be0e-ffbdc6834091',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       goal: null,
+  +       id: '202703-f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       long_goal: null,
+  +       month: 202703
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '5671f480-5c16-48e0-be0e-ffbdc6834091',
+          goal: null,
+          id: '202704-5671f480-5c16-48e0-be0e-ffbdc6834091',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       goal: null,
+  +       id: '202704-f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       long_goal: null,
+  +       month: 202704
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '5671f480-5c16-48e0-be0e-ffbdc6834091',
+          goal: null,
+          id: '202705-5671f480-5c16-48e0-be0e-ffbdc6834091',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       goal: null,
+  +       id: '202705-f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       long_goal: null,
+  +       month: 202705
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '5671f480-5c16-48e0-be0e-ffbdc6834091',
+          goal: null,
+          id: '202706-5671f480-5c16-48e0-be0e-ffbdc6834091',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       goal: null,
+  +       id: '202706-f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       long_goal: null,
+  +       month: 202706
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '5671f480-5c16-48e0-be0e-ffbdc6834091',
+          goal: null,
+          id: '202707-5671f480-5c16-48e0-be0e-ffbdc6834091',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       goal: null,
+  +       id: '202707-f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       long_goal: null,
+  +       month: 202707
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '5671f480-5c16-48e0-be0e-ffbdc6834091',
+          goal: null,
+          id: '202708-5671f480-5c16-48e0-be0e-ffbdc6834091',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       goal: null,
+  +       id: '202708-f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       long_goal: null,
+  +       month: 202708
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '5671f480-5c16-48e0-be0e-ffbdc6834091',
+          goal: null,
+          id: '202709-5671f480-5c16-48e0-be0e-ffbdc6834091',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       goal: null,
+  +       id: '202709-f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       long_goal: null,
+  +       month: 202709
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '5671f480-5c16-48e0-be0e-ffbdc6834091',
+          goal: null,
+          id: '202710-5671f480-5c16-48e0-be0e-ffbdc6834091',
+          long_goal: null,
+  ...
+        },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+  +       category: 'f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       goal: null,
+  +       id: '202710-f4b54b4b-d19e-42bf-b44c-58d40c739c34',
+  +       long_goal: null,
+  +       month: 202710
+  +     }
+      ]
+    }
+  
+      at assertGroupDeletedFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:5976:10)
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:6164:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: {
+      __meta__: [ [Object] ],
+      __migrations__: [
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object]
+      ],
+      account_groups: [],
+      accounts: [ [Object], [Object], [Object], [Object], [Object] ],
+      banks: [],
+      categories: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      category_groups: [ [Object], [Object], [Object] ],
+      category_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+      dashboard: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      dashboard_pages: [ [Object] ],
+      notes: [],
+      payee_locations: [],
+      payee_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      payees: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      pending_transactions: [],
+      preferences: [ [Object], [Object], [Object] ],
+      reflect_budgets: [],
+      rules: [ [Object], [Object] ],
+      schedules: [ [Object] ],
+      schedules_json_paths: [ [Object] ],
+      schedules_next_date: [ [Object] ],
+      tags: [],
+      transaction_filters: [],
+      transactions: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      zero_budget_months: [],
+      zero_budgets: [
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object]
+      ]
+    },
+    expected: {
+      __meta__: [ [Object] ],
+      __migrations__: [
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object]
+      ],
+      account_groups: [],
+      accounts: [ [Object], [Object], [Object], [Object], [Object] ],
+      banks: [],
+      categories: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      category_groups: [ [Object], [Object], [Object] ],
+      category_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+      dashboard: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      dashboard_pages: [ [Object] ],
+      notes: [],
+      payee_locations: [],
+      payee_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      payees: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      pending_transactions: [],
+      preferences: [ [Object], [Object], [Object] ],
+      reflect_budgets: [],
+      rules: [ [Object], [Object] ],
+      schedules: [ [Object] ],
+      schedules_json_paths: [ [Object] ],
+      schedules_next_date: [ [Object] ],
+      tags: [],
+      transaction_filters: [],
+      transactions: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      zero_budget_months: [],
+      zero_budgets: [
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object]
+      ]
+    },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:6096:8
+✖ guarded group deletion preserves raw domains and acknowledged transfers (offline) (6010.3243ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+  
+    {
+      __meta__: [
+        {
+          key: 'view-hash',
+          value: '87d8f0362e93af2e4cb9a7584b789272'
+  ...
+          template_settings: '{"source": "notes"}',
+  +       tombstone: 1
+  -       tombstone: 0
+        },
+        {
+          cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00',
+          cleanup_def: null,
+          goal_def: null,
+  ...
+          template_settings: '{"source": "notes"}',
+  +       tombstone: 1
+  -       tombstone: 0
+        }
+      ],
+      category_groups: [
+        {
+          hidden: 0,
+  ...
+          sort_order: 49152,
+  +       tombstone: 1
+  -       tombstone: 0
+        },
+        {
+          hidden: 0,
+          id: 'eb7159e1-a225-4612-9bf4-8dde913c5b60',
+          is_income: 0,
+  ...
+          id: '39dc90cc-50cb-4be8-8434-71b30cacd87f',
+  +       transferId: 'b3cb2254-e156-40d7-96fc-9a05b2d56274'
+  -       transferId: '39dc90cc-50cb-4be8-8434-71b30cacd87f'
+        },
+        {
+          id: '3c1699a5-522a-435e-86dc-93d900a14f0e',
+          transferId: '3c1699a5-522a-435e-86dc-93d900a14f0e'
+        },
+  ...
+          id: '85004856-701a-4318-9abc-3b64f3e47172',
+  +       transferId: 'b3cb2254-e156-40d7-96fc-9a05b2d56274'
+  -       transferId: '98c1c4af-7234-42d2-8735-fc48378bcb0a'
+        },
+        {
+          id: '90002842-6d18-4945-b9ce-443fbcd73b6c',
+          transferId: '90002842-6d18-4945-b9ce-443fbcd73b6c'
+        },
+        {
+          id: '98c1c4af-7234-42d2-8735-fc48378bcb0a',
+  +       transferId: 'b3cb2254-e156-40d7-96fc-9a05b2d56274'
+  -       transferId: '98c1c4af-7234-42d2-8735-fc48378bcb0a'
+        },
+        {
+          id: 'af375fd4-d759-46b3-bffe-74a856151d57',
+          transferId: 'af375fd4-d759-46b3-bffe-74a856151d57'
+        },
+  ...
+          id: 'ec4c5bee-5d68-40db-a65d-50675a375ea0',
+  +       transferId: 'b3cb2254-e156-40d7-96fc-9a05b2d56274'
+  -       transferId: 'ec4c5bee-5d68-40db-a65d-50675a375ea0'
+        }
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+  ...
+          carryover: 0,
+  +       category: 'b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       goal: null,
+  +       id: '202605-b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       long_goal: null,
+  +       month: 202605
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: '98c1c4af-7234-42d2-8735-fc48378bcb0a',
+          goal: null,
+          id: '202606-98c1c4af-7234-42d2-8735-fc48378bcb0a',
+          long_goal: null,
+          month: 202606
+  ...
+          carryover: 0,
+  +       category: 'b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       goal: null,
+  +       id: '202606-b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       long_goal: null,
+  +       month: 202606
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: '98c1c4af-7234-42d2-8735-fc48378bcb0a',
+          goal: null,
+          id: '202607-98c1c4af-7234-42d2-8735-fc48378bcb0a',
+          long_goal: null,
+          month: 202607
+        },
+        {
+  +       amount: 0,
+  +       carryover: 0,
+  +       category: 'b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       goal: null,
+  +       id: '202607-b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       long_goal: null,
+  +       month: 202607
+  +     },
+  +     {
+          amount: -100,
+          carryover: 1,
+          category: '39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          goal: null,
+          id: '202608-39dc90cc-50cb-4be8-8434-71b30cacd87f',
+  ...
+        {
+  +       amount: 800,
+  -       amount: 200,
+          carryover: 0,
+          category: 'b3cb2254-e156-40d7-96fc-9a05b2d56274',
+          goal: null,
+          id: '202608-b3cb2254-e156-40d7-96fc-9a05b2d56274',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       goal: null,
+  +       id: '202609-b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       long_goal: null,
+  +       month: 202609
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          goal: null,
+          id: '202610-39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       goal: null,
+  +       id: '202610-b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       long_goal: null,
+  +       month: 202610
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          goal: null,
+          id: '202611-39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       goal: null,
+  +       id: '202611-b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       long_goal: null,
+  +       month: 202611
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          goal: null,
+          id: '202612-39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       goal: null,
+  +       id: '202612-b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       long_goal: null,
+  +       month: 202612
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          goal: null,
+          id: '202701-39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       goal: null,
+  +       id: '202701-b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       long_goal: null,
+  +       month: 202701
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          goal: null,
+          id: '202702-39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       goal: null,
+  +       id: '202702-b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       long_goal: null,
+  +       month: 202702
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          goal: null,
+          id: '202703-39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       goal: null,
+  +       id: '202703-b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       long_goal: null,
+  +       month: 202703
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          goal: null,
+          id: '202704-39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       goal: null,
+  +       id: '202704-b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       long_goal: null,
+  +       month: 202704
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          goal: null,
+          id: '202705-39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       goal: null,
+  +       id: '202705-b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       long_goal: null,
+  +       month: 202705
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          goal: null,
+          id: '202706-39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       goal: null,
+  +       id: '202706-b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       long_goal: null,
+  +       month: 202706
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          goal: null,
+          id: '202707-39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       goal: null,
+  +       id: '202707-b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       long_goal: null,
+  +       month: 202707
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          goal: null,
+          id: '202708-39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       goal: null,
+  +       id: '202708-b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       long_goal: null,
+  +       month: 202708
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          goal: null,
+          id: '202709-39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          long_goal: null,
+  ...
+          amount: 0,
+  +       carryover: 0,
+  +       category: 'b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       goal: null,
+  +       id: '202709-b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       long_goal: null,
+  +       month: 202709
+  +     },
+  +     {
+  +       amount: 0,
+          carryover: 1,
+          category: '39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          goal: null,
+          id: '202710-39dc90cc-50cb-4be8-8434-71b30cacd87f',
+          long_goal: null,
+  ...
+        },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+  +       category: 'b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       goal: null,
+  +       id: '202710-b3cb2254-e156-40d7-96fc-9a05b2d56274',
+  +       long_goal: null,
+  +       month: 202710
+  +     }
+      ]
+    }
+  
+      at assertGroupDeletedFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:5976:10)
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:6164:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: {
+      __meta__: [ [Object] ],
+      __migrations__: [
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object]
+      ],
+      account_groups: [],
+      accounts: [ [Object], [Object], [Object], [Object], [Object] ],
+      banks: [],
+      categories: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      category_groups: [ [Object], [Object], [Object] ],
+      category_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+      dashboard: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      dashboard_pages: [ [Object] ],
+      notes: [],
+      payee_locations: [],
+      payee_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      payees: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      pending_transactions: [],
+      preferences: [ [Object], [Object], [Object] ],
+      reflect_budgets: [],
+      rules: [ [Object], [Object] ],
+      schedules: [ [Object] ],
+      schedules_json_paths: [ [Object] ],
+      schedules_next_date: [ [Object] ],
+      tags: [],
+      transaction_filters: [],
+      transactions: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      zero_budget_months: [],
+      zero_budgets: [
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object]
+      ]
+    },
+    expected: {
+      __meta__: [ [Object] ],
+      __migrations__: [
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object]
+      ],
+      account_groups: [],
+      accounts: [ [Object], [Object], [Object], [Object], [Object] ],
+      banks: [],
+      categories: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      category_groups: [ [Object], [Object], [Object] ],
+      category_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+      dashboard: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      dashboard_pages: [ [Object] ],
+      notes: [],
+      payee_locations: [],
+      payee_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      payees: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      pending_transactions: [],
+      preferences: [ [Object], [Object], [Object] ],
+      reflect_budgets: [],
+      rules: [ [Object], [Object] ],
+      schedules: [ [Object] ],
+      schedules_json_paths: [ [Object] ],
+      schedules_next_date: [ [Object] ],
+      tags: [],
+      transaction_filters: [],
+      transactions: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      zero_budget_months: [],
+      zero_budgets: [
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object]
+      ]
+    },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:6273:8
+✖ killed group deletion at before-engine retains its exact outcome without replay (37469.7455ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+  
+    {
+      __meta__: [
+        {
+          key: 'view-hash',
+          value: '87d8f0362e93af2e4cb9a7584b789272'
+  ...
+          template_settings: '{"source": "notes"}',
+  +       tombstone: 0
+  -       tombstone: 1
+        },
+        {
+          cat_group: '73f4c4f7-826c-4d9c-8863-2cb8159d5b97',
+          cleanup_def: null,
+          goal_def: null,
+  ...
+          template_settings: '{"source": "notes"}',
+  +       tombstone: 0
+  -       tombstone: 1
+        }
+      ],
+      category_groups: [
+        {
+          hidden: 0,
+  ...
+          sort_order: 49152,
+  +       tombstone: 0
+  -       tombstone: 1
+        },
+        {
+          hidden: 0,
+          id: '9e93a0ab-4f1d-4360-8cd9-646b47d3e395',
+          is_income: 0,
+  ...
+          id: '13bb6a66-fa86-4dee-bfc7-60ac61d1482f',
+  +       transferId: '13bb6a66-fa86-4dee-bfc7-60ac61d1482f'
+  -       transferId: '56cf0043-c81b-48bf-867a-86906efb0429'
+        },
+        {
+          id: '29ec2c58-8cd3-42fe-9187-7b5dfe0f70a6',
+          transferId: '29ec2c58-8cd3-42fe-9187-7b5dfe0f70a6'
+        },
+  ...
+          id: '7c960a04-7f5e-492b-ae1a-4f641a252dcf',
+  +       transferId: '13bb6a66-fa86-4dee-bfc7-60ac61d1482f'
+  -       transferId: '56cf0043-c81b-48bf-867a-86906efb0429'
+        },
+        {
+          id: 'af375fd4-d759-46b3-bffe-74a856151d57',
+          transferId: 'af375fd4-d759-46b3-bffe-74a856151d57'
+        },
+        {
+          id: 'c20402d8-0105-43cd-87be-ac8505a623ab',
+  +       transferId: 'c20402d8-0105-43cd-87be-ac8505a623ab'
+  -       transferId: '56cf0043-c81b-48bf-867a-86906efb0429'
+        },
+        {
+          id: 'cacb6d4b-6d91-402b-95d9-83068c85ba93',
+  +       transferId: 'cacb6d4b-6d91-402b-95d9-83068c85ba93'
+  -       transferId: '56cf0043-c81b-48bf-867a-86906efb0429'
+        },
+        {
+          id: 'd4b0f075-3343-4408-91ed-fae94f74e5bf',
+          transferId: 'd4b0f075-3343-4408-91ed-fae94f74e5bf'
+        },
+  ...
+          carryover: 0,
+  -       category: '56cf0043-c81b-48bf-867a-86906efb0429',
+  -       goal: null,
+  -       id: '202605-56cf0043-c81b-48bf-867a-86906efb0429',
+  -       long_goal: null,
+  -       month: 202605
+  -     },
+  -     {
+  -       amount: 0,
+  -       carryover: 0,
+          category: '13bb6a66-fa86-4dee-bfc7-60ac61d1482f',
+          goal: null,
+          id: '202606-13bb6a66-fa86-4dee-bfc7-60ac61d1482f',
+          long_goal: null,
+          month: 202606
+  ...
+          carryover: 0,
+  -       category: '56cf0043-c81b-48bf-867a-86906efb0429',
+  -       goal: null,
+  -       id: '202606-56cf0043-c81b-48bf-867a-86906efb0429',
+  -       long_goal: null,
+  -       month: 202606
+  -     },
+  -     {
+  -       amount: 0,
+  -       carryover: 0,
+          category: '13bb6a66-fa86-4dee-bfc7-60ac61d1482f',
+          goal: null,
+          id: '202607-13bb6a66-fa86-4dee-bfc7-60ac61d1482f',
+          long_goal: null,
+          month: 202607
+        },
+        {
+  -       amount: 0,
+  -       carryover: 0,
+  -       category: '56cf0043-c81b-48bf-867a-86906efb0429',
+  -       goal: null,
+  -       id: '202607-56cf0043-c81b-48bf-867a-86906efb0429',
+  -       long_goal: null,
+  -       month: 202607
+  -     },
+  -     {
+          amount: 999,
+          carryover: 0,
+          category: '13bb6a66-fa86-4dee-bfc7-60ac61d1482f',
+          goal: null,
+          id: '202608-13bb6a66-fa86-4dee-bfc7-60ac61d1482f',
+  ...
+        {
+  +       amount: 200,
+  -       amount: 800,
+          carryover: 0,
+          category: '56cf0043-c81b-48bf-867a-86906efb0429',
+          goal: null,
+          id: '202608-56cf0043-c81b-48bf-867a-86906efb0429',
+          long_goal: null,
+  ...
+          amount: 0,
+  -       carryover: 0,
+  -       category: '56cf0043-c81b-48bf-867a-86906efb0429',
+  -       goal: null,
+  -       id: '202609-56cf0043-c81b-48bf-867a-86906efb0429',
+  -       long_goal: null,
+  -       month: 202609
+  -     },
+  -     {
+  -       amount: 0,
+          carryover: 1,
+          category: 'c20402d8-0105-43cd-87be-ac8505a623ab',
+          goal: null,
+          id: '202609-c20402d8-0105-43cd-87be-ac8505a623ab',
+          long_goal: null,
+  ...
+          amount: 0,
+  -       carryover: 0,
+  -       category: '56cf0043-c81b-48bf-867a-86906efb0429',
+  -       goal: null,
+  -       id: '202610-56cf0043-c81b-48bf-867a-86906efb0429',
+  -       long_goal: null,
+  -       month: 202610
+  -     },
+  -     {
+  -       amount: 0,
+          carryover: 1,
+          category: 'c20402d8-0105-43cd-87be-ac8505a623ab',
+          goal: null,
+          id: '202610-c20402d8-0105-43cd-87be-ac8505a623ab',
+          long_goal: null,
+  ...
+          amount: 0,
+  -       carryover: 0,
+  -       category: '56cf0043-c81b-48bf-867a-86906efb0429',
+  -       goal: null,
+  -       id: '202611-56cf0043-c81b-48bf-867a-86906efb0429',
+  -       long_goal: null,
+  -       month: 202611
+  -     },
+  -     {
+  -       amount: 0,
+          carryover: 1,
+          category: 'c20402d8-0105-43cd-87be-ac8505a623ab',
+          goal: null,
+          id: '202611-c20402d8-0105-43cd-87be-ac8505a623ab',
+          long_goal: null,
+  ...
+          amount: 0,
+  -       carryover: 0,
+  -       category: '56cf0043-c81b-48bf-867a-86906efb0429',
+  -       goal: null,
+  -       id: '202612-56cf0043-c81b-48bf-867a-86906efb0429',
+  -       long_goal: null,
+  -       month: 202612
+  -     },
+  -     {
+  -       amount: 0,
+          carryover: 1,
+          category: 'c20402d8-0105-43cd-87be-ac8505a623ab',
+          goal: null,
+          id: '202612-c20402d8-0105-43cd-87be-ac8505a623ab',
+          long_goal: null,
+  ...
+          amount: 0,
+  -       carryover: 0,
+  -       category: '56cf0043-c81b-48bf-867a-86906efb0429',
+  -       goal: null,
+  -       id: '202701-56cf0043-c81b-48bf-867a-86906efb0429',
+  -       long_goal: null,
+  -       month: 202701
+  -     },
+  -     {
+  -       amount: 0,
+          carryover: 1,
+          category: 'c20402d8-0105-43cd-87be-ac8505a623ab',
+          goal: null,
+          id: '202701-c20402d8-0105-43cd-87be-ac8505a623ab',
+          long_goal: null,
+  ...
+          amount: 0,
+  -       carryover: 0,
+  -       category: '56cf0043-c81b-48bf-867a-86906efb0429',
+  -       goal: null,
+  -       id: '202702-56cf0043-c81b-48bf-867a-86906efb0429',
+  -       long_goal: null,
+  -       month: 202702
+  -     },
+  -     {
+  -       amount: 0,
+          carryover: 1,
+          category: 'c20402d8-0105-43cd-87be-ac8505a623ab',
+          goal: null,
+          id: '202702-c20402d8-0105-43cd-87be-ac8505a623ab',
+          long_goal: null,
+  ...
+          amount: 0,
+  -       carryover: 0,
+  -       category: '56cf0043-c81b-48bf-867a-86906efb0429',
+  -       goal: null,
+  -       id: '202703-56cf0043-c81b-48bf-867a-86906efb0429',
+  -       long_goal: null,
+  -       month: 202703
+  -     },
+  -     {
+  -       amount: 0,
+          carryover: 1,
+          category: 'c20402d8-0105-43cd-87be-ac8505a623ab',
+          goal: null,
+          id: '202703-c20402d8-0105-43cd-87be-ac8505a623ab',
+          long_goal: null,
+  ...
+          amount: 0,
+  -       carryover: 0,
+  -       category: '56cf0043-c81b-48bf-867a-86906efb0429',
+  -       goal: null,
+  -       id: '202704-56cf0043-c81b-48bf-867a-86906efb0429',
+  -       long_goal: null,
+  -       month: 202704
+  -     },
+  -     {
+  -       amount: 0,
+          carryover: 1,
+          category: 'c20402d8-0105-43cd-87be-ac8505a623ab',
+          goal: null,
+          id: '202704-c20402d8-0105-43cd-87be-ac8505a623ab',
+          long_goal: null,
+  ...
+          amount: 0,
+  -       carryover: 0,
+  -       category: '56cf0043-c81b-48bf-867a-86906efb0429',
+  -       goal: null,
+  -       id: '202705-56cf0043-c81b-48bf-867a-86906efb0429',
+  -       long_goal: null,
+  -       month: 202705
+  -     },
+  -     {
+  -       amount: 0,
+          carryover: 1,
+          category: 'c20402d8-0105-43cd-87be-ac8505a623ab',
+          goal: null,
+          id: '202705-c20402d8-0105-43cd-87be-ac8505a623ab',
+          long_goal: null,
+  ...
+          amount: 0,
+  -       carryover: 0,
+  -       category: '56cf0043-c81b-48bf-867a-86906efb0429',
+  -       goal: null,
+  -       id: '202706-56cf0043-c81b-48bf-867a-86906efb0429',
+  -       long_goal: null,
+  -       month: 202706
+  -     },
+  -     {
+  -       amount: 0,
+          carryover: 1,
+          category: 'c20402d8-0105-43cd-87be-ac8505a623ab',
+          goal: null,
+          id: '202706-c20402d8-0105-43cd-87be-ac8505a623ab',
+          long_goal: null,
+  ...
+          amount: 0,
+  -       carryover: 0,
+  -       category: '56cf0043-c81b-48bf-867a-86906efb0429',
+  -       goal: null,
+  -       id: '202707-56cf0043-c81b-48bf-867a-86906efb0429',
+  -       long_goal: null,
+  -       month: 202707
+  -     },
+  -     {
+  -       amount: 0,
+          carryover: 1,
+          category: 'c20402d8-0105-43cd-87be-ac8505a623ab',
+          goal: null,
+          id: '202707-c20402d8-0105-43cd-87be-ac8505a623ab',
+          long_goal: null,
+  ...
+          amount: 0,
+  -       carryover: 0,
+  -       category: '56cf0043-c81b-48bf-867a-86906efb0429',
+  -       goal: null,
+  -       id: '202708-56cf0043-c81b-48bf-867a-86906efb0429',
+  -       long_goal: null,
+  -       month: 202708
+  -     },
+  -     {
+  -       amount: 0,
+          carryover: 1,
+          category: 'c20402d8-0105-43cd-87be-ac8505a623ab',
+          goal: null,
+          id: '202708-c20402d8-0105-43cd-87be-ac8505a623ab',
+          long_goal: null,
+  ...
+          amount: 0,
+  -       carryover: 0,
+  -       category: '56cf0043-c81b-48bf-867a-86906efb0429',
+  -       goal: null,
+  -       id: '202709-56cf0043-c81b-48bf-867a-86906efb0429',
+  -       long_goal: null,
+  -       month: 202709
+  -     },
+  -     {
+  -       amount: 0,
+          carryover: 1,
+          category: 'c20402d8-0105-43cd-87be-ac8505a623ab',
+          goal: null,
+          id: '202709-c20402d8-0105-43cd-87be-ac8505a623ab',
+          long_goal: null,
+  ...
+          amount: 0,
+  -       carryover: 0,
+  -       category: '56cf0043-c81b-48bf-867a-86906efb0429',
+  -       goal: null,
+  -       id: '202710-56cf0043-c81b-48bf-867a-86906efb0429',
+  -       long_goal: null,
+  -       month: 202710
+  -     },
+  -     {
+  -       amount: 0,
+          carryover: 1,
+          category: 'c20402d8-0105-43cd-87be-ac8505a623ab',
+          goal: null,
+          id: '202710-c20402d8-0105-43cd-87be-ac8505a623ab',
+          long_goal: null,
+  
+      at assertGroupDeletedFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:5976:10)
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:6367:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: {
+      __meta__: [ [Object] ],
+      __migrations__: [
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object]
+      ],
+      account_groups: [],
+      accounts: [ [Object], [Object], [Object], [Object], [Object] ],
+      banks: [],
+      categories: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      category_groups: [ [Object], [Object], [Object] ],
+      category_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+      dashboard: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      dashboard_pages: [ [Object] ],
+      notes: [],
+      payee_locations: [],
+      payee_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      payees: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      pending_transactions: [],
+      preferences: [ [Object], [Object], [Object] ],
+      reflect_budgets: [],
+      rules: [ [Object], [Object] ],
+      schedules: [ [Object] ],
+      schedules_json_paths: [ [Object] ],
+      schedules_next_date: [ [Object] ],
+      tags: [],
+      transaction_filters: [],
+      transactions: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      zero_budget_months: [],
+      zero_budgets: [
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object]
+      ]
+    },
+    expected: {
+      __meta__: [ [Object] ],
+      __migrations__: [
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object]
+      ],
+      account_groups: [],
+      accounts: [ [Object], [Object], [Object], [Object], [Object] ],
+      banks: [],
+      categories: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      category_groups: [ [Object], [Object], [Object] ],
+      category_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+      dashboard: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      dashboard_pages: [ [Object] ],
+      notes: [],
+      payee_locations: [],
+      payee_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      payees: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      pending_transactions: [],
+      preferences: [ [Object], [Object], [Object] ],
+      reflect_budgets: [],
+      rules: [ [Object], [Object] ],
+      schedules: [ [Object] ],
+      schedules_json_paths: [ [Object] ],
+      schedules_next_date: [ [Object] ],
+      tags: [],
+      transaction_filters: [],
+      transactions: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      zero_budget_months: [],
+      zero_budgets: [
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object]
+      ]
+    },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:6273:8
+✖ killed group deletion at after-engine retains its exact outcome without replay (36969.4453ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+  
+    {
+      __meta__: [
+        {
+          key: 'view-hash',
+          value: '87d8f0362e93af2e4cb9a7584b789272'
+  ...
+          template_settings: '{"source": "notes"}',
+  +       tombstone: 1
+  -       tombstone: 0
+        },
+        {
+          cat_group: 'f03ce7d6-1b03-4d55-93d8-d791bf8e2733',
+          cleanup_def: null,
+          goal_def: null,
+  ...
+          template_settings: '{"source": "notes"}',
+  +       tombstone: 1
+  -       tombstone: 0
+        },
+        {
+          cat_group: '2afe30c9-b330-4b2e-a6ab-9cd647099ade',
+          cleanup_def: null,
+          goal_def: null,
+  ...
+          sort_order: 49152,
+  +       tombstone: 1
+  -       tombstone: 0
+        }
+      ],
+      category_mapping: [
+        {
+          id: '29ec2c58-8cd3-42fe-9187-7b5dfe0f70a6',
+  ...
+          id: '49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+  +       transferId: 'c787d783-8677-415b-b99e-855cc1c0c019'
+  -       transferId: '49f4fbca-a003-424d-91dc-cdd85dfbcd49'
+        },
+        {
+          id: '506e8d9d-7ed0-4397-84e4-07a9185dc6b2',
+          transferId: '506e8d9d-7ed0-4397-84e4-07a9185dc6b2'
+        },
+  ...
+          id: '63eca991-2b86-403e-8cab-09c16dafcb92',
+  +       transferId: 'c787d783-8677-415b-b99e-855cc1c0c019'
+  -       transferId: '63eca991-2b86-403e-8cab-09c16dafcb92'
+        },
+        {
+          id: '6bbd8472-25d4-4cee-8a11-5bd9f7e83d61',
+          transferId: '6bbd8472-25d4-4cee-8a11-5bd9f7e83d61'
+        },
+        {
+          id: 'a48f6a86-0f17-4d2c-88b3-e23057c5fc2b',
+  +       transferId: 'c787d783-8677-415b-b99e-855cc1c0c019'
+  -       transferId: 'a48f6a86-0f17-4d2c-88b3-e23057c5fc2b'
+        },
+        {
+          id: 'af375fd4-d759-46b3-bffe-74a856151d57',
+          transferId: 'af375fd4-d759-46b3-bffe-74a856151d57'
+        },
+        {
+          id: 'bf6f57d5-9b3a-4def-b4e5-62321d00734f',
+  +       transferId: 'c787d783-8677-415b-b99e-855cc1c0c019'
+  -       transferId: '49f4fbca-a003-424d-91dc-cdd85dfbcd49'
+        },
+        {
+          id: 'c787d783-8677-415b-b99e-855cc1c0c019',
+          transferId: 'c787d783-8677-415b-b99e-855cc1c0c019'
+        },
+  ...
+          carryover: 0,
+  +       category: 'c787d783-8677-415b-b99e-855cc1c0c019',
+  +       goal: null,
+  +       id: '202605-c787d783-8677-415b-b99e-855cc1c0c019',
+  +       long_goal: null,
+  +       month: 202605
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: '49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          goal: null,
+          id: '202606-49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          long_goal: null,
+          month: 202606
+  ...
+          carryover: 0,
+  +       category: 'c787d783-8677-415b-b99e-855cc1c0c019',
+  +       goal: null,
+  +       id: '202606-c787d783-8677-415b-b99e-855cc1c0c019',
+  +       long_goal: null,
+  +       month: 202606
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: '49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          goal: null,
+          id: '202607-49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          long_goal: null,
+          month: 202607
+        },
+        {
+  +       amount: 0,
+  +       carryover: 0,
+  +       category: 'c787d783-8677-415b-b99e-855cc1c0c019',
+  +       goal: null,
+  +       id: '202607-c787d783-8677-415b-b99e-855cc1c0c019',
+  +       long_goal: null,
+  +       month: 202607
+  +     },
+  +     {
+          amount: 999,
+          carryover: 0,
+          category: '49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          goal: null,
+          id: '202608-49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+  ...
+        {
+  +       amount: 800,
+  -       amount: 200,
+          carryover: 0,
+          category: 'c787d783-8677-415b-b99e-855cc1c0c019',
+          goal: null,
+          id: '202608-c787d783-8677-415b-b99e-855cc1c0c019',
+          long_goal: null,
+  ...
+          carryover: 0,
+  +       category: 'c787d783-8677-415b-b99e-855cc1c0c019',
+  +       goal: null,
+  +       id: '202609-c787d783-8677-415b-b99e-855cc1c0c019',
+  +       long_goal: null,
+  +       month: 202609
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: '49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          goal: null,
+          id: '202610-49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          long_goal: null,
+          month: 202610
+  ...
+          carryover: 0,
+  +       category: 'c787d783-8677-415b-b99e-855cc1c0c019',
+  +       goal: null,
+  +       id: '202610-c787d783-8677-415b-b99e-855cc1c0c019',
+  +       long_goal: null,
+  +       month: 202610
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: '49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          goal: null,
+          id: '202611-49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          long_goal: null,
+          month: 202611
+  ...
+          carryover: 0,
+  +       category: 'c787d783-8677-415b-b99e-855cc1c0c019',
+  +       goal: null,
+  +       id: '202611-c787d783-8677-415b-b99e-855cc1c0c019',
+  +       long_goal: null,
+  +       month: 202611
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: '49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          goal: null,
+          id: '202612-49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          long_goal: null,
+          month: 202612
+  ...
+          carryover: 0,
+  +       category: 'c787d783-8677-415b-b99e-855cc1c0c019',
+  +       goal: null,
+  +       id: '202612-c787d783-8677-415b-b99e-855cc1c0c019',
+  +       long_goal: null,
+  +       month: 202612
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: '49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          goal: null,
+          id: '202701-49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          long_goal: null,
+          month: 202701
+  ...
+          carryover: 0,
+  +       category: 'c787d783-8677-415b-b99e-855cc1c0c019',
+  +       goal: null,
+  +       id: '202701-c787d783-8677-415b-b99e-855cc1c0c019',
+  +       long_goal: null,
+  +       month: 202701
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: '49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          goal: null,
+          id: '202702-49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          long_goal: null,
+          month: 202702
+  ...
+          carryover: 0,
+  +       category: 'c787d783-8677-415b-b99e-855cc1c0c019',
+  +       goal: null,
+  +       id: '202702-c787d783-8677-415b-b99e-855cc1c0c019',
+  +       long_goal: null,
+  +       month: 202702
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: '49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          goal: null,
+          id: '202703-49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          long_goal: null,
+          month: 202703
+  ...
+          carryover: 0,
+  +       category: 'c787d783-8677-415b-b99e-855cc1c0c019',
+  +       goal: null,
+  +       id: '202703-c787d783-8677-415b-b99e-855cc1c0c019',
+  +       long_goal: null,
+  +       month: 202703
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: '49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          goal: null,
+          id: '202704-49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          long_goal: null,
+          month: 202704
+  ...
+          carryover: 0,
+  +       category: 'c787d783-8677-415b-b99e-855cc1c0c019',
+  +       goal: null,
+  +       id: '202704-c787d783-8677-415b-b99e-855cc1c0c019',
+  +       long_goal: null,
+  +       month: 202704
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: '49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          goal: null,
+          id: '202705-49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          long_goal: null,
+          month: 202705
+  ...
+          carryover: 0,
+  +       category: 'c787d783-8677-415b-b99e-855cc1c0c019',
+  +       goal: null,
+  +       id: '202705-c787d783-8677-415b-b99e-855cc1c0c019',
+  +       long_goal: null,
+  +       month: 202705
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: '49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          goal: null,
+          id: '202706-49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          long_goal: null,
+          month: 202706
+  ...
+          carryover: 0,
+  +       category: 'c787d783-8677-415b-b99e-855cc1c0c019',
+  +       goal: null,
+  +       id: '202706-c787d783-8677-415b-b99e-855cc1c0c019',
+  +       long_goal: null,
+  +       month: 202706
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: '49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          goal: null,
+          id: '202707-49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          long_goal: null,
+          month: 202707
+  ...
+          carryover: 0,
+  +       category: 'c787d783-8677-415b-b99e-855cc1c0c019',
+  +       goal: null,
+  +       id: '202707-c787d783-8677-415b-b99e-855cc1c0c019',
+  +       long_goal: null,
+  +       month: 202707
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: '49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          goal: null,
+          id: '202708-49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          long_goal: null,
+          month: 202708
+  ...
+          carryover: 0,
+  +       category: 'c787d783-8677-415b-b99e-855cc1c0c019',
+  +       goal: null,
+  +       id: '202708-c787d783-8677-415b-b99e-855cc1c0c019',
+  +       long_goal: null,
+  +       month: 202708
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: '49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          goal: null,
+          id: '202709-49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          long_goal: null,
+          month: 202709
+  ...
+          carryover: 0,
+  +       category: 'c787d783-8677-415b-b99e-855cc1c0c019',
+  +       goal: null,
+  +       id: '202709-c787d783-8677-415b-b99e-855cc1c0c019',
+  +       long_goal: null,
+  +       month: 202709
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: '49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          goal: null,
+          id: '202710-49f4fbca-a003-424d-91dc-cdd85dfbcd49',
+          long_goal: null,
+          month: 202710
+  ...
+        },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+  +       category: 'c787d783-8677-415b-b99e-855cc1c0c019',
+  +       goal: null,
+  +       id: '202710-c787d783-8677-415b-b99e-855cc1c0c019',
+  +       long_goal: null,
+  +       month: 202710
+  +     }
+      ]
+    }
+  
+      at assertGroupDeletedFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:5976:10)
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:6367:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: {
+      __meta__: [ [Object] ],
+      __migrations__: [
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object]
+      ],
+      account_groups: [],
+      accounts: [ [Object], [Object], [Object], [Object], [Object] ],
+      banks: [],
+      categories: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      category_groups: [ [Object], [Object], [Object] ],
+      category_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+      dashboard: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      dashboard_pages: [ [Object] ],
+      notes: [],
+      payee_locations: [],
+      payee_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      payees: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      pending_transactions: [],
+      preferences: [ [Object], [Object], [Object] ],
+      reflect_budgets: [],
+      rules: [ [Object], [Object] ],
+      schedules: [ [Object] ],
+      schedules_json_paths: [ [Object] ],
+      schedules_next_date: [ [Object] ],
+      tags: [],
+      transaction_filters: [],
+      transactions: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      zero_budget_months: [],
+      zero_budgets: [
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object]
+      ]
+    },
+    expected: {
+      __meta__: [ [Object] ],
+      __migrations__: [
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object]
+      ],
+      account_groups: [],
+      accounts: [ [Object], [Object], [Object], [Object], [Object] ],
+      banks: [],
+      categories: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      category_groups: [ [Object], [Object], [Object] ],
+      category_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+      dashboard: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      dashboard_pages: [ [Object] ],
+      notes: [],
+      payee_locations: [],
+      payee_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      payees: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      pending_transactions: [],
+      preferences: [ [Object], [Object], [Object] ],
+      reflect_budgets: [],
+      rules: [ [Object], [Object] ],
+      schedules: [ [Object] ],
+      schedules_json_paths: [ [Object] ],
+      schedules_next_date: [ [Object] ],
+      tags: [],
+      transaction_filters: [],
+      transactions: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      zero_budget_months: [],
+      zero_budgets: [
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object]
+      ]
+    },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:6273:8
+✖ killed group deletion at before-sync retains its exact outcome without replay (37032.4319ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+  
+    {
+      __meta__: [
+        {
+          key: 'view-hash',
+          value: '87d8f0362e93af2e4cb9a7584b789272'
+  ...
+          template_settings: '{"source": "notes"}',
+  +       tombstone: 1
+  -       tombstone: 0
+        },
+        {
+          cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00',
+          cleanup_def: null,
+          goal_def: null,
+  ...
+          template_settings: '{"source": "notes"}',
+  +       tombstone: 1
+  -       tombstone: 0
+        }
+      ],
+      category_groups: [
+        {
+          hidden: 0,
+  ...
+          sort_order: 49152,
+  +       tombstone: 1
+  -       tombstone: 0
+        },
+        {
+          hidden: 0,
+          id: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00',
+          is_income: 1,
+  ...
+          id: '3a066091-e0f1-4d2b-846a-05f8e24e2769',
+  +       transferId: '80f32932-6553-4c30-8357-b5314f9c5810'
+  -       transferId: '3a066091-e0f1-4d2b-846a-05f8e24e2769'
+        },
+        {
+          id: '3c1699a5-522a-435e-86dc-93d900a14f0e',
+          transferId: '3c1699a5-522a-435e-86dc-93d900a14f0e'
+        },
+  ...
+          id: '53331860-cd7a-4793-af5d-6ba02b2f3111',
+  +       transferId: '80f32932-6553-4c30-8357-b5314f9c5810'
+  -       transferId: 'e877c77e-ca36-48a0-acff-9b0dacead56b'
+        },
+        {
+          id: '541836f1-e756-4473-a5d0-6c1d3f06c7fa',
+          transferId: '541836f1-e756-4473-a5d0-6c1d3f06c7fa'
+        },
+  ...
+          id: 'e877c77e-ca36-48a0-acff-9b0dacead56b',
+  +       transferId: '80f32932-6553-4c30-8357-b5314f9c5810'
+  -       transferId: 'e877c77e-ca36-48a0-acff-9b0dacead56b'
+        },
+        {
+          id: 'f9296f28-6d73-4afc-ab33-71dfb9586403',
+  +       transferId: '80f32932-6553-4c30-8357-b5314f9c5810'
+  -       transferId: 'f9296f28-6d73-4afc-ab33-71dfb9586403'
+        }
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+  ...
+          carryover: 0,
+  +       category: '80f32932-6553-4c30-8357-b5314f9c5810',
+  +       goal: null,
+  +       id: '202605-80f32932-6553-4c30-8357-b5314f9c5810',
+  +       long_goal: null,
+  +       month: 202605
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'e877c77e-ca36-48a0-acff-9b0dacead56b',
+          goal: null,
+          id: '202605-e877c77e-ca36-48a0-acff-9b0dacead56b',
+          long_goal: null,
+          month: 202605
+  ...
+          carryover: 0,
+  +       category: '80f32932-6553-4c30-8357-b5314f9c5810',
+  +       goal: null,
+  +       id: '202606-80f32932-6553-4c30-8357-b5314f9c5810',
+  +       long_goal: null,
+  +       month: 202606
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'e877c77e-ca36-48a0-acff-9b0dacead56b',
+          goal: null,
+          id: '202606-e877c77e-ca36-48a0-acff-9b0dacead56b',
+          long_goal: null,
+          month: 202606
+  ...
+          carryover: 0,
+  +       category: '80f32932-6553-4c30-8357-b5314f9c5810',
+  +       goal: null,
+  +       id: '202607-80f32932-6553-4c30-8357-b5314f9c5810',
+  +       long_goal: null,
+  +       month: 202607
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'e877c77e-ca36-48a0-acff-9b0dacead56b',
+          goal: null,
+          id: '202607-e877c77e-ca36-48a0-acff-9b0dacead56b',
+          long_goal: null,
+          month: 202607
+  ...
+        {
+  +       amount: 800,
+  -       amount: 200,
+          carryover: 0,
+          category: '80f32932-6553-4c30-8357-b5314f9c5810',
+          goal: null,
+          id: '202608-80f32932-6553-4c30-8357-b5314f9c5810',
+          long_goal: null,
+  ...
+          carryover: 0,
+  +       category: '80f32932-6553-4c30-8357-b5314f9c5810',
+  +       goal: null,
+  +       id: '202609-80f32932-6553-4c30-8357-b5314f9c5810',
+  +       long_goal: null,
+  +       month: 202609
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'e877c77e-ca36-48a0-acff-9b0dacead56b',
+          goal: null,
+          id: '202609-e877c77e-ca36-48a0-acff-9b0dacead56b',
+          long_goal: null,
+          month: 202609
+  ...
+          carryover: 0,
+  +       category: '80f32932-6553-4c30-8357-b5314f9c5810',
+  +       goal: null,
+  +       id: '202610-80f32932-6553-4c30-8357-b5314f9c5810',
+  +       long_goal: null,
+  +       month: 202610
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'e877c77e-ca36-48a0-acff-9b0dacead56b',
+          goal: null,
+          id: '202610-e877c77e-ca36-48a0-acff-9b0dacead56b',
+          long_goal: null,
+          month: 202610
+  ...
+          carryover: 0,
+  +       category: '80f32932-6553-4c30-8357-b5314f9c5810',
+  +       goal: null,
+  +       id: '202611-80f32932-6553-4c30-8357-b5314f9c5810',
+  +       long_goal: null,
+  +       month: 202611
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'e877c77e-ca36-48a0-acff-9b0dacead56b',
+          goal: null,
+          id: '202611-e877c77e-ca36-48a0-acff-9b0dacead56b',
+          long_goal: null,
+          month: 202611
+  ...
+          carryover: 0,
+  +       category: '80f32932-6553-4c30-8357-b5314f9c5810',
+  +       goal: null,
+  +       id: '202612-80f32932-6553-4c30-8357-b5314f9c5810',
+  +       long_goal: null,
+  +       month: 202612
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'e877c77e-ca36-48a0-acff-9b0dacead56b',
+          goal: null,
+          id: '202612-e877c77e-ca36-48a0-acff-9b0dacead56b',
+          long_goal: null,
+          month: 202612
+  ...
+          carryover: 0,
+  +       category: '80f32932-6553-4c30-8357-b5314f9c5810',
+  +       goal: null,
+  +       id: '202701-80f32932-6553-4c30-8357-b5314f9c5810',
+  +       long_goal: null,
+  +       month: 202701
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'e877c77e-ca36-48a0-acff-9b0dacead56b',
+          goal: null,
+          id: '202701-e877c77e-ca36-48a0-acff-9b0dacead56b',
+          long_goal: null,
+          month: 202701
+  ...
+          carryover: 0,
+  +       category: '80f32932-6553-4c30-8357-b5314f9c5810',
+  +       goal: null,
+  +       id: '202702-80f32932-6553-4c30-8357-b5314f9c5810',
+  +       long_goal: null,
+  +       month: 202702
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'e877c77e-ca36-48a0-acff-9b0dacead56b',
+          goal: null,
+          id: '202702-e877c77e-ca36-48a0-acff-9b0dacead56b',
+          long_goal: null,
+          month: 202702
+  ...
+          carryover: 0,
+  +       category: '80f32932-6553-4c30-8357-b5314f9c5810',
+  +       goal: null,
+  +       id: '202703-80f32932-6553-4c30-8357-b5314f9c5810',
+  +       long_goal: null,
+  +       month: 202703
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'e877c77e-ca36-48a0-acff-9b0dacead56b',
+          goal: null,
+          id: '202703-e877c77e-ca36-48a0-acff-9b0dacead56b',
+          long_goal: null,
+          month: 202703
+  ...
+          carryover: 0,
+  +       category: '80f32932-6553-4c30-8357-b5314f9c5810',
+  +       goal: null,
+  +       id: '202704-80f32932-6553-4c30-8357-b5314f9c5810',
+  +       long_goal: null,
+  +       month: 202704
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'e877c77e-ca36-48a0-acff-9b0dacead56b',
+          goal: null,
+          id: '202704-e877c77e-ca36-48a0-acff-9b0dacead56b',
+          long_goal: null,
+          month: 202704
+  ...
+          carryover: 0,
+  +       category: '80f32932-6553-4c30-8357-b5314f9c5810',
+  +       goal: null,
+  +       id: '202705-80f32932-6553-4c30-8357-b5314f9c5810',
+  +       long_goal: null,
+  +       month: 202705
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'e877c77e-ca36-48a0-acff-9b0dacead56b',
+          goal: null,
+          id: '202705-e877c77e-ca36-48a0-acff-9b0dacead56b',
+          long_goal: null,
+          month: 202705
+  ...
+          carryover: 0,
+  +       category: '80f32932-6553-4c30-8357-b5314f9c5810',
+  +       goal: null,
+  +       id: '202706-80f32932-6553-4c30-8357-b5314f9c5810',
+  +       long_goal: null,
+  +       month: 202706
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'e877c77e-ca36-48a0-acff-9b0dacead56b',
+          goal: null,
+          id: '202706-e877c77e-ca36-48a0-acff-9b0dacead56b',
+          long_goal: null,
+          month: 202706
+  ...
+          carryover: 0,
+  +       category: '80f32932-6553-4c30-8357-b5314f9c5810',
+  +       goal: null,
+  +       id: '202707-80f32932-6553-4c30-8357-b5314f9c5810',
+  +       long_goal: null,
+  +       month: 202707
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'e877c77e-ca36-48a0-acff-9b0dacead56b',
+          goal: null,
+          id: '202707-e877c77e-ca36-48a0-acff-9b0dacead56b',
+          long_goal: null,
+          month: 202707
+  ...
+          carryover: 0,
+  +       category: '80f32932-6553-4c30-8357-b5314f9c5810',
+  +       goal: null,
+  +       id: '202708-80f32932-6553-4c30-8357-b5314f9c5810',
+  +       long_goal: null,
+  +       month: 202708
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'e877c77e-ca36-48a0-acff-9b0dacead56b',
+          goal: null,
+          id: '202708-e877c77e-ca36-48a0-acff-9b0dacead56b',
+          long_goal: null,
+          month: 202708
+  ...
+          carryover: 0,
+  +       category: '80f32932-6553-4c30-8357-b5314f9c5810',
+  +       goal: null,
+  +       id: '202709-80f32932-6553-4c30-8357-b5314f9c5810',
+  +       long_goal: null,
+  +       month: 202709
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'e877c77e-ca36-48a0-acff-9b0dacead56b',
+          goal: null,
+          id: '202709-e877c77e-ca36-48a0-acff-9b0dacead56b',
+          long_goal: null,
+          month: 202709
+  ...
+          carryover: 0,
+  +       category: '80f32932-6553-4c30-8357-b5314f9c5810',
+  +       goal: null,
+  +       id: '202710-80f32932-6553-4c30-8357-b5314f9c5810',
+  +       long_goal: null,
+  +       month: 202710
+  +     },
+  +     {
+  +       amount: 0,
+  +       carryover: 0,
+          category: 'e877c77e-ca36-48a0-acff-9b0dacead56b',
+          goal: null,
+          id: '202710-e877c77e-ca36-48a0-acff-9b0dacead56b',
+          long_goal: null,
+          month: 202710
+  
+      at assertGroupDeletedFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:5976:10)
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:6367:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: {
+      __meta__: [ [Object] ],
+      __migrations__: [
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object]
+      ],
+      account_groups: [],
+      accounts: [ [Object], [Object], [Object], [Object], [Object] ],
+      banks: [],
+      categories: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      category_groups: [ [Object], [Object], [Object] ],
+      category_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+      dashboard: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      dashboard_pages: [ [Object] ],
+      notes: [],
+      payee_locations: [],
+      payee_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      payees: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      pending_transactions: [],
+      preferences: [ [Object], [Object], [Object] ],
+      reflect_budgets: [],
+      rules: [ [Object], [Object] ],
+      schedules: [ [Object] ],
+      schedules_json_paths: [ [Object] ],
+      schedules_next_date: [ [Object] ],
+      tags: [],
+      transaction_filters: [],
+      transactions: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      zero_budget_months: [],
+      zero_budgets: [
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object]
+      ]
+    },
+    expected: {
+      __meta__: [ [Object] ],
+      __migrations__: [
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object]
+      ],
+      account_groups: [],
+      accounts: [ [Object], [Object], [Object], [Object], [Object] ],
+      banks: [],
+      categories: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      category_groups: [ [Object], [Object], [Object] ],
+      category_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+      dashboard: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      dashboard_pages: [ [Object] ],
+      notes: [],
+      payee_locations: [],
+      payee_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      payees: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      pending_transactions: [],
+      preferences: [ [Object], [Object], [Object] ],
+      reflect_budgets: [],
+      rules: [ [Object], [Object] ],
+      schedules: [ [Object] ],
+      schedules_json_paths: [ [Object] ],
+      schedules_next_date: [ [Object] ],
+      tags: [],
+      transaction_filters: [],
+      transactions: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      zero_budget_months: [],
+      zero_budgets: [
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object]
+      ]
+    },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

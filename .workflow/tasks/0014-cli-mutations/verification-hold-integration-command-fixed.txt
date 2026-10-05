@@ -1,0 +1,67 @@
+✖ guarded holds clamp funds and receipts preserve later hold and reset writes (online) (1388.8874ms)
+✖ guarded holds clamp funds and receipts preserve later hold and reset writes (offline) (1129.4293ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2599.373
+
+✖ failing tests:
+
+test at packages\cli\integration\changes.test.mjs:1785:3
+✖ guarded holds clamp funds and receipts preserve later hold and reset writes (online) (1388.8874ms)
+  Error: Disposable seed failed: node:internal/modules/run_main:107
+      triggerUncaughtException(
+      ^
+  
+  [Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\packages\api\dist\default-db.sqlite'] {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'D:\\Projects\\personal\\Budget\\actual\\packages\\api\\dist\\default-db.sqlite'
+  }
+  
+  Node.js v26.3.0
+  Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 94
+  
+  [Breadcrumb] { message: 'Closing budget' }
+  [Breadcrumb] { message: 'Closing budget' }
+  
+      at createFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/harness.mjs:173:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1789:17)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at packages\cli\integration\changes.test.mjs:1785:3
+✖ guarded holds clamp funds and receipts preserve later hold and reset writes (offline) (1129.4293ms)
+  Error: Disposable seed failed: node:internal/modules/esm/resolve:271
+      throw new ERR_MODULE_NOT_FOUND(
+            ^
+  
+  Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'D:\Projects\personal\Budget\actual\node_modules\@actual-app\api\dist\index.js' imported from D:\Projects\personal\Budget\actual\packages\cli\integration\seed.mjs
+      at finalizeResolution (node:internal/modules/esm/resolve:271:11)
+      at moduleResolve (node:internal/modules/esm/resolve:865:10)
+      at defaultResolve (node:internal/modules/esm/resolve:992:11)
+      at #cachedDefaultResolve (node:internal/modules/esm/loader:704:20)
+      at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:724:38)
+      at ModuleLoader.resolveSync (node:internal/modules/esm/loader:762:56)
+      at #resolve (node:internal/modules/esm/loader:686:17)
+      at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:606:35)
+      at ModuleJob.syncLink (node:internal/modules/esm/module_job:163:33)
+      at ModuleJob.link (node:internal/modules/esm/module_job:253:17) {
+    code: 'ERR_MODULE_NOT_FOUND',
+    url: 'file:///D:/Projects/personal/Budget/actual/node_modules/@actual-app/api/dist/index.js'
+  }
+  
+  Node.js v26.3.0
+  
+  
+      at createFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/harness.mjs:173:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1789:17)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)

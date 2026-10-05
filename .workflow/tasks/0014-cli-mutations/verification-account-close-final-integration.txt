@@ -1,0 +1,27 @@
+✔ guarded clone preserves the rich source and receipts prevent another destination on retries (9480.7132ms)
+✔ killed apply at before-engine (budgets.clone) preserves its durable outcome and never replays (37477.445ms)
+✔ killed apply at after-engine (budgets.clone) preserves its durable outcome and never replays (37855.3645ms)
+✔ guarded account reopening preserves provider fields and retries retain later closure (online) (10480.9172ms)
+✔ guarded account reopening preserves provider fields and retries retain later closure (offline) (9743.4647ms)
+✔ guarded account updates preserve ledger and retries retain later account edits (online) (9922.0327ms)
+✔ guarded account updates preserve ledger and retries retain later account edits (offline) (9308.4284ms)
+✔ guarded account creation acknowledges actual identities and retries one account (online) (9288.2759ms)
+✔ guarded account creation acknowledges actual identities and retries one account (offline) (8884.4941ms)
+✔ guarded account deletion preserves other domains and retries its exact outcome (online) (5143.3837ms)
+✔ guarded account deletion preserves other domains and retries its exact outcome (offline) (4957.7454ms)
+✔ killed account deletion at before-engine retains its exact outcome without replay (34362.1738ms)
+✔ killed account deletion at after-engine retains its exact outcome without replay (34991.1104ms)
+✔ killed account deletion at before-sync retains its exact outcome without replay (36167.1899ms)
+✔ guarded account closure preserves its planned transfers and acknowledged retries (online) (7924.5388ms)
+✔ guarded account closure preserves its planned transfers and acknowledged retries (offline) (7163.6794ms)
+✔ killed account closure at before-engine retains its exact outcome without replay (34441.9804ms)
+✔ killed account closure at after-engine retains its exact outcome without replay (34396.4868ms)
+✔ killed account closure at before-sync retains its exact outcome without replay (34916.466ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 376977.0319

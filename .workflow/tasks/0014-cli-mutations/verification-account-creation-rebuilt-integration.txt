@@ -1,0 +1,10 @@
+✔ guarded account creation acknowledges actual identities and retries one account (online) (9348.046ms)
+✔ guarded account creation acknowledges actual identities and retries one account (offline) (9050.3195ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 18469.0658

@@ -1,0 +1,13 @@
+✔ killed apply at before-engine (accounts.reopen) preserves its durable outcome and never replays (36644.8378ms)
+✔ killed apply at after-engine (accounts.reopen) preserves its durable outcome and never replays (37217.9486ms)
+✔ killed apply at before-sync (accounts.reopen) preserves its durable outcome and never replays (38266.8989ms)
+✔ guarded account reopening preserves provider fields and retries retain later closure (online) (10513.719ms)
+✔ guarded account reopening preserves provider fields and retries retain later closure (offline) (9999.1568ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 132719.4153

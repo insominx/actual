@@ -1,0 +1,146 @@
+✖ publication exact interruption retains one identity (before-engine, encrypted=false) (34836.2355ms)
+✖ publication exact interruption retains one identity (after-remote, encrypted=false) (34907.8647ms)
+✖ publication exact interruption retains one identity (after-engine, encrypted=false) (35119.0173ms)
+✔ publication exact interruption retains one identity (before-sync, encrypted=false) (36269.2089ms)
+✔ publication exact interruption retains one identity (before-engine, encrypted=true) (36652.001ms)
+✔ publication exact interruption retains one identity (after-remote, encrypted=true) (36906.8724ms)
+✔ publication exact interruption retains one identity (after-engine, encrypted=true) (36754.3914ms)
+✔ publication exact interruption retains one identity (before-sync, encrypted=true) (36753.8683ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 5
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 288274.5328
+
+✖ failing tests:
+
+test at packages\cli\integration\publication-crash.test.mjs:18:5
+✖ publication exact interruption retains one identity (before-engine, encrypted=false) (34836.2355ms)
+  AssertionError [ERR_ASSERTION]: {
+    "schemaVersion": 2,
+    "operation": "budgets.publish",
+    "context": {
+      "budgetId": null,
+      "syncId": null,
+      "serverUrl": "http://127.0.0.1:61723",
+      "mode": "no-budget",
+      "currency": null,
+      "scale": 100,
+      "lastSyncedAt": null,
+      "freshness": "unknown",
+      "commit": "uncertain"
+    },
+    "error": {
+      "code": "INVALID_INPUT",
+      "message": "Invalid publication proposal or encryption mode",
+      "retryable": false,
+      "details": {
+        "operationId": "crash-publication"
+      }
+    },
+    "warnings": []
+  }
+  
+  
+  2 !== 4
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-crash.test.mjs:198:22)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 4,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\publication-crash.test.mjs:18:5
+✖ publication exact interruption retains one identity (after-remote, encrypted=false) (34907.8647ms)
+  AssertionError [ERR_ASSERTION]: {
+    "schemaVersion": 2,
+    "operation": "budgets.publish",
+    "context": {
+      "budgetId": null,
+      "syncId": null,
+      "serverUrl": "http://127.0.0.1:53292",
+      "mode": "no-budget",
+      "currency": null,
+      "scale": 100,
+      "lastSyncedAt": null,
+      "freshness": "unknown",
+      "commit": "uncertain"
+    },
+    "error": {
+      "code": "INVALID_INPUT",
+      "message": "Invalid publication proposal or encryption mode",
+      "retryable": false,
+      "details": {
+        "operationId": "crash-publication"
+      }
+    },
+    "warnings": []
+  }
+  
+  
+  2 !== 0
+  
+      at invoke (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-crash.test.mjs:70:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-crash.test.mjs:214:27)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\publication-crash.test.mjs:18:5
+✖ publication exact interruption retains one identity (after-engine, encrypted=false) (35119.0173ms)
+  AssertionError [ERR_ASSERTION]: {
+    "schemaVersion": 2,
+    "operation": "budgets.publish",
+    "context": {
+      "budgetId": null,
+      "syncId": null,
+      "serverUrl": "http://127.0.0.1:57877",
+      "mode": "no-budget",
+      "currency": null,
+      "scale": 100,
+      "lastSyncedAt": null,
+      "freshness": "unknown",
+      "commit": "uncertain"
+    },
+    "error": {
+      "code": "INVALID_INPUT",
+      "message": "Invalid publication proposal or encryption mode",
+      "retryable": false,
+      "details": {
+        "operationId": "crash-publication"
+      }
+    },
+    "warnings": []
+  }
+  
+  
+  2 !== 0
+  
+      at invoke (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-crash.test.mjs:70:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-crash.test.mjs:214:27)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,74 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+ ❯ src/server/transactions/transaction-rules.test.ts (38 tests | 1 failed) 1618ms
+   ✓ Transaction rules (19)
+     ✓ makeRule validates rule data 51ms
+     ✓ insert a rule into the database 50ms
+     ✓ update a rule in the database 42ms
+     ✓ delete a rule in the database 42ms
+     ✓ payee rules match after a staged formula sets payee name 62ms
+     ✓ loadRules loads all the rules 42ms
+     ✓ ids in rules are migrated as mapping changes 43ms
+     ✓ await runRules runs all the rules in each phase 42ms
+     ✓ category_group condition matches categories in that group (live) 43ms
+     ✓ category_group condition does not match an unrelated group (live) 53ms
+     ✓ category_group condition observes a category set earlier in the same rule chain (live) 43ms
+     ✓ transactions can be queried by rule 52ms
+     ✓ transactions can be queried by hasTags 43ms
+     ✓ transactions can be queried by hasTags if no "#" is included 41ms
+     ✓ transactions can be queried by hasTags with multiple tags present 41ms
+     ✓ transactions can be queried by hasTags when tag starts with dollar 39ms
+     ✓ transactions can be queried by hasAnyTag with two tags returns everything 40ms
+     ✓ transactions can be queried by hasAnyTag with one tag 42ms
+     ✓ and sub expression builds $and condition 36ms
+   ✓ Learning categories (11)
+     ✓ getProbableCategory estimates a category winner 37ms
+     ✓ creates rule when inserting transactions 40ms
+     ✓ leaves existing rule alone if probable category is ambiguous 41ms
+     ✓ updates an existing rule 41ms
+     ✓ works with multiple payees 39ms
+     ✓ updates rules correctly even if multiple rules exist 41ms
+     ✓ avoids remembering categories for `null` payee 38ms
+     ✓ avoids remembering categories for payees specified by the user 38ms
+     ✓ adding transaction with `null` payee never changes rules 39ms
+     ✓ rules are saved with internal field names 36ms
+     ✓ rules with public field names are loaded correctly 36ms
+   ✓ Running balance for rules (4)
+     ✓ actionsReferenceBalance only flags templates and formulas that use it 42ms
+     ✓ a template that uses the balance still sees the running balance 40ms
+     ✓ a rule that uses the balance but does not match runs no query 38ms
+     ✓ rules that do not use the balance still apply normally 44ms
+   ✓ read-only rule balances with planned source insertions (3)
+     ✓ matches persisted ledger ordering: ordered target 43ms
+     ✓ matches persisted ledger ordering: unordered identified target 43ms
+     ✓ matches persisted ledger ordering: unidentified counterpart 41ms
+   × planned closing source affects canonical balance formulas without ledger writes 55ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/transactions/transaction-rules.test.ts > planned closing source affects canonical balance formulas without ledger writes
+AssertionError: expected [] to be undefined
+
+- Expected:
+undefined
+
++ Received:
+[]
+
+ ❯ src/server/transactions/transaction-rules.test.ts:1647:31
+    1645|   const preview = await runRules(target, null, { plannedTransactions: …
+    1646|   expect(preview.notes).not.toBe(withoutPlan.notes);
+    1647|   expect(preview._ruleErrors).toBeUndefined();
+       |                               ^
+    1648|   expect(await db.all('SELECT * FROM transactions ORDER BY id')).toEqu…
+    1649|     before,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 37 passed (38)
+   Start at  13:46:17
+   Duration  4.34s (setup 40%, tests 38%, transform 22%)
+

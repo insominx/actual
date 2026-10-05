@@ -1,0 +1,154 @@
+✖ publication exact interruption retains one identity (before-engine, encrypted=false) (4391.0303ms)
+✖ publication exact interruption retains one identity (after-remote, encrypted=false) (4240.6724ms)
+✖ publication exact interruption retains one identity (after-engine, encrypted=false) (4368.983ms)
+✖ publication exact interruption retains one identity (before-sync, encrypted=false) (4154.2771ms)
+✖ publication exact interruption retains one identity (before-engine, encrypted=true) (4236.7977ms)
+✖ publication exact interruption retains one identity (after-remote, encrypted=true) (4337.3081ms)
+✖ publication exact interruption retains one identity (after-engine, encrypted=true) (4219.2504ms)
+✖ publication exact interruption retains one identity (before-sync, encrypted=true) (4659.4515ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 0
+ℹ fail 8
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 34686.8239
+
+✖ failing tests:
+
+test at packages\cli\integration\publication-crash.test.mjs:18:5
+✖ publication exact interruption retains one identity (before-engine, encrypted=false) (4391.0303ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-crash.test.mjs:171:18)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\publication-crash.test.mjs:18:5
+✖ publication exact interruption retains one identity (after-remote, encrypted=false) (4240.6724ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-crash.test.mjs:171:18)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\publication-crash.test.mjs:18:5
+✖ publication exact interruption retains one identity (after-engine, encrypted=false) (4368.983ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-crash.test.mjs:171:18)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\publication-crash.test.mjs:18:5
+✖ publication exact interruption retains one identity (before-sync, encrypted=false) (4154.2771ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-crash.test.mjs:171:18)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\publication-crash.test.mjs:18:5
+✖ publication exact interruption retains one identity (before-engine, encrypted=true) (4236.7977ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-crash.test.mjs:171:18)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\publication-crash.test.mjs:18:5
+✖ publication exact interruption retains one identity (after-remote, encrypted=true) (4337.3081ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-crash.test.mjs:171:18)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\publication-crash.test.mjs:18:5
+✖ publication exact interruption retains one identity (after-engine, encrypted=true) (4219.2504ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-crash.test.mjs:171:18)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\publication-crash.test.mjs:18:5
+✖ publication exact interruption retains one identity (before-sync, encrypted=true) (4659.4515ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-crash.test.mjs:171:18)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

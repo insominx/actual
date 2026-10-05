@@ -1,0 +1,13 @@
+✔ guarded category updates preserve raw domains and acknowledged retries (online) (5747.1059ms)
+✔ guarded category updates preserve raw domains and acknowledged retries (offline) (5384.653ms)
+✔ killed category update at before-engine retains its exact outcome without replay (33876.5532ms)
+✔ killed category update at after-engine retains its exact outcome without replay (34255.3088ms)
+✔ killed category update at before-sync retains its exact outcome without replay (35050.8088ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 114393.745

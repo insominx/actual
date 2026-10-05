@@ -346,3 +346,296 @@ describe('Database', () => {
     expect(rows[0].id).toBe('trans1');
   });
 });
+
+describe('read-only category insertion planning', () => {
+  test.each([
+    {
+      name: 'ordinary group ordering',
+      compact: false,
+      atEnd: false,
+      order: 8192,
+      updates: 0,
+    },
+    {
+      name: 'compact sibling shoves',
+      compact: true,
+      atEnd: false,
+      order: 0.5,
+      updates: 2,
+    },
+    {
+      name: 'global append ordering',
+      compact: false,
+      atEnd: true,
+      order: 106384,
+      updates: 0,
+    },
+  ])(
+    '$name matches the canonical writer without preview writes',
+    async ({ compact, atEnd, order, updates }) => {
+      await db.insertCategoryGroup({
+        id: 'planned-group',
+        name: 'Planned group',
+      });
+      await db.insertCategoryGroup({ id: 'other-group', name: 'Other group' });
+      const fixtureRows: Array<[string, string, number]> = [
+        ['first', 'planned-group', compact ? 1 : 16384],
+        ['second', 'planned-group', compact ? 2 : 32768],
+        ['unrelated', 'other-group', 90000],
+      ];
+      for (const [id, group] of fixtureRows) {
+        await db.insertCategory({
+          id,
+          name: id,
+          cat_group: group,
+          is_income: 0,
+          hidden: 0,
+        });
+      }
+      // Fixture insertion can itself shove earlier siblings. Set the intended
+      // compact orders only after every fixture row exists.
+      for (const [id, , value] of fixtureRows) {
+        await db.update('categories', { id, sort_order: value });
+      }
+      const input = {
+        name: 'Planned category',
+        cat_group: 'planned-group',
+        is_income: 0,
+        hidden: 0,
+      } satisfies Partial<db.DbCategory>;
+      const before = await db.all<db.DbCategory>(
+        'SELECT * FROM categories ORDER BY id',
+      );
+      const mappings = await db.all(
+        'SELECT * FROM category_mapping ORDER BY id',
+      );
+      const messages = await db.all(
+        'SELECT * FROM messages_crdt ORDER BY timestamp',
+      );
+      const plan = await db.inspectCategoryInsertion(input, { atEnd });
+      expect(plan.category.sort_order).toBe(order);
+      expect(plan.updates).toHaveLength(updates);
+      expect(await db.all('SELECT * FROM categories ORDER BY id')).toEqual(
+        before,
+      );
+      expect(
+        await db.all('SELECT * FROM category_mapping ORDER BY id'),
+      ).toEqual(mappings);
+      expect(
+        await db.all('SELECT * FROM messages_crdt ORDER BY timestamp'),
+      ).toEqual(messages);
+      const id = await db.insertCategory(input, { atEnd });
+      expect(await db.getCategory(id)).toMatchObject(plan.category);
+      expect(
+        await db.all('SELECT * FROM categories WHERE id != ? ORDER BY id', [
+          id,
+        ]),
+      ).toEqual(
+        before.map(row => ({
+          ...row,
+          ...plan.updates.find(update => update.id === row.id),
+        })),
+      );
+      expect(
+        await db.all(
+          'SELECT * FROM category_mapping WHERE id != ? ORDER BY id',
+          [id],
+        ),
+      ).toEqual(mappings);
+      expect(
+        await db.first('SELECT * FROM category_mapping WHERE id = ?', [id]),
+      ).toEqual({ id, transferId: id });
+    },
+  );
+  test('duplicate-name rejection does not change category rows or synchronization messages', async () => {
+    const group = await db.insertCategoryGroup({ name: 'Duplicate group' });
+    await db.insertCategory({ name: 'Existing name', cat_group: group });
+    const before = await db.all('SELECT * FROM categories ORDER BY id');
+    const messages = await db.all(
+      'SELECT * FROM messages_crdt ORDER BY timestamp',
+    );
+    await expect(
+      db.inspectCategoryInsertion({ name: 'EXISTING NAME', cat_group: group }),
+    ).rejects.toThrow('already exists');
+    expect(await db.all('SELECT * FROM categories ORDER BY id')).toEqual(
+      before,
+    );
+    expect(
+      await db.all('SELECT * FROM messages_crdt ORDER BY timestamp'),
+    ).toEqual(messages);
+  });
+});
+
+describe('read-only category deletion mapping planning', () => {
+  test.each([false, true])(
+    'matches canonical forwarding effects with transfer=%s without preview writes',
+    async transfer => {
+      await db.insertCategoryGroup({
+        id: 'deletion-group',
+        name: 'Deletion group',
+      });
+      for (const id of [
+        'deleted-before',
+        'source',
+        'destination',
+        'unrelated',
+      ]) {
+        await db.insertCategory({ id, name: id, cat_group: 'deletion-group' });
+      }
+      await db.deleteCategory({ id: 'deleted-before' }, 'source');
+      const categories = await db.all<db.DbCategory>(
+        'SELECT * FROM categories ORDER BY id',
+      );
+      const mappings = await db.all<db.DbCategoryMapping>(
+        'SELECT * FROM category_mapping ORDER BY id',
+      );
+      const messages = await db.all(
+        'SELECT * FROM messages_crdt ORDER BY timestamp',
+      );
+      const transferId = transfer ? 'destination' : undefined;
+      const plan = await db.inspectCategoryDeletion(
+        { id: 'source' },
+        transferId,
+      );
+      expect(plan.category).toEqual({ id: 'source', tombstone: 1 });
+      expect(plan.mappings).toEqual(
+        transfer
+          ? [
+              { id: 'deleted-before', transferId: 'destination' },
+              { id: 'source', transferId: 'destination' },
+              { id: 'source', transferId: 'destination' },
+            ]
+          : [],
+      );
+      expect(await db.all('SELECT * FROM categories ORDER BY id')).toEqual(
+        categories,
+      );
+      expect(
+        await db.all('SELECT * FROM category_mapping ORDER BY id'),
+      ).toEqual(mappings);
+      expect(
+        await db.all('SELECT * FROM messages_crdt ORDER BY timestamp'),
+      ).toEqual(messages);
+      await db.deleteCategory({ id: 'source' }, transferId);
+      expect(await db.all('SELECT * FROM categories ORDER BY id')).toEqual(
+        categories.map(row =>
+          row.id === 'source' ? { ...row, tombstone: 1 } : row,
+        ),
+      );
+      expect(
+        await db.all('SELECT * FROM category_mapping ORDER BY id'),
+      ).toEqual(
+        mappings.map(row => {
+          const update = plan.mappings.find(mapping => mapping.id === row.id);
+          return update ? { ...row, ...update } : row;
+        }),
+      );
+    },
+  );
+});
+
+test('category group insertion inspection preserves rows and matches canonical global order', async () => {
+  await db.insertCategoryGroup({
+    id: 'existing-group',
+    name: 'Existing group',
+    is_income: 0,
+  });
+  await db.update('category_groups', {
+    id: 'existing-group',
+    sort_order: 90000,
+  });
+  const before = await db.all('SELECT * FROM category_groups ORDER BY id');
+  const messages = await db.all(
+    'SELECT * FROM messages_crdt ORDER BY timestamp',
+  );
+  const input = {
+    name: 'Planned income group',
+    is_income: 1,
+    hidden: 1,
+  } satisfies Partial<db.DbCategoryGroup>;
+  const plan = await db.inspectCategoryGroupInsertion(input);
+  expect(plan).toEqual({ ...input, sort_order: 106384 });
+  expect(await db.all('SELECT * FROM category_groups ORDER BY id')).toEqual(
+    before,
+  );
+  expect(
+    await db.all('SELECT * FROM messages_crdt ORDER BY timestamp'),
+  ).toEqual(messages);
+  await expect(
+    db.inspectCategoryGroupInsertion({ name: 'EXISTING GROUP' }),
+  ).rejects.toThrow('already exists');
+  expect(await db.all('SELECT * FROM category_groups ORDER BY id')).toEqual(
+    before,
+  );
+  const id = await db.insertCategoryGroup(input);
+  expect(
+    await db.first('SELECT * FROM category_groups WHERE id = ?', [id]),
+  ).toEqual({ id, tombstone: 0, ...plan });
+});
+
+test('category group update inspection validates duplicates without writes and matches partial writer', async () => {
+  const id = await db.insertCategoryGroup({
+    name: 'Inspection update group',
+    is_income: 1,
+    hidden: 1,
+  });
+  await db.insertCategoryGroup({ name: 'Duplicate group' });
+  const before = await db.all<db.DbCategoryGroup>(
+    'SELECT * FROM category_groups ORDER BY id',
+  );
+  const messages = await db.all(
+    'SELECT * FROM messages_crdt ORDER BY timestamp',
+  );
+  const plan = await db.inspectCategoryGroupUpdate({ id, hidden: 0 });
+  expect(plan).toEqual({ id, hidden: 0 });
+  await expect(
+    db.inspectCategoryGroupUpdate({ id, name: 'DUPLICATE GROUP' }),
+  ).rejects.toThrow('already exists');
+  expect(await db.all('SELECT * FROM category_groups ORDER BY id')).toEqual(
+    before,
+  );
+  expect(
+    await db.all('SELECT * FROM messages_crdt ORDER BY timestamp'),
+  ).toEqual(messages);
+  await db.updateCategoryGroup(plan);
+  expect(await db.all('SELECT * FROM category_groups ORDER BY id')).toEqual(
+    before.map(row => (row.id === id ? { ...row, hidden: 0 } : row)),
+  );
+});
+
+test('payee insertion inspection preserves exact names and duplicate behavior without writes and matches mapping owner', async () => {
+  const before = {
+    payees: await db.all('SELECT * FROM payees ORDER BY id'),
+    mappings: await db.all('SELECT * FROM payee_mapping ORDER BY id'),
+    messages: await db.all('SELECT * FROM messages_crdt ORDER BY timestamp'),
+  };
+  const plan = db.inspectPayeeInsertion({ name: '  Exact payee  ' });
+  expect(plan).toEqual({ name: '  Exact payee  ' });
+  expect({
+    payees: await db.all('SELECT * FROM payees ORDER BY id'),
+    mappings: await db.all('SELECT * FROM payee_mapping ORDER BY id'),
+    messages: await db.all('SELECT * FROM messages_crdt ORDER BY timestamp'),
+  }).toEqual(before);
+  const first = await db.insertPayee(plan);
+  const second = await db.insertPayee(
+    db.inspectPayeeInsertion({ name: plan.name }),
+  );
+  expect(second).not.toBe(first);
+  for (const id of [first, second]) {
+    expect(await db.first('SELECT * FROM payees WHERE id = ?', [id])).toEqual({
+      id,
+      name: plan.name,
+      category: null,
+      tombstone: 0,
+      transfer_acct: null,
+      favorite: 0,
+      learn_categories: 1,
+    });
+    expect(
+      await db.first('SELECT * FROM payee_mapping WHERE id = ?', [id]),
+    ).toEqual({ id, targetId: id });
+  }
+  expect(() =>
+    db.inspectPayeeInsertion({ name: undefined as unknown as string }),
+  ).toThrow('missing field name');
+});

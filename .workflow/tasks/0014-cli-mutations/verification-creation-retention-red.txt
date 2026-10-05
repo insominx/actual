@@ -1,0 +1,73 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+ ❯ src/change-journal.test.ts (7 tests | 1 failed | 6 skipped) 28ms
+   × expires acknowledged creation receipts while retaining ambiguous destination evidence 27ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/change-journal.test.ts > expires acknowledged creation receipts while retaining ambiguous destination evidence
+AssertionError: expected { schemaVersion: 1, …(7) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "createdAt": "2026-10-04T03:02:30.124Z",
+  "operationId": "creation-ack",
+  "outcome": {
+    "affectedIds": [
+      "new-actual-id",
+    ],
+    "changed": true,
+    "checkpoint": "observed",
+    "status": "committed-local",
+  },
+  "proposal": {
+    "after": {
+      "currency": null,
+      "name": "New local budget",
+      "published": false,
+    },
+    "before": {
+      "exists": false,
+    },
+    "budget": null,
+    "delivery": "local-only",
+    "operation": "budgets.create",
+    "references": {
+      "nameAvailable": true,
+    },
+    "request": {
+      "name": "New local budget",
+    },
+    "schemaVersion": 1,
+    "sideEffects": [
+      "new local identity",
+    ],
+  },
+  "schemaVersion": 1,
+  "state": "committed-local",
+  "token": "75e0f58ff23f0447df08879848b83117fc8b3abf41828133ca68604743a6c44f",
+  "updatedAt": "2000-01-01T00:00:00.000Z",
+}
+
+ ❯ src/change-journal.test.ts:166:50
+    164|       await journal.write(uncertain);
+    165|       await journal.prepare('next', proposal);
+    166|       expect(await journal.read('creation-ack')).toBeNull();
+       |                                                  ^
+    167|       expect((await journal.read('creation-uncertain'))?.state).toBe(
+    168|         'uncertain',
+ ❯ withChangeJournal src/change-journal.ts:73:12
+ ❯ src/change-journal.test.ts:150:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 skipped (7)
+   Start at  20:02:29
+   Duration  174ms (transform 46%, tests 30%, import 19%, worker 5%)
+

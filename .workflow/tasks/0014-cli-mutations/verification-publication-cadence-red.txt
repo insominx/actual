@@ -1,0 +1,166 @@
+✖ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=after) (3322.329ms)
+✖ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=after) (3279.0668ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6676.7538
+
+✖ failing tests:
+
+test at packages\cli\integration\publication.test.mjs:310:5
+✖ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=after) (3322.329ms)
+  AssertionError [ERR_ASSERTION]: [Breadcrumb] { message: 'Closing budget' }
+  [Breadcrumb] {
+    message: 'Loading budget C:\\Users\\mlinh\\AppData\\Local\\Temp\\actual-agent-cli-ma8dez\\guarded-publication\\Guarded-API-publication-7667274'
+  }
+  [Breadcrumb] { message: 'loading spreadsheet', category: 'server' }
+  Loading fresh spreadsheet
+  [Breadcrumb] { message: 'loaded spreadsheet', category: 'server' }
+  [Breadcrumb] { message: 'Closing budget' }
+  [Breadcrumb] {
+    message: 'Loading budget C:\\Users\\mlinh\\AppData\\Local\\Temp\\actual-agent-cli-ma8dez\\guarded-publication\\Guarded-API-publication-7667274'
+  }
+  [Breadcrumb] { message: 'loading spreadsheet', category: 'server' }
+  Loaded spreadsheet from cache (744 items)
+  [Breadcrumb] { message: 'loaded spreadsheet', category: 'server' }
+  Upload failure [TypeError: fetch failed] {
+    [cause]: SocketError: other side closed
+        at Socket.onHttpSocketEnd (node:internal/deps/undici/undici:7685:26)
+        at Socket.emit (node:events:521:24)
+        at endReadableNT (node:internal/streams/readable:1744:12)
+        at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+      code: 'UND_ERR_SOCKET',
+      socket: {
+        localAddress: '127.0.0.1',
+        localPort: 64323,
+        remoteAddress: '127.0.0.1',
+        remotePort: 64319,
+        remoteFamily: 'IPv4',
+        timeout: undefined,
+        bytesWritten: 17410,
+        bytesRead: 2840
+      }
+    }
+  }
+  Syncing since 2026-10-04T05:47:46.954Z-0000-0000000000000000 35 (attempt: 0)
+  Got messages from server 0
+  Syncing since 2026-10-04T05:52:46.883Z-0008-a370f677be29051f 0 (attempt: 0)
+  Got messages from server 0
+  Syncing since 2026-10-04T05:52:46.883Z-0008-a370f677be29051f 0 (attempt: 0)
+  Got messages from server 0
+  [Breadcrumb] { message: 'Closing budget' }
+  node:internal/modules/run_main:107
+      triggerUncaughtException(
+      ^
+  
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^\d{4}-\d{2}-\d{2}$/. Input:
+  
+  ''
+  
+      at provePublication (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-api.mjs:205:12)
+      at async file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-api.mjs:243:1 {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /^\d{4}-\d{2}-\d{2}$/,
+    operator: 'match',
+    diff: 'simple'
+  }
+  
+  Node.js v26.3.0
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:402:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\publication.test.mjs:310:5
+✖ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=after) (3279.0668ms)
+  AssertionError [ERR_ASSERTION]: [Breadcrumb] { message: 'Closing budget' }
+  [Breadcrumb] {
+    message: 'Loading budget C:\\Users\\mlinh\\AppData\\Local\\Temp\\actual-agent-cli-eo9jep\\guarded-publication\\Guarded-API-publication-23e8af2'
+  }
+  [Breadcrumb] { message: 'loading spreadsheet', category: 'server' }
+  Loading fresh spreadsheet
+  [Breadcrumb] { message: 'loaded spreadsheet', category: 'server' }
+  [Breadcrumb] { message: 'Closing budget' }
+  [Breadcrumb] {
+    message: 'Loading budget C:\\Users\\mlinh\\AppData\\Local\\Temp\\actual-agent-cli-eo9jep\\guarded-publication\\Guarded-API-publication-23e8af2'
+  }
+  [Breadcrumb] { message: 'loading spreadsheet', category: 'server' }
+  Loaded spreadsheet from cache (744 items)
+  [Breadcrumb] { message: 'loaded spreadsheet', category: 'server' }
+  Upload failure [TypeError: fetch failed] {
+    [cause]: SocketError: other side closed
+        at Socket.onHttpSocketEnd (node:internal/deps/undici/undici:7685:26)
+        at Socket.emit (node:events:521:24)
+        at endReadableNT (node:internal/streams/readable:1744:12)
+        at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+      code: 'UND_ERR_SOCKET',
+      socket: {
+        localAddress: '127.0.0.1',
+        localPort: 64343,
+        remoteAddress: '127.0.0.1',
+        remotePort: 64342,
+        remoteFamily: 'IPv4',
+        timeout: undefined,
+        bytesWritten: 19080,
+        bytesRead: 4358
+      }
+    }
+  }
+  Syncing since 2026-10-04T05:47:50.229Z-0000-0000000000000000 35 (attempt: 0)
+  Got messages from server 0
+  Syncing since 2026-10-04T05:52:50.136Z-0008-a0be0346350d4938 0 (attempt: 0)
+  Got messages from server 0
+  Syncing since 2026-10-04T05:52:50.136Z-0008-a0be0346350d4938 0 (attempt: 0)
+  Got messages from server 0
+  [Breadcrumb] { message: 'Closing budget' }
+  node:internal/modules/run_main:107
+      triggerUncaughtException(
+      ^
+  
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^\d{4}-\d{2}-\d{2}$/. Input:
+  
+  ''
+  
+      at provePublication (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-api.mjs:205:12)
+      at async file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-api.mjs:243:1 {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /^\d{4}-\d{2}-\d{2}$/,
+    operator: 'match',
+    diff: 'simple'
+  }
+  
+  Node.js v26.3.0
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:402:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

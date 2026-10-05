@@ -1,0 +1,38 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+ ❯ src/server/transactions/transfer.test.ts (5 tests | 1 failed | 4 skipped) 36ms
+   ❯ Transfer (5)
+     × resolves transfer accounts through the canonical view rather than a retained raw payee 35ms
+     ↓ updates a linked split child and recalculates its parent error without changing its total
+     ↓ transfers are properly inserted/updated/deleted
+     ↓ transfers are properly de-categorized
+     ↓ split transfers are retained on child transactions
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/transactions/transfer.test.ts > Transfer > resolves transfer accounts through the canonical view rather than a retained raw payee
+AssertionError: expected 'two' to be null
+
+- Expected:
+null
+
++ Received:
+"two"
+
+ ❯ src/server/transactions/transfer.test.ts:74:63
+     72|       ).transfer_acct,
+     73|     ).toBe('two');
+     74|     expect(await transfer.getTransferredAccount(transaction)).toBeNull…
+       |                                                               ^
+     75|   });
+     76|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 skipped (5)
+   Start at  18:58:36
+   Duration  2.79s (setup 63%, transform 35%, tests 1%, import 1%)
+

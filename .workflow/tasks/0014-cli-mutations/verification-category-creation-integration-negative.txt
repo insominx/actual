@@ -1,0 +1,258 @@
+✖ guarded category creation acknowledges mapping and sibling shoves without replay (online) (2941.8249ms)
+✖ guarded category creation acknowledges mapping and sibling shoves without replay (offline) (2783.4448ms)
+✖ killed category creation at before-engine retains its exact outcome without replay (33498.0085ms)
+✖ killed category creation at after-engine retains its exact outcome without replay (34044.7772ms)
+✖ killed category creation at before-sync retains its exact outcome without replay (34085.8269ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 0
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 107437.2243
+
+✖ failing tests:
+
+test at integration\changes.test.mjs:4490:8
+✖ guarded category creation acknowledges mapping and sibling shoves without replay (online) (2941.8249ms)
+  AssertionError [ERR_ASSERTION]: categories
+  + actual - expected
+  ... Skipped lines
+  
+    [
+      {
+        cat_group: '25c32ee1-ffd5-428e-9517-74bc64b9775b',
+        cleanup_def: null,
+        goal_def: null,
+  ...
+        name: 'Dining',
+  +     sort_order: 16385,
+  -     sort_order: 1,
+        template_settings: '{"source": "notes"}',
+        tombstone: 0
+      },
+      {
+  +     cat_group: '25c32ee1-ffd5-428e-9517-74bc64b9775b',
+  +     cleanup_def: null,
+  +     goal_def: null,
+  +     hidden: 1,
+  +     id: '28352f55-92f2-463f-8ee9-a1e57becf47e',
+  +     is_income: 0,
+  +     name: 'Packaged category',
+  +     sort_order: 0.5,
+  +     template_settings: '{"source": "notes"}',
+  +     tombstone: 0
+  +   },
+  +   {
+        cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00',
+        cleanup_def: null,
+        goal_def: null,
+        hidden: 0,
+        id: '3c1699a5-522a-435e-86dc-93d900a14f0e',
+  ...
+        name: 'Groceries',
+  +     sort_order: 32769,
+  -     sort_order: 2,
+        template_settings: '{"source": "notes"}',
+        tombstone: 0
+      },
+      {
+        cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00',
+  
+      at assertCategoryCreatedFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:4457:12)
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:4540:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ { id: '12f8f77c-93cc-41ad-8eb2-3cfc0919a1e6', name: 'Dining', is_income: 0, cat_group: '25c32ee1-ffd5-428e-9517-74bc64b9775b', sort_order: 16385, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '28352f55-92f2-463f-8ee9-a1e57becf47e', name: 'Packaged category', is_income: 0, cat_group: '25c32ee1-ffd5-428e-9517-74bc64b9775b', sort_order: 0.5, tombstone: 0, hidden: 1, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '3c1699a5-522a-435e-86dc-93d900a14f0e', name: 'Income', is_income: 1, cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00', sort_order: 32768, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '4ca4220e-bcfc-4954-9c01-5042fae2498d', name: 'Groceries', is_income: 0, cat_group: '25c32ee1-ffd5-428e-9517-74bc64b9775b', sort_order: 32769, tombstone: 0, hidden: 1, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '506e8d9d-7ed0-4397-84e4-07a9185dc6b2', name: 'Starting Balances', is_income: 1, cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00', sort_order: 32768, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null } ],
+    expected: [ { id: '12f8f77c-93cc-41ad-8eb2-3cfc0919a1e6', name: 'Dining', is_income: 0, cat_group: '25c32ee1-ffd5-428e-9517-74bc64b9775b', sort_order: 1, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '3c1699a5-522a-435e-86dc-93d900a14f0e', name: 'Income', is_income: 1, cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00', sort_order: 32768, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '4ca4220e-bcfc-4954-9c01-5042fae2498d', name: 'Groceries', is_income: 0, cat_group: '25c32ee1-ffd5-428e-9517-74bc64b9775b', sort_order: 2, tombstone: 0, hidden: 1, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '506e8d9d-7ed0-4397-84e4-07a9185dc6b2', name: 'Starting Balances', is_income: 1, cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00', sort_order: 32768, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null } ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at integration\changes.test.mjs:4490:8
+✖ guarded category creation acknowledges mapping and sibling shoves without replay (offline) (2783.4448ms)
+  AssertionError [ERR_ASSERTION]: categories
+  + actual - expected
+  ... Skipped lines
+  
+    [
+      {
+        cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00',
+        cleanup_def: null,
+        goal_def: null,
+  ...
+        goal_def: null,
+  +     hidden: 1,
+  +     id: '799ff897-7d0a-4934-9610-4cb7336c3a1a',
+  +     is_income: 0,
+  +     name: 'Packaged category',
+  +     sort_order: 0.5,
+  +     template_settings: '{"source": "notes"}',
+  +     tombstone: 0
+  +   },
+  +   {
+  +     cat_group: 'cee498e9-623d-4acc-972f-230a72a2ca51',
+  +     cleanup_def: null,
+  +     goal_def: null,
+        hidden: 0,
+        id: '8c7f1ad1-bc01-436d-9a28-fbc3a6e50a0f',
+        is_income: 0,
+        name: 'Dining',
+  +     sort_order: 16385,
+  -     sort_order: 1,
+        template_settings: '{"source": "notes"}',
+        tombstone: 0
+      },
+      {
+        cat_group: 'cee498e9-623d-4acc-972f-230a72a2ca51',
+  ...
+        name: 'Groceries',
+  +     sort_order: 32769,
+  -     sort_order: 2,
+        template_settings: '{"source": "notes"}',
+        tombstone: 0
+      }
+    ]
+  
+      at assertCategoryCreatedFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:4457:12)
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:4540:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ { id: '3c1699a5-522a-435e-86dc-93d900a14f0e', name: 'Income', is_income: 1, cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00', sort_order: 32768, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '506e8d9d-7ed0-4397-84e4-07a9185dc6b2', name: 'Starting Balances', is_income: 1, cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00', sort_order: 32768, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '799ff897-7d0a-4934-9610-4cb7336c3a1a', name: 'Packaged category', is_income: 0, cat_group: 'cee498e9-623d-4acc-972f-230a72a2ca51', sort_order: 0.5, tombstone: 0, hidden: 1, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '8c7f1ad1-bc01-436d-9a28-fbc3a6e50a0f', name: 'Dining', is_income: 0, cat_group: 'cee498e9-623d-4acc-972f-230a72a2ca51', sort_order: 16385, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '9f8f343b-6fa4-4a3e-ab32-fac8f4245569', name: 'Groceries', is_income: 0, cat_group: 'cee498e9-623d-4acc-972f-230a72a2ca51', sort_order: 32769, tombstone: 0, hidden: 1, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null } ],
+    expected: [ { id: '3c1699a5-522a-435e-86dc-93d900a14f0e', name: 'Income', is_income: 1, cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00', sort_order: 32768, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '506e8d9d-7ed0-4397-84e4-07a9185dc6b2', name: 'Starting Balances', is_income: 1, cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00', sort_order: 32768, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '8c7f1ad1-bc01-436d-9a28-fbc3a6e50a0f', name: 'Dining', is_income: 0, cat_group: 'cee498e9-623d-4acc-972f-230a72a2ca51', sort_order: 1, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '9f8f343b-6fa4-4a3e-ab32-fac8f4245569', name: 'Groceries', is_income: 0, cat_group: 'cee498e9-623d-4acc-972f-230a72a2ca51', sort_order: 2, tombstone: 0, hidden: 1, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null } ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at integration\changes.test.mjs:4654:8
+✖ killed category creation at before-engine retains its exact outcome without replay (33498.0085ms)
+  AssertionError [ERR_ASSERTION]: Created category must exist
+      at assertCategoryCreatedFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:4434:12)
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:4755:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at integration\changes.test.mjs:4654:8
+✖ killed category creation at after-engine retains its exact outcome without replay (34044.7772ms)
+  AssertionError [ERR_ASSERTION]: categories
+  + actual - expected
+  ... Skipped lines
+  
+    [
+      {
+  +     cat_group: '034e3a7d-4a80-44db-9cf6-cbe748905da2',
+  +     cleanup_def: null,
+  +     goal_def: null,
+  +     hidden: 1,
+  +     id: '296fd612-2711-4193-9a20-d1623a9e5fab',
+  +     is_income: 0,
+  +     name: 'Killed category',
+  +     sort_order: 0.5,
+  +     template_settings: '{"source": "notes"}',
+  +     tombstone: 0
+  +   },
+  +   {
+        cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00',
+        cleanup_def: null,
+        goal_def: null,
+        hidden: 0,
+        id: '3c1699a5-522a-435e-86dc-93d900a14f0e',
+  ...
+        name: 'Dining',
+  +     sort_order: 16385,
+  -     sort_order: 1,
+        template_settings: '{"source": "notes"}',
+        tombstone: 0
+      },
+      {
+        cat_group: '034e3a7d-4a80-44db-9cf6-cbe748905da2',
+  ...
+        name: 'Groceries',
+  +     sort_order: 32769,
+  -     sort_order: 2,
+        template_settings: '{"source": "notes"}',
+        tombstone: 0
+      }
+    ]
+  
+      at assertCategoryCreatedFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:4457:12)
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:4755:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ { id: '296fd612-2711-4193-9a20-d1623a9e5fab', name: 'Killed category', is_income: 0, cat_group: '034e3a7d-4a80-44db-9cf6-cbe748905da2', sort_order: 0.5, tombstone: 0, hidden: 1, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '3c1699a5-522a-435e-86dc-93d900a14f0e', name: 'Income', is_income: 1, cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00', sort_order: 32768, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '506e8d9d-7ed0-4397-84e4-07a9185dc6b2', name: 'Starting Balances', is_income: 1, cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00', sort_order: 32768, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '9ff17125-478b-4fee-b21e-622c63af7159', name: 'Dining', is_income: 0, cat_group: '034e3a7d-4a80-44db-9cf6-cbe748905da2', sort_order: 16385, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: 'ccd3da69-0414-4e5c-87b5-1bffa1d00d01', name: 'Groceries', is_income: 0, cat_group: '034e3a7d-4a80-44db-9cf6-cbe748905da2', sort_order: 32769, tombstone: 0, hidden: 1, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null } ],
+    expected: [ { id: '3c1699a5-522a-435e-86dc-93d900a14f0e', name: 'Income', is_income: 1, cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00', sort_order: 32768, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '506e8d9d-7ed0-4397-84e4-07a9185dc6b2', name: 'Starting Balances', is_income: 1, cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00', sort_order: 32768, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '9ff17125-478b-4fee-b21e-622c63af7159', name: 'Dining', is_income: 0, cat_group: '034e3a7d-4a80-44db-9cf6-cbe748905da2', sort_order: 1, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: 'ccd3da69-0414-4e5c-87b5-1bffa1d00d01', name: 'Groceries', is_income: 0, cat_group: '034e3a7d-4a80-44db-9cf6-cbe748905da2', sort_order: 2, tombstone: 0, hidden: 1, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null } ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at integration\changes.test.mjs:4654:8
+✖ killed category creation at before-sync retains its exact outcome without replay (34085.8269ms)
+  AssertionError [ERR_ASSERTION]: categories
+  + actual - expected
+  ... Skipped lines
+  
+    [
+      {
+        cat_group: '6b255614-2b79-4342-939f-0c69a49500c7',
+        cleanup_def: null,
+        goal_def: null,
+  ...
+        name: 'Groceries',
+  +     sort_order: 32769,
+  -     sort_order: 2,
+        template_settings: '{"source": "notes"}',
+        tombstone: 0
+      },
+      {
+        cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00',
+  ...
+        name: 'Dining',
+  +     sort_order: 16385,
+  -     sort_order: 1,
+        template_settings: '{"source": "notes"}',
+        tombstone: 0
+      },
+  +   {
+  +     cat_group: '6b255614-2b79-4342-939f-0c69a49500c7',
+  +     cleanup_def: null,
+  +     goal_def: null,
+  +     hidden: 1,
+  +     id: 'aacb82ec-4c5f-4a29-b012-4d951611d21e',
+  +     is_income: 0,
+  +     name: 'Killed category',
+  +     sort_order: 0.5,
+  +     template_settings: '{"source": "notes"}',
+  +     tombstone: 0
+  +   }
+    ]
+  
+      at assertCategoryCreatedFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:4457:12)
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:4755:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ { id: '03117234-e99c-497e-b68f-a68405ec945b', name: 'Groceries', is_income: 0, cat_group: '6b255614-2b79-4342-939f-0c69a49500c7', sort_order: 32769, tombstone: 0, hidden: 1, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '3c1699a5-522a-435e-86dc-93d900a14f0e', name: 'Income', is_income: 1, cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00', sort_order: 32768, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '506e8d9d-7ed0-4397-84e4-07a9185dc6b2', name: 'Starting Balances', is_income: 1, cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00', sort_order: 32768, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '56f95b3e-549c-4814-9d7d-a074f5860f57', name: 'Dining', is_income: 0, cat_group: '6b255614-2b79-4342-939f-0c69a49500c7', sort_order: 16385, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: 'aacb82ec-4c5f-4a29-b012-4d951611d21e', name: 'Killed category', is_income: 0, cat_group: '6b255614-2b79-4342-939f-0c69a49500c7', sort_order: 0.5, tombstone: 0, hidden: 1, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null } ],
+    expected: [ { id: '03117234-e99c-497e-b68f-a68405ec945b', name: 'Groceries', is_income: 0, cat_group: '6b255614-2b79-4342-939f-0c69a49500c7', sort_order: 2, tombstone: 0, hidden: 1, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '3c1699a5-522a-435e-86dc-93d900a14f0e', name: 'Income', is_income: 1, cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00', sort_order: 32768, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '506e8d9d-7ed0-4397-84e4-07a9185dc6b2', name: 'Starting Balances', is_income: 1, cat_group: '2E1F5BDB-209B-43F9-AF2C-3CE28E380C00', sort_order: 32768, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null }, { id: '56f95b3e-549c-4814-9d7d-a074f5860f57', name: 'Dining', is_income: 0, cat_group: '6b255614-2b79-4342-939f-0c69a49500c7', sort_order: 1, tombstone: 0, hidden: 0, goal_def: null, template_settings: '{"source": "notes"}', cleanup_def: null } ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

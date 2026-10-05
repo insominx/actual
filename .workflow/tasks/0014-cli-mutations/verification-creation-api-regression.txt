@@ -1,0 +1,85 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/api
+
+7:47:24 PM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/chevrotain/lib/src/api.js.
+Error: An error occurred while trying to read the map file at api.js.map
+Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\node_modules\chevrotain\lib\src\api.js.map'
+    at Object.readFileSync (node:fs:436:20)
+    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13
+    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)
+    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)
+    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)
+    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)
+    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)
+stderr | methods.test.ts > API budget import/export > importBudget rejects with an Error on failure
+[Exception] Error: Error importing budget: File not found at the provided path: /does/not/exist.zip
+    at importBudget (D:/Projects/personal/Budget/actual/packages/loot-core/src/server/budgetfiles/app.ts:519:15)
+
+ ✓ methods.test.ts (53 tests) 44499ms
+   ✓ API setup and teardown (1)
+     ✓ successfully loads budget 721ms
+   ✓ API budget import/export (16)
+     ✓ createBudget loads a local budget and preserves currency after reload 1443ms
+     ✓ guarded creation previews without changing budgets and rejects changed name availability 1530ms
+     ✓ guarded creation rejects malformed proposals and a concurrently occupied name 1535ms
+     ✓ restoreBudget creates a new identity without replacing its source 791ms
+     ✓ restore removes invalid SQLite archives and incomplete writes without modifying existing budgets 691ms
+     ✓ restore never cleans up a directory when exclusive creation failed 682ms
+     ✓ creation validates before closing the selected budget 703ms
+     ✓ creation removes incomplete files when the database copy fails 694ms
+     ✓ cloneBudget preserves ledger and preferences with a separate local identity 755ms
+     ✓ creation reports incomplete cleanup instead of inviting a blind retry 862ms
+     ✓ cloneBudget removes incomplete copies when copying the database fails 724ms
+     ✓ renaming preserves identity and local archiving is reversible 715ms
+     ✓ sync status reports local unpublished writes without synchronizing or changing them 1424ms
+     ✓ exportBudget returns bytes that importBudget loads back 743ms
+     ✓ importBudget imports from a file path 742ms
+     ✓ importBudget rejects with an Error on failure 805ms
+   ✓ API CRUD operations (18)
+     ✓ getBudgets 699ms
+     ✓ CategoryGroups: successfully update category groups 723ms
+     ✓ Categories: successfully update categories 722ms
+     ✓ Budgets: successfully update budgets 731ms
+     ✓ Accounts: successfully complete account operators 761ms
+     ✓ Payees: successfully update payees 737ms
+     ✓ Tags: successfully complete tag operations 721ms
+     ✓ Tags: create tag with minimal fields 834ms
+     ✓ Tags: update single field only 750ms
+     ✓ Tags: handle null values correctly 712ms
+     ✓ Tags: clear optional field 714ms
+     ✓ Notes: successfully get and update note 714ms
+     ✓ Rules: successfully update rules 756ms
+     ✓ Transactions: successfully update transactions 880ms
+     ✓ Transactions: successfully merge two transactions 941ms
+     ✓ Transactions: import notes are preserved when importing 744ms
+     ✓ Transactions: reimportDeleted=false prevents reimporting deleted transactions 723ms
+     ✓ Transactions: reimportDeleted=true reimports deleted transactions 757ms
+   ✓ Schedules: successfully complete schedules operations 793ms
+   ✓ Preferences: successfully read synced preferences 725ms
+   ✓ API preferences: setPreference (5)
+     ✓ successfully sets a single preference 769ms
+     ✓ can set multiple preferences 1473ms
+     ✓ can set feature flag preferences 753ms
+     ✓ can set account-specific preferences 1230ms
+     ✓ can set CSV import preferences 1010ms
+   ✓ guarded transaction changes (4)
+     ✓ previews without writing, applies exact state, and rejects a stale repeat 751ms
+     ✓ rejects edited state, another budget, and invalid fields before a write 704ms
+     ✓ previews the full split and applies parent inheritance without preview writes 932ms
+     ✓ updates a split child with canonical error recalculation and rejects sibling changes 775ms
+   ✓ guarded linked transfer changes (3)
+     ✓ preserves cross-budget categories and rejects changed account references or missing links 829ms
+     ✓ previews both sides without writes, mirrors canonical fields, and rejects counterpart edits 762ms
+     ✓ includes the counterpart split and recalculates its error through the transfer owner 796ms
+   ✓ guarded budget metadata changes (2)
+     ✓ previews rename without writes and rejects stale or wrong-budget metadata 704ms
+     ✓ archives only local metadata, preserves pending messages, and supports a zero-write no-op 711ms
+   ✓ guarded allocation changes (2)
+     ✓ previews a canonical allocation without writes and preserves carryover when applying 862ms
+     ✓ rejects invalid inputs, changed allocation state, and another budget before a write 740ms
+
+ Test Files  1 passed (1)
+      Tests  53 passed (53)
+   Start at  19:47:19
+   Duration  52.86s (tests 84%, transform 13%, import 3%)
+

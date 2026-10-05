@@ -1,0 +1,69 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+ ❯ src/server/main.test.ts (31 tests | 1 failed | 30 skipped) 57ms
+   ↓ Budgets (2)
+     ↓ budget is successfully loaded
+     ↓ budget detects out of sync migrations
+   ↓ Accounts (20)
+     ↓ forced closure rejects a missing transfer counterpart before unlinking
+     ↓ closure outcome discloses provider removal: acknowledged
+     ↓ closure outcome discloses provider removal: uncertain
+     ↓ closure acknowledges exact generated transfers and its bound date
+     ↓ forced closure acknowledges deleted rows and preserves transfer counterpart amount
+     ↓ remote unlink keeps provider removal scope: last linked account
+     ↓ remote unlink keeps provider removal scope: other linked account
+     ↓ remote unlink keeps provider removal scope: no token
+     ↓ invalid remote unlink preserves account: missing bank
+     ↓ invalid remote unlink preserves account: missing server
+     ↓ account closure inspection is read-only and includes future split balances
+     ↓ invalid account closure preserves provider and ledger: missing required destination
+     ↓ invalid account closure preserves provider and ledger: self transfer
+     ↓ invalid account closure preserves provider and ledger: missing destination
+     ↓ invalid account closure preserves provider and ledger: deleted destination
+     ↓ invalid account closure preserves provider and ledger: missing destination payee
+     ↓ invalid account closure preserves provider and ledger: missing closing category
+     ↓ invalid account closure preserves provider and ledger: missing deletion payee
+     ↓ invalid account closure preserves provider and ledger: missing closing payee
+     ↓ Transfers are properly updated
+   ↓ Budget (2)
+     ↓ new budgets should be created
+     ↓ budget updates when changing a category
+   ↓ Categories (3)
+     ↓ can be deleted
+     ↓ transfers properly when deleted
+     ↓ do not count as overspent when deleted
+   ↓ partial category owner updates preserve template settings and other raw columns
+   ↓ category deletion inspection preserves income=0 canonical effects without writes
+   ↓ category deletion inspection preserves income=1 canonical effects without writes
+   × partial category group updates preserve raw fields and child categories 56ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/main.test.ts > partial category group updates preserve raw fields and child categories
+TypeError: Cannot read properties of undefined (reading 'toUpperCase')
+ ❯ Module.updateCategoryGroup src/server/db/index.ts:400:17
+    398|   >(
+    399|     `SELECT id, name, hidden FROM category_groups WHERE UPPER(name) = …
+    400|     [group.name.toUpperCase(), group.id],
+       |                 ^
+    401|   );
+    402|   if (existingGroup) {
+ ❯ updateCategoryGroup src/server/budget/app.ts:471:12
+ ❯ src/server/undo.ts:102:21
+ ❯ withMutatorContext src/server/mutators.ts:115:10
+ ❯ withUndo src/server/undo.ts:89:10
+ ❯ src/server/undo.ts:100:12
+ ❯ runMutator.undoTag.undoTag src/server/mutators.ts:54:29
+ ❯ _runMutator src/server/mutators.ts:93:10
+ ❯ run src/shared/async.ts:37:32
+ ❯ sequenceState.queue.push.resolve.resolve src/shared/async.ts:52:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 30 skipped (31)
+   Start at  18:19:22
+   Duration  3.13s (setup 61%, transform 36%, tests 2%, import 1%)
+

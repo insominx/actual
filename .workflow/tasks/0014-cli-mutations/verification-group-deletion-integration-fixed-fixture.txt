@@ -1,0 +1,13 @@
+✔ guarded group deletion preserves raw domains and acknowledged transfers (online) (13207.5853ms)
+✔ guarded group deletion preserves raw domains and acknowledged transfers (offline) (11378.4279ms)
+✔ killed group deletion at before-engine retains its exact outcome without replay (37823.8661ms)
+✔ killed group deletion at after-engine retains its exact outcome without replay (38075.669ms)
+✔ killed group deletion at before-sync retains its exact outcome without replay (39236.1135ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 139798.2475

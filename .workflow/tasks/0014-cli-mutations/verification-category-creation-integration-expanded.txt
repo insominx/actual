@@ -1,0 +1,13 @@
+✔ guarded category creation acknowledges mapping and sibling shoves without replay (online) (6763.4799ms)
+✔ guarded category creation acknowledges mapping and sibling shoves without replay (offline) (6071.3733ms)
+✔ killed category creation at before-engine retains its exact outcome without replay (33816.1726ms)
+✔ killed category creation at after-engine retains its exact outcome without replay (34369.8523ms)
+✔ killed category creation at before-sync retains its exact outcome without replay (35006.8489ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 116104.8414

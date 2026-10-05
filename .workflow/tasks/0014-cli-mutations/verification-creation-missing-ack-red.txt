@@ -1,0 +1,35 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+ ❯ src/change-journal.test.ts (7 tests | 1 failed | 6 skipped) 33ms
+   × expires acknowledged creation receipts while retaining ambiguous destination evidence 32ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/change-journal.test.ts > expires acknowledged creation receipts while retaining ambiguous destination evidence
+AssertionError: expected undefined to be 'committed-local' // Object.is equality
+
+- Expected:
+"committed-local"
+
++ Received:
+undefined
+
+ ❯ src/change-journal.test.ts:173:67
+    171|       await journal.write(missingAck);
+    172|       await journal.prepare('next', proposal);
+    173|       expect((await journal.read('creation-missing-ack'))?.state).toBe(
+       |                                                                   ^
+    174|         'committed-local',
+    175|       );
+ ❯ withChangeJournal src/change-journal.ts:73:12
+ ❯ src/change-journal.test.ts:150:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 skipped (7)
+   Start at  20:06:33
+   Duration  203ms (transform 43%, tests 33%, import 19%, worker 5%)
+

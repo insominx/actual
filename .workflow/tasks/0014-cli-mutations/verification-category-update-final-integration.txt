@@ -1,0 +1,23 @@
+✔ guarded account reopening preserves provider fields and retries retain later closure (online) (10239.8644ms)
+✔ guarded account reopening preserves provider fields and retries retain later closure (offline) (9808.8334ms)
+✔ guarded account updates preserve ledger and retries retain later account edits (online) (9978.7882ms)
+✔ guarded account updates preserve ledger and retries retain later account edits (offline) (9216.2403ms)
+✔ guarded account creation acknowledges actual identities and retries one account (online) (9062.0212ms)
+✔ guarded account creation acknowledges actual identities and retries one account (offline) (9000.114ms)
+✔ guarded account deletion preserves other domains and retries its exact outcome (online) (5132.4519ms)
+✔ guarded account deletion preserves other domains and retries its exact outcome (offline) (4936.3553ms)
+✔ guarded account closure preserves its planned transfers and acknowledged retries (online) (7874.6737ms)
+✔ guarded account closure preserves its planned transfers and acknowledged retries (offline) (7247.5746ms)
+✔ guarded category updates preserve raw domains and acknowledged retries (online) (5988.094ms)
+✔ guarded category updates preserve raw domains and acknowledged retries (offline) (5620.0466ms)
+✔ killed category update at before-engine retains its exact outcome without replay (34426.6959ms)
+✔ killed category update at after-engine retains its exact outcome without replay (33799.8535ms)
+✔ killed category update at before-sync retains its exact outcome without replay (35098.4788ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 197508.7847

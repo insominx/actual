@@ -1,0 +1,19 @@
+✔ guarded account closure preserves its planned transfers and acknowledged retries (online) (8730.9534ms)
+✔ guarded account closure preserves its planned transfers and acknowledged retries (offline) (7889.0892ms)
+✔ guarded category updates preserve raw domains and acknowledged retries (online) (6436.44ms)
+✔ guarded category updates preserve raw domains and acknowledged retries (offline) (5609.0348ms)
+✔ guarded category creation acknowledges mapping and sibling shoves without replay (online) (6973.9743ms)
+✔ guarded category creation acknowledges mapping and sibling shoves without replay (offline) (6636.4159ms)
+✔ guarded category deletion preserves raw domains and never replays acknowledged transfers (online) (8784.6943ms)
+✔ guarded category deletion preserves raw domains and never replays acknowledged transfers (offline) (8458.7181ms)
+✔ killed category deletion at before-engine retains its exact outcome without replay (35045.827ms)
+✔ killed category deletion at after-engine retains its exact outcome without replay (35199.2892ms)
+✔ killed category deletion at before-sync retains its exact outcome without replay (35912.4723ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 165752.7552

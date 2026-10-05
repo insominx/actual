@@ -1,16 +1,16 @@
-Last Edited: 2026-10-02
+Last Edited: 2026-10-04
 
 # Agent CLI roadmap
 
-The user requested a maximally useful CLI, sequenced behind prerequisites, and authorized implementation on 2026-10-02. Tasks 0007-0009 are implemented and verified locally on Windows. The remaining 27 tasks remain planned. This document defines the delivery graph; each task plan defines its contract. Reread delivered prerequisite output before dependent reviews. No sub-agent delegation is required.
+The user requested a maximally useful CLI and authorized implementation on 2026-10-02. Tasks 0007-0013 are implemented and verified locally on Windows. Lifecycle includes encrypted publication recovery. Synchronization includes browser/two-cache convergence, pending-write recovery, required freshness, bounded watch, and live profile switching. Backups include creation, listing, isolated validation, restore-as-new, comparison, and retention. Task 0014 has verified guarded transaction/split/transfer, recovery, allocation, rename/archive, local creation, clone, restore, guarded publication, direct allocation/carryover, hold/reset, and account creation/update/reopening/deletion checkpoints; tasks 0015-0036 remain planned. Linux and personal adoption remain final acceptance work. This document preserves the full delivery graph. No sub-agent delegation is required.
 
-The first foundation delivers discovery/schema commands, version 2 output, device-local profiles, budget context, and explicit offline sessions. Real disposable servers prove encrypted sessions, two-budget isolation, import deduplication, restart, and offline convergence. See each completed task's implementation.md. Linux execution, browser interoperability, receipts, headless creation, and managed server lifecycle remain unverified or unimplemented. Tasks 0010 and 0011 are ready for review using the local foundation.
+The first foundation delivers discovery/schema commands, version 2 output, device-local profiles, budget context, and explicit offline sessions. Real disposable servers prove encrypted sessions, two-budget isolation, import deduplication, restart, and offline convergence. See each completed task's implementation.md. Managed lifecycle and first-run bootstrap are delivered locally. Budget lifecycle has Windows packaged proofs, including publication recovery and clone isolation. Synchronization has Windows browser and CLI acceptance. Backups have complete Windows acceptance. Linux execution, the remaining receipt adapters, and the remaining roadmap work are pending.
 
 ## Architecture and preserved decisions
 
 Use one `actual` executable with explicit domain operations and configurable inputs. Keep flexible read-only ActualQL. A registry supplies schemas/discovery, CLI execution, and an optional MCP adapter. Dependencies flow CLI/adapter -> public API -> core engine; sync-server owns authentication and remote transport. Do not use internal send calls as a permanent public API or duplicate UI calculation logic in CLI.
 
-Keep planning targets separate from allocations. The current cash-planning module is already implemented in [0006](tasks/0006-cash-planning/progress.md), locally verified and uncommitted. This roadmap extends its supported API/tool exposure, not its formulas. Existing account CRUD, normalized JSON import, allocations, rule/schedule CRUD, and ActualQL are reused and hardened rather than replaced.
+Keep planning targets separate from allocations. The current cash-planning module is already implemented in [0006](tasks/0006-cash-planning/progress.md), locally verified and committed in `68ffdbe3b`. This roadmap extends its supported API/tool exposure, not its formulas. Existing account CRUD, normalized JSON import, allocations, rule/schedule CRUD, and ActualQL are reused and hardened rather than replaced.
 
 Private account scope remains Chase, Capital One, Robinhood cash, and cards. Tracking accounts remain inspectable, but holdings valuation, mortgage amortization, wife accounts/ownership segmentation, personal automatic bank setup, spending suggestions, and transaction exclusions remain deferred. Existing configured bank-sync capability gets diagnostics; no new bank linking is implied.
 
@@ -95,3 +95,19 @@ Each plan is ready for review-plan with its prerequisite hold explicit. Review t
 Run focused CLI/API/core/server tests, root type checking, targeted formatting/lint, affected builds, and browser interoperability where business logic moves or writes sync. Final acceptance uses clean packaged installs, Windows/Linux processes, real disposable sync server, two caches, desktop/mobile browser, encrypted sessions, restarts, and fault injection. Optional MCP has separate parity evidence.
 
 Known baseline: prior cash-planning verification recorded repository-wide formatting failures and no personal export validation. Do not fix unrelated formatting as part of these tasks. Separate observed baseline failures from new defects and rerun relevant checks at delivery time.
+
+2026-10-04 checkpoint: guarded account closure passes full local Windows acceptance. Task 0014 remains partial with 23 existing write adapters outstanding; later tasks retain their prerequisites.
+
+2026-10-04 checkpoint: guarded category updates pass final 15-case local Windows acceptance. Task 0014 remains partial with 22 existing write adapters outstanding.
+
+2026-10-04 checkpoint: guarded category creation passes final nine-case local Windows acceptance. Task 0014 remains partial with 21 existing write adapters outstanding.
+
+2026-10-04 checkpoint: guarded category deletion passes final eleven-case local Windows acceptance. Task 0014 remains partial with 20 existing write adapters outstanding.
+
+2026-10-04 checkpoint: guarded category-group creation passes final nine-case local Windows acceptance. Task 0014 remains partial with 19 existing write adapters outstanding.
+
+
+2026-10-04 checkpoint: guarded category-group updates pass final nine-case local Windows acceptance. Task 0014 remains partial with 18 existing write adapters outstanding.
+
+
+2026-10-04 checkpoint: guarded category-group deletion passes final nine-case local Windows acceptance. Task 0014 remains partial with 17 existing write adapters outstanding.

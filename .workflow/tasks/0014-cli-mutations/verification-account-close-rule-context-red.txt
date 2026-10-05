@@ -1,0 +1,67 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+ ❯ src/server/transactions/transaction-rules.test.ts (38 tests | 1 failed | 37 skipped) 82ms
+   ↓ Transaction rules (19)
+     ↓ makeRule validates rule data
+     ↓ insert a rule into the database
+     ↓ update a rule in the database
+     ↓ delete a rule in the database
+     ↓ payee rules match after a staged formula sets payee name
+     ↓ loadRules loads all the rules
+     ↓ ids in rules are migrated as mapping changes
+     ↓ await runRules runs all the rules in each phase
+     ↓ category_group condition matches categories in that group (live)
+     ↓ category_group condition does not match an unrelated group (live)
+     ↓ category_group condition observes a category set earlier in the same rule chain (live)
+     ↓ transactions can be queried by rule
+     ↓ transactions can be queried by hasTags
+     ↓ transactions can be queried by hasTags if no "#" is included
+     ↓ transactions can be queried by hasTags with multiple tags present
+     ↓ transactions can be queried by hasTags when tag starts with dollar
+     ↓ transactions can be queried by hasAnyTag with two tags returns everything
+     ↓ transactions can be queried by hasAnyTag with one tag
+     ↓ and sub expression builds $and condition
+   ↓ Learning categories (11)
+     ↓ getProbableCategory estimates a category winner
+     ↓ creates rule when inserting transactions
+     ↓ leaves existing rule alone if probable category is ambiguous
+     ↓ updates an existing rule
+     ↓ works with multiple payees
+     ↓ updates rules correctly even if multiple rules exist
+     ↓ avoids remembering categories for `null` payee
+     ↓ avoids remembering categories for payees specified by the user
+     ↓ adding transaction with `null` payee never changes rules
+     ↓ rules are saved with internal field names
+     ↓ rules with public field names are loaded correctly
+   ↓ Running balance for rules (4)
+     ↓ actionsReferenceBalance only flags templates and formulas that use it
+     ↓ a template that uses the balance still sees the running balance
+     ↓ a rule that uses the balance but does not match runs no query
+     ↓ rules that do not use the balance still apply normally
+   ↓ read-only rule balances with planned source insertions (3)
+     ↓ matches persisted ledger ordering: ordered target
+     ↓ matches persisted ledger ordering: unordered identified target
+     ↓ matches persisted ledger ordering: unidentified counterpart
+   × planned closing source affects canonical balance formulas without ledger writes 81ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/transactions/transaction-rules.test.ts > planned closing source affects canonical balance formulas without ledger writes
+AssertionError: expected 'source=1000;destination=200' not to be 'source=1000;destination=200' // Object.is equality
+ ❯ src/server/transactions/transaction-rules.test.ts:1646:29
+    1644|   );
+    1645|   const preview = await runRules(target, null, { plannedTransactions: …
+    1646|   expect(preview.notes).not.toBe(withoutPlan.notes);
+       |                             ^
+    1647|   expect(preview._ruleErrors).toBeUndefined();
+    1648|   expect(await db.all('SELECT * FROM transactions ORDER BY id')).toEqu…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 37 skipped (38)
+   Start at  13:45:48
+   Duration  2.74s (setup 63%, transform 34%, tests 3%)
+

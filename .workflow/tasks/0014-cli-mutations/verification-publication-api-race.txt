@@ -1,0 +1,16 @@
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=null) (2922.2634ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=before) (2709.6925ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=after) (2905.5507ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=source-race) (2734.7217ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=null) (2985.7723ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=before) (2737.7622ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=after) (2964.749ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=source-race) (2839.1879ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 22866.7424

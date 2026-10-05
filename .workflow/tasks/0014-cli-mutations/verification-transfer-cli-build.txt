@@ -1,0 +1,19 @@
+vite v8.1.5 building ssr environment for production...
+[2K
+transforming...✓ 148 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/typescript-vwzWOg5G.js           0.11 kB │ gzip:     0.10 kB
+dist/budget-snapshot.js               0.13 kB │ gzip:     0.11 kB
+dist/sync-worker.js                   0.70 kB │ gzip:     0.41 kB
+dist/backup-worker.js                 1.18 kB │ gzip:     0.60 kB
+dist/utils-CshYbTKc.js                1.57 kB │ gzip:     0.60 kB
+dist/budget-snapshot-DdaMpuBV.js      1.69 kB │ gzip:     0.81 kB
+dist/agent-output-B5HHb0ew.js         2.32 kB │ gzip:     0.99 kB
+dist/runtime-state-DjmUEC9J.js        4.21 kB │ gzip:     1.60 kB
+dist/server-runner.js                 4.80 kB │ gzip:     1.91 kB
+dist/connection-CPozyksJ.js         222.65 kB │ gzip:    53.25 kB
+dist/cli.js                         286.29 kB │ gzip:    69.15 kB
+dist/typescript-C1S9wxku.js       7,935.29 kB │ gzip: 1,475.39 kB
+
+✓ built in 714ms

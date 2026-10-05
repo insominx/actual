@@ -1,0 +1,35 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+ ❯ src/change-journal.test.ts (13 tests | 1 failed | 12 skipped) 39ms
+   × retains deletion receipts with uncertain provider removal after the retention period 38ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/change-journal.test.ts > retains deletion receipts with uncertain provider removal after the retention period
+AssertionError: expected undefined to be 'synced' // Object.is equality
+
+- Expected:
+"synced"
+
++ Received:
+undefined
+
+ ❯ src/change-journal.test.ts:133:65
+    131|       expect((await journal.read('remote-uncertain'))?.state).toBe('sy…
+    132|       expect((await journal.read('missing-outcome'))?.state).toBe('syn…
+    133|       expect((await journal.read('incomplete-outcome'))?.state).toBe('…
+       |                                                                 ^
+    134|     });
+    135|   } finally {
+ ❯ withChangeJournal src/change-journal.ts:90:12
+ ❯ src/change-journal.test.ts:86:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 skipped (13)
+   Start at  13:31:03
+   Duration  195ms (transform 42%, tests 37%, import 17%, worker 4%)
+

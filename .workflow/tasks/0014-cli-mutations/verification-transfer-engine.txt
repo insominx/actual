@@ -1,0 +1,11 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+ ✓ src/shared/transactions.test.ts (15 tests) 7ms
+ ✓ src/server/transactions/transfer.test.ts (5 tests) 177ms
+
+ Test Files  2 passed (2)
+      Tests  20 passed (20)
+   Start at  18:57:47
+   Duration  3.01s (setup 64%, transform 33%, tests 3%)
+

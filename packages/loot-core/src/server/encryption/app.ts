@@ -14,11 +14,62 @@ import * as encryption from '.';
 export type EncryptionHandlers = {
   'key-make': typeof keyMake;
   'key-test': typeof keyTest;
+  'key-prepare-publication': typeof preparePublicationKey;
 };
 
 export const app = createApp<EncryptionHandlers>();
 app.method('key-make', keyMake);
 app.method('key-test', keyTest);
+app.method('key-prepare-publication', preparePublicationKey);
+
+async function preparePublicationKey({ password }: { password: string }) {
+  const metadata = prefs.getPrefs();
+  if (
+    !metadata?.cloudFileId ||
+    metadata.groupId ||
+    !metadata.publication?.encrypted
+  ) {
+    throw new Error('Publication key requires a new unpublished file identity');
+  }
+  const salt =
+    metadata.publication.keySalt ??
+    encryption.randomBytes(32).toString('base64');
+  const key = await encryption.createKey({
+    id: metadata.encryptKeyId ?? uuidv4(),
+    password,
+    salt,
+  });
+  await encryption.loadKey(key);
+  if (metadata.publication.keyTest) {
+    const test = JSON.parse(metadata.publication.keyTest);
+    try {
+      await encryption.decrypt(Buffer.from(test.value, 'base64'), test.meta);
+    } catch {
+      encryption.unloadKey(key);
+      throw new Error('Incorrect publication encryption password');
+    }
+  }
+  const test = await makeTestMessage(key.getId());
+  const testContent = JSON.stringify({
+    ...test,
+    value: test.value.toString('base64'),
+  });
+  const keys = JSON.parse((await asyncStorage.getItem('encrypt-keys')) || '{}');
+  keys[metadata.cloudFileId] = key.serialize();
+  await asyncStorage.setItem('encrypt-keys', JSON.stringify(keys));
+  await prefs.savePrefs(
+    {
+      encryptKeyId: key.getId(),
+      publication: {
+        ...metadata.publication,
+        keySalt: salt,
+        keyTest: testContent,
+      },
+    },
+    { avoidSync: true },
+  );
+  return { salt, testContent };
+}
 
 // A user can only enable/change their key with the file loaded. This
 // will change in the future: during onboarding the user should be

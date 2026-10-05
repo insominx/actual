@@ -3,7 +3,8 @@ import * as sheet from '#server/sheet';
 // @ts-strict-ignore
 import * as monthUtils from '#shared/months';
 
-import { createAllBudgets } from './base';
+import * as budgetActions from './actions';
+import { createAllBudgets, doTransfer, inspectBudgetTransfer } from './base';
 
 beforeEach(() => {
   return global.emptyDatabase()();
@@ -510,4 +511,122 @@ describe('Base budget', () => {
     const jan = monthUtils.sheetForMonth('2017-01');
     expect(sheet.getCellValue(jan, `sum-amount-${foodId}`)).toBe(-1000);
   });
+});
+
+describe('read-only budget transfer planning', () => {
+  test.each(['envelope', 'tracking'] as const)(
+    '%s transfers every created month through the canonical budget table',
+    async mode => {
+      await db.insertCategoryGroup({
+        id: 'transfer-group',
+        name: 'Transfer group',
+      });
+      for (const id of ['source', 'other-source', 'destination', 'unrelated']) {
+        await db.insertCategory({ id, name: id, cat_group: 'transfer-group' });
+      }
+      await sheet.loadSpreadsheet(db);
+      sheet.get().meta().createdMonths = new Set([
+        '2024-02',
+        '2024-01',
+        '2024-03',
+      ]);
+      sheet.get().meta().budgetType = mode;
+      await db.insert('preferences', { id: 'budgetType', value: mode });
+      await budgetActions.setBudget({
+        month: '2024-01',
+        category: 'source',
+        amount: 1200,
+      });
+      await budgetActions.setBudget({
+        month: '2024-01',
+        category: 'other-source',
+        amount: -300,
+      });
+      await budgetActions.setBudget({
+        month: '2024-01',
+        category: 'destination',
+        amount: 400,
+      });
+      await budgetActions.setBudget({
+        month: '2024-02',
+        category: 'source',
+        amount: -100,
+      });
+      await budgetActions.setBudget({
+        month: '2024-04',
+        category: 'source',
+        amount: 8000,
+      });
+      const table = mode === 'tracking' ? 'reflect_budgets' : 'zero_budgets';
+      await db.update(table, {
+        id: '202401-destination',
+        carryover: 1,
+        goal: 222,
+        long_goal: 333,
+      });
+      const before = await db.all<db.DbZeroBudget | db.DbReflectBudget>(
+        `SELECT * FROM ${table} ORDER BY id`,
+      );
+      const inactive = mode === 'tracking' ? 'zero_budgets' : 'reflect_budgets';
+      const inactiveBefore = await db.all(
+        `SELECT * FROM ${inactive} ORDER BY id`,
+      );
+      const messages = await db.all(
+        'SELECT * FROM messages_crdt ORDER BY timestamp',
+      );
+      const plan = inspectBudgetTransfer(
+        ['source', 'other-source'],
+        'destination',
+      );
+      expect(
+        plan.map(({ month, category, amount }) => ({
+          month,
+          category,
+          amount,
+        })),
+      ).toEqual([
+        { month: '2024-01', category: 'destination', amount: 1300 },
+        { month: '2024-02', category: 'destination', amount: -100 },
+        { month: '2024-03', category: 'destination', amount: 0 },
+      ]);
+      expect(
+        plan.every(
+          row =>
+            row.before.table === table &&
+            row.sources.every(source => source.table === table),
+        ),
+      ).toBe(true);
+      expect(plan[0].before.row).toEqual(
+        before.find(row => row.id === '202401-destination'),
+      );
+      expect(plan[1].before.row).toBeNull();
+      expect(plan[0].sources.map(source => source.amount)).toEqual([
+        1200, -300,
+      ]);
+      expect(await db.all(`SELECT * FROM ${table} ORDER BY id`)).toEqual(
+        before,
+      );
+      expect(
+        await db.all('SELECT * FROM messages_crdt ORDER BY timestamp'),
+      ).toEqual(messages);
+      await doTransfer(['source', 'other-source'], 'destination');
+      for (const row of plan) {
+        expect(
+          budgetActions.getBudget({ month: row.month, category: row.category }),
+        ).toBe(row.amount);
+      }
+      expect(await db.all(`SELECT * FROM ${inactive} ORDER BY id`)).toEqual(
+        inactiveBefore,
+      );
+      const after = await db.all<db.DbZeroBudget | db.DbReflectBudget>(
+        `SELECT * FROM ${table} ORDER BY id`,
+      );
+      for (const row of before) {
+        expect(after.find(updated => updated.id === row.id)).toEqual(
+          row.id === '202401-destination' ? { ...row, amount: 1300 } : row,
+        );
+      }
+      expect(after).toHaveLength(before.length + 2);
+    },
+  );
 });

@@ -1,0 +1,29 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+ ❯ src/change-journal.test.ts (16 tests | 1 failed | 15 skipped) 18ms
+   × decodes category deletion receipts and retains uncertain outcomes 17ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/change-journal.test.ts > decodes category deletion receipts and retains uncertain outcomes
+Error: The change receipt has an unsupported schema.
+ ❯ ChangeJournal.readPath src/change-journal.ts:281:15
+    279|         ].includes(String(value.proposal.operation))
+    280|       ) {
+    281|         throw new AgentError(
+       |               ^
+    282|           'INVALID_INPUT',
+    283|           'The change receipt has an unsupported schema.',
+ ❯ src/change-journal.test.ts:809:15
+ ❯ withChangeJournal src/change-journal.ts:211:12
+ ❯ src/change-journal.test.ts:804:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 15 skipped (16)
+   Start at  17:11:49
+   Duration  175ms (transform 56%, import 21%, tests 19%, worker 5%)
+

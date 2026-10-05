@@ -17,6 +17,7 @@ export type JsonSchema = {
   anyOf?: JsonSchema[];
   enum?: unknown[];
   format?: 'date';
+  pattern?: string;
 };
 
 const string: JsonSchema = { type: 'string' };
@@ -33,9 +34,10 @@ const object = (
   required,
   additionalProperties: false,
 });
-const split = object({ amount: money, category: string, notes: string }, [
-  'amount',
-]);
+const split = object(
+  { amount: money, category: string, payee: nullableId, notes: string },
+  ['amount'],
+);
 const importProperties = {
   account: string,
   date,
@@ -93,6 +95,111 @@ const schedule = object({
 
 export function operationPayloadSchema(name: string): JsonSchema | undefined {
   switch (name) {
+    case 'changes.preview':
+      return {
+        anyOf: [
+          object({ notes: string, amount: money, date, cleared: boolean }),
+          object({ transferAccount: string, transferCategory: string }),
+          object({ transferCategoryId: string }),
+          object(
+            {
+              name: string,
+              is_income: boolean,
+              hidden: boolean,
+              categories: {
+                type: 'array',
+                items: object(
+                  {
+                    id: string,
+                    name: string,
+                    group_id: string,
+                    is_income: boolean,
+                    hidden: boolean,
+                  },
+                  ['id', 'name', 'group_id'],
+                ),
+              },
+            },
+            ['name'],
+          ),
+          object({
+            id: string,
+            name: string,
+            is_income: boolean,
+            hidden: boolean,
+            categories: {
+              type: 'array',
+              items: object(
+                {
+                  id: string,
+                  name: string,
+                  group_id: string,
+                  is_income: boolean,
+                  hidden: boolean,
+                },
+                ['id', 'name', 'group_id'],
+              ),
+            },
+          }),
+          object({
+            id: string,
+            name: string,
+            group_id: string,
+            hidden: boolean,
+            is_income: boolean,
+          }),
+          object(
+            {
+              name: string,
+              group_id: string,
+              is_income: boolean,
+              hidden: boolean,
+            },
+            ['name', 'group_id'],
+          ),
+          object({ month: { type: 'string' }, amount: money }, [
+            'month',
+            'amount',
+          ]),
+          {
+            ...object({
+              name: string,
+              offbudget: boolean,
+              closed: boolean,
+              balance_current: { anyOf: [money, { type: 'null' }] },
+              account_group_id: nullableId,
+            }),
+          },
+          object({ name: string }, ['name']),
+          object({ name: string, path: string, timeout: money }, [
+            'name',
+            'path',
+          ]),
+          object({ archived: boolean }, ['archived']),
+          object({ encrypted: boolean }, ['encrypted']),
+          object({ month: { type: 'string' } }, ['month']),
+          object(
+            {
+              name: string,
+              offbudget: boolean,
+              initialBalance: money,
+              closed: boolean,
+            },
+            ['name', 'offbudget', 'initialBalance'],
+          ),
+          object({ month: { type: 'string' }, flag: boolean }, [
+            'month',
+            'flag',
+          ]),
+          object(
+            {
+              name: string,
+              currency: { type: 'string', pattern: '^[A-Z]{3}$' },
+            },
+            ['name'],
+          ),
+        ],
+      };
     case 'profiles.set':
       return object({
         serverUrl: string,
@@ -194,6 +301,7 @@ export function validateJson(
       break;
     case 'string':
       if (typeof value !== 'string') return fail();
+      if (schema.pattern && !new RegExp(schema.pattern).test(value)) fail();
       if (
         schema.format === 'date' &&
         (!/^\d{4}-\d{2}-\d{2}$/.test(value) ||

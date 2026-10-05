@@ -1,0 +1,39 @@
+@actual-app/crdt build … queued
+@actual-app/crdt build ➔ start
+@actual-app/crdt build ✓ done - 1.44s
+@actual-app/core build … queued
+@actual-app/core build ➔ start
+@actual-app/core build ✓ done - 1.03s
+@actual-app/api build … queued
+@actual-app/api build ➔ start
+@actual-app/api build ✖ fail
+
+Summary
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+@actual-app/cli build pending, took 0.00s, queued for 0.00s
+@actual-app/api build failed, took 1.42s, queued for 0.00s
+@actual-app/crdt build success, took 1.44s, queued for 0.00s
+@actual-app/core build success, took 1.03s, queued for 0.00s
+success: 2, skipped: 0, pending: 1, aborted: 0, failed: 1
+worker restarts: 0, max worker memory usage: 13.28 MB
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+[@actual-app/api build] ERROR DETECTED
+
+
+
+Running yarn run build, pid: 57756
+vite v8.1.5 building ssr environment for production...
+[2K
+transforming...✓ 1852 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/models.js      0.00 kB │ gzip:   0.02 kB
+dist/index.js   4,127.80 kB │ gzip: 769.11 kB │ map: 8,313.01 kB
+
+✓ built in 391ms
+methods.test.ts(4187,46): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+methods.test.ts(4261,21): error TS2532: Object is possibly 'undefined'.
+
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+Took a total of 3.89s to complete. 

@@ -1,0 +1,131 @@
+✔ encrypted first publication survives a lost response, retries one identity, and preserves rename/archive semantics (10587.076ms)
+✔ CLI clones an encrypted cached budget without modifying or publishing its source (5562.188ms)
+✔ CLI creates a usable local budget without publishing to its configured server (5569.0503ms)
+✖ guarded publication API preserves preview, rejects stale input and publishes one identity (encrypted=false) (3256.2054ms)
+✖ guarded publication API preserves preview, rejects stale input and publishes one identity (encrypted=true) (3155.4599ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 3
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 21791.5648
+
+✖ failing tests:
+
+test at packages\cli\integration\publication.test.mjs:8:3
+✖ guarded publication API preserves preview, rejects stale input and publishes one identity (encrypted=false) (3256.2054ms)
+  AssertionError [ERR_ASSERTION]: [Breadcrumb] { message: 'Closing budget' }
+  [Breadcrumb] {
+    message: 'Loading budget C:\\Users\\mlinh\\AppData\\Local\\Temp\\actual-agent-cli-uaUWpZ\\guarded-publication\\Guarded-API-publication-fb7126d'
+  }
+  [Breadcrumb] { message: 'loading spreadsheet', category: 'server' }
+  Loading fresh spreadsheet
+  [Breadcrumb] { message: 'loaded spreadsheet', category: 'server' }
+  [Breadcrumb] { message: 'Closing budget' }
+  [Breadcrumb] {
+    message: 'Loading budget C:\\Users\\mlinh\\AppData\\Local\\Temp\\actual-agent-cli-uaUWpZ\\guarded-publication\\Guarded-API-publication-fb7126d'
+  }
+  [Breadcrumb] { message: 'loading spreadsheet', category: 'server' }
+  Loaded spreadsheet from cache (744 items)
+  [Breadcrumb] { message: 'loaded spreadsheet', category: 'server' }
+  Syncing since 2026-10-04T04:39:24.443Z-0000-0000000000000000 35 (attempt: 0)
+  Got messages from server 0
+  Syncing since 2026-10-04T04:44:24.389Z-0008-ab0451d850d8e1cc 0 (attempt: 0)
+  Got messages from server 0
+  Syncing since 2026-10-04T04:44:24.389Z-0008-ab0451d850d8e1cc 0 (attempt: 0)
+  Got messages from server 0
+  [Breadcrumb] { message: 'Closing budget' }
+  node:internal/modules/run_main:107
+      triggerUncaughtException(
+      ^
+  
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 1
+  
+      at file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-api.mjs:110:10
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+  
+  Node.js v26.3.0
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:29:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\publication.test.mjs:8:3
+✖ guarded publication API preserves preview, rejects stale input and publishes one identity (encrypted=true) (3155.4599ms)
+  AssertionError [ERR_ASSERTION]: [Breadcrumb] { message: 'Closing budget' }
+  [Breadcrumb] {
+    message: 'Loading budget C:\\Users\\mlinh\\AppData\\Local\\Temp\\actual-agent-cli-UwtGQL\\guarded-publication\\Guarded-API-publication-35f7ba1'
+  }
+  [Breadcrumb] { message: 'loading spreadsheet', category: 'server' }
+  Loading fresh spreadsheet
+  [Breadcrumb] { message: 'loaded spreadsheet', category: 'server' }
+  [Breadcrumb] { message: 'Closing budget' }
+  [Breadcrumb] {
+    message: 'Loading budget C:\\Users\\mlinh\\AppData\\Local\\Temp\\actual-agent-cli-UwtGQL\\guarded-publication\\Guarded-API-publication-35f7ba1'
+  }
+  [Breadcrumb] { message: 'loading spreadsheet', category: 'server' }
+  Loaded spreadsheet from cache (744 items)
+  [Breadcrumb] { message: 'loaded spreadsheet', category: 'server' }
+  Syncing since 2026-10-04T04:39:27.593Z-0000-0000000000000000 35 (attempt: 0)
+  Got messages from server 0
+  Syncing since 2026-10-04T04:44:27.523Z-0008-bfa65693f685d5c5 0 (attempt: 0)
+  Got messages from server 0
+  Syncing since 2026-10-04T04:44:27.523Z-0008-bfa65693f685d5c5 0 (attempt: 0)
+  Got messages from server 0
+  [Breadcrumb] { message: 'Closing budget' }
+  node:internal/modules/run_main:107
+      triggerUncaughtException(
+      ^
+  
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 1
+  
+      at file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-api.mjs:110:10
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+  
+  Node.js v26.3.0
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:29:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

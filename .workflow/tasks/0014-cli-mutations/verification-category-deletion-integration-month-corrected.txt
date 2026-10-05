@@ -1,0 +1,10 @@
+✔ guarded category deletion preserves raw domains and never replays acknowledged transfers (online) (9192.0407ms)
+✔ guarded category deletion preserves raw domains and never replays acknowledged transfers (offline) (8148.3733ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17418.4241

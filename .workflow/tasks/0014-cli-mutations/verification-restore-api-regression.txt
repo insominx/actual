@@ -1,0 +1,90 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/api
+
+9:06:44 PM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/chevrotain/lib/src/api.js.
+Error: An error occurred while trying to read the map file at api.js.map
+Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\node_modules\chevrotain\lib\src\api.js.map'
+    at Object.readFileSync (node:fs:436:20)
+    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13
+    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)
+    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)
+    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)
+    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)
+    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)
+stderr | methods.test.ts > API budget import/export > importBudget rejects with an Error on failure
+[Exception] Error: Error importing budget: File not found at the provided path: /does/not/exist.zip
+    at importBudget (D:/Projects/personal/Budget/actual/packages/loot-core/src/server/budgetfiles/app.ts:519:15)
+
+ ✓ methods.test.ts (58 tests) 47717ms
+   ✓ API setup and teardown (1)
+     ✓ successfully loads budget 710ms
+   ✓ API budget import/export (21)
+     ✓ createBudget loads a local budget and preserves currency after reload 1484ms
+     ✓ guarded creation previews without changing budgets and rejects changed name availability 1425ms
+     ✓ guarded creation rejects malformed proposals and a concurrently occupied name 1356ms
+     ✓ guarded creation works without a loaded budget and serializes competing applies 1399ms
+     ✓ guarded restore preview preserves source files and binds the archive before creating a new identity 1968ms
+     ✓ guarded restore rejects changed archive, occupied name and invalid SQLite without a destination 1425ms
+     ✓ restoreBudget creates a new identity without replacing its source 753ms
+     ✓ restore removes invalid SQLite archives and incomplete writes without modifying existing budgets 745ms
+     ✓ restore never cleans up a directory when exclusive creation failed 721ms
+     ✓ creation validates before closing the selected budget 737ms
+     ✓ creation removes incomplete files when the database copy fails 699ms
+     ✓ cloneBudget preserves ledger and preferences with a separate local identity 786ms
+     ✓ guarded clone preview preserves source files and reload accepts the same copied state 1217ms
+     ✓ guarded clone rejects source edits and wrong identities before creating a destination 790ms
+     ✓ creation reports incomplete cleanup instead of inviting a blind retry 701ms
+     ✓ cloneBudget removes incomplete copies when copying the database fails 693ms
+     ✓ renaming preserves identity and local archiving is reversible 701ms
+     ✓ sync status reports local unpublished writes without synchronizing or changing them 1387ms
+     ✓ exportBudget returns bytes that importBudget loads back 781ms
+     ✓ importBudget imports from a file path 750ms
+     ✓ importBudget rejects with an Error on failure 687ms
+   ✓ API CRUD operations (18)
+     ✓ getBudgets 685ms
+     ✓ CategoryGroups: successfully update category groups 706ms
+     ✓ Categories: successfully update categories 780ms
+     ✓ Budgets: successfully update budgets 714ms
+     ✓ Accounts: successfully complete account operators 743ms
+     ✓ Payees: successfully update payees 703ms
+     ✓ Tags: successfully complete tag operations 682ms
+     ✓ Tags: create tag with minimal fields 653ms
+     ✓ Tags: update single field only 694ms
+     ✓ Tags: handle null values correctly 685ms
+     ✓ Tags: clear optional field 711ms
+     ✓ Notes: successfully get and update note 691ms
+     ✓ Rules: successfully update rules 736ms
+     ✓ Transactions: successfully update transactions 738ms
+     ✓ Transactions: successfully merge two transactions 734ms
+     ✓ Transactions: import notes are preserved when importing 739ms
+     ✓ Transactions: reimportDeleted=false prevents reimporting deleted transactions 707ms
+     ✓ Transactions: reimportDeleted=true reimports deleted transactions 765ms
+   ✓ Schedules: successfully complete schedules operations 808ms
+   ✓ Preferences: successfully read synced preferences 688ms
+   ✓ API preferences: setPreference (5)
+     ✓ successfully sets a single preference 657ms
+     ✓ can set multiple preferences 679ms
+     ✓ can set feature flag preferences 710ms
+     ✓ can set account-specific preferences 671ms
+     ✓ can set CSV import preferences 663ms
+   ✓ guarded transaction changes (4)
+     ✓ previews without writing, applies exact state, and rejects a stale repeat 806ms
+     ✓ rejects edited state, another budget, and invalid fields before a write 704ms
+     ✓ previews the full split and applies parent inheritance without preview writes 736ms
+     ✓ updates a split child with canonical error recalculation and rejects sibling changes 715ms
+   ✓ guarded linked transfer changes (3)
+     ✓ preserves cross-budget categories and rejects changed account references or missing links 782ms
+     ✓ previews both sides without writes, mirrors canonical fields, and rejects counterpart edits 787ms
+     ✓ includes the counterpart split and recalculates its error through the transfer owner 735ms
+   ✓ guarded budget metadata changes (2)
+     ✓ previews rename without writes and rejects stale or wrong-budget metadata 670ms
+     ✓ archives only local metadata, preserves pending messages, and supports a zero-write no-op 710ms
+   ✓ guarded allocation changes (2)
+     ✓ previews a canonical allocation without writes and preserves carryover when applying 713ms
+     ✓ rejects invalid inputs, changed allocation state, and another budget before a write 697ms
+
+ Test Files  1 passed (1)
+      Tests  58 passed (58)
+   Start at  21:06:38
+   Duration  56.90s (tests 84%, transform 13%, import 3%)
+

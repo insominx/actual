@@ -1,0 +1,35 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+ ❯ src/change-journal.test.ts (12 tests | 1 failed | 11 skipped) 37ms
+   × expires account creation only with acknowledged generated identities 37ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/change-journal.test.ts > expires account creation only with acknowledged generated identities
+AssertionError: expected undefined to be 'synced' // Object.is equality
+
+- Expected:
+"synced"
+
++ Received:
+undefined
+
+ ❯ src/change-journal.test.ts:101:58
+     99|       await journal.prepare('next', proposal);
+    100|       expect(await journal.read('ack')).toBeNull();
+    101|       expect((await journal.read('missing-ack'))?.state).toBe('synced'…
+       |                                                          ^
+    102|       expect((await journal.read('incomplete-ack'))?.state).toBe('sync…
+    103|       expect((await journal.read('uncertain'))?.state).toBe('uncertain…
+ ❯ withChangeJournal src/change-journal.ts:88:12
+ ❯ src/change-journal.test.ts:78:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 skipped (12)
+   Start at  11:11:33
+   Duration  192ms (transform 45%, tests 34%, import 18%, worker 4%)
+

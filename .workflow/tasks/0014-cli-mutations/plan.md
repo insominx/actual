@@ -1,4 +1,4 @@
-Last Edited: 2026-10-02
+Last Edited: 2026-10-03
 
 # Plan: Preview, apply, receipts, and safe retry protocol
 
@@ -103,6 +103,18 @@ After each step, run its focused unit/integration proof for the corresponding ac
 
 Avoid one universal execute operation, duplicate finance formulas, and a second tool-only persistence path for budget state. Registry, session, receipts, and workflow adapters are shared infrastructure; domain-specific behavior remains explicit.
 
+### Implementation addendum from owner review (2026-10-03)
+
+Use one core mutation wrapper for each guarded domain implementation. Do not call another withMutation wrapper from inside runMutator. Reuse the existing transaction and allocation implementation owners; do not duplicate split, transfer, or budget calculations. Preview identifies the canonical affected closure, relevant references/configuration, before/after values, and declared side effects. Apply validates the exact selected local/remote identity and observed preconditions inside that same serialized engine call after online refresh. The local lock cannot exclude later remote CRDT edits.
+
+The device-local journal persists a prepared proposal before returning its token. It atomically persists uncertain apply intent before issuing the engine mutation. It records committed-local only from an acknowledged successful engine outcome, then synced only after successful synchronization. Process death or an unacknowledged response leaves uncertain; matching after-values cannot establish causation. Repeated IDs with mismatched input reject; committed or uncertain IDs never automatically re-execute. Status may reconcile supported engine evidence, but missing proof remains uncertain. A new engine persistence mechanism is not assumed necessary: explicit uncertainty is an allowed acceptance outcome.
+
+Integrate journal phase handling with the existing connection owner. Persist local outcome before its automatic sync and sync outcome afterward. Hold the existing session lock through shutdown. Reject --no-lock for protected version 2 operations. Offline apply discloses unknown remote freshness and enforces local observed preconditions. Preview may refresh cache and write its disclosed device-local proposal, but cannot mutate ledger, allocation, template, or schedule state.
+
+Journal retention is bounded and documented. Preserve unresolved prepared/uncertain entries; fail before a new mutation when unresolved entries prevent safe bounded retention. Use private files, schema versions, path boundaries, atomic publication, and bounded list/status output. Journal records contain no credentials. Record sensitive before/after values only as required by the operation and document their local storage.
+
+First verify transaction preview/apply and engine guards together. Then add allocation and retrofit version 2 lifecycle and existing mutation adapters. Keep all original acceptance checks. Kill tests wait for a specific phase checkpoint before termination and inspect independent ledger and durable receipt state after restart. Do not substitute a timing sleep for proof of the killed phase.
+
 ## 9. Migration and compatibility
 
 Preserve existing IDs, CLI names/default legacy JSON, preference keys, parser mappings, and sync identities unless the operation explicitly creates a clone/new budget. Persisted tool schemas are versioned; do not silently reinterpret old receipts or jobs. If extraction moves UI business logic, maintain parity tests before switching consumers. Any necessary core data migration must be explicit, engine-owned, tested, and recorded during task review; no speculative migration is authorized by this plan.
@@ -136,4 +148,4 @@ Update `packages/docs/docs/api/cli.md`, `packages/cli/README.md`, and relevant A
 
 No user decision blocks writing or reviewing this task. Exact prerequisite-produced symbols and schemas must be reread at task review; this is a dependency checkpoint, not a request for repeated user approval.
 
-Planning verdict: ready for review-plan. Implementation is not started, and prerequisite holds still apply.
+Planning verdict: reviewed; proceed after the owner-review addendum above. Prerequisites are complete locally on Windows. Implementation has not started.

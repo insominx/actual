@@ -1,0 +1,65 @@
+{
+  "ok": true,
+  "projectRoot": "D:\\Projects\\personal\\Budget\\actual",
+  "task": "0014-cli-mutations",
+  "profile": "recovery",
+  "checks": [
+    {
+      "id": "cli-unit",
+      "type": "scripted",
+      "command": "yarn workspace @actual-app/cli test",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 2397,
+      "stdout": "\n RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli\n\n\n Test Files  17 passed (17)\n      Tests  219 passed (219)\n   Start at  16:22:42\n   Duration  1.55s (tests 41%, transform 38%, import 18%, worker 2%)\n\n",
+      "stderr": "4:22:42 PM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/cosmiconfig/dist/index.js.\nError: An error occurred while trying to read the map file at index.js.map\nError: ENOENT: no such file or directory, open 'D:\\Projects\\personal\\Budget\\actual\\node_modules\\cosmiconfig\\dist\\index.js.map'\n    at Object.readFileSync (node:fs:436:20)\n    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13\n    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)\n    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)\n    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)\n    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)\n    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)\n"
+    },
+    {
+      "id": "real-integration",
+      "type": "scripted",
+      "command": "yarn workspace @actual-app/cli test:integration",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 120845,
+      "stdout": "✔ retention previews and applies per-source policy while preserving invalid and external artifacts (8854.0796ms)\n✔ restore creates independent local identities and preserves the encrypted source (10355.5001ms)\n✔ isolated validation rejects corrupt archives and listing preserves complete artifacts (5666.6269ms)\n✔ an encrypted sync budget creates complete plaintext backups without replacing earlier artifacts (3417.4901ms)\n✔ guarded transaction preview preserves domains and receipts prevent repeat writes (9925.1939ms)\n✔ killed apply at before-engine preserves its durable outcome and never replays (34905.1077ms)\n✔ killed apply at after-engine preserves its durable outcome and never replays (35133.8624ms)\n✔ killed apply at before-sync preserves its durable outcome and never replays (35530.2185ms)\n✔ a rejected post-commit push retains a receipt and later sync never replays the update (4666.7156ms)\n✔ packaged discovery and validation work without personal configuration (593.1899ms)\n✔ encrypted remote sessions register keys across process restarts (4333.5667ms)\n✔ real server, import deduplication, two clients, and restart (12766.7619ms)\n✔ encrypted first publication survives a lost response, retries one identity, and preserves rename/archive semantics (11203.4387ms)\n✔ CLI clones an encrypted cached budget without modifying or publishing its source (5929.0347ms)\n✔ CLI creates a usable local budget without publishing to its configured server (5695.3566ms)\n✔ fresh server bootstraps through CLI and authenticates without a browser (2570.9289ms)\n✔ managed lifecycle checks ownership, port, executable, restart, and shutdown (6874.2485ms)\n✔ watch freezes its selected budget while profiles switch and cache identities stay separate (7940.9263ms)\n✔ watch bounds a stalled worker and a subsequent writer can reopen its cache (6265.2884ms)\n✔ encrypted watch reconnects, cancels, and releases its cache for a writer (5751.3764ms)\n✔ a failed push preserves the local write and refresh does not replay it (encrypted=false) (4105.9328ms)\n✔ a failed push preserves the local write and refresh does not replay it (encrypted=true) (3980.6054ms)\n✔ pending status is offline and refresh sends existing writes (encrypted=false) (6583.1138ms)\n✔ pending status is offline and refresh sends existing writes (encrypted=true) (6273.575ms)\nℹ tests 24\nℹ suites 0\nℹ pass 24\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 120236.1121\n",
+      "stderr": ""
+    },
+    {
+      "id": "browser-convergence",
+      "type": "scripted",
+      "command": "yarn workspace @actual-app/cli test:browser-integration",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 9808,
+      "stdout": "✔ browser and two CLI caches converge after import, edit, preference change, and undo (8947.0148ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 9188.1514\n",
+      "stderr": ""
+    },
+    {
+      "id": "lint",
+      "type": "scripted",
+      "command": "yarn exec oxlint packages/cli/integration",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 1058,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "id": "format",
+      "type": "scripted",
+      "command": "yarn exec oxfmt --check packages/cli/integration .workflow/tasks/0014-cli-mutations/verify.json",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 815,
+      "stdout": "Checking formatting...\n\nAll matched files use the correct format.\nFinished in 160ms on 12 files using 32 threads.\n",
+      "stderr": ""
+    }
+  ],
+  "markdownRows": [
+    "| scripted | cli-unit | pass | 2397ms |",
+    "| scripted | real-integration | pass | 120845ms |",
+    "| scripted | browser-convergence | pass | 9808ms |",
+    "| scripted | lint | pass | 1058ms |",
+    "| scripted | format | pass | 815ms |"
+  ]
+}

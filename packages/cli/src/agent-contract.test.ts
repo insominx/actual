@@ -9,6 +9,7 @@ function command() {
     .command('accounts')
     .command('create')
     .requiredOption('--name <name>')
+    .option('--operation-id <id>')
     .option('--balance <amount>');
   return root;
 }
@@ -17,7 +18,7 @@ describe('agent command contract', () => {
   it('discovers the actual registered options without a connection', () => {
     const [operation] = discoverOperations(command());
     expect(operation.name).toBe('accounts.create');
-    expect(operation.inputSchema.required).toEqual(['name']);
+    expect(operation.inputSchema.required).toEqual(['name', 'operationId']);
     expect(operation.inputSchema.properties.balance).toMatchObject({
       type: 'integer',
     });

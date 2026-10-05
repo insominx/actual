@@ -1,0 +1,13 @@
+✔ guarded group creation preserves raw domains and acknowledged identities (online) (6525.4628ms)
+✔ guarded group creation preserves raw domains and acknowledged identities (offline) (6107.1881ms)
+✔ killed group creation at before-engine retains its exact outcome without replay (34577.2547ms)
+✔ killed group creation at after-engine retains its exact outcome without replay (35210.9188ms)
+✔ killed group creation at before-sync retains its exact outcome without replay (35783.5254ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 118286.7837

@@ -2,6 +2,22 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+export function stableJson(value: unknown): string {
+  if (Array.isArray(value)) return '[' + value.map(stableJson).join(',') + ']';
+  if (value !== null && typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    return (
+      '{' +
+      Object.keys(record)
+        .sort()
+        .map(key => JSON.stringify(key) + ':' + stableJson(record[key]))
+        .join(',') +
+      '}'
+    );
+  }
+  return JSON.stringify(value) ?? 'null';
+}
+
 export function parseBoolFlag(value: string, flagName: string): boolean {
   if (value !== 'true' && value !== 'false') {
     throw new Error(

@@ -1,0 +1,16 @@
+✔ guarded category updates preserve raw domains and acknowledged retries (online) (6482.9237ms)
+✔ guarded category updates preserve raw domains and acknowledged retries (offline) (5861.4016ms)
+✔ guarded category deletion preserves raw domains and never replays acknowledged transfers (online) (9704.3883ms)
+✔ guarded category deletion preserves raw domains and never replays acknowledged transfers (offline) (8340.8838ms)
+✔ guarded group creation preserves raw domains and acknowledged identities (online) (6692.7397ms)
+✔ guarded group creation preserves raw domains and acknowledged identities (offline) (6132.8307ms)
+✔ guarded group updates preserve raw domains and acknowledged retries (online) (5786.5174ms)
+✔ guarded group updates preserve raw domains and acknowledged retries (offline) (5520.1654ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 54596.6203

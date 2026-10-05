@@ -1,0 +1,27 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/api
+
+10:52:56 AM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/chevrotain/lib/src/api.js.
+Error: An error occurred while trying to read the map file at api.js.map
+Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\node_modules\chevrotain\lib\src\api.js.map'
+    at Object.readFileSync (node:fs:436:20)
+    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13
+    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)
+    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)
+    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)
+    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)
+    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)
+ ✓ methods.test.ts (67 tests | 65 skipped) 1524ms
+   ✓ guarded account creation (2)
+     ✓ account creation previews without writes and acknowledges actual account, payee and opening identities 783ms
+     ✓ zero/off-budget account creation preserves canonical opening behavior and rejects changed date, source or identity 740ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed | 65 skipped (67)
+   Start at  10:52:50
+   Duration  11.30s (transform 71%, import 16%, tests 14%)
+
+  Transform  transforming modules took 7.92s · 71% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+

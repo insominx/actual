@@ -10,6 +10,7 @@ import {
   deleteRule,
   getProbableCategory,
   getRules,
+  getRunningBalanceBeforeTransaction,
   insertRule,
   loadRules,
   makeRule,
@@ -1464,4 +1465,193 @@ describe('Running balance for rules', () => {
     expect(transaction).not.toHaveProperty('balance');
     expect(queries()).toBe(0);
   });
+});
+
+describe('read-only rule balances with planned source insertions', () => {
+  test.each([
+    {
+      label: 'ordered target',
+      target: { id: 'current', sort_order: 10 },
+      expected: 1300,
+    },
+    {
+      label: 'unordered identified target',
+      target: { id: 'current' },
+      expected: 2500,
+    },
+    { label: 'unidentified counterpart', target: {}, expected: 2000 },
+  ])(
+    'matches persisted ledger ordering: $label',
+    async ({ target, expected }) => {
+      const account = await db.insertAccount({ name: 'Source' });
+      const other = await db.insertAccount({ name: 'Other' });
+      await db.insertTransaction({
+        id: 'existing',
+        account,
+        date: '2026-10-01',
+        amount: 1000,
+      });
+      const added = [
+        {
+          id: 'older',
+          account,
+          date: '2026-10-02',
+          amount: 100,
+          sort_order: 1,
+        },
+        {
+          id: 'earlier',
+          account,
+          date: '2026-10-04',
+          amount: 200,
+          sort_order: 9,
+        },
+        {
+          id: 'equal-order',
+          account,
+          date: '2026-10-04',
+          amount: 300,
+          sort_order: 10,
+        },
+        {
+          id: 'later',
+          account,
+          date: '2026-10-04',
+          amount: 400,
+          sort_order: 11,
+        },
+        {
+          id: 'a-null',
+          account,
+          date: '2026-10-04',
+          amount: 500,
+          sort_order: null,
+        },
+        {
+          id: 'future',
+          account,
+          date: '2099-01-01',
+          amount: -100,
+          sort_order: 1,
+        },
+        {
+          id: 'parent',
+          account,
+          date: '2026-10-02',
+          amount: -999,
+          is_parent: true,
+        },
+        { id: 'unrelated', account: other, date: '2026-10-02', amount: 1000 },
+        {
+          id: 'current',
+          account,
+          date: '2026-10-04',
+          amount: -111,
+          sort_order: null,
+        },
+      ];
+      const transaction = {
+        ...target,
+        account,
+        date: '2026-10-04',
+        amount: -100,
+      };
+      const before = await db.all('SELECT * FROM transactions ORDER BY id');
+      const messages = await db.all(
+        'SELECT * FROM messages_crdt ORDER BY timestamp',
+      );
+      const pending = structuredClone(added);
+      const balance = await getRunningBalanceBeforeTransaction(
+        transaction,
+        account,
+        added,
+      );
+      expect(balance).toBe(expected);
+      expect(added).toEqual(pending);
+      expect(await db.all('SELECT * FROM transactions ORDER BY id')).toEqual(
+        before,
+      );
+      expect(
+        await db.all('SELECT * FROM messages_crdt ORDER BY timestamp'),
+      ).toEqual(messages);
+      for (const row of added) {
+        await db.insertTransaction(row);
+        if (row.sort_order === null) {
+          db.runQuery(
+            'UPDATE transactions SET sort_order = NULL WHERE id = ?',
+            [row.id],
+          );
+        }
+      }
+      expect(
+        await getRunningBalanceBeforeTransaction(transaction, account),
+      ).toBe(balance);
+    },
+  );
+});
+
+test('planned closing source affects canonical balance formulas without ledger writes', async () => {
+  await loadRules();
+  const source = await db.insertAccount({ name: 'Source' });
+  const destination = await db.insertAccount({ name: 'Destination' });
+  await db.insertTransaction({
+    id: 'source-existing',
+    account: source,
+    date: '2026-10-01',
+    amount: 1000,
+  });
+  await db.insertTransaction({
+    id: 'destination-existing',
+    account: destination,
+    date: '2026-10-01',
+    amount: 200,
+  });
+  await insertRule({
+    stage: null,
+    conditionsOp: 'and',
+    conditions: [{ op: 'contains', field: 'notes', value: 'Closing account' }],
+    actions: [
+      {
+        op: 'set',
+        field: 'notes',
+        value: '',
+        options: {
+          formula:
+            '=CONCATENATE("source=", BALANCE_OF("Source"), ";destination=", balance)',
+        },
+      },
+    ],
+  });
+  const target = {
+    account: destination,
+    date: '2026-10-04',
+    amount: 500,
+    notes: 'Closing account',
+  };
+  const added = [
+    {
+      id: 'planned-source',
+      account: source,
+      date: '2026-10-04',
+      amount: -500,
+      sort_order: 10,
+    },
+  ];
+  const withoutPlan = await runRules(target);
+  const before = await db.all('SELECT * FROM transactions ORDER BY id');
+  const messages = await db.all(
+    'SELECT * FROM messages_crdt ORDER BY timestamp',
+  );
+  const preview = await runRules(target, null, { plannedTransactions: added });
+  expect(preview.notes).not.toBe(withoutPlan.notes);
+  expect(preview._ruleErrors).toEqual([]);
+  expect(preview.notes).toBe('source=500;destination=200');
+  expect(await db.all('SELECT * FROM transactions ORDER BY id')).toEqual(
+    before,
+  );
+  expect(
+    await db.all('SELECT * FROM messages_crdt ORDER BY timestamp'),
+  ).toEqual(messages);
+  await db.insertTransaction(added[0]);
+  expect(await runRules(target)).toEqual(preview);
 });

@@ -1,0 +1,12 @@
+✔ retention previews and applies per-source policy while preserving invalid and external artifacts (7863.2144ms)
+✔ restore creates independent local identities and preserves the encrypted source (10432.2312ms)
+✔ isolated validation rejects corrupt archives and listing preserves complete artifacts (5532.8722ms)
+✔ an encrypted sync budget creates complete plaintext backups without replacing earlier artifacts (3266.5243ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 27169.1376

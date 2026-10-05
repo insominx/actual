@@ -1,0 +1,100 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+ ❯ src/change-journal.test.ts (13 tests | 1 failed | 12 skipped) 35ms
+   × retains deletion receipts with uncertain provider removal after the retention period 33ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/change-journal.test.ts > retains deletion receipts with uncertain provider removal after the retention period
+AssertionError: expected { schemaVersion: 1, …(7) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "createdAt": "2026-10-04T20:21:51.832Z",
+  "operationId": "remote-uncertain",
+  "outcome": {
+    "accountClosure": {
+      "accountId": "account",
+      "action": "deleted",
+      "addedTransactionIds": [],
+      "deletedPayeeIds": [],
+      "deletedTransactionIds": [],
+      "unlink": {
+        "localChanged": true,
+        "remoteStatus": "uncertain",
+      },
+      "updatedTransactionIds": [],
+    },
+    "affectedIds": [
+      "account",
+    ],
+    "changed": true,
+    "checkpoint": "observed",
+    "status": "committed-local",
+  },
+  "proposal": {
+    "after": {
+      "action": "deleted",
+      "deletedPayeeIds": [],
+      "deletedTransactionIds": [],
+      "unlink": {
+        "clearFields": [
+          "bank",
+        ],
+        "hasToken": true,
+        "remoteRemoval": {
+          "requisitionId": "synthetic",
+          "url": "http://synthetic.invalid/remove",
+        },
+      },
+      "updatedTransactionIds": [],
+    },
+    "before": {
+      "account": {},
+      "counterparts": [],
+      "sourceHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "transactions": [],
+    },
+    "budget": {
+      "cloudFileId": null,
+      "id": "test-budget",
+      "syncId": null,
+    },
+    "operation": "accounts.delete",
+    "references": {},
+    "request": {
+      "id": "account",
+    },
+    "schemaVersion": 1,
+    "sideEffects": [
+      "delete",
+    ],
+  },
+  "schemaVersion": 1,
+  "state": "synced",
+  "token": "9d1ab6362b6f2b8909ffbda4343ea85e732d708496793a93b4b423496e07c4ca",
+  "updatedAt": "2000-01-01T00:00:00.000Z",
+}
+
+ ❯ src/change-journal.test.ts:115:54
+    113|       await journal.prepare('next', proposal);
+    114|       expect(await journal.read('confirmed')).toBeNull();
+    115|       expect(await journal.read('remote-uncertain')).toBeNull();
+       |                                                      ^
+    116|       expect((await journal.read('missing-outcome'))?.state).toBe('syn…
+    117|     });
+ ❯ withChangeJournal src/change-journal.ts:90:12
+ ❯ src/change-journal.test.ts:86:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 skipped (13)
+   Start at  13:21:51
+   Duration  199ms (transform 46%, tests 31%, import 19%, worker 5%)
+

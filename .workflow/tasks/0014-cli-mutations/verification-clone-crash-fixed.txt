@@ -1,0 +1,10 @@
+✔ killed apply at before-engine (budgets.clone) preserves its durable outcome and never replays (37406.5871ms)
+✔ killed apply at after-engine (budgets.clone) preserves its durable outcome and never replays (38043.9952ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 75519.7662

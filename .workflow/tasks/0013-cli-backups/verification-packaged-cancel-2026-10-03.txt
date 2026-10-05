@@ -1,0 +1,10 @@
+✔ isolated validation rejects corrupt archives and listing preserves complete artifacts (5635.199ms)
+✔ an encrypted sync budget creates complete plaintext backups without replacing earlier artifacts (3236.8772ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8930.7262

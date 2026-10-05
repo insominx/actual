@@ -1,0 +1,34 @@
+@actual-app/crdt build … queued
+@actual-app/crdt build ➔ start
+@actual-app/crdt build ✓ done - 1.42s
+@actual-app/core build … queued
+@actual-app/core build ➔ start
+@actual-app/core build ✖ fail
+
+Summary
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+@actual-app/cli build pending, took 0.00s, queued for 0.00s
+@actual-app/api build pending, took 0.00s, queued for 0.00s
+@actual-app/crdt build success, took 1.42s, queued for 0.00s
+@actual-app/core build failed, took 1.07s, queued for 0.00s
+success: 1, skipped: 0, pending: 2, aborted: 0, failed: 1
+worker restarts: 0, max worker memory usage: 13.27 MB
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+[@actual-app/core build] ERROR DETECTED
+
+
+
+Running yarn run build, pid: 56656
+(node:86268) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+src/server/api.ts(2834,50): error TS2345: Argument of type '{ name?: string; is_income?: boolean; hidden?: boolean; categories?: CategoryGroupCreationRequest['categories']; id: string; }' is not assignable to parameter of type 'APICategoryGroupEntity'.
+  Type '{ name?: string; is_income?: boolean; hidden?: boolean; categories?: CategoryGroupCreationRequest['categories']; id: string; }' is not assignable to type 'Pick<CategoryGroupEntity, "hidden" | "id" | "is_income" | "name">'.
+    Property 'name' is optional in type '{ name?: string; is_income?: boolean; hidden?: boolean; categories?: { id: string; name: string; group_id: string; is_income?: boolean; hidden?: boolean; }[]; id: string; }' but required in type 'Pick<CategoryGroupEntity, "hidden" | "id" | "is_income" | "name">'.
+src/server/api.ts(2915,39): error TS2345: Argument of type '{ name?: string; is_income?: boolean; hidden?: boolean; categories?: CategoryGroupCreationRequest['categories']; id: string; }' is not assignable to parameter of type 'APICategoryGroupEntity'.
+  Type '{ name?: string; is_income?: boolean; hidden?: boolean; categories?: CategoryGroupCreationRequest['categories']; id: string; }' is not assignable to type 'Pick<CategoryGroupEntity, "hidden" | "id" | "is_income" | "name">'.
+    Property 'name' is optional in type '{ name?: string; is_income?: boolean; hidden?: boolean; categories?: { id: string; name: string; group_id: string; is_income?: boolean; hidden?: boolean; }[]; id: string; }' but required in type 'Pick<CategoryGroupEntity, "hidden" | "id" | "is_income" | "name">'.
+src/server/db/index.test.ts(600,28): error TS2339: Property 'id' does not exist on type 'unknown'.
+src/server/db/index.test.ts(600,42): error TS2698: Spread types may only be created from object types.
+
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+Took a total of 2.50s to complete. 

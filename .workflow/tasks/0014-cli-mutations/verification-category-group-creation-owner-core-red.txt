@@ -1,0 +1,49 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+ ❯ src/server/db/index.test.ts (21 tests | 1 failed | 20 skipped) 57ms
+   ↓ Database (14)
+     ↓ all and first accept null params
+     ↓ inserting a category works
+     ↓ using a deleted category name works
+     ↓ transactions are sorted by date
+     ↓ transactions are sorted by starting balance flag
+     ↓ transactions are sorted by sort order
+     ↓ transactions are sorted by id as a last resort
+     ↓ schedules can be reordered
+     ↓ moving a schedule to the top uses a null targetId
+     ↓ moving a non-existent schedule throws
+     ↓ transactions get child transactions in the right order
+     ↓ transactions don't show orphaned child transactions
+     ↓ parent transactions never have a category
+     ↓ child transactions never appear if parent is deleted
+   ↓ read-only category insertion planning (4)
+     ↓ ordinary group ordering matches the canonical writer without preview writes
+     ↓ compact sibling shoves matches the canonical writer without preview writes
+     ↓ global append ordering matches the canonical writer without preview writes
+     ↓ duplicate-name rejection does not change category rows or synchronization messages
+   ↓ read-only category deletion mapping planning (2)
+     ↓ matches canonical forwarding effects with transfer=false without preview writes
+     ↓ matches canonical forwarding effects with transfer=true without preview writes
+   × category group insertion inspection preserves rows and matches canonical global order 56ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/db/index.test.ts > category group insertion inspection preserves rows and matches canonical global order
+TypeError: inspectCategoryGroupInsertion is not a function
+ ❯ src/server/db/index.test.ts:544:25
+    542|   const messages = await db.all('SELECT * FROM messages_crdt ORDER BY …
+    543|   const input = { name: 'Planned income group', is_income: 1, hidden: …
+    544|   const plan = await db.inspectCategoryGroupInsertion(input);
+       |                         ^
+    545|   expect(plan).toEqual({ ...input, sort_order: 106384 });
+    546|   expect(await db.all('SELECT * FROM category_groups ORDER BY id')).to…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 20 skipped (21)
+   Start at  18:30:51
+   Duration  3.09s (setup 64%, transform 34%, tests 2%)
+

@@ -1,0 +1,105 @@
+✖ killed apply at before-engine (accounts.create) preserves its durable outcome and never replays (34394.1282ms)
+✖ killed apply at after-engine (accounts.create) preserves its durable outcome and never replays (33870.0561ms)
+✖ killed apply at before-sync (accounts.create) preserves its durable outcome and never replays (33943.1829ms)
+✖ guarded account creation acknowledges actual identities and retries one account (online) (5023.5832ms)
+✖ guarded account creation acknowledges actual identities and retries one account (offline) (4864.1416ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 0
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 112196.4288
+
+✖ failing tests:
+
+test at packages\cli\integration\changes.test.mjs:1346:3
+✖ killed apply at before-engine (accounts.create) preserves its durable outcome and never replays (34394.1282ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  4 !== 5
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1547:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 4,
+    expected: 5,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:1346:3
+✖ killed apply at after-engine (accounts.create) preserves its durable outcome and never replays (33870.0561ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  5 !== 6
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1547:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 5,
+    expected: 6,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:1346:3
+✖ killed apply at before-sync (accounts.create) preserves its durable outcome and never replays (33943.1829ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  5 !== 6
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1547:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 5,
+    expected: 6,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:1933:3
+✖ guarded account creation acknowledges actual identities and retries one account (online) (5023.5832ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  12345 !== 12346
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:2010:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 12345,
+    expected: 12346,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:1933:3
+✖ guarded account creation acknowledges actual identities and retries one account (offline) (4864.1416ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  -32100 !== -32099
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:2010:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: -32100,
+    expected: -32099,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

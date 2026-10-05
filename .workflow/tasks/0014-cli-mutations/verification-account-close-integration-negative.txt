@@ -1,0 +1,1119 @@
+✖ guarded account closure preserves its planned transfers and acknowledged retries (online) (2979.2333ms)
+✖ guarded account closure preserves its planned transfers and acknowledged retries (offline) (2805.2599ms)
+✖ killed account closure at before-engine retains its exact outcome without replay (33456.9954ms)
+✖ killed account closure at after-engine retains its exact outcome without replay (33543.7601ms)
+✖ killed account closure at before-sync retains its exact outcome without replay (33018.2833ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 0
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 105894.3403
+
+✖ failing tests:
+
+test at integration\changes.test.mjs:3723:8
+✖ guarded account closure preserves its planned transfers and acknowledged retries (online) (2979.2333ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+  
+    {
+      __meta__: [
+        {
+          key: 'view-hash',
+          value: '87d8f0362e93af2e4cb9a7584b789272'
+  ...
+          account_group_id: null,
+  +       account_id: null,
+  +       account_sync_source: null,
+  +       balance_available: null,
+  +       balance_current: null,
+  +       balance_limit: null,
+  +       bank: null,
+  +       bank_sync_status: null,
+  +       closed: 1,
+  -       account_id: 'synthetic-provider-account',
+  -       account_sync_source: 'simpleFin',
+  -       balance_available: 2222,
+  -       balance_current: 3333,
+  -       balance_limit: 1111,
+  -       bank: 'synthetic-bank',
+  -       bank_sync_status: 'ok',
+  -       closed: 0,
+          id: '54c57549-a610-40de-888f-b82e27c43c1c',
+          last_reconciled: null,
+          last_sync: null,
+          mask: '4321',
+          name: 'Checking',
+  ...
+          acct: '54c57549-a610-40de-888f-b82e27c43c1c',
+  +       amount: -975500,
+  +       category: null,
+  +       cleared: 1,
+  +       date: 20261004,
+  +       description: '4d82710b-a4f8-47c0-85e4-e566dae3c47f',
+  +       error: null,
+  +       financial_id: null,
+  +       id: '83d8fbe9-a4b9-41f7-a259-915622789fea',
+  +       imported_description: null,
+  +       isChild: 0,
+  +       isParent: 0,
+  +       location: null,
+  +       notes: 'Closing account',
+  +       parent_id: null,
+  +       pending: 0,
+  +       raw_synced_data: null,
+  +       reconciled: 0,
+  +       schedule: null,
+  +       sort_order: 1791149034767,
+  +       starting_balance_flag: 0,
+  +       tombstone: 0,
+  +       transferred_id: 'f3282474-a251-4924-96aa-83830a0d6769',
+  +       type: null
+  +     },
+  +     {
+  +       acct: '54c57549-a610-40de-888f-b82e27c43c1c',
+          amount: -1000,
+          category: null,
+          cleared: 1,
+          date: 20260803,
+          description: null,
+  ...
+        {
+  +       acct: '5b62282b-9545-483e-a93f-8732b1a4ecae',
+  +       amount: 975500,
+  +       category: null,
+  +       cleared: 0,
+  +       date: 20261004,
+  +       description: 'e5b4e4ad-0759-43c5-95e3-17f42416831e',
+  +       error: null,
+  +       financial_id: null,
+  +       id: 'f3282474-a251-4924-96aa-83830a0d6769',
+  +       imported_description: null,
+  +       isChild: 0,
+  +       isParent: 0,
+  +       location: null,
+  +       notes: 'Closing account',
+  +       parent_id: null,
+  +       pending: 0,
+  +       raw_synced_data: null,
+  +       reconciled: 0,
+  +       schedule: null,
+  +       sort_order: 1791149035193,
+  +       starting_balance_flag: 0,
+  +       tombstone: 0,
+  +       transferred_id: '83d8fbe9-a4b9-41f7-a259-915622789fea',
+  +       type: null
+  +     },
+  +     {
+          acct: '54c57549-a610-40de-888f-b82e27c43c1c',
+          amount: -5000,
+          category: '64d23d1f-7654-460a-bf2a-baf21490fdd7',
+          cleared: 1,
+          date: 20260801,
+  
+      at assertClosedFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:3656:12)
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:3793:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: {
+      __meta__: [ [Object] ],
+      __migrations__: [
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object]
+      ],
+      account_groups: [],
+      accounts: [ [Object], [Object], [Object], [Object], [Object] ],
+      banks: [],
+      categories: [ [Object], [Object], [Object], [Object] ],
+      category_groups: [ [Object], [Object] ],
+      category_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+      dashboard: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      dashboard_pages: [ [Object] ],
+      notes: [],
+      payee_locations: [],
+      payee_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      payees: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      pending_transactions: [],
+      preferences: [ [Object], [Object], [Object] ],
+      reflect_budgets: [],
+      rules: [ [Object], [Object] ],
+      schedules: [ [Object] ],
+      schedules_json_paths: [ [Object] ],
+      schedules_next_date: [ [Object] ],
+      tags: [],
+      transaction_filters: [],
+      transactions: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      zero_budget_months: [],
+      zero_budgets: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ]
+    },
+    expected: {
+      __meta__: [ [Object] ],
+      __migrations__: [
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object]
+      ],
+      account_groups: [],
+      accounts: [ [Object], [Object], [Object], [Object], [Object] ],
+      banks: [],
+      categories: [ [Object], [Object], [Object], [Object] ],
+      category_groups: [ [Object], [Object] ],
+      category_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+      dashboard: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      dashboard_pages: [ [Object] ],
+      notes: [],
+      payee_locations: [],
+      payee_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      payees: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      pending_transactions: [],
+      preferences: [ [Object], [Object], [Object] ],
+      reflect_budgets: [],
+      rules: [ [Object], [Object] ],
+      schedules: [ [Object] ],
+      schedules_json_paths: [ [Object] ],
+      schedules_next_date: [ [Object] ],
+      tags: [],
+      transaction_filters: [],
+      transactions: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      zero_budget_months: [],
+      zero_budgets: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ]
+    },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at integration\changes.test.mjs:3723:8
+✖ guarded account closure preserves its planned transfers and acknowledged retries (offline) (2805.2599ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+  
+    {
+      __meta__: [
+        {
+          key: 'view-hash',
+          value: '87d8f0362e93af2e4cb9a7584b789272'
+  ...
+          account_group_id: null,
+  +       account_id: null,
+  +       account_sync_source: null,
+  +       balance_available: null,
+  +       balance_current: null,
+  +       balance_limit: null,
+  +       bank: null,
+  +       bank_sync_status: null,
+  +       closed: 1,
+  -       account_id: 'synthetic-provider-account',
+  -       account_sync_source: 'simpleFin',
+  -       balance_available: 2222,
+  -       balance_current: 3333,
+  -       balance_limit: 1111,
+  -       bank: 'synthetic-bank',
+  -       bank_sync_status: 'ok',
+  -       closed: 0,
+          id: 'b0be38a2-7e8d-4bda-8115-f322eede87b3',
+          last_reconciled: null,
+          last_sync: null,
+          mask: '4321',
+          name: 'Checking',
+  ...
+        {
+  +       acct: 'dc02c515-75a7-4d61-b835-2028a9b47b4c',
+  +       amount: 975500,
+  +       category: null,
+  +       cleared: 0,
+  +       date: 20261004,
+  +       description: '2f4a03cf-7f99-4c81-a7dc-745b52d9161c',
+  +       error: null,
+  +       financial_id: null,
+  +       id: 'af89d935-428d-4e1e-b3cf-ec890f1c89cb',
+  +       imported_description: null,
+  +       isChild: 0,
+  +       isParent: 0,
+  +       location: null,
+  +       notes: 'Closing account',
+  +       parent_id: null,
+  +       pending: 0,
+  +       raw_synced_data: null,
+  +       reconciled: 0,
+  +       schedule: null,
+  +       sort_order: 1791149038022,
+  +       starting_balance_flag: 0,
+  +       tombstone: 0,
+  +       transferred_id: 'e8936ab3-3ba2-4f30-a952-200f75e57bd3',
+  +       type: null
+  +     },
+  +     {
+          acct: '856c93c3-c862-4ebc-b1cc-f82e8f62e8a9',
+          amount: -200000,
+          category: '506e8d9d-7ed0-4397-84e4-07a9185dc6b2',
+          cleared: 1,
+          date: 20261004,
+  ...
+          acct: 'b0be38a2-7e8d-4bda-8115-f322eede87b3',
+  +       amount: -975500,
+  +       category: null,
+  +       cleared: 1,
+  +       date: 20261004,
+  +       description: '9d5d82e6-c4c1-4a80-b436-bde9cc76203b',
+  +       error: null,
+  +       financial_id: null,
+  +       id: 'e8936ab3-3ba2-4f30-a952-200f75e57bd3',
+  +       imported_description: null,
+  +       isChild: 0,
+  +       isParent: 0,
+  +       location: null,
+  +       notes: 'Closing account',
+  +       parent_id: null,
+  +       pending: 0,
+  +       raw_synced_data: null,
+  +       reconciled: 0,
+  +       schedule: null,
+  +       sort_order: 1791149037656,
+  +       starting_balance_flag: 0,
+  +       tombstone: 0,
+  +       transferred_id: 'af89d935-428d-4e1e-b3cf-ec890f1c89cb',
+  +       type: null
+  +     },
+  +     {
+  +       acct: 'b0be38a2-7e8d-4bda-8115-f322eede87b3',
+          amount: -1000,
+          category: null,
+          cleared: 1,
+          date: 20260803,
+          description: null,
+  
+      at assertClosedFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:3656:12)
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:3793:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: {
+      __meta__: [ [Object] ],
+      __migrations__: [
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object]
+      ],
+      account_groups: [],
+      accounts: [ [Object], [Object], [Object], [Object], [Object] ],
+      banks: [],
+      categories: [ [Object], [Object], [Object], [Object] ],
+      category_groups: [ [Object], [Object] ],
+      category_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+      dashboard: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      dashboard_pages: [ [Object] ],
+      notes: [],
+      payee_locations: [],
+      payee_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      payees: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      pending_transactions: [],
+      preferences: [ [Object], [Object], [Object] ],
+      reflect_budgets: [],
+      rules: [ [Object], [Object] ],
+      schedules: [ [Object] ],
+      schedules_json_paths: [ [Object] ],
+      schedules_next_date: [ [Object] ],
+      tags: [],
+      transaction_filters: [],
+      transactions: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      zero_budget_months: [],
+      zero_budgets: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ]
+    },
+    expected: {
+      __meta__: [ [Object] ],
+      __migrations__: [
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object]
+      ],
+      account_groups: [],
+      accounts: [ [Object], [Object], [Object], [Object], [Object] ],
+      banks: [],
+      categories: [ [Object], [Object], [Object], [Object] ],
+      category_groups: [ [Object], [Object] ],
+      category_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+      dashboard: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      dashboard_pages: [ [Object] ],
+      notes: [],
+      payee_locations: [],
+      payee_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      payees: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      pending_transactions: [],
+      preferences: [ [Object], [Object], [Object] ],
+      reflect_budgets: [],
+      rules: [ [Object], [Object] ],
+      schedules: [ [Object] ],
+      schedules_json_paths: [ [Object] ],
+      schedules_next_date: [ [Object] ],
+      tags: [],
+      transaction_filters: [],
+      transactions: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      zero_budget_months: [],
+      zero_budgets: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ]
+    },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at integration\changes.test.mjs:3946:8
+✖ killed account closure at before-engine retains its exact outcome without replay (33456.9954ms)
+  AssertionError [ERR_ASSERTION]: Closing source must exist
+      at assertClosedFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:3660:10)
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:4042:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at integration\changes.test.mjs:3946:8
+✖ killed account closure at after-engine retains its exact outcome without replay (33543.7601ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+  
+    {
+      __meta__: [
+        {
+          key: 'view-hash',
+          value: '87d8f0362e93af2e4cb9a7584b789272'
+  ...
+          bank_sync_status: null,
+  +       closed: 1,
+  -       closed: 0,
+          id: '3b92771f-73b6-4bf1-bf7b-1de9dba79bc5',
+          last_reconciled: null,
+          last_sync: null,
+          mask: null,
+          name: 'Checking',
+  ...
+          acct: '3b92771f-73b6-4bf1-bf7b-1de9dba79bc5',
+  +       amount: -975500,
+  +       category: null,
+  +       cleared: 1,
+  +       date: 20261004,
+  +       description: '7c2f6251-8d93-43ac-9b96-cc363ce55c21',
+  +       error: null,
+  +       financial_id: null,
+  +       id: '15690b59-4e72-45e0-9a75-3999b07898a4',
+  +       imported_description: null,
+  +       isChild: 0,
+  +       isParent: 0,
+  +       location: null,
+  +       notes: 'Closing account',
+  +       parent_id: null,
+  +       pending: 0,
+  +       raw_synced_data: null,
+  +       reconciled: 0,
+  +       schedule: null,
+  +       sort_order: 1791149073910,
+  +       starting_balance_flag: 0,
+  +       tombstone: 0,
+  +       transferred_id: 'ce36f2e5-93ee-4141-bd32-d0cead9d1da7',
+  +       type: null
+  +     },
+  +     {
+  +       acct: '3b92771f-73b6-4bf1-bf7b-1de9dba79bc5',
+          amount: -500,
+          category: '68f95fe2-30d6-43e7-9940-96e5621d4d4f',
+          cleared: 1,
+          date: 20990101,
+          description: null,
+  ...
+          acct: '528bc445-97b6-4502-bd8e-06bcde703cda',
+  +       amount: 975500,
+  +       category: null,
+  +       cleared: 0,
+  +       date: 20261004,
+  +       description: 'ddd96552-2fae-4186-8ade-1f9cd2ec3417',
+  +       error: null,
+  +       financial_id: null,
+  +       id: 'ce36f2e5-93ee-4141-bd32-d0cead9d1da7',
+  +       imported_description: null,
+  +       isChild: 0,
+  +       isParent: 0,
+  +       location: null,
+  +       notes: 'Closing account',
+  +       parent_id: null,
+  +       pending: 0,
+  +       raw_synced_data: null,
+  +       reconciled: 0,
+  +       schedule: null,
+  +       sort_order: 1791149074275,
+  +       starting_balance_flag: 0,
+  +       tombstone: 0,
+  +       transferred_id: '15690b59-4e72-45e0-9a75-3999b07898a4',
+  +       type: null
+  +     },
+  +     {
+  +       acct: '528bc445-97b6-4502-bd8e-06bcde703cda',
+          amount: 10000,
+          category: null,
+          cleared: 0,
+          date: 20260804,
+          description: 'ddd96552-2fae-4186-8ade-1f9cd2ec3417',
+  
+      at assertClosedFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:3656:12)
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:4042:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: {
+      __meta__: [ [Object] ],
+      __migrations__: [
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object]
+      ],
+      account_groups: [],
+      accounts: [ [Object], [Object], [Object], [Object], [Object] ],
+      banks: [],
+      categories: [ [Object], [Object], [Object], [Object] ],
+      category_groups: [ [Object], [Object] ],
+      category_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+      dashboard: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      dashboard_pages: [ [Object] ],
+      notes: [],
+      payee_locations: [],
+      payee_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      payees: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      pending_transactions: [],
+      preferences: [ [Object], [Object], [Object] ],
+      reflect_budgets: [],
+      rules: [ [Object], [Object] ],
+      schedules: [ [Object] ],
+      schedules_json_paths: [ [Object] ],
+      schedules_next_date: [ [Object] ],
+      tags: [],
+      transaction_filters: [],
+      transactions: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      zero_budget_months: [],
+      zero_budgets: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ]
+    },
+    expected: {
+      __meta__: [ [Object] ],
+      __migrations__: [
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object]
+      ],
+      account_groups: [],
+      accounts: [ [Object], [Object], [Object], [Object], [Object] ],
+      banks: [],
+      categories: [ [Object], [Object], [Object], [Object] ],
+      category_groups: [ [Object], [Object] ],
+      category_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+      dashboard: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      dashboard_pages: [ [Object] ],
+      notes: [],
+      payee_locations: [],
+      payee_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      payees: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      pending_transactions: [],
+      preferences: [ [Object], [Object], [Object] ],
+      reflect_budgets: [],
+      rules: [ [Object], [Object] ],
+      schedules: [ [Object] ],
+      schedules_json_paths: [ [Object] ],
+      schedules_next_date: [ [Object] ],
+      tags: [],
+      transaction_filters: [],
+      transactions: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      zero_budget_months: [],
+      zero_budgets: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ]
+    },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at integration\changes.test.mjs:3946:8
+✖ killed account closure at before-sync retains its exact outcome without replay (33018.2833ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+  
+    {
+      __meta__: [
+        {
+          key: 'view-hash',
+          value: '87d8f0362e93af2e4cb9a7584b789272'
+  ...
+          bank_sync_status: null,
+  +       closed: 1,
+  -       closed: 0,
+          id: 'a6afbaec-c565-4f56-855f-ff96e692f2bc',
+          last_reconciled: null,
+          last_sync: null,
+          mask: null,
+          name: 'Checking',
+  ...
+        {
+  +       acct: '8db31bb3-7253-402f-8024-869897c698ed',
+  +       amount: 975500,
+  +       category: null,
+  +       cleared: 0,
+  +       date: 20261004,
+  +       description: '9bdf9eae-b2e7-4561-af65-31673abb6831',
+  +       error: null,
+  +       financial_id: null,
+  +       id: '0411038c-9cae-4c1f-9d14-893284e2df3e',
+  +       imported_description: null,
+  +       isChild: 0,
+  +       isParent: 0,
+  +       location: null,
+  +       notes: 'Closing account',
+  +       parent_id: null,
+  +       pending: 0,
+  +       raw_synced_data: null,
+  +       reconciled: 0,
+  +       schedule: null,
+  +       sort_order: 1791149107846,
+  +       starting_balance_flag: 0,
+  +       tombstone: 0,
+  +       transferred_id: 'bc10f09d-f8c6-4897-a2c5-a9a189145c42',
+  +       type: null
+  +     },
+  +     {
+          acct: '84c80343-114d-410d-985e-ffb36eca8920',
+          amount: -200000,
+          category: '506e8d9d-7ed0-4397-84e4-07a9185dc6b2',
+          cleared: 1,
+          date: 20261004,
+  ...
+          acct: 'a6afbaec-c565-4f56-855f-ff96e692f2bc',
+  +       amount: -975500,
+  +       category: null,
+  +       cleared: 1,
+  +       date: 20261004,
+  +       description: 'f1df1b59-0e7e-47b0-89a0-de3e35ceba55',
+  +       error: null,
+  +       financial_id: null,
+  +       id: 'bc10f09d-f8c6-4897-a2c5-a9a189145c42',
+  +       imported_description: null,
+  +       isChild: 0,
+  +       isParent: 0,
+  +       location: null,
+  +       notes: 'Closing account',
+  +       parent_id: null,
+  +       pending: 0,
+  +       raw_synced_data: null,
+  +       reconciled: 0,
+  +       schedule: null,
+  +       sort_order: 1791149107464,
+  +       starting_balance_flag: 0,
+  +       tombstone: 0,
+  +       transferred_id: '0411038c-9cae-4c1f-9d14-893284e2df3e',
+  +       type: null
+  +     },
+  +     {
+  +       acct: 'a6afbaec-c565-4f56-855f-ff96e692f2bc',
+          amount: -10000,
+          category: '745562d1-b64e-4238-b211-a39c234372c1',
+          cleared: 1,
+          date: 20260801,
+          description: null,
+  
+      at assertClosedFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:3656:12)
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:4042:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: {
+      __meta__: [ [Object] ],
+      __migrations__: [
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object]
+      ],
+      account_groups: [],
+      accounts: [ [Object], [Object], [Object], [Object], [Object] ],
+      banks: [],
+      categories: [ [Object], [Object], [Object], [Object] ],
+      category_groups: [ [Object], [Object] ],
+      category_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+      dashboard: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      dashboard_pages: [ [Object] ],
+      notes: [],
+      payee_locations: [],
+      payee_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      payees: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      pending_transactions: [],
+      preferences: [ [Object], [Object], [Object] ],
+      reflect_budgets: [],
+      rules: [ [Object], [Object] ],
+      schedules: [ [Object] ],
+      schedules_json_paths: [ [Object] ],
+      schedules_next_date: [ [Object] ],
+      tags: [],
+      transaction_filters: [],
+      transactions: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      zero_budget_months: [],
+      zero_budgets: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ]
+    },
+    expected: {
+      __meta__: [ [Object] ],
+      __migrations__: [
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object], [Object]
+      ],
+      account_groups: [],
+      accounts: [ [Object], [Object], [Object], [Object], [Object] ],
+      banks: [],
+      categories: [ [Object], [Object], [Object], [Object] ],
+      category_groups: [ [Object], [Object] ],
+      category_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      cleanup_groups: [],
+      created_budgets: [],
+      custom_reports: [],
+      dashboard: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      dashboard_pages: [ [Object] ],
+      notes: [],
+      payee_locations: [],
+      payee_mapping: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      payees: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      pending_transactions: [],
+      preferences: [ [Object], [Object], [Object] ],
+      reflect_budgets: [],
+      rules: [ [Object], [Object] ],
+      schedules: [ [Object] ],
+      schedules_json_paths: [ [Object] ],
+      schedules_next_date: [ [Object] ],
+      tags: [],
+      transaction_filters: [],
+      transactions: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      zero_budget_months: [],
+      zero_budgets: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ]
+    },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

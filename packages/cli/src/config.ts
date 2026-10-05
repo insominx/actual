@@ -38,6 +38,7 @@ export type CliGlobalOpts = {
   cacheTtl?: number;
   lockTimeout?: number;
   refresh?: boolean;
+  requireFresh?: boolean;
   // Commander stores --no-foo flags under the positive key. Default true,
   // false when the flag is passed.
   cache?: boolean;
@@ -175,6 +176,7 @@ function validateNonNegativeInt(value: number, name: string): number {
 
 export async function resolveConfig(
   cliOpts: CliGlobalOpts,
+  { connectionOnly = false }: { connectionOnly?: boolean } = {},
 ): Promise<CliConfig> {
   const fileConfig = await loadConfigFile();
   const profile = await selectedProfile(
@@ -189,11 +191,12 @@ export async function resolveConfig(
       'Choose --budget-id or --sync-id, not both.',
     );
   }
-  const budgetId =
-    cliOpts.budgetId ??
-    (!explicitRemote
-      ? (process.env.ACTUAL_BUDGET_ID ?? profile?.budgetId)
-      : undefined);
+  const budgetId = connectionOnly
+    ? undefined
+    : (cliOpts.budgetId ??
+      (!explicitRemote
+        ? (process.env.ACTUAL_BUDGET_ID ?? profile?.budgetId)
+        : undefined));
   const offline =
     cliOpts.offline ??
     parseBoolEnv(process.env.ACTUAL_OFFLINE, 'ACTUAL_OFFLINE') ??
@@ -205,7 +208,10 @@ export async function resolveConfig(
       'Local --budget-id selection requires --offline. Use a sync ID for online access.',
     );
   }
-  if (offline && (cliOpts.refresh || cliOpts.cache === false)) {
+  if (
+    offline &&
+    (cliOpts.refresh || cliOpts.requireFresh || cliOpts.cache === false)
+  ) {
     throw new AgentError(
       'INVALID_INPUT',
       'Offline access cannot request a server refresh.',
@@ -235,11 +241,12 @@ export async function resolveConfig(
       (await readProfileSecret(profile?.sessionTokenFile)) ??
       fileConfig.sessionToken);
 
-  const syncId =
-    cliOpts.syncId ??
-    (!budgetId
-      ? (process.env.ACTUAL_SYNC_ID ?? profile?.syncId ?? fileConfig.syncId)
-      : undefined);
+  const syncId = connectionOnly
+    ? undefined
+    : (cliOpts.syncId ??
+      (!budgetId
+        ? (process.env.ACTUAL_SYNC_ID ?? profile?.syncId ?? fileConfig.syncId)
+        : undefined));
 
   const dataDir =
     cliOpts.dataDir ??
@@ -292,7 +299,10 @@ export async function resolveConfig(
     'lockTimeout',
   );
 
-  const refresh = (cliOpts.refresh ?? false) || cliOpts.cache === false;
+  const refresh =
+    (cliOpts.refresh ?? false) ||
+    (cliOpts.requireFresh ?? false) ||
+    cliOpts.cache === false;
 
   const flagNoLock = cliOpts.lock === false ? true : undefined;
   const noLock =

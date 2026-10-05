@@ -1,0 +1,87 @@
+{
+  "ok": false,
+  "projectRoot": "D:\\Projects\\personal\\Budget\\actual",
+  "task": "0012-cli-sync",
+  "profile": "watch",
+  "checks": [
+    {
+      "id": "cli-unit",
+      "type": "scripted",
+      "command": "yarn workspace @actual-app/cli test",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 1313,
+      "stdout": "\n RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli\n\n\n Test Files  14 passed (14)\n      Tests  211 passed (211)\n   Start at  14:25:50\n   Duration  469ms (transform 52%, import 23%, tests 22%, worker 3%)\n\n",
+      "stderr": "2:25:51 PM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/cosmiconfig/dist/index.js.\nError: An error occurred while trying to read the map file at index.js.map\nError: ENOENT: no such file or directory, open 'D:\\Projects\\personal\\Budget\\actual\\node_modules\\cosmiconfig\\dist\\index.js.map'\n    at Object.readFileSync (node:fs:436:20)\n    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13\n    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)\n    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)\n    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)\n    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)\n    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)\n"
+    },
+    {
+      "id": "root-types",
+      "type": "scripted",
+      "command": "yarn typecheck",
+      "status": "fail",
+      "exitCode": 1,
+      "durationMs": 4014,
+      "stdout": "@actual-app/ci-actions typecheck … queued\n@actual-app/components typecheck … queued\n@actual-app/crdt typecheck … queued\nplugins-service typecheck … queued\n@actual-app/ci-actions typecheck ➔ start\n@actual-app/components typecheck ➔ start\n@actual-app/ci-actions typecheck » skip - a15bf2f851e791f66552eb8704bef90aaa2afe3e\n@actual-app/crdt typecheck ➔ start\n@actual-app/crdt typecheck » skip - 1842a47eb61ba5c7646b83ea6db2760c1023b597\n@actual-app/core typecheck … queued\nplugins-service typecheck ➔ start\nplugins-service typecheck » skip - 7d72e72d9e5af9dfa737dcf25809c86147dd79e6\n@actual-app/core typecheck ➔ start\n@actual-app/components typecheck » skip - cfff67e84b2e8caef320ddc03f0bf7155f809eae\n@actual-app/core typecheck » skip - ae30cbe6102571385b26a2964835f7e6061449d6\n@actual-app/api typecheck … queued\n@actual-app/web typecheck … queued\n@actual-app/api typecheck ➔ start\n@actual-app/web typecheck ➔ start\n@actual-app/api typecheck » skip - 321540fb83c473830b86934d96c204a4b2c1d113\n@actual-app/cli typecheck … queued\n@actual-app/cli typecheck ➔ start\n@actual-app/web typecheck » skip - 39912469014135db15709120b98dba5cb20a1acc\n@actual-app/sync-server typecheck … queued\n@actual-app/sync-server typecheck ➔ start\n@actual-app/sync-server typecheck » skip - badabd48e9939c0fe6d312d5e421ba328aaac1f5\ndesktop-electron typecheck … queued\ndesktop-electron typecheck ➔ start\ndesktop-electron typecheck » skip - eaca791a0163f7e1285e76fb49b9e5c1628c2511\n@actual-app/cli typecheck ✖ fail\n\nSummary\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n@actual-app/cli typecheck failed, took 1.81s, queued for 0.00s\nsuccess: 0, skipped: 9, pending: 0, aborted: 0, failed: 1\nworker restarts: 0, max worker memory usage: 49.06 MB\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n[@actual-app/cli typecheck] ERROR DETECTED\n\n\n\nlocal cache fetch: 94d6f39d2a768a04a7bc131a9157fe5f711ef1e6 false\nremote fallback fetch: 94d6f39d2a768a04a7bc131a9157fe5f711ef1e6 false\nRunning yarn run typecheck, pid: 101628\n(node:85572) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.\n(Use `node --trace-deprecation ...` to show where the warning was created)\nsrc/agent-contract.ts(95,11): error TS2783: 'minimum' is specified more than once, so this usage will be overwritten.\nsrc/agent-contract.ts(96,11): error TS2783: 'maximum' is specified more than once, so this usage will be overwritten.\n\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\nTook a total of 2.84s to complete. \n",
+      "stderr": ""
+    },
+    {
+      "id": "cli-build",
+      "type": "scripted",
+      "command": "yarn exec lage build --scope=@actual-app/cli --no-cache",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 6877,
+      "stdout": "@actual-app/crdt build … queued\n@actual-app/crdt build ➔ start\n@actual-app/crdt build ✓ done - 1.47s\n@actual-app/core build … queued\n@actual-app/core build ➔ start\n@actual-app/core build ✓ done - 0.56s\n@actual-app/api build … queued\n@actual-app/api build ➔ start\n@actual-app/api build ✓ done - 2.40s\n@actual-app/cli build … queued\n@actual-app/cli build ➔ start\n@actual-app/cli build ✓ done - 1.41s\n\nSummary\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n@actual-app/api build success, took 2.40s, queued for 0.00s\n@actual-app/cli build success, took 1.41s, queued for 0.00s\n@actual-app/crdt build success, took 1.47s, queued for 0.00s\n@actual-app/core build success, took 0.56s, queued for 0.00s\nsuccess: 4, skipped: 0, pending: 0, aborted: 0, failed: 0\nworker restarts: 0, max worker memory usage: 13.47 MB\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\nTook a total of 5.85s to complete. \n",
+      "stderr": ""
+    },
+    {
+      "id": "server-build",
+      "type": "scripted",
+      "command": "yarn workspace @actual-app/sync-server build",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 872,
+      "stdout": "vite v8.1.5 building ssr environment for production...\n\u001b[2K\rtransforming...✓ 115 modules transformed.\nrendering chunks...\ncomputing gzip size...\nbuild/scripts/run-migrations.js                                   0.27 kB │ gzip:  0.22 kB │ map:   0.43 kB\nbuild/app.js                                                      0.29 kB │ gzip:  0.23 kB │ map:   0.64 kB\nbuild/chunks/1694362247011-create-secret-table-CG-GivMF.js        0.47 kB │ gzip:  0.31 kB │ map:   0.65 kB\nbuild/chunks/1763873568237-server-global-prefs-Ci5s7i3D.js        0.48 kB │ gzip:  0.31 kB │ map:   0.72 kB\nbuild/chunks/1763873600000-backfill-files-owner-CNPMON4X.js       0.51 kB │ gzip:  0.35 kB │ map:   0.85 kB\nbuild/chunks/1702667624000-rename-nordigen-secrets-BW-LymBo.js    0.74 kB │ gzip:  0.31 kB │ map:   1.04 kB\nbuild/chunks/1694360479680-create-account-db-CRjaQQFg.js          0.84 kB │ gzip:  0.42 kB │ map:   1.05 kB\nbuild/chunks/1694360000000-create-folders-DP5YCxxz.js             0.85 kB │ gzip:  0.44 kB │ map:   1.38 kB\nbuild/scripts/health-check.js                                     0.92 kB │ gzip:  0.47 kB │ map:   1.59 kB\nbuild/chunks/1718889148000-openid-VFDfSyxT.js                     1.13 kB │ gzip:  0.53 kB │ map:   1.38 kB\nbuild/scripts/disable-openid.js                                   1.33 kB │ gzip:  0.61 kB │ map:   2.00 kB\nbuild/scripts/reset-password.js                                   1.59 kB │ gzip:  0.54 kB │ map:   2.48 kB\nbuild/scripts/enable-openid.js                                    1.61 kB │ gzip:  0.73 kB │ map:   2.39 kB\nbuild/chunks/prompt-DOMFdmgQ.js                                   1.62 kB │ gzip:  0.62 kB │ map:   3.03 kB\nbuild/chunks/migrations-CkMiXB0p.js                               2.34 kB │ gzip:  1.02 kB │ map:   3.38 kB\nbuild/bin/actual-server.js                                        2.49 kB │ gzip:  0.93 kB │ map:   4.59 kB\nbuild/chunks/1719409568000-multiuser-Cee_tIXg.js                  2.63 kB │ gzip:  0.88 kB │ map:   3.22 kB\nbuild/chunks/load-config-D2TXNvHj.js                              9.49 kB │ gzip:  2.89 kB │ map:  16.44 kB\nbuild/chunks/account-db-DP6HlniU.js                              28.08 kB │ gzip:  6.83 kB │ map:  50.77 kB\nbuild/chunks/app-DSx2Nfu2.js                                    209.35 kB │ gzip: 48.15 kB │ map: 414.59 kB\n\n✓ built in 110ms\n",
+      "stderr": ""
+    },
+    {
+      "id": "real-integration",
+      "type": "scripted",
+      "command": "yarn workspace @actual-app/cli test:integration",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 33046,
+      "stdout": "✔ packaged discovery and validation work without personal configuration (504.0996ms)\n✔ encrypted remote sessions register keys across process restarts (3825.8577ms)\n✔ real server, import deduplication, two clients, and restart (11917.9654ms)\n✔ encrypted first publication survives a lost response, retries one identity, and preserves rename/archive semantics (10167.5975ms)\n✔ CLI clones an encrypted cached budget without modifying or publishing its source (5411.8107ms)\n✔ CLI creates a usable local budget without publishing to its configured server (5343.9883ms)\n✔ fresh server bootstraps through CLI and authenticates without a browser (2352.7008ms)\n✔ managed lifecycle checks ownership, port, executable, restart, and shutdown (6378.3938ms)\n✔ watch bounds a stalled worker and a subsequent writer can reopen its cache (5931.9498ms)\n✔ encrypted watch reconnects, cancels, and releases its cache for a writer (5771.2681ms)\n✔ a failed push preserves the local write and refresh does not replay it (encrypted=false) (4099.0744ms)\n✔ a failed push preserves the local write and refresh does not replay it (encrypted=true) (3695.9759ms)\n✔ pending status is offline and refresh sends existing writes (encrypted=false) (6540.8696ms)\n✔ pending status is offline and refresh sends existing writes (encrypted=true) (6290.9424ms)\nℹ tests 14\nℹ suites 0\nℹ pass 14\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 32450.6627\n",
+      "stderr": ""
+    },
+    {
+      "id": "lint",
+      "type": "scripted",
+      "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/cli/vite.config.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/loot-core/src/server/sync/index.ts",
+      "status": "fail",
+      "exitCode": 1,
+      "durationMs": 1254,
+      "stdout": "packages/cli/src/commands/sync.ts:174:13: error eslint(curly): Expected { after 'if' condition. help: Replace `throw new AgentError( 'INVALID_INPUT', `${key} must be an integer from ${min} to ${max}.`, );` with `{throw new AgentError( 'INVALID_INPUT', `${key} must be an integer from ${min} to ${max}.`, );}`.\npackages/cli/src/commands/sync.ts:181:11: error eslint(curly): Expected { after 'if' condition. help: Replace `throw new AgentError( 'INVALID_INPUT', 'Watch requires an online connection and an explicit sync budget.', );` with `{throw new AgentError( 'INVALID_INPUT', 'Watch requires an online connection and an explicit sync budget.', );}`.\npackages/cli/src/commands/sync.ts:191:13: error eslint(curly): Expected { after 'if' condition. help: Replace `cancel();` with `{cancel();}`.\npackages/cli/src/commands/sync.ts:14:27: error actual(prefer-subpath-imports): Use subpath import \"#sync-watch\" instead of relative import \"../sync-watch\"\npackages/cli/integration/sync.test.mjs:7:47: error actual(enforce-boundaries): Backtracked import \"../../crdt/dist/index.js\" is not allowed. Use subpath imports (#path) or package imports instead.\npackages/cli/src/sync-watch.ts:127:70: error eslint(no-empty-function): Unexpected empty function help: Consider removing this function or adding logic to it.\npackages/cli/src/sync-watch.ts:160:15: error eslint(no-empty-function): Unexpected empty function help: Consider removing this function or adding logic to it.\n",
+      "stderr": ""
+    },
+    {
+      "id": "format",
+      "type": "scripted",
+      "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/vite.config.ts packages/cli/README.md packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/docs/docs/api/cli.md .workflow/tasks/0010-cli-runtime .workflow/tasks/0011-cli-budget-lifecycle/plan.review.md .workflow/tasks/0011-cli-budget-lifecycle/execution-decisions.md .workflow/tasks/0011-cli-budget-lifecycle/verify.json upcoming-release-notes/agent-cli-runtime.md upcoming-release-notes/agent-cli-budget-creation.md packages/loot-core/src/server/sync/index.ts",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 979,
+      "stdout": "Checking formatting...\n\nAll matched files use the correct format.\nFinished in 266ms on 84 files using 32 threads.\n",
+      "stderr": ""
+    }
+  ],
+  "markdownRows": [
+    "| scripted | cli-unit | pass | 1313ms |",
+    "| scripted | root-types | fail | exit 1 |",
+    "| scripted | cli-build | pass | 6877ms |",
+    "| scripted | server-build | pass | 872ms |",
+    "| scripted | real-integration | pass | 33046ms |",
+    "| scripted | lint | fail | exit 1 |",
+    "| scripted | format | pass | 979ms |"
+  ]
+}

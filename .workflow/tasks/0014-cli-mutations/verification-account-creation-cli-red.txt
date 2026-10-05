@@ -1,0 +1,41 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+10:55:12 AM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/cosmiconfig/dist/index.js.
+Error: An error occurred while trying to read the map file at index.js.map
+Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\node_modules\cosmiconfig\dist\index.js.map'
+    at Object.readFileSync (node:fs:436:20)
+    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13
+    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)
+    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)
+    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)
+    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)
+    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)
+ ❯ src/program.test.ts (25 tests | 1 failed) 82ms
+   ❯ registered agent commands (25)
+     × requires an account creation operation ID before connecting and advertises it 19ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/program.test.ts > registered agent commands > requires an account creation operation ID before connecting and advertises it
+AssertionError: expected 'MISSING_CONTEXT' to be 'INVALID_INPUT' // Object.is equality
+
+Expected: "INVALID_INPUT"
+Received: "MISSING_CONTEXT"
+
+ ❯ src/program.test.ts:67:32
+     65|   it('requires an account creation operation ID before connecting and …
+     66|     const missing = await run(['--output-version', '2', 'accounts', 'c…
+     67|     expect(missing.error.code).toBe('INVALID_INPUT');
+       |                                ^
+     68|     expect(missing.error.details.field).toBe('operationId');
+     69|     const schema = await run(['schema', 'accounts.create']);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 24 passed (25)
+   Start at  10:55:12
+   Duration  552ms (transform 61%, import 19%, tests 18%, worker 1%)
+

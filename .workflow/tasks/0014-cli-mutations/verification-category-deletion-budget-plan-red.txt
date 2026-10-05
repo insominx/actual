@@ -1,0 +1,38 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+ ❯ src/server/budget/base.test.ts (10 tests | 2 failed | 8 skipped) 103ms
+   ↓ Base budget (8)
+     ↓ Recomputes budget cells when account fields change
+     ↓ Excludes hidden categories from group totals in Tracking Budget
+     ↓ Excludes hidden category groups from budget totals in Tracking Budget
+     ↓ Includes hidden categories in group totals for Envelope Budget
+     ↓ Includes hidden category groups in budget totals for Envelope Budget
+     ↓ Seeds sum-amount across all months on a cold build (Envelope Budget)
+     ↓ Seeds sum-amount across all months on a cold build (Tracking Budget)
+     ↓ Excludes off-budget account spending when seeding sum-amount
+   ❯ read-only budget transfer planning (2)
+     × envelope transfers every created month through the canonical budget table 59ms
+     × tracking transfers every created month through the canonical budget table 43ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/budget/base.test.ts > read-only budget transfer planning > envelope transfers every created month through the canonical budget table
+ FAIL  src/server/budget/base.test.ts > read-only budget transfer planning > tracking transfers every created month through the canonical budget table
+TypeError: inspectBudgetTransfer is not a function
+ ❯ src/server/budget/base.test.ts:540:20
+    538|       const inactiveBefore = await db.all(`SELECT * FROM ${inactive} O…
+    539|       const messages = await db.all('SELECT * FROM messages_crdt ORDER…
+    540|       const plan = inspectBudgetTransfer(['source', 'other-source'], '…
+       |                    ^
+    541|       expect(plan.map(({ month, category, amount }) => ({ month, categ…
+    542|         { month: '2024-01', category: 'destination', amount: 1300 },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 8 skipped (10)
+   Start at  16:59:47
+   Duration  3.02s (setup 62%, transform 34%, tests 4%)
+

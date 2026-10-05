@@ -1,0 +1,12 @@
+✔ guarded account creation acknowledges actual identities and retries one account (online) (10176.3915ms)
+✔ guarded account creation acknowledges actual identities and retries one account (offline) (9384.597ms)
+✔ guarded category updates preserve raw domains and acknowledged retries (online) (6151.5758ms)
+✔ guarded category updates preserve raw domains and acknowledged retries (offline) (5558.0648ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 31355.1528

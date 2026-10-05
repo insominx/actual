@@ -20,6 +20,8 @@ import APIList from './APIList';
 "importTransactions",
 "getTransactions",
 "updateTransaction",
+"previewTransactionUpdate",
+"applyTransactionUpdate",
 "deleteTransaction",
 "mergeTransactions"
 ]} />
@@ -28,9 +30,15 @@ import APIList from './APIList';
 "Account",
 "getAccounts",
 "createAccount",
+"previewAccountCreation",
+"applyAccountCreation",
 "updateAccount",
+"previewAccountUpdate",
+"applyAccountUpdate",
 "closeAccount",
 "reopenAccount",
+"previewAccountReopen",
+"applyAccountReopen",
 "deleteAccount",
 "getAccountBalance"
 ]} />
@@ -104,6 +112,9 @@ import APIList from './APIList';
 "loadBudget",
 "downloadBudget",
 "importBudget",
+"restoreBudget",
+"previewBudgetRestore",
+"applyBudgetRestore",
 "exportBudget",
 "batchBudgetUpdates",
 "runQuery",
@@ -175,26 +186,9 @@ A split transaction has several sub-transactions that split the total
 amount across them. You can create a split transaction by specifying
 an array of sub-transactions in the `subtransactions` field. This field is primarily used during creation and retrieval.
 
-In practice, updating subtransactions individually may not work reliably. To modify split transactions, update the parent transaction and provide the full `subtransactions` array.
+When creating a split with `addTransactions`, each subtransaction requires an integer `amount`. Optional fields include `category`, `payee`, and `notes`. A `payee` can identify an account's transfer payee; enable `runTransfers` to create its counterpart.
 
-Subtransactions are treated as full transaction records and are validated similarly to regular transactions.
-
-In practice, API creation commonly requires at least the fields below.
-
-- `amount`
-- `account`
-- `date`
-- `parent_id`
-- `is_child: true`
-
-Additionally, child transactions should explicitly set:
-
-- `is_parent`: false
-
-Optional fields include:
-
-- `category`
-- `notes`
+The engine supplies child IDs, account, date, parent linkage, and split flags. You can update an existing child through `updateTransaction(childId, fields)`. The engine recalculates the parent error and preserves omitted child fields. To change inherited account, date, cleared, or reconciled values, update the parent.
 
 If the amounts of the sub-transactions do not equal the total amount
 of the transaction, currently the API call will succeed but an error
@@ -202,13 +196,7 @@ will be displayed within the app.
 
 #### Parent Transaction Requirements
 
-A transaction must be marked with `is_parent: true` before subtransactions can be added.
-
-If `is_parent` is not set to `true` on the parent transaction, any provided `subtransactions` will be ignored and the transaction will be treated as a standard (non-split) transaction. No split will be created.
-
-Subtransactions are only processed when the parent transaction has `is_parent: true`.
-
-If subtransactions are provided but are invalid (e.g. missing required fields such as `account` or `date`), the API will return a validation error (HTTP 400) indicating that required transaction fields are missing.
+For `addTransactions`, supply the parent date, amount, and a nonempty `subtransactions` array. The engine marks the parent and children as a split; callers do not need to supply `is_parent`, child account, or child date. Updating a normal transaction with a nonempty `subtransactions` array also converts it into a split.
 
 A working example of API fields:
 
@@ -310,6 +298,14 @@ Get all the transactions in `accountId` between the specified dates (inclusive).
 
 Update fields of a transaction. `fields` can specify any field described in [`Transaction`](#transaction).
 
+#### `previewTransactionUpdate`
+
+`previewTransactionUpdate({ id, fields })` returns a version 1 proposal for an ordinary transaction. The initial guarded scope supports notes, amount, date, and cleared. The proposal contains exact budget identities, detached before/after values, reference preconditions, and declared side effects. Preview does not write the transaction. Split and transfer updates remain unavailable through this guarded method.
+
+#### `applyTransactionUpdate`
+
+`applyTransactionUpdate(proposal)` compares the proposal with current state inside the core mutation boundary. It returns either `rejected` with a stable code or `committed-local` with changed status, affected IDs, and an observed checkpoint. The method awaits canonical batch completion before acknowledging the outcome. It does not synchronize remotely or create durable operation receipts. The CLI changes commands own those local receipts and prevent automatic replay of uncertain operations. Independent remote edits after refresh are not globally locked.
+
 #### `deleteTransaction`
 
 <Method name="deleteTransaction" args={[{ name: 'id', type: 'id'}]} />
@@ -389,11 +385,27 @@ Get all accounts. Returns an array of [`Account`](#account) objects.
 
 Create an account with an initial balance of `initialBalance` (defaults to 0). Remember that [`amount`](#primitives) has no decimal places. Returns the `id` of the new account.
 
+#### `previewAccountCreation`
+
+`previewAccountCreation({ name, offbudget, initialBalance, closed? })` returns an `accounts.create` proposal for the loaded budget. `initialBalance` uses signed integer cents. Preview records the source fingerprint, account fields, transfer payee creation, and any opening transaction. It inspects Starting Balance references without creating a payee. A nonzero opening balance binds the execution date and the canonical income category. Off-budget opening transactions have no category.
+
+#### `applyAccountCreation`
+
+`applyAccountCreation(proposal)` rechecks the budget identity, source fingerprint, references, and opening date before calling the canonical account writer. A committed result includes `accountCreation` with actual account, transfer payee, opening transaction, and Starting Balance payee IDs. The last two IDs are null for a zero opening balance. API callers must manage retries themselves; the CLI stores durable operation receipts. A matching account name cannot establish an uncertain creation outcome.
+
 #### `updateAccount`
 
 <Method name="updateAccount" args={[{ name: 'id', type: 'id' }, { name: 'fields', type: 'object' }]} />
 
 Update fields of an account. `fields` can specify any field described in [`Account`](#account).
+
+#### `previewAccountUpdate`
+
+`previewAccountUpdate({ id, fields })` supports `name`, `offbudget`, `closed`, `balance_current`, and `account_group_id`. Supply at least one field. `balance_current` uses integer cents or null; it is the stored bank balance, not the computed ledger balance. `account_group_id` accepts an existing group ID or null. Preview validates references and preserves account, payee, and transaction records. It records before/after account fields and derived transfer payee names. Its source fingerprint binds the persistent ledger and references.
+
+#### `applyAccountUpdate`
+
+`applyAccountUpdate(proposal)` rechecks the exact budget and complete proposal before invoking the existing account update writer. Omitted fields and ledger transactions remain unchanged. Renaming changes displayed transfer payee names through the account join, without writing payees. Updating `closed` through this method only changes the account field. Use `closeAccount` when bank unlink or a balance transfer is required. A committed outcome includes the account ID, checkpoint, and whether account fields changed. The CLI adds durable receipts and safe retries.
 
 #### `closeAccount`
 
@@ -412,6 +424,14 @@ If you want to simply delete an account, see [`deleteAccount`](#deleteaccount).
 <Method name="reopenAccount" args={[{ name: 'id', type: 'id' }]} />
 
 Reopen a closed account.
+
+#### `previewAccountReopen`
+
+`previewAccountReopen({ id })` returns a proposal for the loaded budget. Preview preserves all records and shows `closed` changing to false. The fingerprint binds the persistent source, ledger, account, and references. Reopening does not relink a bank, transfer money, or rename a payee.
+
+#### `applyAccountReopen`
+
+`applyAccountReopen(proposal)` rechecks the exact operation, budget, and complete proposal before calling the canonical reopening writer. It preserves stored provider fields and ledger records. A committed outcome includes the account ID and checkpoint; `changed` is false when the account was already open. API callers manage retries themselves. CLI receipts prevent replay after an acknowledged reopening or an uncertain outcome.
 
 #### `deleteAccount`
 
@@ -571,7 +591,7 @@ Create a category group. Returns the `id` of the new group.
 
 <Method name="updateCategoryGroup" args={[{ name: 'id', type: 'id' }, { name: 'fields', type: 'object' }]} returns="Promise<id>" />
 
-Update fields of a category group. `fields` can specify any field described in [`CategoryGroup`](#category-group).
+Update fields of a category group. `fields` can specify any field described in [`CategoryGroup`](#category-group). Omitted fields keep their values. Nested `categories` are read metadata; group updates never change child categories.
 
 #### `deleteCategoryGroup`
 
@@ -872,6 +892,20 @@ Load a budget file. If the file exists locally, it will load from there. Otherwi
 
 Import a budget from an exported file and load it. `input` is either a path to the file or the raw file contents. By default the file is treated as an Actual export (a `.zip` file containing `db.sqlite` and `metadata.json`); pass `type: 'ynab4'` or `type: 'ynab5'` to import a YNAB export instead. When passing raw contents, you can supply the original file name with `filename` — some import types use it to derive the budget name. Returns the id of the imported budget, which is now the loaded budget.
 
+#### `restoreBudget`
+
+<Method name="restoreBudget" args={[{ name: 'input', type: 'ArrayBuffer | Uint8Array' }, { name: 'options', type: '{ name: string }' }]} returns="Promise<{ id: string }>" />
+
+Restore an Actual archive into a new local budget and load it. Initialize the API without a server before calling this method. The name must be unique and contain 1 to 100 characters. The engine generates a new local ID, clears publication/encryption/sync metadata, and resets the synchronization clock. It never publishes the restored budget. It preserves existing budgets and removes incomplete new files on failure. If cleanup fails, the error has code `creation-cleanup-failed`; inspect the data directory before retrying.
+
+#### `previewBudgetRestore`
+
+`previewBudgetRestore(input, { name })` prepares a version 1 `backups.restore` proposal. Initialize without a server. Preview captures the exact archive SHA-256, byte count, source metadata ID, and destination name availability. The destination has no ID yet (`budget: null`). Preview uses the canonical archive reader and checks SQLite integrity in a separate in-memory database. It preserves the selected budget and creates no directory. This check does not prove that every migration or domain read will succeed; CLI restore also needs isolated full archive validation.
+
+#### `applyBudgetRestore`
+
+`applyBudgetRestore(proposal, input)` checks the archive fingerprint and destination name inside one serialized mutation. The canonical restore owner creates and loads a new local identity. A rejected proposal leaves existing budgets unchanged. A successful result includes `committed-local`, the actual destination ID in `affectedIds`, and an observed checkpoint. Archive bytes stay separate from the proposal. These API methods do not maintain durable receipts. CLI restore uses the shared receipt executor and isolated full validation. Retained acknowledged IDs return the original destination; uncertain outcomes never replay.
+
 #### `exportBudget`
 
 <Method name="exportBudget" args={[]} returns="Promise<Uint8Array>" />
@@ -913,3 +947,55 @@ Returns the budget's synced preferences — settings that sync across devices, s
 <Method name="setPreference" args={[{ name: 'id', type: 'keyof SyncedPrefs' }, { name: 'value', type: 'string | undefined' }]} returns="Promise<void>" />
 
 Sets a single synced preference. The `id` must be a valid SyncedPrefs key.
+
+#### `previewBudgetAmount`
+
+`previewBudgetAmount({ month, categoryId, amount })` returns a version 1 `budgets.set-amount` proposal. The month uses YYYY-MM and amount uses integer cents. The engine validates the category and current budget mode. The proposal records the current allocation row, before/after amount, category/group references, and recalculation side effects. Preview does not change allocations, carryover, goals, or templates.
+
+#### `applyBudgetAmount`
+
+`applyBudgetAmount(proposal)` compares the exact budget identity and current allocation/reference state inside the core mutation boundary. It returns `rejected` with a stable code or `committed-local` with changed status, affected category IDs, and an observed checkpoint. The existing engine amount setter owns the write. The API does not create a durable CLI receipt or synchronize remotely. The CLI changes commands provide those transport and journal behaviors.
+
+#### `previewBudgetCreation`
+
+`previewBudgetCreation({ name, currency? })` prepares a version 1 `budgets.create` proposal for a new local budget. Initialize the API without a server. The engine validates name availability and the optional uppercase three-letter currency code. The proposal declares `budget: null` because no destination identity exists yet. Preview preserves the loaded budget and local inventory. It does not reserve the name or create files.
+
+#### `applyBudgetCreation`
+
+`applyBudgetCreation(proposal)` rechecks the exact proposal and name availability in the serialized core mutation boundary. The existing lifecycle owner creates and loads a new local budget. The result is `rejected` with a stable code or `committed-local` with the actual destination ID in `affectedIds` and an observed checkpoint. Creation does not publish the budget. Reapplying the proposal fails once its name is occupied. This API acknowledgement does not itself provide durable retry. CLI creation uses the shared device-local receipt protocol and never automatically replays uncertain outcomes. If a response is lost, a matching budget name does not prove that this operation created it.
+
+#### `previewBudgetClone`
+
+`previewBudgetClone({ id, name })` prepares a version 1 `budgets.clone` proposal for the selected source budget. Initialize without a server. The proposal captures exact local/sync/cloud identity, source name/currency/archive state, destination name availability, and a SHA-256 fingerprint of the copied persistent state. It fingerprints persistent tables, schema, and metadata normalized through the existing clone owner. It excludes the derived cache and synchronization clock. Preview does not close the source or create a destination.
+
+#### `applyBudgetClone`
+
+`applyBudgetClone(proposal)` rechecks source identity, copied state, and destination name availability inside one serialized mutation. The canonical clone owner creates and loads a new local identity without publishing it. The result is `rejected` or `committed-local`, with the actual destination ID in `affectedIds` and an observed checkpoint. This public API does not maintain a durable receipt. CLI clone uses the shared receipt protocol: acknowledged retries reuse the destination, and uncertain outcomes never replay automatically.
+
+#### `previewCategoryCreation` and `applyCategoryCreation`
+
+`previewCategoryCreation({ name, group_id, is_income?, hidden? })` returns a read-only proposal. The flags default to false. It trims names through the canonical budget owner, rejects duplicate live names in the destination group, and captures canonical ordering changes and self mapping creation. `applyCategoryCreation(proposal)` rechecks budget identity, source and destination references within the engine mutator, invokes that same owner, and verifies actual category, mapping and sibling-order outcomes. Its committed `categoryCreation` includes `categoryId`, `mappingId` and `updatedCategoryIds`. Acknowledgements describe actual generated IDs; an uncertain operation cannot be inferred from matching names.
+
+#### `previewCategoryUpdate` and `applyCategoryUpdate`
+
+`previewCategoryUpdate({ id, fields })` returns a read-only proposal for category updates. Supported public fields are `name`, `group_id`, `is_income`, `hidden` and an optional matching `id`. Preview trims supplied names through the canonical owner, preserves omitted columns and captures the destination group and full source fingerprint. `applyCategoryUpdate(proposal)` rejects stale or tampered scope within the engine mutation boundary, updates through the same owner and verifies the actual raw category row. Its outcome includes changed status, checkpoint and affected ID. Existing category API behavior remains available.
+
+#### `previewAccountClosure` and `applyAccountClosure`
+
+`previewAccountClosure({ id, transferAccountId?, categoryId? })` returns a read-only proposal for canonical account closure. Nonzero balances require a transfer account. The proposal binds a generated source ID, closing date and row order. It evaluates counterpart notes, cleared and schedule rules with the planned source included in running balances. It records the resulting source/counterpart fields and unlink consequences. Empty accounts are deleted; already-closed accounts preserve their ledger after unlink.
+
+`applyAccountClosure(proposal)` rechecks the exact operation, budget identity, ledger, rule/schedule and provider references within the engine mutation boundary. It rejects stale consequences and source ID collisions before writing. The committed outcome includes `accountClosure`, its actual action, account ID, generated transfer IDs and provider status. Provider status distinguishes acknowledgement, skipped removal and uncertain responses. The proposal excludes credential values. The existing `closeAccount` API retains its void result and input scope.
+
+#### `previewAccountDeletion` and `applyAccountDeletion`
+
+`previewAccountDeletion({ id })` returns a read-only proposal for the canonical forced closure, including complete source rows, counterpart references and consumed bank/provider consequences. Requests contain only `id`. `applyAccountDeletion(proposal)` rechecks the exact operation, budget identity and complete source/references at the engine mutation boundary. Its committed outcome includes actual account action, affected IDs, checkpoint and `accountClosure`, with actual deleted/updated transaction and deleted payee IDs. Provider unlink status distinguishes local changes, successful remote acknowledgement, skipped removal and uncertain responses. Credentials are excluded from proposals and outcomes. API callers manage retries; the CLI preserves acknowledged outcomes in receipts. Already-closed accounts preserve the existing unlink-only behavior.
+
+
+#### `previewCategoryGroupUpdate` and `applyCategoryGroupUpdate`
+
+`previewCategoryGroupUpdate({ id, fields })` returns a read-only proposal. Fields support exact `name`, boolean `is_income` and `hidden`, optional matching `id`, and nested `categories` metadata. The shared owner preserves omitted columns and children. Preview binds the full raw group, group/child references and source fingerprint. `applyCategoryGroupUpdate(proposal)` rejects stale, tampered or wrong-budget proposals inside the engine mutator. It invokes the canonical owner and verifies the actual group row before returning changed status, checkpoint and affected ID. Supplied categories do not update children.
+
+
+#### `previewCategoryGroupDeletion` and `applyCategoryGroupDeletion`
+
+`previewCategoryGroupDeletion({ id, transferCategoryId? })` returns a read-only proposal. A supplied destination must be live and outside the group. The proposal binds all children, including tombstoned children, forwarding mappings, live child allocations and the full source fingerprint. `applyCategoryGroupDeletion(proposal)` rejects wrong-budget, stale or tampered scope inside the engine mutator, invokes the shared group owner and verifies actual tombstones, mappings and allocations. Its acknowledgement includes changed status, checkpoint and affected IDs. Group deletion transfers live allocations for both income and expense groups. Source allocations and raw transaction rows remain preserved. Without a destination, mappings and allocations remain preserved.

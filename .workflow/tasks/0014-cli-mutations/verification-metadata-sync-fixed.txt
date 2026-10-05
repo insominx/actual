@@ -1,0 +1,15 @@
+✔ watch freezes its selected budget while profiles switch and cache identities stay separate (7410.9647ms)
+✔ watch bounds a stalled worker and a subsequent writer can reopen its cache (6194.4422ms)
+✔ encrypted watch reconnects, cancels, and releases its cache for a writer (5595.4111ms)
+✔ a failed push preserves the local write and refresh does not replay it (encrypted=false) (4254.0183ms)
+✔ a failed push preserves the local write and refresh does not replay it (encrypted=true) (3986.9252ms)
+✔ pending status is offline and refresh sends existing writes (encrypted=false) (7627.6734ms)
+✔ pending status is offline and refresh sends existing writes (encrypted=true) (7234.9245ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 42409.4562

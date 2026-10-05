@@ -1,0 +1,83 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+stderr | src/server/main.test.ts > Budgets > budget detects out of sync migrations
+Database is out of sync with migrations (unknown migration from before the additive-only era): {
+  appliedIds: [ 1000, 1548957970627 ],
+  available: [
+    '1548957970627_remove-db-version.sql',
+    '1550601598648_payees.sql',
+    '1555786194328_remove_category_group_unique.sql',
+    '1561751833510_indexes.sql',
+    '1567699552727_budget.sql',
+    '1582384163573_cleared.sql',
+    '1597756566448_rules.sql',
+    '1608652596043_parent_field.sql',
+    '1608652596044_trans_views.sql',
+    '1612625548236_optimize.sql',
+    '1614782639336_trans_views2.sql',
+    '1615745967948_meta.sql',
+    '1616167010796_accounts_order.sql',
+    '1618975177358_schedules.sql',
+    '1632571489012_remove_cache.js',
+    '1679728867040_rules_conditions.sql',
+    '1681115033845_add_schedule_name.sql',
+    '1682974838138_remove_payee_rules.sql',
+    '1685007876842_add_category_hidden.sql',
+    '1686139660866_remove_account_type.sql',
+    '1688749527273_transaction_filters.sql',
+    '1688841238000_add_account_type.sql',
+    '1691233396000_add_schedule_next_date_tombstone.sql',
+    '1694438752000_add_goal_targets.sql',
+    '1697046240000_add_reconciled.sql',
+    '1704572023730_add_account_sync_source.sql',
+    '1704572023731_add_missing_goCardless_sync_source.sql',
+    '1707267033000_reports.sql',
+    '1712784523000_unhide_input_group.sql',
+    '1716359441000_include_current.sql',
+    '1720310586000_link_transfer_schedules.sql',
+    '1720664867241_add_payee_favorite.sql',
+    '1720665000000_goal_context.sql',
+    '1722717601000_reports_move_selected_categories.js',
+    '1722804019000_create_dashboard_table.js',
+    '1723665565000_prefs.js',
+    '1730744182000_fix_dashboard_table.sql',
+    '1736640000000_custom_report_sorting.sql',
+    '1737158400000_add_learn_categories_to_payees.sql',
+    '1738491452000_sorting_rename.sql',
+    '1739139550000_bank_sync_page.sql',
+    '1740506588539_add_last_reconciled_at.sql',
+    '1745425408000_update_budgetType_pref.sql',
+    '1749799110000_add_tags.sql',
+    '1749799110001_tags_tombstone.sql',
+    '1754611200000_add_category_template_settings.sql',
+    '1759260219000_add_trim_interval_report_setting.sql',
+    '1759842823172_add_isGlobal_to_preferences.sql',
+    '1762178745667_rename_csv_skip_lines_pref.sql',
+    '1765518577215_multiple_dashboards.js',
+    '1768872504000_add_payee_locations.sql',
+    '1769000000000_add_custom_upcoming_length.sql',
+    '1778510362740_add_cleanup_groups_and_def.sql',
+    '1780099200000_add_show_trend_lines_report_setting.sql',
+    '1780327681000_add_tags_hidden.sql',
+    '1780606215000_add_bank_sync_status.sql',
+    '1780606215001_add_performance_indexes.sql',
+    '1783004650757_schedule_sort_order.sql',
+    '1787013118115_add_account_groups.sql',
+    '1788468782000_add_messages_pending.js'
+  ]
+}
+
+ ✓ src/server/budget/actions.test.ts (12 tests) 1534ms
+ ✓ src/server/main.test.ts (27 tests) 3149ms
+   ✓ Budgets (2)
+     ✓ budget is successfully loaded 851ms
+   ✓ Accounts (20)
+     ✓ remote unlink keeps provider removal scope: other linked account 377ms
+ ✓ src/server/budget/sort-categories.test.ts (5 tests) 600ms
+
+ Test Files  3 passed (3)
+      Tests  44 passed (44)
+   Start at  16:06:33
+   Duration  8.21s (setup 46%, tests 37%, transform 16%, import 2%)
+

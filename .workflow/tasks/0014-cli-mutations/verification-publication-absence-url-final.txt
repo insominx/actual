@@ -1,0 +1,11 @@
+✔ publication rejects credential-bearing server URLs before authentication or receipt preparation (4858.8372ms)
+✔ CLI keeps publication uncertain when the upload was not accepted (encrypted=false) (6449.3136ms)
+✔ CLI keeps publication uncertain when the upload was not accepted (encrypted=true) (6366.3104ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17746.2482

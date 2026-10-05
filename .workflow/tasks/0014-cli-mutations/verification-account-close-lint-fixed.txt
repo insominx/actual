@@ -1,0 +1,50 @@
+packages/loot-core/src/server/api.ts:158:16: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'Handlers' is more narrow than the original type.
+packages/loot-core/src/server/accounts/app.ts:1608:23: warning typescript(no-unsafe-type-assertion): Unsafe assertion from `any` detected: consider using type guards or a safer assertion.
+packages/loot-core/src/server/accounts/app.ts:1612:11: warning typescript(no-misused-spread): Using the spread operator on class instances will lose their class prototype.
+packages/loot-core/src/server/accounts/app.ts:1692:31: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'BankSyncError' is more narrow than the original type.
+packages/loot-core/src/server/accounts/app.ts:1725:21: warning typescript(no-unsafe-type-assertion): Unsafe assertion from `any` detected: consider using type guards or a safer assertion.
+packages/loot-core/src/server/api.ts:1514:22: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'number' is more narrow than the original type.
+packages/loot-core/src/server/api.ts:1515:25: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'number' is more narrow than the original type.
+packages/loot-core/src/server/api.ts:1516:19: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'number' is more narrow than the original type.
+packages/loot-core/src/server/api.ts:1517:20: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'number' is more narrow than the original type.
+packages/loot-core/src/server/api.ts:1518:15: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'number' is more narrow than the original type.
+packages/loot-core/src/server/api.ts:1520:20: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'number' is more narrow than the original type.
+packages/loot-core/src/server/api.ts:1521:18: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'number' is more narrow than the original type.
+packages/loot-core/src/server/api.ts:1522:17: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'number' is more narrow than the original type.
+packages/loot-core/src/server/api.ts:1523:19: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'number' is more narrow than the original type.
+packages/loot-core/src/server/api.ts:3009:11: error typescript(require-array-sort-compare): Require 'compare' argument.
+packages/loot-core/src/server/api.ts:3012:11: error typescript(require-array-sort-compare): Require 'compare' argument.
+packages/loot-core/src/server/api.ts:3406:21: warning typescript(no-unsafe-type-assertion): Unsafe assertion from `any` detected: consider using type guards or a safer assertion.
+packages/loot-core/src/server/api.ts:3436:17: warning typescript(no-unsafe-type-assertion): Unsafe assertion from `any` detected: consider using type guards or a safer assertion.
+packages/loot-core/src/server/api.ts:3445:22: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type '"account" | "amount" | "amountOp" | "completed" | "date" | "id" | "name" | "next_date" | "payee" | "posts_transaction" | "rule"' is more narrow than the original type.
+packages/loot-core/src/server/api.ts:3450:32: warning typescript(no-base-to-string): 'value' may use Object's default stringification format ('[object Object]') when stringified. help: Consider picking a property (e.g. `user.name`), using a formatter (or `JSON.stringify`), or implementing a custom `toString()`/`toLocaleString()` on the type.
+packages/loot-core/src/server/api.ts:3481:27: warning typescript(no-base-to-string): 'value' may use Object's default stringification format ('[object Object]') when stringified. help: Consider picking a property (e.g. `user.name`), using a formatter (or `JSON.stringify`), or implementing a custom `toString()`/`toLocaleString()` on the type.
+packages/loot-core/src/server/api.ts:3495:27: warning typescript(no-base-to-string): 'value' may use Object's default stringification format ('[object Object]') when stringified. help: Consider picking a property (e.g. `user.name`), using a formatter (or `JSON.stringify`), or implementing a custom `toString()`/`toLocaleString()` on the type.
+packages/loot-core/src/server/api.ts:3516:52: warning typescript(no-base-to-string): 'value' may use Object's default stringification format ('[object Object]') when stringified. help: Consider picking a property (e.g. `user.name`), using a formatter (or `JSON.stringify`), or implementing a custom `toString()`/`toLocaleString()` on the type.
+packages/api/methods.test.ts:178:37: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'BudgetCreationProposal' is more narrow than the original type.
+packages/cli/src/change-journal.ts:276:23: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'ChangeReceipt' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:764:26: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'Partial<Pick<TransactionEntity, "amount" | "cleared" | "date" | "notes">>' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:786:39: warning typescript(no-base-to-string): 'payload.transferAccount' may use Object's default stringification format ('[object Object]') when stringified. help: Consider picking a property (e.g. `user.name`), using a formatter (or `JSON.stringify`), or implementing a custom `toString()`/`toLocaleString()` on the type.
+packages/cli/src/guarded-changes.ts:789:32: warning typescript(no-base-to-string): 'payload.transferCategory' may use Object's default stringification format ('[object Object]') when stringified. help: Consider picking a property (e.g. `user.name`), using a formatter (or `JSON.stringify`), or implementing a custom `toString()`/`toLocaleString()` on the type.
+packages/cli/src/guarded-changes.ts:802:26: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'AccountUpdateFields' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:805:12: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'AccountCreationRequest' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:809:11: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type '{ month: string; amount: number; }' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:814:18: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type '{ month: string; flag: boolean; }' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:817:18: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type '{ name: string; }' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:820:18: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type '{ month: string; amount: number; }' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:823:18: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type '{ month: string; }' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:826:18: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type '{ name: string; }' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:829:18: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type '{ archived: boolean; }' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:946:23: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'BudgetCreationRequest' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:950:25: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'BudgetPublicationRequest' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:954:27: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'BudgetCloneRequest' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:958:29: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'TransactionUpdateRequest' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:962:31: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'AccountCloseRequest' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:966:33: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'AccountDeletionRequest' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:970:35: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'AccountReopenRequest' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:974:37: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'AccountUpdateRequest' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:978:39: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'AccountCreationRequest' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:982:41: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'BudgetAmountRequest' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:986:43: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'BudgetCarryoverRequest' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:992:45: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'BudgetHoldRequest' is more narrow than the original type.
+packages/cli/src/guarded-changes.ts:995:45: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'BudgetMetadataRequest' is more narrow than the original type.

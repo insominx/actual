@@ -1,0 +1,92 @@
+✖ killed apply at before-engine (budgets.clone) preserves its durable outcome and never replays (3105.4959ms)
+✖ killed apply at after-engine (budgets.clone) preserves its durable outcome and never replays (2917.5295ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6087.3039
+
+✖ failing tests:
+
+test at integration\changes.test.mjs:1067:3
+✖ killed apply at before-engine (budgets.clone) preserves its durable outcome and never replays (3105.4959ms)
+  AssertionError [ERR_ASSERTION]: {
+    "schemaVersion": 2,
+    "operation": "changes.preview",
+    "context": {
+      "budgetId": "Agent-CLI-disposable-84dd087",
+      "syncId": "1a494694-9562-47ac-8299-5a10f504ee7d",
+      "serverUrl": null,
+      "mode": "offline-local",
+      "currency": "USD",
+      "scale": 100,
+      "lastSyncedAt": 1791084855309,
+      "freshness": "unknown",
+      "commit": "none"
+    },
+    "error": {
+      "code": "INVALID_INPUT",
+      "message": "Cannot preview this change. Check the identity, fields, and supported operation scope.",
+      "retryable": false
+    },
+    "warnings": []
+  }
+  
+  
+  2 !== 0
+  
+      at cli (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1080:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1115:26)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at integration\changes.test.mjs:1067:3
+✖ killed apply at after-engine (budgets.clone) preserves its durable outcome and never replays (2917.5295ms)
+  AssertionError [ERR_ASSERTION]: {
+    "schemaVersion": 2,
+    "operation": "changes.preview",
+    "context": {
+      "budgetId": "Agent-CLI-disposable-f7ab94a",
+      "syncId": "647cefed-0236-4a89-9aa9-2be15e21a83f",
+      "serverUrl": null,
+      "mode": "offline-local",
+      "currency": "USD",
+      "scale": 100,
+      "lastSyncedAt": 1791084858252,
+      "freshness": "unknown",
+      "commit": "none"
+    },
+    "error": {
+      "code": "INVALID_INPUT",
+      "message": "Cannot preview this change. Check the identity, fields, and supported operation scope.",
+      "retryable": false
+    },
+    "warnings": []
+  }
+  
+  
+  2 !== 0
+  
+      at cli (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1080:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:1115:26)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

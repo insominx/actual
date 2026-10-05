@@ -1,0 +1,98 @@
+✖ CLI publication receipts acknowledge and reuse one identity (encrypted=false) (2936.1908ms)
+✖ CLI publication receipts acknowledge and reuse one identity (encrypted=true) (2930.1603ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5931.7839
+
+✖ failing tests:
+
+test at packages\cli\integration\publication.test.mjs:10:3
+✖ CLI publication receipts acknowledge and reuse one identity (encrypted=false) (2936.1908ms)
+  AssertionError [ERR_ASSERTION]: {
+    "schemaVersion": 2,
+    "operation": "changes.preview",
+    "context": {
+      "budgetId": null,
+      "syncId": null,
+      "serverUrl": null,
+      "mode": "no-budget",
+      "currency": null,
+      "scale": 100,
+      "lastSyncedAt": null,
+      "freshness": "unknown",
+      "commit": "none"
+    },
+    "error": {
+      "code": "INVALID_INPUT",
+      "message": "JSON input does not match the operation schema.",
+      "retryable": false,
+      "details": {
+        "field": "data"
+      }
+    },
+    "warnings": []
+  }
+  
+  
+  2 !== 0
+  
+      at invoke (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:16:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:21:24)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\publication.test.mjs:10:3
+✖ CLI publication receipts acknowledge and reuse one identity (encrypted=true) (2930.1603ms)
+  AssertionError [ERR_ASSERTION]: {
+    "schemaVersion": 2,
+    "operation": "changes.preview",
+    "context": {
+      "budgetId": null,
+      "syncId": null,
+      "serverUrl": null,
+      "mode": "no-budget",
+      "currency": null,
+      "scale": 100,
+      "lastSyncedAt": null,
+      "freshness": "unknown",
+      "commit": "none"
+    },
+    "error": {
+      "code": "INVALID_INPUT",
+      "message": "JSON input does not match the operation schema.",
+      "retryable": false,
+      "details": {
+        "field": "data"
+      }
+    },
+    "warnings": []
+  }
+  
+  
+  2 !== 0
+  
+      at invoke (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:16:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:21:24)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

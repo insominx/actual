@@ -1,0 +1,50 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+10:56:04 AM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/cosmiconfig/dist/index.js.
+Error: An error occurred while trying to read the map file at index.js.map
+Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\node_modules\cosmiconfig\dist\index.js.map'
+    at Object.readFileSync (node:fs:436:20)
+    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13
+    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)
+    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)
+    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)
+    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)
+    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)
+ ❯ src/agent-contract.test.ts (4 tests | 1 failed) 13ms
+   ❯ agent command contract (4)
+     × discovers the actual registered options without a connection 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/agent-contract.test.ts > agent command contract > discovers the actual registered options without a connection
+AssertionError: expected [ 'name', 'operationId' ] to deeply equal [ 'name' ]
+
+- Expected
++ Received
+
+  [
+    "name",
++   "operationId",
+  ]
+
+ ❯ src/agent-contract.test.ts:20:44
+     18|     const [operation] = discoverOperations(command());
+     19|     expect(operation.name).toBe('accounts.create');
+     20|     expect(operation.inputSchema.required).toEqual(['name']);
+       |                                            ^
+     21|     expect(operation.inputSchema.properties.balance).toMatchObject({
+     22|       type: 'integer',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 16 passed (17)
+      Tests  1 failed | 237 passed (238)
+   Start at  10:56:04
+   Duration  4.72s (tests 61%, transform 26%, import 11%, worker 1%)
+
+  Transform  transforming modules took 2.28s · 26% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+

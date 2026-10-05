@@ -1,0 +1,89 @@
+✔ retention previews and applies per-source policy while preserving invalid and external artifacts (11037.2085ms)
+✔ restore creates independent local identities and preserves the encrypted source (12489.1967ms)
+✔ isolated validation rejects corrupt archives and listing preserves complete artifacts (6430.2125ms)
+✔ an encrypted sync budget creates complete plaintext backups without replacing earlier artifacts (3736.8277ms)
+✔ guarded restore preserves the rich source and retries one destination without needing the retained archive (13382.8915ms)
+✔ guarded clone preserves the rich source and receipts prevent another destination on retries (11945.1231ms)
+✔ guarded creation preserves inventory and receipts return one destination across restarts (10618.2049ms)
+✔ guarded budget metadata preserves preview data and receipts protect rename and local archive retries (12874.3997ms)
+✔ guarded transfers preserve preview data, synchronize both sides, and protect counterpart splits (13425.9557ms)
+✔ guarded split edits preserve preview data, inherit parent fields, and reject sibling edits (7841.4376ms)
+✔ guarded transaction preview preserves domains and receipts prevent repeat writes (8941.744ms)
+✔ killed apply at before-engine (transactions.update) preserves its durable outcome and never replays (35257.5744ms)
+✔ killed apply at after-engine (transactions.update) preserves its durable outcome and never replays (35339.38ms)
+✔ killed apply at before-sync (transactions.update) preserves its durable outcome and never replays (36995.7681ms)
+✔ killed apply at before-engine (budgets.archive) preserves its durable outcome and never replays (36519.0946ms)
+✔ killed apply at after-engine (budgets.archive) preserves its durable outcome and never replays (35604.1684ms)
+✔ killed apply at before-engine (budgets.create) preserves its durable outcome and never replays (36533.2873ms)
+✔ killed apply at after-engine (budgets.create) preserves its durable outcome and never replays (37594.8826ms)
+✔ killed apply at before-engine (budgets.clone) preserves its durable outcome and never replays (38473.2942ms)
+✔ killed apply at after-engine (budgets.clone) preserves its durable outcome and never replays (39202.5315ms)
+✔ killed apply at before-engine (backups.restore) preserves its durable outcome and never replays (38463.5272ms)
+✔ killed apply at after-engine (backups.restore) preserves its durable outcome and never replays (39318.654ms)
+✔ a rejected post-commit push retains a receipt and later sync never replays the update (5017.5887ms)
+✔ guarded allocation preview preserves all domains and applies only its selected amount (9342.3986ms)
+✔ orphan staging is disclosed and blocks new proposals and apply intent without ledger writes (5180.5116ms)
+✔ packaged discovery and validation work without personal configuration (705.5153ms)
+✔ encrypted remote sessions register keys across process restarts (5348.3883ms)
+✔ real server, import deduplication, two clients, and restart (13975.2233ms)
+✔ encrypted first publication survives a lost response, retries one identity, and preserves rename/archive semantics (13975.2829ms)
+✔ CLI clones an encrypted cached budget without modifying or publishing its source (6626.3377ms)
+✔ CLI creates a usable local budget without publishing to its configured server (6776.3382ms)
+✔ publication exact interruption retains one identity (before-engine, encrypted=false) (37286.8375ms)
+✖ publication exact interruption retains one identity (after-remote, encrypted=false) (36520.8019ms)
+✔ publication exact interruption retains one identity (after-engine, encrypted=false) (37035.412ms)
+✔ publication exact interruption retains one identity (before-sync, encrypted=false) (36921.5095ms)
+✔ publication exact interruption retains one identity (before-engine, encrypted=true) (37440.5853ms)
+✔ publication exact interruption retains one identity (after-remote, encrypted=true) (36647.8213ms)
+✔ publication exact interruption retains one identity (after-engine, encrypted=true) (36713.7225ms)
+✔ publication exact interruption retains one identity (before-sync, encrypted=true) (36421.5139ms)
+✔ publication rejects credential-bearing server URLs before authentication or receipt preparation (6393.4784ms)
+✔ CLI keeps publication uncertain when the upload was not accepted (encrypted=false) (7376.0127ms)
+✔ CLI publication receipts acknowledge and reuse one identity (encrypted=false) (6114.6238ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=null) (3740.8187ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=before) (3560.2928ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=after) (3600.439ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=source-race) (3395.3831ms)
+✔ CLI keeps publication uncertain when the upload was not accepted (encrypted=true) (7022.0216ms)
+✔ CLI publication receipts acknowledge and reuse one identity (encrypted=true) (7136.3393ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=null) (3887.8947ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=before) (3341.5973ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=after) (3545.9294ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=source-race) (3323.4679ms)
+✔ fresh server bootstraps through CLI and authenticates without a browser (3422.1635ms)
+✔ managed lifecycle checks ownership, port, executable, restart, and shutdown (7901.6375ms)
+✔ watch freezes its selected budget while profiles switch and cache identities stay separate (9157.2764ms)
+✔ watch bounds a stalled worker and a subsequent writer can reopen its cache (6788.6737ms)
+✔ encrypted watch reconnects, cancels, and releases its cache for a writer (6259.1133ms)
+✔ a failed push preserves the local write and refresh does not replay it (encrypted=false) (4751.192ms)
+✔ a failed push preserves the local write and refresh does not replay it (encrypted=true) (4318.0715ms)
+✔ pending status is offline and refresh sends existing writes (encrypted=false) (8082.3344ms)
+✔ pending status is offline and refresh sends existing writes (encrypted=true) (7797.522ms)
+ℹ tests 61
+ℹ suites 0
+ℹ pass 60
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 507978.6183
+
+✖ failing tests:
+
+test at packages\cli\integration\publication-crash.test.mjs:18:5
+✖ publication exact interruption retains one identity (after-remote, encrypted=false) (36520.8019ms)
+  AssertionError [ERR_ASSERTION]: Interrupted publication recovery must never initial-upload again
+  
+  2 !== 1
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-crash.test.mjs:236:20)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -51,6 +51,8 @@ export type ImportTransactionEntity = {
     /** The only required field for subtransactions */
     amount: number;
     category?: string;
+    /** An existing payee ID, including an account's transfer payee. */
+    payee?: string | null;
     notes?: string;
   }>;
 };

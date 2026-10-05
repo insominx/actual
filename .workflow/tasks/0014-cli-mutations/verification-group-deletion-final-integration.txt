@@ -1,0 +1,17 @@
+✔ guarded category deletion preserves raw domains and never replays acknowledged transfers (online) (8599.5864ms)
+✔ guarded category deletion preserves raw domains and never replays acknowledged transfers (offline) (7801.7517ms)
+✔ guarded group updates preserve raw domains and acknowledged retries (online) (5619.0633ms)
+✔ guarded group updates preserve raw domains and acknowledged retries (offline) (5374.5688ms)
+✔ guarded group deletion preserves raw domains and acknowledged transfers (online) (13276.4795ms)
+✔ guarded group deletion preserves raw domains and acknowledged transfers (offline) (11217.766ms)
+✔ killed group deletion at before-engine retains its exact outcome without replay (37809.7114ms)
+✔ killed group deletion at after-engine retains its exact outcome without replay (38454.569ms)
+✔ killed group deletion at before-sync retains its exact outcome without replay (39612.3957ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 167847.2726

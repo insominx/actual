@@ -1,0 +1,49 @@
+@actual-app/ci-actions typecheck … queued
+@actual-app/components typecheck … queued
+@actual-app/crdt typecheck … queued
+plugins-service typecheck … queued
+@actual-app/ci-actions typecheck ➔ start
+@actual-app/components typecheck ➔ start
+@actual-app/ci-actions typecheck » skip - a15bf2f851e791f66552eb8704bef90aaa2afe3e
+@actual-app/crdt typecheck ➔ start
+@actual-app/crdt typecheck » skip - 1842a47eb61ba5c7646b83ea6db2760c1023b597
+@actual-app/core typecheck … queued
+plugins-service typecheck ➔ start
+@actual-app/components typecheck » skip - cfff67e84b2e8caef320ddc03f0bf7155f809eae
+@actual-app/core typecheck ➔ start
+plugins-service typecheck » skip - 7d72e72d9e5af9dfa737dcf25809c86147dd79e6
+@actual-app/core typecheck ✓ done - 5.22s
+@actual-app/api typecheck … queued
+@actual-app/web typecheck … queued
+@actual-app/api typecheck ➔ start
+@actual-app/web typecheck ➔ start
+@actual-app/api typecheck ✓ done - 4.30s
+@actual-app/cli typecheck … queued
+@actual-app/cli typecheck ➔ start
+@actual-app/cli typecheck ✖ fail
+
+Summary
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+@actual-app/api typecheck success, took 4.30s, queued for 0.00s
+@actual-app/cli typecheck failed, took 0.94s, queued for 0.00s
+@actual-app/web typecheck running - incomplete, took 0.00s, queued for 0.00s
+desktop-electron typecheck pending, took 0.00s, queued for 0.00s
+@actual-app/core typecheck success, took 5.22s, queued for 0.54s
+@actual-app/sync-server typecheck pending, took 0.00s, queued for 0.00s
+success: 2, skipped: 4, pending: 2, aborted: 0, failed: 1
+worker restarts: 0, max worker memory usage: 25.59 MB
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+[@actual-app/cli typecheck] ERROR DETECTED
+
+
+
+local cache fetch: e39a4d85f3b727c55db7a5085a3cc22f39f38c4a false
+remote fallback fetch: e39a4d85f3b727c55db7a5085a3cc22f39f38c4a false
+Running yarn run typecheck, pid: 110552
+src/guarded-changes.ts(618,57): error TS2345: Argument of type 'BudgetMetadataProposal | BudgetRestoreProposal' is not assignable to parameter of type 'BudgetMetadataProposal'.
+  Type 'BudgetRestoreProposal' is not assignable to type 'BudgetMetadataProposal'.
+    Types of property 'operation' are incompatible.
+      Type '"backups.restore"' is not assignable to type '"budgets.archive" | "budgets.rename"'.
+
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+Took a total of 11.20s to complete. 

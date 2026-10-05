@@ -1,0 +1,1 @@
+packages/api/methods.test.ts:178:37: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type 'BudgetCreationProposal' is more narrow than the original type.

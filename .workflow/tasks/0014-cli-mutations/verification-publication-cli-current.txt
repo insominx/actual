@@ -1,0 +1,269 @@
+✔ CLI publication receipts acknowledge and reuse one identity (encrypted=false) (5135.6672ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=null) (3022.1583ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=before) (2758.5512ms)
+✖ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=after) (1844.4154ms)
+✖ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=source-race) (1129.7115ms)
+✖ CLI publication receipts acknowledge and reuse one identity (encrypted=true) (1150.8917ms)
+✖ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=null) (1141.7846ms)
+✖ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=before) (1126.6483ms)
+✖ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=after) (1131.6447ms)
+✖ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=source-race) (1148.8516ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 3
+ℹ fail 7
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 19657.2247
+
+✖ failing tests:
+
+test at packages\cli\integration\publication.test.mjs:113:5
+✖ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=after) (1844.4154ms)
+  Error: Disposable seed failed: Error updating [Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\packages\api\dist\migrations\1730744182000_fix_dashboard_table.sql'] {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'D:\\Projects\\personal\\Budget\\actual\\packages\\api\\dist\\migrations\\1730744182000_fix_dashboard_table.sql'
+  }
+  [Exception] [Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\packages\api\dist\migrations\1730744182000_fix_dashboard_table.sql'] {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'D:\\Projects\\personal\\Budget\\actual\\packages\\api\\dist\\migrations\\1730744182000_fix_dashboard_table.sql'
+  }
+  D:\Projects\personal\Budget\actual\packages\api\dist\index.js:1111
+  		stmt = typeof sql === "string" ? db.prepare(sql) : sql;
+  		                                    ^
+  
+  TypeError: Cannot read properties of null (reading 'prepare')
+      at runQuery$2 (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:1111:39)
+      at runQuery$1 (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:63017:14)
+      at handlers$1.api/start-import (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:113301:2)
+  
+  Node.js v26.3.0
+  
+  [Breadcrumb] { message: 'Closing budget' }
+  [Breadcrumb] {
+    message: 'Loading budget C:\\Users\\mlinh\\AppData\\Local\\Temp\\actual-agent-cli-Bxn146\\seed\\Agent-CLI-disposable-1bb9a7a'
+  }
+  [Breadcrumb] { message: 'loading spreadsheet', category: 'server' }
+  Loading fresh spreadsheet
+  [Breadcrumb] { message: 'loaded spreadsheet', category: 'server' }
+  [Breadcrumb] { message: 'Closing budget' }
+  [Breadcrumb] {
+    message: 'Loading budget C:\\Users\\mlinh\\AppData\\Local\\Temp\\actual-agent-cli-Bxn146\\seed\\Agent-CLI-disposable-1bb9a7a'
+  }
+  [Breadcrumb] { message: 'loading spreadsheet', category: 'server' }
+  Loading fresh spreadsheet
+  [Breadcrumb] { message: 'loaded spreadsheet', category: 'server' }
+  Syncing since 2026-10-04T05:01:17.510Z-0000-0000000000000000 0 (attempt: 0)
+  Got messages from server 0
+  [Breadcrumb] { message: 'Closing budget' }
+  [Breadcrumb] {
+    message: 'Loading budget C:\\Users\\mlinh\\AppData\\Local\\Temp\\actual-agent-cli-Bxn146\\seed\\Second-isolated-budget-fcc8968'
+  }
+  Error updating budget Second-isolated-budget-fcc8968 [Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\packages\api\dist\migrations\1730744182000_fix_dashboard_table.sql'] {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'D:\\Projects\\personal\\Budget\\actual\\packages\\api\\dist\\migrations\\1730744182000_fix_dashboard_table.sql'
+  }
+  Error updating budget [Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\packages\api\dist\migrations\1730744182000_fix_dashboard_table.sql'] {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'D:\\Projects\\personal\\Budget\\actual\\packages\\api\\dist\\migrations\\1730744182000_fix_dashboard_table.sql'
+  }
+  [Breadcrumb] { message: 'Closing budget' }
+  Error creating budget: loading-budget
+  [Breadcrumb] { message: 'Closing budget' }
+  error DELETE FROM categories WHERE is_income = 0
+  [Breadcrumb] { message: 'Closing budget' }
+  
+      at createFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/harness.mjs:173:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:117:19)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at packages\cli\integration\publication.test.mjs:113:5
+✖ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=source-race) (1129.7115ms)
+  Error: Disposable seed failed: node:internal/modules/esm/resolve:271
+      throw new ERR_MODULE_NOT_FOUND(
+            ^
+  
+  Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'D:\Projects\personal\Budget\actual\node_modules\@actual-app\api\dist\index.js' imported from D:\Projects\personal\Budget\actual\packages\cli\integration\seed.mjs
+      at finalizeResolution (node:internal/modules/esm/resolve:271:11)
+      at moduleResolve (node:internal/modules/esm/resolve:865:10)
+      at defaultResolve (node:internal/modules/esm/resolve:992:11)
+      at #cachedDefaultResolve (node:internal/modules/esm/loader:704:20)
+      at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:724:38)
+      at ModuleLoader.resolveSync (node:internal/modules/esm/loader:762:56)
+      at #resolve (node:internal/modules/esm/loader:686:17)
+      at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:606:35)
+      at ModuleJob.syncLink (node:internal/modules/esm/module_job:163:33)
+      at ModuleJob.link (node:internal/modules/esm/module_job:253:17) {
+    code: 'ERR_MODULE_NOT_FOUND',
+    url: 'file:///D:/Projects/personal/Budget/actual/node_modules/@actual-app/api/dist/index.js'
+  }
+  
+  Node.js v26.3.0
+  
+  
+      at createFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/harness.mjs:173:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:117:19)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at packages\cli\integration\publication.test.mjs:10:3
+✖ CLI publication receipts acknowledge and reuse one identity (encrypted=true) (1150.8917ms)
+  Error: Disposable seed failed: node:internal/modules/esm/resolve:271
+      throw new ERR_MODULE_NOT_FOUND(
+            ^
+  
+  Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'D:\Projects\personal\Budget\actual\node_modules\@actual-app\api\dist\index.js' imported from D:\Projects\personal\Budget\actual\packages\cli\integration\seed.mjs
+      at finalizeResolution (node:internal/modules/esm/resolve:271:11)
+      at moduleResolve (node:internal/modules/esm/resolve:865:10)
+      at defaultResolve (node:internal/modules/esm/resolve:992:11)
+      at #cachedDefaultResolve (node:internal/modules/esm/loader:704:20)
+      at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:724:38)
+      at ModuleLoader.resolveSync (node:internal/modules/esm/loader:762:56)
+      at #resolve (node:internal/modules/esm/loader:686:17)
+      at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:606:35)
+      at ModuleJob.syncLink (node:internal/modules/esm/module_job:163:33)
+      at ModuleJob.link (node:internal/modules/esm/module_job:253:17) {
+    code: 'ERR_MODULE_NOT_FOUND',
+    url: 'file:///D:/Projects/personal/Budget/actual/node_modules/@actual-app/api/dist/index.js'
+  }
+  
+  Node.js v26.3.0
+  
+  
+      at createFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/harness.mjs:173:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:14:17)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at packages\cli\integration\publication.test.mjs:113:5
+✖ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=null) (1141.7846ms)
+  Error: Disposable seed failed: node:internal/modules/esm/resolve:271
+      throw new ERR_MODULE_NOT_FOUND(
+            ^
+  
+  Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'D:\Projects\personal\Budget\actual\node_modules\@actual-app\api\dist\index.js' imported from D:\Projects\personal\Budget\actual\packages\cli\integration\seed.mjs
+      at finalizeResolution (node:internal/modules/esm/resolve:271:11)
+      at moduleResolve (node:internal/modules/esm/resolve:865:10)
+      at defaultResolve (node:internal/modules/esm/resolve:992:11)
+      at #cachedDefaultResolve (node:internal/modules/esm/loader:704:20)
+      at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:724:38)
+      at ModuleLoader.resolveSync (node:internal/modules/esm/loader:762:56)
+      at #resolve (node:internal/modules/esm/loader:686:17)
+      at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:606:35)
+      at ModuleJob.syncLink (node:internal/modules/esm/module_job:163:33)
+      at ModuleJob.link (node:internal/modules/esm/module_job:253:17) {
+    code: 'ERR_MODULE_NOT_FOUND',
+    url: 'file:///D:/Projects/personal/Budget/actual/node_modules/@actual-app/api/dist/index.js'
+  }
+  
+  Node.js v26.3.0
+  
+  
+      at createFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/harness.mjs:173:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:117:19)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at packages\cli\integration\publication.test.mjs:113:5
+✖ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=before) (1126.6483ms)
+  Error: Disposable seed failed: node:internal/modules/esm/resolve:271
+      throw new ERR_MODULE_NOT_FOUND(
+            ^
+  
+  Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'D:\Projects\personal\Budget\actual\node_modules\@actual-app\api\dist\index.js' imported from D:\Projects\personal\Budget\actual\packages\cli\integration\seed.mjs
+      at finalizeResolution (node:internal/modules/esm/resolve:271:11)
+      at moduleResolve (node:internal/modules/esm/resolve:865:10)
+      at defaultResolve (node:internal/modules/esm/resolve:992:11)
+      at #cachedDefaultResolve (node:internal/modules/esm/loader:704:20)
+      at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:724:38)
+      at ModuleLoader.resolveSync (node:internal/modules/esm/loader:762:56)
+      at #resolve (node:internal/modules/esm/loader:686:17)
+      at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:606:35)
+      at ModuleJob.syncLink (node:internal/modules/esm/module_job:163:33)
+      at ModuleJob.link (node:internal/modules/esm/module_job:253:17) {
+    code: 'ERR_MODULE_NOT_FOUND',
+    url: 'file:///D:/Projects/personal/Budget/actual/node_modules/@actual-app/api/dist/index.js'
+  }
+  
+  Node.js v26.3.0
+  
+  
+      at createFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/harness.mjs:173:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:117:19)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at packages\cli\integration\publication.test.mjs:113:5
+✖ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=after) (1131.6447ms)
+  Error: Disposable seed failed: node:internal/modules/esm/resolve:271
+      throw new ERR_MODULE_NOT_FOUND(
+            ^
+  
+  Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'D:\Projects\personal\Budget\actual\node_modules\@actual-app\api\dist\index.js' imported from D:\Projects\personal\Budget\actual\packages\cli\integration\seed.mjs
+      at finalizeResolution (node:internal/modules/esm/resolve:271:11)
+      at moduleResolve (node:internal/modules/esm/resolve:865:10)
+      at defaultResolve (node:internal/modules/esm/resolve:992:11)
+      at #cachedDefaultResolve (node:internal/modules/esm/loader:704:20)
+      at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:724:38)
+      at ModuleLoader.resolveSync (node:internal/modules/esm/loader:762:56)
+      at #resolve (node:internal/modules/esm/loader:686:17)
+      at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:606:35)
+      at ModuleJob.syncLink (node:internal/modules/esm/module_job:163:33)
+      at ModuleJob.link (node:internal/modules/esm/module_job:253:17) {
+    code: 'ERR_MODULE_NOT_FOUND',
+    url: 'file:///D:/Projects/personal/Budget/actual/node_modules/@actual-app/api/dist/index.js'
+  }
+  
+  Node.js v26.3.0
+  
+  
+      at createFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/harness.mjs:173:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:117:19)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at packages\cli\integration\publication.test.mjs:113:5
+✖ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=source-race) (1148.8516ms)
+  Error: Disposable seed failed: node:internal/modules/esm/resolve:271
+      throw new ERR_MODULE_NOT_FOUND(
+            ^
+  
+  Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'D:\Projects\personal\Budget\actual\node_modules\@actual-app\api\dist\index.js' imported from D:\Projects\personal\Budget\actual\packages\cli\integration\seed.mjs
+      at finalizeResolution (node:internal/modules/esm/resolve:271:11)
+      at moduleResolve (node:internal/modules/esm/resolve:865:10)
+      at defaultResolve (node:internal/modules/esm/resolve:992:11)
+      at #cachedDefaultResolve (node:internal/modules/esm/loader:704:20)
+      at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:724:38)
+      at ModuleLoader.resolveSync (node:internal/modules/esm/loader:762:56)
+      at #resolve (node:internal/modules/esm/loader:686:17)
+      at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:606:35)
+      at ModuleJob.syncLink (node:internal/modules/esm/module_job:163:33)
+      at ModuleJob.link (node:internal/modules/esm/module_job:253:17) {
+    code: 'ERR_MODULE_NOT_FOUND',
+    url: 'file:///D:/Projects/personal/Budget/actual/node_modules/@actual-app/api/dist/index.js'
+  }
+  
+  Node.js v26.3.0
+  
+  
+      at createFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/harness.mjs:173:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:117:19)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)

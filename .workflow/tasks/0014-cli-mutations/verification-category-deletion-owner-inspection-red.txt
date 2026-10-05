@@ -1,0 +1,60 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+ ❯ src/server/main.test.ts (30 tests | 2 failed | 28 skipped) 99ms
+   ↓ Budgets (2)
+     ↓ budget is successfully loaded
+     ↓ budget detects out of sync migrations
+   ↓ Accounts (20)
+     ↓ forced closure rejects a missing transfer counterpart before unlinking
+     ↓ closure outcome discloses provider removal: acknowledged
+     ↓ closure outcome discloses provider removal: uncertain
+     ↓ closure acknowledges exact generated transfers and its bound date
+     ↓ forced closure acknowledges deleted rows and preserves transfer counterpart amount
+     ↓ remote unlink keeps provider removal scope: last linked account
+     ↓ remote unlink keeps provider removal scope: other linked account
+     ↓ remote unlink keeps provider removal scope: no token
+     ↓ invalid remote unlink preserves account: missing bank
+     ↓ invalid remote unlink preserves account: missing server
+     ↓ account closure inspection is read-only and includes future split balances
+     ↓ invalid account closure preserves provider and ledger: missing required destination
+     ↓ invalid account closure preserves provider and ledger: self transfer
+     ↓ invalid account closure preserves provider and ledger: missing destination
+     ↓ invalid account closure preserves provider and ledger: deleted destination
+     ↓ invalid account closure preserves provider and ledger: missing destination payee
+     ↓ invalid account closure preserves provider and ledger: missing closing category
+     ↓ invalid account closure preserves provider and ledger: missing deletion payee
+     ↓ invalid account closure preserves provider and ledger: missing closing payee
+     ↓ Transfers are properly updated
+   ↓ Budget (2)
+     ↓ new budgets should be created
+     ↓ budget updates when changing a category
+   ↓ Categories (3)
+     ↓ can be deleted
+     ↓ transfers properly when deleted
+     ↓ do not count as overspent when deleted
+   ↓ partial category owner updates preserve template settings and other raw columns
+   × category deletion inspection preserves income=0 canonical effects without writes 56ms
+   × category deletion inspection preserves income=1 canonical effects without writes 42ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/main.test.ts > category deletion inspection preserves income=0 canonical effects without writes
+ FAIL  src/server/main.test.ts > category deletion inspection preserves income=1 canonical effects without writes
+TypeError: inspectCategoryDeletion is not a function
+ ❯ src/server/main.test.ts:1007:22
+    1005|   });
+    1006|   const before = await snapshot();
+    1007|   const plan = await inspectCategoryDeletion({ id: 'deletion-source', …
+       |                      ^
+    1008|   expect(plan.category).toEqual(await db.getCategory('deletion-source'…
+    1009|   expect(plan.transfer).toEqual(await db.getCategory('deletion-target'…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 28 skipped (30)
+   Start at  17:01:23
+   Duration  2.84s (setup 61%, transform 34%, tests 4%, import 1%)
+

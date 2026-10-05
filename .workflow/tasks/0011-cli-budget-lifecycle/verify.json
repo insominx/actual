@@ -1,0 +1,39 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        { "id": "api-unit", "command": "yarn workspace @actual-app/api test" },
+        { "id": "cli-unit", "command": "yarn workspace @actual-app/cli test" },
+        {
+          "id": "server-unit",
+          "command": "yarn workspace @actual-app/sync-server test app-sync.test.ts"
+        },
+        { "id": "root-types", "command": "yarn typecheck" },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "browser-build",
+          "command": "yarn exec lage build:browser --to=@actual-app/web"
+        },
+        {
+          "id": "real-integration",
+          "command": "yarn workspace @actual-app/cli test:integration"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/cli/vite.config.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/vite.config.ts packages/cli/README.md packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/docs/docs/api/cli.md .workflow/tasks/0010-cli-runtime .workflow/tasks/0011-cli-budget-lifecycle/plan.review.md .workflow/tasks/0011-cli-budget-lifecycle/execution-decisions.md .workflow/tasks/0011-cli-budget-lifecycle/verify.json upcoming-release-notes/agent-cli-runtime.md upcoming-release-notes/agent-cli-budget-creation.md"
+        }
+      ]
+    }
+  }
+}

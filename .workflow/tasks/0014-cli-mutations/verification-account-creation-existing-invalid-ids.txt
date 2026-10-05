@@ -1,0 +1,308 @@
+✔ retention previews and applies per-source policy while preserving invalid and external artifacts (10369.5928ms)
+✖ restore creates independent local identities and preserves the encrypted source (8696.4106ms)
+✔ isolated validation rejects corrupt archives and listing preserves complete artifacts (5743.7172ms)
+✔ an encrypted sync budget creates complete plaintext backups without replacing earlier artifacts (3814.2343ms)
+✔ packaged discovery and validation work without personal configuration (670.1313ms)
+✖ encrypted remote sessions register keys across process restarts (4585.3291ms)
+✖ real server, import deduplication, two clients, and restart (4552.5806ms)
+✖ encrypted first publication survives a lost response, retries one identity, and preserves rename/archive semantics (4483.6654ms)
+✖ CLI clones an encrypted cached budget without modifying or publishing its source (4008.8245ms)
+✖ CLI creates a usable local budget without publishing to its configured server (4203.6899ms)
+✔ publication rejects credential-bearing server URLs before authentication or receipt preparation (6241.0156ms)
+✖ CLI keeps publication uncertain when the upload was not accepted (encrypted=false) (3537.237ms)
+✔ CLI publication receipts acknowledge and reuse one identity (encrypted=false) (5530.6523ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=null) (3183.9676ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=before) (3115.3279ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=after) (3316.2311ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=source-race) (3789.3062ms)
+✖ CLI keeps publication uncertain when the upload was not accepted (encrypted=true) (3718.8302ms)
+✔ CLI publication receipts acknowledge and reuse one identity (encrypted=true) (5706.3528ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=null) (4132.5753ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=before) (2918.5395ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=after) (3086.3447ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=source-race) (2974.547ms)
+✔ fresh server bootstraps through CLI and authenticates without a browser (3281.3248ms)
+✔ managed lifecycle checks ownership, port, executable, restart, and shutdown (7169.0972ms)
+✔ watch freezes its selected budget while profiles switch and cache identities stay separate (8875.7ms)
+✔ watch bounds a stalled worker and a subsequent writer can reopen its cache (6234.64ms)
+✔ encrypted watch reconnects, cancels, and releases its cache for a writer (5847.048ms)
+✖ a failed push preserves the local write and refresh does not replay it (encrypted=false) (2930.546ms)
+✖ a failed push preserves the local write and refresh does not replay it (encrypted=true) (2674.3856ms)
+✔ pending status is offline and refresh sends existing writes (encrypted=false) (8064.0339ms)
+✔ pending status is offline and refresh sends existing writes (encrypted=true) (7412.8665ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 22
+ℹ fail 10
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 51346.8472
+
+✖ failing tests:
+
+test at packages\cli\integration\backups.test.mjs:157:1
+✖ restore creates independent local identities and preserves the encrypted source (8696.4106ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/backups.test.mjs:308:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\cli.test.mjs:33:1
+✖ encrypted remote sessions register keys across process restarts (4585.3291ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/cli.test.mjs:65:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\cli.test.mjs:79:1
+✖ real server, import deduplication, two clients, and restart (4552.5806ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 5
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/cli.test.mjs:130:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 5,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\lifecycle.test.mjs:9:1
+✖ encrypted first publication survives a lost response, retries one identity, and preserves rename/archive semantics (4483.6654ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/lifecycle.test.mjs:85:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\lifecycle.test.mjs:258:1
+✖ CLI clones an encrypted cached budget without modifying or publishing its source (4008.8245ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/lifecycle.test.mjs:310:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\lifecycle.test.mjs:390:1
+✖ CLI creates a usable local budget without publishing to its configured server (4203.6899ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/lifecycle.test.mjs:450:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\publication.test.mjs:76:3
+✖ CLI keeps publication uncertain when the upload was not accepted (encrypted=false) (3537.237ms)
+  AssertionError [ERR_ASSERTION]: {
+    "schemaVersion": 2,
+    "operation": "accounts.create",
+    "context": {
+      "budgetId": null,
+      "syncId": null,
+      "serverUrl": null,
+      "mode": "no-budget",
+      "currency": null,
+      "scale": 100,
+      "lastSyncedAt": null,
+      "freshness": "unknown",
+      "commit": "none"
+    },
+    "error": {
+      "code": "INVALID_INPUT",
+      "message": "Operation ID must contain 1-80 letters, digits, underscores, or hyphens.",
+      "retryable": false
+    },
+    "warnings": []
+  }
+  
+  
+  2 !== 0
+  
+      at invoke (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:120:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:133:9)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\publication.test.mjs:76:3
+✖ CLI keeps publication uncertain when the upload was not accepted (encrypted=true) (3718.8302ms)
+  AssertionError [ERR_ASSERTION]: {
+    "schemaVersion": 2,
+    "operation": "accounts.create",
+    "context": {
+      "budgetId": null,
+      "syncId": null,
+      "serverUrl": null,
+      "mode": "no-budget",
+      "currency": null,
+      "scale": 100,
+      "lastSyncedAt": null,
+      "freshness": "unknown",
+      "commit": "none"
+    },
+    "error": {
+      "code": "INVALID_INPUT",
+      "message": "Operation ID must contain 1-80 letters, digits, underscores, or hyphens.",
+      "retryable": false
+    },
+    "warnings": []
+  }
+  
+  
+  2 !== 0
+  
+      at invoke (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:120:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:133:9)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\sync.test.mjs:334:3
+✖ a failed push preserves the local write and refresh does not replay it (encrypted=false) (2930.546ms)
+  AssertionError [ERR_ASSERTION]: {
+    "schemaVersion": 2,
+    "operation": "accounts.create",
+    "context": {
+      "budgetId": null,
+      "syncId": null,
+      "serverUrl": null,
+      "mode": "no-budget",
+      "currency": null,
+      "scale": 100,
+      "lastSyncedAt": null,
+      "freshness": "unknown",
+      "commit": "none"
+    },
+    "error": {
+      "code": "INVALID_INPUT",
+      "message": "Operation ID must contain 1-80 letters, digits, underscores, or hyphens.",
+      "retryable": false
+    },
+    "warnings": []
+  }
+  
+  
+  2 !== 6
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/sync.test.mjs:392:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 6,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\sync.test.mjs:334:3
+✖ a failed push preserves the local write and refresh does not replay it (encrypted=true) (2674.3856ms)
+  AssertionError [ERR_ASSERTION]: {
+    "schemaVersion": 2,
+    "operation": "accounts.create",
+    "context": {
+      "budgetId": null,
+      "syncId": null,
+      "serverUrl": null,
+      "mode": "no-budget",
+      "currency": null,
+      "scale": 100,
+      "lastSyncedAt": null,
+      "freshness": "unknown",
+      "commit": "none"
+    },
+    "error": {
+      "code": "INVALID_INPUT",
+      "message": "Operation ID must contain 1-80 letters, digits, underscores, or hyphens.",
+      "retryable": false
+    },
+    "warnings": []
+  }
+  
+  
+  2 !== 6
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/sync.test.mjs:392:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 6,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

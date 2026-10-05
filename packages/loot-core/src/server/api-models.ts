@@ -24,7 +24,10 @@ export type APIAccountEntity = Pick<AccountEntity, 'id' | 'name'> & {
 export const accountModel = {
   ...models.accountModel,
 
-  toExternal(account: AccountEntity): APIAccountEntity {
+  toExternal(
+    account: Pick<AccountEntity, 'id' | 'name' | 'offbudget' | 'closed'> &
+      Partial<Pick<AccountEntity, 'balance_current' | 'account_group_id'>>,
+  ): APIAccountEntity {
     return {
       id: account.id,
       name: account.name,
@@ -116,8 +119,11 @@ export const categoryGroupModel = {
     };
   },
 
-  fromExternal(group: APICategoryGroupEntity) {
-    const result = { ...group } as unknown as CategoryGroupEntity;
+  fromExternal(
+    group: Pick<APICategoryGroupEntity, 'id'> & Partial<APICategoryGroupEntity>,
+  ) {
+    const result = { ...group } as unknown as Pick<CategoryGroupEntity, 'id'> &
+      Partial<CategoryGroupEntity>;
     if ('categories' in group && group.categories) {
       result.categories = group.categories.map(cat =>
         categoryModel.fromExternal(cat),

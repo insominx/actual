@@ -1,0 +1,43 @@
+{
+  "ok": true,
+  "projectRoot": "D:\\Projects\\personal\\Budget\\actual",
+  "task": "0012-cli-sync",
+  "profile": "fixes",
+  "checks": [
+    {
+      "id": "browser-convergence",
+      "type": "scripted",
+      "command": "yarn workspace @actual-app/cli test:browser-integration",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 8442,
+      "stdout": "✔ browser and two CLI caches converge after import, edit, preference change, and undo (7610.3533ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 7861.0058\n",
+      "stderr": ""
+    },
+    {
+      "id": "lint",
+      "type": "scripted",
+      "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/cli/vite.config.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/loot-core/src/server/sync/index.ts",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 1262,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "id": "format",
+      "type": "scripted",
+      "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/vite.config.ts packages/cli/README.md packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/docs/docs/api/cli.md .workflow/tasks/0010-cli-runtime .workflow/tasks/0011-cli-budget-lifecycle/plan.review.md .workflow/tasks/0011-cli-budget-lifecycle/execution-decisions.md .workflow/tasks/0011-cli-budget-lifecycle/verify.json upcoming-release-notes/agent-cli-runtime.md upcoming-release-notes/agent-cli-budget-creation.md packages/loot-core/src/server/sync/index.ts",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 906,
+      "stdout": "Checking formatting...\n\nAll matched files use the correct format.\nFinished in 261ms on 85 files using 32 threads.\n",
+      "stderr": ""
+    }
+  ],
+  "markdownRows": [
+    "| scripted | browser-convergence | pass | 8442ms |",
+    "| scripted | lint | pass | 1262ms |",
+    "| scripted | format | pass | 906ms |"
+  ]
+}

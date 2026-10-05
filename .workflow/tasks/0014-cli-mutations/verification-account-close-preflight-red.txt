@@ -1,0 +1,212 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+ ❯ src/server/main.test.ts (16 tests | 8 failed | 8 skipped) 431ms
+   ↓ Budgets (2)
+     ↓ budget is successfully loaded
+     ↓ budget detects out of sync migrations
+   ❯ Accounts (9)
+     × invalid account closure preserves provider and ledger: missing required destination 61ms
+     × invalid account closure preserves provider and ledger: self transfer 48ms
+     × invalid account closure preserves provider and ledger: missing destination 48ms
+     × invalid account closure preserves provider and ledger: deleted destination 52ms
+     × invalid account closure preserves provider and ledger: missing destination payee 51ms
+     × invalid account closure preserves provider and ledger: missing closing category 60ms
+     × invalid account closure preserves provider and ledger: missing deletion payee 52ms
+     × invalid account closure preserves provider and ledger: missing closing payee 59ms
+     ↓ Transfers are properly updated
+   ↓ Budget (2)
+     ↓ new budgets should be created
+     ↓ budget updates when changing a category
+   ↓ Categories (3)
+     ↓ can be deleted
+     ↓ transfers properly when deleted
+     ↓ do not count as overspent when deleted
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/main.test.ts > Accounts > invalid account closure preserves provider and ledger: missing required destination
+ FAIL  src/server/main.test.ts > Accounts > invalid account closure preserves provider and ledger: self transfer
+ FAIL  src/server/main.test.ts > Accounts > invalid account closure preserves provider and ledger: missing deletion payee
+AssertionError: expected { …(4) } to deeply equal { …(4) }
+
+- Expected
++ Received
+
+@@ -1,15 +1,15 @@
+  {
+    "accounts": [
+      {
+        "account_group_id": null,
+-       "account_id": "synthetic-account",
+-       "account_sync_source": "simpleFin",
++       "account_id": null,
++       "account_sync_source": null,
+        "balance_available": null,
+-       "balance_current": 6789,
++       "balance_current": null,
+        "balance_limit": null,
+-       "bank": "synthetic-bank",
++       "bank": null,
+        "bank_sync_status": null,
+        "closed": 0,
+        "id": "closing",
+        "last_reconciled": null,
+        "last_sync": null,
+
+ ❯ src/server/main.test.ts:163:29
+    161|       categoryId: options.categoryId, forced: options.forced,
+    162|     })).rejects.toThrow();
+    163|     expect(await capture()).toEqual(before);
+       |                             ^
+    164|   });
+    165|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  src/server/main.test.ts > Accounts > invalid account closure preserves provider and ledger: missing destination
+ FAIL  src/server/main.test.ts > Accounts > invalid account closure preserves provider and ledger: missing destination payee
+AssertionError: expected { …(4) } to deeply equal { …(4) }
+
+- Expected
++ Received
+
+@@ -1,17 +1,17 @@
+  {
+    "accounts": [
+      {
+        "account_group_id": null,
+-       "account_id": "synthetic-account",
+-       "account_sync_source": "simpleFin",
++       "account_id": null,
++       "account_sync_source": null,
+        "balance_available": null,
+-       "balance_current": 6789,
++       "balance_current": null,
+        "balance_limit": null,
+-       "bank": "synthetic-bank",
++       "bank": null,
+        "bank_sync_status": null,
+-       "closed": 0,
++       "closed": 1,
+        "id": "closing",
+        "last_reconciled": null,
+        "last_sync": null,
+        "mask": null,
+        "name": "Closing",
+
+ ❯ src/server/main.test.ts:163:29
+    161|       categoryId: options.categoryId, forced: options.forced,
+    162|     })).rejects.toThrow();
+    163|     expect(await capture()).toEqual(before);
+       |                             ^
+    164|   });
+    165|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  src/server/main.test.ts > Accounts > invalid account closure preserves provider and ledger: deleted destination
+ FAIL  src/server/main.test.ts > Accounts > invalid account closure preserves provider and ledger: missing closing category
+AssertionError: promise resolved "undefined" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+undefined
+
+ ❯ src/server/main.test.ts:162:8
+    160|       id: 'closing', transferAccountId: options.transferAccountId,
+    161|       categoryId: options.categoryId, forced: options.forced,
+    162|     })).rejects.toThrow();
+       |        ^
+    163|     expect(await capture()).toEqual(before);
+    164|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  src/server/main.test.ts > Accounts > invalid account closure preserves provider and ledger: missing closing payee
+AssertionError: expected { …(4) } to deeply equal { …(4) }
+
+- Expected
++ Received
+
+@@ -1,17 +1,17 @@
+  {
+    "accounts": [
+      {
+        "account_group_id": null,
+-       "account_id": "synthetic-account",
+-       "account_sync_source": "simpleFin",
++       "account_id": null,
++       "account_sync_source": null,
+        "balance_available": null,
+-       "balance_current": 6789,
++       "balance_current": null,
+        "balance_limit": null,
+-       "bank": "synthetic-bank",
++       "bank": null,
+        "bank_sync_status": null,
+-       "closed": 0,
++       "closed": 1,
+        "id": "closing",
+        "last_reconciled": null,
+        "last_sync": null,
+        "mask": null,
+        "name": "Closing",
+@@ -71,10 +71,36 @@
+        "imported_description": null,
+        "isChild": 0,
+        "isParent": 0,
+        "location": null,
+        "notes": null,
++       "parent_id": null,
++       "pending": 0,
++       "raw_synced_data": null,
++       "reconciled": 0,
++       "schedule": null,
++       "sort_order": 123456789,
++       "starting_balance_flag": 0,
++       "tombstone": 0,
++       "transferred_id": null,
++       "type": null,
++     },
++     {
++       "acct": "closing",
++       "amount": 1234,
++       "category": null,
++       "cleared": 1,
++       "date": 20170101,
++       "description": "transfer-destination",
++       "error": null,
++       "financial_id": null,
++       "id": "id2",
++       "imported_description": null,
++       "isChild": 0,
++       "isParent": 0,
++       "location": null,
++       "notes": "Closing account",
+        "parent_id": null,
+        "pending": 0,
+        "raw_synced_data": null,
+        "reconciled": 0,
+        "schedule": null,
+
+ ❯ src/server/main.test.ts:163:29
+    161|       categoryId: options.categoryId, forced: options.forced,
+    162|     })).rejects.toThrow();
+    163|     expect(await capture()).toEqual(before);
+       |                             ^
+    164|   });
+    165|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  8 failed | 8 skipped (16)
+   Start at  12:27:18
+   Duration  3.31s (setup 54%, transform 31%, tests 13%, import 1%)
+

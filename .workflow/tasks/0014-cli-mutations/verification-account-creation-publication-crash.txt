@@ -1,0 +1,16 @@
+✔ publication exact interruption retains one identity (before-engine, encrypted=false) (36666.5604ms)
+✔ publication exact interruption retains one identity (after-remote, encrypted=false) (36480.4408ms)
+✔ publication exact interruption retains one identity (after-engine, encrypted=false) (36180.6741ms)
+✔ publication exact interruption retains one identity (before-sync, encrypted=false) (36972.444ms)
+✔ publication exact interruption retains one identity (before-engine, encrypted=true) (36376.1471ms)
+✔ publication exact interruption retains one identity (after-remote, encrypted=true) (36518.9413ms)
+✔ publication exact interruption retains one identity (after-engine, encrypted=true) (35794.2728ms)
+✔ publication exact interruption retains one identity (before-sync, encrypted=true) (36347.1049ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 291411.553

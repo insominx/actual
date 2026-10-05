@@ -1,0 +1,3 @@
+packages/cli/integration/changes.test.mjs:856:9: error typescript(require-array-sort-compare): Require 'compare' argument.
+packages/cli/integration/changes.test.mjs:946:9: error typescript(require-array-sort-compare): Require 'compare' argument.
+packages/cli/integration/changes.test.mjs:1053:9: error typescript(require-array-sort-compare): Require 'compare' argument.

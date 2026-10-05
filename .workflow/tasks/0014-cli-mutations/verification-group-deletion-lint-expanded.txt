@@ -1,0 +1,1 @@
+packages/cli/integration/changes.test.mjs:6171:13: error eslint(curly): Expected { after 'if' condition. help: Replace `await legacy([ 'categories', 'create', '--name', 'Direct child', '--group-id', created.id, ]);` with `{await legacy([ 'categories', 'create', '--name', 'Direct child', '--group-id', created.id, ]);}`.

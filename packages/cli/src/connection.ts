@@ -17,6 +17,8 @@ import type { Release } from './lock';
 type ConnectionOptions = {
   mutates: boolean;
   skipBudget?: boolean;
+  onlineOnly?: boolean;
+  onSynced?: () => Promise<void>;
 };
 
 function info(message: string, verbose?: boolean) {
@@ -41,9 +43,22 @@ async function resolveBudgetIdForSyncId(syncId: string): Promise<string> {
 export async function withConnection<T>(
   globalOpts: CliGlobalOpts,
   fn: (config: CliConfig) => Promise<T>,
-  { mutates, skipBudget = false }: ConnectionOptions,
+  {
+    mutates,
+    skipBudget = false,
+    onlineOnly = false,
+    onSynced,
+  }: ConnectionOptions,
 ): Promise<T> {
-  const config = await resolveConfig(globalOpts);
+  if (onlineOnly && !skipBudget) {
+    throw new Error(
+      'Online-only initialization requires an explicit lifecycle operation',
+    );
+  }
+  const config = await resolveConfig(
+    onlineOnly ? { ...globalOpts, offline: false } : globalOpts,
+    { connectionOnly: onlineOnly },
+  );
 
   if (config.offline) {
     let cached = config.syncId
@@ -137,6 +152,7 @@ export async function withConnection<T>(
     );
   }
 
+  let release: Release | null = null;
   try {
     if (skipBudget) return await fn(config);
     if (!config.syncId) {
@@ -147,7 +163,6 @@ export async function withConnection<T>(
     }
 
     const meta = getMetaDir(config.dataDir, config.syncId);
-    let release: Release | null = null;
     if (!config.noLock) {
       release = mutates
         ? await acquireExclusive(meta, {
@@ -158,104 +173,105 @@ export async function withConnection<T>(
           });
     }
 
-    try {
-      const cachedState = readCacheState(meta);
-      const decision = decideSyncAction({
-        state: cachedState,
-        config: { syncId: config.syncId, serverUrl: config.serverUrl },
-        now: Date.now(),
-        ttlMs: config.cacheTtl * 1000,
-        mutates,
-        refresh: config.refresh,
-        encrypted: Boolean(config.encryptionPassword),
+    const cachedState = readCacheState(meta);
+    const decision = decideSyncAction({
+      state: cachedState,
+      config: { syncId: config.syncId, serverUrl: config.serverUrl },
+      now: Date.now(),
+      ttlMs: config.cacheTtl * 1000,
+      mutates,
+      refresh: config.refresh,
+      encrypted: Boolean(config.encryptionPassword),
+    });
+
+    let state: CacheState;
+    if (decision.action === 'download') {
+      info(
+        cachedState === null
+          ? `Downloading budget ${config.syncId} for the first time...`
+          : `Re-downloading budget ${config.syncId} (cache invalidated)...`,
+        globalOpts.verbose,
+      );
+      await api.downloadBudget(config.syncId, {
+        password: config.encryptionPassword,
       });
-
-      let state: CacheState;
-      if (decision.action === 'download') {
-        info(
-          cachedState === null
-            ? `Downloading budget ${config.syncId} for the first time...`
-            : `Re-downloading budget ${config.syncId} (cache invalidated)...`,
-          globalOpts.verbose,
-        );
-        await api.downloadBudget(config.syncId, {
-          password: config.encryptionPassword,
-        });
-        const budgetId = await resolveBudgetIdForSyncId(config.syncId);
-        const now = Date.now();
-        state = {
-          version: CACHE_VERSION,
-          syncId: config.syncId,
-          budgetId,
-          serverUrl: config.serverUrl,
-          lastSyncedAt: now,
-          lastDownloadedAt: now,
-        };
-        writeCacheState(meta, state);
-      } else if (decision.action === 'skip') {
-        const age = Math.round(
-          (Date.now() - decision.state.lastSyncedAt) / 1000,
-        );
-        info(`Using cached budget (synced ${age}s ago)...`, globalOpts.verbose);
-        await api.loadBudget(decision.state.budgetId);
-        state = decision.state;
-      } else if (config.encryptionPassword) {
-        info(`Syncing budget ${config.syncId}...`, globalOpts.verbose);
-        // `loadBudget` does not register the end-to-end encryption key, so a
-        // later push fails with `encrypt-failure` / `isMissingKey`. Reads still
-        // work, which makes the failure look like a broken budget file rather
-        // than a missing key. `downloadBudget` registers the key via `key-test`
-        // and, when the budget already exists locally, just loads and syncs it
-        // instead of re-downloading, so this costs nothing extra.
-        await api.downloadBudget(config.syncId, {
-          password: config.encryptionPassword,
-        });
-        state = { ...decision.state, lastSyncedAt: Date.now() };
-        writeCacheState(meta, state);
-      } else {
-        info(`Syncing budget ${config.syncId}...`, globalOpts.verbose);
-        await api.loadBudget(decision.state.budgetId);
-        await api.sync();
-        state = { ...decision.state, lastSyncedAt: Date.now() };
-        writeCacheState(meta, state);
-      }
-
-      updateAgentContext({
-        budgetId: state.budgetId,
-        mode: 'remote-cache',
-        lastSyncedAt: state.lastSyncedAt,
-        freshness: 'observed',
+      const budgetId = await resolveBudgetIdForSyncId(config.syncId);
+      const now = Date.now();
+      state = {
+        version: CACHE_VERSION,
+        syncId: config.syncId,
+        budgetId,
+        serverUrl: config.serverUrl,
+        lastSyncedAt: now,
+        lastDownloadedAt: now,
+      };
+      writeCacheState(meta, state);
+    } else if (decision.action === 'skip') {
+      const age = Math.round((Date.now() - decision.state.lastSyncedAt) / 1000);
+      info(`Using cached budget (synced ${age}s ago)...`, globalOpts.verbose);
+      await api.loadBudget(decision.state.budgetId);
+      state = decision.state;
+    } else if (config.encryptionPassword) {
+      info(`Syncing budget ${config.syncId}...`, globalOpts.verbose);
+      // `loadBudget` does not register the end-to-end encryption key, so a
+      // later push fails with `encrypt-failure` / `isMissingKey`. Reads still
+      // work, which makes the failure look like a broken budget file rather
+      // than a missing key. `downloadBudget` registers the key via `key-test`
+      // and, when the budget already exists locally, just loads and syncs it
+      // instead of re-downloading, so this costs nothing extra.
+      await api.downloadBudget(config.syncId, {
+        password: config.encryptionPassword,
       });
-      if (globalOpts.outputVersion === '2') {
-        const prefs = await api.getPreferences();
-        updateAgentContext({ currency: prefs.defaultCurrencyCode ?? null });
-      }
-      const result = await fn(config);
-
-      if (mutates) {
-        updateAgentContext({ commit: 'committed-local' });
-        info(`Pushing changes for ${config.syncId}...`, globalOpts.verbose);
-        try {
-          await api.sync();
-        } catch (error) {
-          if (globalOpts.outputVersion !== '2') throw error;
-          throw new AgentError(
-            'PARTIAL_COMPLETION',
-            'Local changes committed, but synchronization failed. Retry synchronization rather than the mutation.',
-            true,
-          );
-        }
-        updateAgentContext({ commit: 'synced' });
-        state = { ...state, lastSyncedAt: Date.now() };
-        writeCacheState(meta, state);
-      }
-
-      updateAgentContext({ lastSyncedAt: state.lastSyncedAt });
-      return result;
-    } finally {
-      if (release) await release();
+      state = { ...decision.state, lastSyncedAt: Date.now() };
+      writeCacheState(meta, state);
+    } else {
+      info(`Syncing budget ${config.syncId}...`, globalOpts.verbose);
+      await api.loadBudget(decision.state.budgetId);
+      await api.sync();
+      state = { ...decision.state, lastSyncedAt: Date.now() };
+      writeCacheState(meta, state);
     }
+
+    updateAgentContext({
+      budgetId: state.budgetId,
+      mode: 'remote-cache',
+      lastSyncedAt: state.lastSyncedAt,
+      freshness: 'observed',
+    });
+    if (globalOpts.outputVersion === '2') {
+      const prefs = await api.getPreferences();
+      updateAgentContext({ currency: prefs.defaultCurrencyCode ?? null });
+    }
+    const result = await fn(config);
+
+    if (mutates) {
+      updateAgentContext({ commit: 'committed-local' });
+      info(`Pushing changes for ${config.syncId}...`, globalOpts.verbose);
+      try {
+        await api.sync();
+      } catch (error) {
+        writeCacheState(meta, { ...state, lastSyncedAt: 0 });
+        updateAgentContext({ freshness: 'unknown' });
+        if (globalOpts.outputVersion !== '2') throw error;
+        throw new AgentError(
+          'PARTIAL_COMPLETION',
+          'Local changes committed, but synchronization failed. Retry synchronization rather than the mutation.',
+          true,
+        );
+      }
+      updateAgentContext({ commit: 'synced' });
+      await onSynced?.();
+      state = { ...state, lastSyncedAt: Date.now() };
+      writeCacheState(meta, state);
+    }
+
+    updateAgentContext({ lastSyncedAt: state.lastSyncedAt });
+    return result;
   } finally {
-    await api.shutdown();
+    try {
+      await api.shutdown();
+    } finally {
+      await release?.();
+    }
   }
 }

@@ -1,0 +1,41 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+8:15:08 PM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/cosmiconfig/dist/index.js.
+Error: An error occurred while trying to read the map file at index.js.map
+Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\node_modules\cosmiconfig\dist\index.js.map'
+    at Object.readFileSync (node:fs:436:20)
+    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13
+    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)
+    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)
+    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)
+    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)
+    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)
+ ❯ src/program.test.ts (17 tests | 1 failed | 16 skipped) 15ms
+   ❯ registered agent commands (17)
+     × declares creation retry IDs and validates creation before connecting 14ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/program.test.ts > registered agent commands > declares creation retry IDs and validates creation before connecting
+AssertionError: expected 'data' to be 'wrong-field' // Object.is equality
+
+Expected: "wrong-field"
+Received: "data"
+
+ ❯ src/program.test.ts:107:49
+    105|     ]);
+    106|     expect(invalidCurrency.error.code).toBe('INVALID_INPUT');
+    107|     expect(invalidCurrency.error.details.field).toBe('wrong-field');
+       |                                                 ^
+    108|     expect(invalidCurrency.context.commit).toBe('none');
+    109|     const missing = await run([
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 16 skipped (17)
+   Start at  20:15:08
+   Duration  450ms (transform 72%, import 22%, tests 4%, worker 1%)
+

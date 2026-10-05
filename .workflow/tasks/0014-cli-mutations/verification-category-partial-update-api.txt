@@ -1,0 +1,118 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/api
+
+4:06:40 PM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/chevrotain/lib/src/api.js.
+Error: An error occurred while trying to read the map file at api.js.map
+Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\node_modules\chevrotain\lib\src\api.js.map'
+    at Object.readFileSync (node:fs:436:20)
+    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13
+    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)
+    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)
+    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)
+    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)
+    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)
+stderr | methods.test.ts > API budget import/export > importBudget rejects with an Error on failure
+[Exception] Error: Error importing budget: File not found at the provided path: /does/not/exist.zip
+    at importBudget (D:/Projects/personal/Budget/actual/packages/loot-core/src/server/budgetfiles/app.ts:519:15)
+
+ ✓ methods.test.ts (78 tests) 69001ms
+   ✓ API setup and teardown (1)
+     ✓ successfully loads budget 787ms
+   ✓ API budget import/export (22)
+     ✓ createBudget loads a local budget and preserves currency after reload 2789ms
+     ✓ guarded creation previews without changing budgets and rejects changed name availability 1577ms
+     ✓ guarded creation rejects malformed proposals and a concurrently occupied name 2486ms
+     ✓ guarded creation works without a loaded budget and serializes competing applies 1508ms
+     ✓ guarded restore preview preserves source files and binds the archive before creating a new identity 2316ms
+     ✓ guarded restore rejects changed archive, occupied name and invalid SQLite without a destination 1584ms
+     ✓ guarded restore works without a loaded budget and competing applies create one destination 769ms
+     ✓ restoreBudget creates a new identity without replacing its source 806ms
+     ✓ restore removes invalid SQLite archives and incomplete writes without modifying existing budgets 728ms
+     ✓ restore never cleans up a directory when exclusive creation failed 756ms
+     ✓ creation validates before closing the selected budget 741ms
+     ✓ creation removes incomplete files when the database copy fails 721ms
+     ✓ cloneBudget preserves ledger and preferences with a separate local identity 851ms
+     ✓ guarded clone preview preserves source files and reload accepts the same copied state 1431ms
+     ✓ guarded clone rejects source edits and wrong identities before creating a destination 785ms
+     ✓ creation reports incomplete cleanup instead of inviting a blind retry 714ms
+     ✓ cloneBudget removes incomplete copies when copying the database fails 769ms
+     ✓ renaming preserves identity and local archiving is reversible 714ms
+     ✓ sync status reports local unpublished writes without synchronizing or changing them 1689ms
+     ✓ exportBudget returns bytes that importBudget loads back 814ms
+     ✓ importBudget imports from a file path 750ms
+     ✓ importBudget rejects with an Error on failure 900ms
+   ✓ API CRUD operations (18)
+     ✓ getBudgets 763ms
+     ✓ CategoryGroups: successfully update category groups 755ms
+     ✓ Categories: successfully update categories 764ms
+     ✓ Budgets: successfully update budgets 833ms
+     ✓ Accounts: successfully complete account operators 803ms
+     ✓ Payees: successfully update payees 715ms
+     ✓ Tags: successfully complete tag operations 711ms
+     ✓ Tags: create tag with minimal fields 718ms
+     ✓ Tags: update single field only 679ms
+     ✓ Tags: handle null values correctly 678ms
+     ✓ Tags: clear optional field 701ms
+     ✓ Notes: successfully get and update note 743ms
+     ✓ Rules: successfully update rules 785ms
+     ✓ Transactions: successfully update transactions 765ms
+     ✓ Transactions: successfully merge two transactions 796ms
+     ✓ Transactions: import notes are preserved when importing 724ms
+     ✓ Transactions: reimportDeleted=false prevents reimporting deleted transactions 726ms
+     ✓ Transactions: reimportDeleted=true reimports deleted transactions 750ms
+   ✓ Schedules: successfully complete schedules operations 862ms
+   ✓ Preferences: successfully read synced preferences 696ms
+   ✓ API preferences: setPreference (5)
+     ✓ successfully sets a single preference 702ms
+     ✓ can set multiple preferences 724ms
+     ✓ can set feature flag preferences 711ms
+     ✓ can set account-specific preferences 715ms
+     ✓ can set CSV import preferences 753ms
+   ✓ guarded transaction changes (4)
+     ✓ previews without writing, applies exact state, and rejects a stale repeat 732ms
+     ✓ rejects edited state, another budget, and invalid fields before a write 770ms
+     ✓ previews the full split and applies parent inheritance without preview writes 744ms
+     ✓ updates a split child with canonical error recalculation and rejects sibling changes 763ms
+   ✓ guarded linked transfer changes (3)
+     ✓ preserves cross-budget categories and rejects changed account references or missing links 835ms
+     ✓ previews both sides without writes, mirrors canonical fields, and rejects counterpart edits 791ms
+     ✓ includes the counterpart split and recalculates its error through the transfer owner 896ms
+   ✓ guarded budget metadata changes (2)
+     ✓ previews rename without writes and rejects stale or wrong-budget metadata 714ms
+     ✓ archives only local metadata, preserves pending messages, and supports a zero-write no-op 814ms
+   ✓ guarded account creation (2)
+     ✓ account creation previews without writes and acknowledges actual account, payee and opening identities 750ms
+     ✓ zero/off-budget account creation preserves canonical opening behavior and rejects changed date, source or identity 815ms
+   ✓ guarded account reopening (2)
+     ✓ previews without writes and reopens only visibility through the canonical owner 753ms
+     ✓ rejects stale ledger, missing accounts, wrong identities and tampered consequences 759ms
+   ✓ guarded account deletion (2)
+     ✓ previews exact deletion and counterpart updates without writes and acknowledges actual IDs 762ms
+     ✓ rejects stale or tampered deletion and preserves canonical closed-account no-op 773ms
+   ✓ guarded account updates (2)
+     ✓ preview preserves ledger and references and canonical apply keeps omitted fields 838ms
+     ✓ rejects stale ledger, deleted groups, wrong identities, and tampered account consequences 765ms
+   ✓ guarded account opening references (1)
+     ✓ preview never creates a missing starting balance payee and acknowledged IDs identify its actual creation 720ms
+   ✓ guarded budget holds (3)
+     ✓ hold preview preserves state and uses the engine clamp before reset 777ms
+     ✓ holds with no available funds acknowledge no change and reset preserves missing-row behavior 765ms
+     ✓ holds reject changed ledger inputs, wrong identity, mode and malformed requests 777ms
+   ✓ guarded allocation changes (5)
+     ✓ carryover preview preserves rows and applies the complete future month range 763ms
+     ✓ carryover binds budget mode and preserves missing-row writer behavior 934ms
+     ✓ carryover rejects changed future rows and validates its entire proposal 780ms
+     ✓ previews a canonical allocation without writes and preserves carryover when applying 771ms
+     ✓ rejects invalid inputs, changed allocation state, and another budget before a write 747ms
+   ✓ guarded account closure (3)
+     ✓ previews canonical closing transfers and rules without writes (offbudget=false) 833ms
+     ✓ previews canonical closing transfers and rules without writes (offbudget=true) 764ms
+     ✓ preserves empty, zero-balance and already-closed behavior and rejects stale or malformed proposals 774ms
+   ✓ partial category updates (1)
+     ✓ updates hidden, group and income without requiring a name or changing unrelated fields 761ms
+
+ Test Files  1 passed (1)
+      Tests  78 passed (78)
+   Start at  16:06:33
+   Duration  80.51s (tests 86%, transform 11%, import 3%)
+

@@ -1,0 +1,154 @@
+✖ guarded group deletion preserves raw domains and acknowledged transfers (online) (4111.4246ms)
+✖ guarded group deletion preserves raw domains and acknowledged transfers (offline) (3543.6153ms)
+✖ killed group deletion at before-engine retains its exact outcome without replay (3838.0703ms)
+✖ killed group deletion at after-engine retains its exact outcome without replay (3900.2857ms)
+✖ killed group deletion at before-sync retains its exact outcome without replay (3847.8136ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 0
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 19314.6681
+
+✖ failing tests:
+
+test at packages\cli\integration\changes.test.mjs:6072:8
+✖ guarded group deletion preserves raw domains and acknowledged transfers (online) (4111.4246ms)
+  AssertionError [ERR_ASSERTION]: [Exception] Error: Transfer category with id 6dcf5024-82c6-4bb6-99d9-90a51393c3cf not found.
+      at inspectCategoryDeletion (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118373:37)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118384:8
+      at async batchMessages (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:62660:3)
+      at async deleteCategory$1 (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118383:2)
+      at async runMutator.undoDisabled (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118549:19)
+  Error: Transfer category with id 6dcf5024-82c6-4bb6-99d9-90a51393c3cf not found.
+  
+  
+  1 !== 0
+  
+      at legacy (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:5982:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async provisionGroupDeletionFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:6016:3)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:6092:13)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:6072:8
+✖ guarded group deletion preserves raw domains and acknowledged transfers (offline) (3543.6153ms)
+  AssertionError [ERR_ASSERTION]: [Exception] Error: Transfer category with id 16403998-896e-4444-8a80-9b0294eb362d not found.
+      at inspectCategoryDeletion (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118373:37)
+      at async D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118384:8
+      at async batchMessages (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:62660:3)
+      at async deleteCategory$1 (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118383:2)
+      at async runMutator.undoDisabled (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118549:19)
+  Error: Transfer category with id 16403998-896e-4444-8a80-9b0294eb362d not found.
+  
+  
+  1 !== 0
+  
+      at legacy (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:5982:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async provisionGroupDeletionFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:6016:3)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:6092:13)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:6248:8
+✖ killed group deletion at before-engine retains its exact outcome without replay (3838.0703ms)
+  AssertionError [ERR_ASSERTION]: [Exception] Error: Transfer category with id 0f7b7aeb-5d7c-446e-87b4-5c258ba79ff9 not found.
+      at inspectCategoryDeletion (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118373:37)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118384:8
+      at async batchMessages (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:62660:3)
+      at async deleteCategory$1 (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118383:2)
+      at async runMutator.undoDisabled (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118549:19)
+  Error: Transfer category with id 0f7b7aeb-5d7c-446e-87b4-5c258ba79ff9 not found.
+  
+  
+  1 !== 0
+  
+      at legacy (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:5982:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async provisionGroupDeletionFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:6016:3)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:6262:40)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:6248:8
+✖ killed group deletion at after-engine retains its exact outcome without replay (3900.2857ms)
+  AssertionError [ERR_ASSERTION]: [Exception] Error: Transfer category with id d8549382-3b4a-453f-b380-9faa901defeb not found.
+      at inspectCategoryDeletion (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118373:37)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118384:8
+      at async batchMessages (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:62660:3)
+      at async deleteCategory$1 (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118383:2)
+      at async runMutator.undoDisabled (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118549:19)
+  Error: Transfer category with id d8549382-3b4a-453f-b380-9faa901defeb not found.
+  
+  
+  1 !== 0
+  
+      at legacy (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:5982:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async provisionGroupDeletionFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:6016:3)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:6262:40)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:6248:8
+✖ killed group deletion at before-sync retains its exact outcome without replay (3847.8136ms)
+  AssertionError [ERR_ASSERTION]: [Exception] Error: Transfer category with id 09653a34-3f17-4b7a-9be1-7f08883ad09a not found.
+      at inspectCategoryDeletion (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118373:37)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118384:8
+      at async batchMessages (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:62660:3)
+      at async deleteCategory$1 (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118383:2)
+      at async runMutator.undoDisabled (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:118549:19)
+  Error: Transfer category with id 09653a34-3f17-4b7a-9be1-7f08883ad09a not found.
+  
+  
+  1 !== 0
+  
+      at legacy (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:5982:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async provisionGroupDeletionFixture (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:6016:3)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:6262:40)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

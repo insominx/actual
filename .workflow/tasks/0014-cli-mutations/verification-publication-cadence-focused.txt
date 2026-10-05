@@ -1,0 +1,10 @@
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=after) (2952.9048ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=after) (2913.3292ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5933.4676

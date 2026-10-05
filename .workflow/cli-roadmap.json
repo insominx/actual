@@ -38,7 +38,7 @@
       "stage": "Foundation",
       "mode": "AFK",
       "dependencies": ["0009-cli-sessions"],
-      "status": "ready-for-review"
+      "status": "completed-locally"
     },
     {
       "key": "cli-budget-lifecycle",
@@ -47,7 +47,7 @@
       "stage": "Foundation",
       "mode": "AFK",
       "dependencies": ["0009-cli-sessions"],
-      "status": "ready-for-review"
+      "status": "completed-locally"
     },
     {
       "key": "cli-sync",
@@ -56,7 +56,7 @@
       "stage": "Foundation",
       "mode": "AFK",
       "dependencies": ["0009-cli-sessions", "0011-cli-budget-lifecycle"],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-backups",
@@ -65,7 +65,7 @@
       "stage": "Foundation",
       "mode": "AFK",
       "dependencies": ["0011-cli-budget-lifecycle", "0012-cli-sync"],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-mutations",
@@ -79,7 +79,7 @@
         "0012-cli-sync",
         "0013-cli-backups"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "partially-implemented"
     },
     {
       "key": "cli-accounts",

@@ -1,0 +1,1 @@
+packages/api/methods.test.ts:3967:7: error eslint(curly): Expected { after 'if' condition. help: Replace `throw new Error('Group creation did not commit');` with `{throw new Error('Group creation did not commit');}`.

@@ -1,0 +1,14 @@
+✔ killed apply at before-engine (accounts.update) preserves its durable outcome and never replays (36431.2391ms)
+✔ killed apply at after-engine (accounts.update) preserves its durable outcome and never replays (35570.5782ms)
+✔ killed apply at before-sync (accounts.update) preserves its durable outcome and never replays (37563.6506ms)
+✔ killed apply at before-engine (accounts.reopen) preserves its durable outcome and never replays (36699.9626ms)
+✔ killed apply at after-engine (accounts.reopen) preserves its durable outcome and never replays (37291.0969ms)
+✔ killed apply at before-sync (accounts.reopen) preserves its durable outcome and never replays (38471.0348ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 222107.6685

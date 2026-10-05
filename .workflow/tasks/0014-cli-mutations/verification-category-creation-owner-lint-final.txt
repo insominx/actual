@@ -1,0 +1,2 @@
+packages/loot-core/src/server/db/index.ts:204:10: warning typescript(no-unsafe-type-assertion): Unsafe assertion to `any` detected: consider using a more specific type to ensure safety.
+packages/loot-core/src/server/db/index.ts:286:10: warning typescript(no-unsafe-type-assertion): Unsafe assertion to `any` detected: consider using a more specific type to ensure safety.

@@ -326,10 +326,64 @@ app.post('/upload-user-file', async (req, res) => {
     return;
   }
 
-  const keyId =
-    encryptMeta && typeof encryptMeta === 'string'
-      ? JSON.parse(encryptMeta).keyId
-      : null;
+  let keyId: string | null = null;
+  try {
+    if (encryptMeta) {
+      const meta = JSON.parse(encryptMeta);
+      if (
+        typeof meta?.keyId !== 'string' ||
+        !meta.keyId ||
+        meta.keyId.length > 128
+      ) {
+        throw new Error('Invalid key identity');
+      }
+      keyId = meta.keyId;
+    }
+  } catch {
+    res.status(400).send('invalid encryption metadata');
+    return;
+  }
+
+  const initialKeyHeader = extractSingleHeader(
+    req,
+    res,
+    'x-actual-initial-key',
+  );
+  if (res.headersSent) return;
+  let initialKey: { salt: string; testContent: string } | undefined;
+  if (initialKeyHeader !== null) {
+    try {
+      if (!keyId || initialKeyHeader.length > 4096) {
+        throw new Error('Invalid initial key');
+      }
+      const value = JSON.parse(initialKeyHeader);
+      if (
+        typeof value?.salt !== 'string' ||
+        typeof value?.testContent !== 'string' ||
+        Buffer.from(value.salt, 'base64').length !== 32 ||
+        Buffer.from(value.salt, 'base64').toString('base64') !== value.salt
+      ) {
+        throw new Error('Invalid initial key');
+      }
+      const test = JSON.parse(value.testContent);
+      if (
+        typeof test?.value !== 'string' ||
+        !test.value ||
+        test.meta?.keyId !== keyId ||
+        test.meta.algorithm !== 'aes-256-gcm' ||
+        typeof test.meta.iv !== 'string' ||
+        typeof test.meta.authTag !== 'string' ||
+        Buffer.from(test.meta.iv, 'base64').length !== 12 ||
+        Buffer.from(test.meta.authTag, 'base64').length !== 16
+      ) {
+        throw new Error('Invalid initial key test');
+      }
+      initialKey = { salt: value.salt, testContent: value.testContent };
+    } catch {
+      res.status(400).send('invalid initial encryption key');
+      return;
+    }
+  }
 
   const filesService = new FilesService(getAccountDb());
   let currentFile;
@@ -353,6 +407,10 @@ app.post('/upload-user-file', async (req, res) => {
     return;
   }
 
+  if (initialKey && currentFile) {
+    res.status(400).send('initial encryption key requires a new file');
+    return;
+  }
   const errorMessage = validateUploadedFile(groupId, keyId, currentFile);
   if (errorMessage) {
     res.status(400).send(errorMessage);
@@ -378,6 +436,13 @@ app.post('/upload-user-file', async (req, res) => {
         syncVersion: syncFormatVersion,
         name,
         encryptMeta,
+        ...(initialKey
+          ? {
+              encryptKeyId: keyId,
+              encryptSalt: initialKey.salt,
+              encryptTest: initialKey.testContent,
+            }
+          : {}),
         owner:
           res.locals.user_id ||
           (() => {

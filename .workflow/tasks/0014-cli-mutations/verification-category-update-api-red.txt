@@ -1,0 +1,148 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/api
+
+4:14:17 PM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/chevrotain/lib/src/api.js.
+Error: An error occurred while trying to read the map file at api.js.map
+Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\node_modules\chevrotain\lib\src\api.js.map'
+    at Object.readFileSync (node:fs:436:20)
+    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13
+    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)
+    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)
+    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)
+    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)
+    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)
+ ❯ methods.test.ts (80 tests | 2 failed | 78 skipped) 1361ms
+   ↓ API setup and teardown (1)
+     ↓ successfully loads budget
+   ↓ API budget import/export (22)
+     ↓ createBudget loads a local budget and preserves currency after reload
+     ↓ guarded creation previews without changing budgets and rejects changed name availability
+     ↓ guarded creation rejects malformed proposals and a concurrently occupied name
+     ↓ guarded creation works without a loaded budget and serializes competing applies
+     ↓ guarded restore preview preserves source files and binds the archive before creating a new identity
+     ↓ guarded restore rejects changed archive, occupied name and invalid SQLite without a destination
+     ↓ guarded restore works without a loaded budget and competing applies create one destination
+     ↓ restoreBudget creates a new identity without replacing its source
+     ↓ restore removes invalid SQLite archives and incomplete writes without modifying existing budgets
+     ↓ restore never cleans up a directory when exclusive creation failed
+     ↓ creation validates before closing the selected budget
+     ↓ creation removes incomplete files when the database copy fails
+     ↓ cloneBudget preserves ledger and preferences with a separate local identity
+     ↓ guarded clone preview preserves source files and reload accepts the same copied state
+     ↓ guarded clone rejects source edits and wrong identities before creating a destination
+     ↓ creation reports incomplete cleanup instead of inviting a blind retry
+     ↓ cloneBudget removes incomplete copies when copying the database fails
+     ↓ renaming preserves identity and local archiving is reversible
+     ↓ sync status reports local unpublished writes without synchronizing or changing them
+     ↓ exportBudget returns bytes that importBudget loads back
+     ↓ importBudget imports from a file path
+     ↓ importBudget rejects with an Error on failure
+   ↓ API CRUD operations (18)
+     ↓ getBudgets
+     ↓ CategoryGroups: successfully update category groups
+     ↓ Categories: successfully update categories
+     ↓ Budgets: successfully update budgets
+     ↓ Accounts: successfully complete account operators
+     ↓ Payees: successfully update payees
+     ↓ Tags: successfully complete tag operations
+     ↓ Tags: create tag with minimal fields
+     ↓ Tags: update single field only
+     ↓ Tags: handle null values correctly
+     ↓ Tags: clear optional field
+     ↓ Notes: successfully get and update note
+     ↓ Rules: successfully update rules
+     ↓ Transactions: successfully update transactions
+     ↓ Transactions: successfully merge two transactions
+     ↓ Transactions: import notes are preserved when importing
+     ↓ Transactions: reimportDeleted=false prevents reimporting deleted transactions
+     ↓ Transactions: reimportDeleted=true reimports deleted transactions
+   ↓ Schedules: successfully complete schedules operations
+   ↓ Preferences: successfully read synced preferences
+   ↓ API preferences: setPreference (5)
+     ↓ successfully sets a single preference
+     ↓ can set multiple preferences
+     ↓ can set feature flag preferences
+     ↓ can set account-specific preferences
+     ↓ can set CSV import preferences
+   ↓ guarded transaction changes (4)
+     ↓ previews without writing, applies exact state, and rejects a stale repeat
+     ↓ rejects edited state, another budget, and invalid fields before a write
+     ↓ previews the full split and applies parent inheritance without preview writes
+     ↓ updates a split child with canonical error recalculation and rejects sibling changes
+   ↓ guarded linked transfer changes (3)
+     ↓ preserves cross-budget categories and rejects changed account references or missing links
+     ↓ previews both sides without writes, mirrors canonical fields, and rejects counterpart edits
+     ↓ includes the counterpart split and recalculates its error through the transfer owner
+   ↓ guarded budget metadata changes (2)
+     ↓ previews rename without writes and rejects stale or wrong-budget metadata
+     ↓ archives only local metadata, preserves pending messages, and supports a zero-write no-op
+   ↓ guarded account creation (2)
+     ↓ account creation previews without writes and acknowledges actual account, payee and opening identities
+     ↓ zero/off-budget account creation preserves canonical opening behavior and rejects changed date, source or identity
+   ↓ guarded account reopening (2)
+     ↓ previews without writes and reopens only visibility through the canonical owner
+     ↓ rejects stale ledger, missing accounts, wrong identities and tampered consequences
+   ↓ guarded account deletion (2)
+     ↓ previews exact deletion and counterpart updates without writes and acknowledges actual IDs
+     ↓ rejects stale or tampered deletion and preserves canonical closed-account no-op
+   ↓ guarded account updates (2)
+     ↓ preview preserves ledger and references and canonical apply keeps omitted fields
+     ↓ rejects stale ledger, deleted groups, wrong identities, and tampered account consequences
+   ↓ guarded account opening references (1)
+     ↓ preview never creates a missing starting balance payee and acknowledged IDs identify its actual creation
+   ↓ guarded budget holds (3)
+     ↓ hold preview preserves state and uses the engine clamp before reset
+     ↓ holds with no available funds acknowledge no change and reset preserves missing-row behavior
+     ↓ holds reject changed ledger inputs, wrong identity, mode and malformed requests
+   ↓ guarded allocation changes (5)
+     ↓ carryover preview preserves rows and applies the complete future month range
+     ↓ carryover binds budget mode and preserves missing-row writer behavior
+     ↓ carryover rejects changed future rows and validates its entire proposal
+     ↓ previews a canonical allocation without writes and preserves carryover when applying
+     ↓ rejects invalid inputs, changed allocation state, and another budget before a write
+   ↓ guarded account closure (3)
+     ↓ previews canonical closing transfers and rules without writes (offbudget=false)
+     ↓ previews canonical closing transfers and rules without writes (offbudget=true)
+     ↓ preserves empty, zero-balance and already-closed behavior and rejects stale or malformed proposals
+   ↓ partial category updates (1)
+     ↓ updates hidden, group and income without requiring a name or changing unrelated fields
+   ❯ guarded category updates (2)
+     × previews the complete public field scope without writes and acknowledges canonical updates 679ms
+     × rejects malformed, stale, tampered and wrong-budget updates before writing 681ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  methods.test.ts > guarded category updates > previews the complete public field scope without writes and acknowledges canonical updates
+TypeError: previewCategoryUpdate is not a function
+ ❯ methods.test.ts:3528:32
+    3526|     const id = await api.createCategory({ name: 'Before guarded catego…
+    3527|     const before = await api.getCategories();
+    3528|     const proposal = await api.previewCategoryUpdate({ id, fields: { n…
+       |                                ^
+    3529|     expect(await api.getCategories()).toEqual(before);
+    3530|     expect(proposal.after).toMatchObject({ id, name: 'After guarded ca…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  methods.test.ts > guarded category updates > rejects malformed, stale, tampered and wrong-budget updates before writing
+TypeError: previewCategoryUpdate is not a function
+ ❯ methods.test.ts:3540:32
+    3538|     const group = await api.createCategoryGroup({ name: 'Stale categor…
+    3539|     const id = await api.createCategory({ name: 'Unchanged guarded', g…
+    3540|     const proposal = await api.previewCategoryUpdate({ id, fields: { h…
+       |                                ^
+    3541|     expect(await api.applyCategoryUpdate({ ...proposal, budget: { ...p…
+    3542|     expect(await api.applyCategoryUpdate({ ...proposal, after: { ...pr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 78 skipped (80)
+   Start at  16:14:12
+   Duration  9.49s (transform 69%, import 17%, tests 14%)
+
+  Transform  transforming modules took 6.48s · 69% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+

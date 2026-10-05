@@ -1,0 +1,40 @@
+✔ retention previews and applies per-source policy while preserving invalid and external artifacts (9394.3155ms)
+✔ restore creates independent local identities and preserves the encrypted source (11534.2676ms)
+✔ isolated validation rejects corrupt archives and listing preserves complete artifacts (5934.563ms)
+✔ an encrypted sync budget creates complete plaintext backups without replacing earlier artifacts (3510.7971ms)
+✔ packaged discovery and validation work without personal configuration (587.1401ms)
+✔ encrypted remote sessions register keys across process restarts (4433.2762ms)
+✔ real server, import deduplication, two clients, and restart (12866.5043ms)
+✔ encrypted first publication survives a lost response, retries one identity, and preserves rename/archive semantics (12072.9116ms)
+✔ CLI clones an encrypted cached budget without modifying or publishing its source (6113.4271ms)
+✔ CLI creates a usable local budget without publishing to its configured server (6280.8385ms)
+✔ publication rejects credential-bearing server URLs before authentication or receipt preparation (5272.8559ms)
+✔ CLI keeps publication uncertain when the upload was not accepted (encrypted=false) (6748.7142ms)
+✔ CLI publication receipts acknowledge and reuse one identity (encrypted=false) (5578.7143ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=null) (3356.842ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=before) (3270.7573ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=after) (3245.3764ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=source-race) (3177.8695ms)
+✔ CLI keeps publication uncertain when the upload was not accepted (encrypted=true) (6314.0798ms)
+✔ CLI publication receipts acknowledge and reuse one identity (encrypted=true) (5449.6648ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=null) (3322.2587ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=before) (3127.2271ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=after) (3179.1256ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=source-race) (3177.5812ms)
+✔ fresh server bootstraps through CLI and authenticates without a browser (2621.1886ms)
+✔ managed lifecycle checks ownership, port, executable, restart, and shutdown (6879.8355ms)
+✔ watch freezes its selected budget while profiles switch and cache identities stay separate (7875.2193ms)
+✔ watch bounds a stalled worker and a subsequent writer can reopen its cache (6346.6232ms)
+✔ encrypted watch reconnects, cancels, and releases its cache for a writer (5803.2524ms)
+✔ a failed push preserves the local write and refresh does not replay it (encrypted=false) (4608.9386ms)
+✔ a failed push preserves the local write and refresh does not replay it (encrypted=true) (4057.0822ms)
+✔ pending status is offline and refresh sends existing writes (encrypted=false) (7356.8537ms)
+✔ pending status is offline and refresh sends existing writes (encrypted=true) (6978.4986ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 55319.2045

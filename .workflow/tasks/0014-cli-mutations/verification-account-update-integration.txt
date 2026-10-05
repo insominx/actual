@@ -1,0 +1,61 @@
+✔ killed apply at before-engine (accounts.update) preserves its durable outcome and never replays (35656.3651ms)
+✔ killed apply at after-engine (accounts.update) preserves its durable outcome and never replays (36160.0396ms)
+✔ killed apply at before-sync (accounts.update) preserves its durable outcome and never replays (37469.3685ms)
+✖ guarded account updates preserve ledger and retries retain later account edits (online) (8577.8881ms)
+✖ guarded account updates preserve ledger and retries retain later account edits (offline) (7899.8507ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 3
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 125849.5438
+
+✖ failing tests:
+
+test at packages\cli\integration\changes.test.mjs:2002:3
+✖ guarded account updates preserve ledger and retries retain later account edits (online) (8577.8881ms)
+  AssertionError [ERR_ASSERTION]: payees
+  + actual - expected
+  
+    {
+      rows: 7,
+  +   sha256: 'cac443d5b2b6a2748bf89c6babdd9dfec26125c61761da6748cb99261e3d35d2'
+  -   sha256: 'f7dc25973e4b7ce8e7ed0795172419e96ef9659738ae2493332df5d4e4c9e92f'
+    }
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:2112:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: { rows: 7, sha256: 'cac443d5b2b6a2748bf89c6babdd9dfec26125c61761da6748cb99261e3d35d2' },
+    expected: { rows: 7, sha256: 'f7dc25973e4b7ce8e7ed0795172419e96ef9659738ae2493332df5d4e4c9e92f' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\changes.test.mjs:2002:3
+✖ guarded account updates preserve ledger and retries retain later account edits (offline) (7899.8507ms)
+  AssertionError [ERR_ASSERTION]: payees
+  + actual - expected
+  
+    {
+      rows: 7,
+  +   sha256: 'bf64b4fcf9aac0114b7b511c2780d4cc134f77ab365a697e25f098938ee5a19e'
+  -   sha256: '999b3901d978ab35365d2026d789c45134a58ecc7141dc005dfb67304bec6572'
+    }
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:2112:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: { rows: 7, sha256: 'bf64b4fcf9aac0114b7b511c2780d4cc134f77ab365a697e25f098938ee5a19e' },
+    expected: { rows: 7, sha256: '999b3901d978ab35365d2026d789c45134a58ecc7141dc005dfb67304bec6572' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

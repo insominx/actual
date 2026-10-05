@@ -1,0 +1,27 @@
+vite v8.1.5 building ssr environment for production...
+[2K
+transforming...✓ 115 modules transformed.
+rendering chunks...
+computing gzip size...
+build/scripts/run-migrations.js                                   0.27 kB │ gzip:  0.22 kB │ map:   0.43 kB
+build/app.js                                                      0.29 kB │ gzip:  0.23 kB │ map:   0.64 kB
+build/chunks/1694362247011-create-secret-table-CG-GivMF.js        0.47 kB │ gzip:  0.31 kB │ map:   0.65 kB
+build/chunks/1763873568237-server-global-prefs-Ci5s7i3D.js        0.48 kB │ gzip:  0.31 kB │ map:   0.72 kB
+build/chunks/1763873600000-backfill-files-owner-CNPMON4X.js       0.51 kB │ gzip:  0.35 kB │ map:   0.85 kB
+build/chunks/1702667624000-rename-nordigen-secrets-BW-LymBo.js    0.74 kB │ gzip:  0.31 kB │ map:   1.04 kB
+build/chunks/1694360479680-create-account-db-CRjaQQFg.js          0.84 kB │ gzip:  0.42 kB │ map:   1.05 kB
+build/chunks/1694360000000-create-folders-DP5YCxxz.js             0.85 kB │ gzip:  0.44 kB │ map:   1.38 kB
+build/scripts/health-check.js                                     0.92 kB │ gzip:  0.47 kB │ map:   1.59 kB
+build/chunks/1718889148000-openid-VFDfSyxT.js                     1.13 kB │ gzip:  0.53 kB │ map:   1.38 kB
+build/scripts/disable-openid.js                                   1.33 kB │ gzip:  0.61 kB │ map:   2.00 kB
+build/scripts/reset-password.js                                   1.59 kB │ gzip:  0.54 kB │ map:   2.48 kB
+build/scripts/enable-openid.js                                    1.61 kB │ gzip:  0.73 kB │ map:   2.39 kB
+build/chunks/prompt-DOMFdmgQ.js                                   1.62 kB │ gzip:  0.62 kB │ map:   3.03 kB
+build/chunks/migrations-CkMiXB0p.js                               2.34 kB │ gzip:  1.02 kB │ map:   3.38 kB
+build/bin/actual-server.js                                        2.49 kB │ gzip:  0.93 kB │ map:   4.59 kB
+build/chunks/1719409568000-multiuser-Cee_tIXg.js                  2.63 kB │ gzip:  0.88 kB │ map:   3.22 kB
+build/chunks/load-config-D2TXNvHj.js                              9.49 kB │ gzip:  2.89 kB │ map:  16.44 kB
+build/chunks/account-db-DP6HlniU.js                              28.08 kB │ gzip:  6.83 kB │ map:  50.77 kB
+build/chunks/app-DSx2Nfu2.js                                    209.35 kB │ gzip: 48.15 kB │ map: 414.59 kB
+
+✓ built in 141ms

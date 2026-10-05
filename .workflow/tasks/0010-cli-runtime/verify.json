@@ -1,0 +1,30 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        { "id": "cli-unit", "command": "yarn workspace @actual-app/cli test" },
+        { "id": "root-types", "command": "yarn typecheck" },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "real-integration",
+          "command": "yarn workspace @actual-app/cli test:integration"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/cli/vite.config.ts packages/sync-server/src/app.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/README.md packages/cli/vite.config.ts packages/sync-server/src/app.ts packages/docs/docs/api/cli.md .workflow/tasks/0010-cli-runtime upcoming-release-notes/agent-cli-runtime.md"
+        }
+      ]
+    }
+  }
+}

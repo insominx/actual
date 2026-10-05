@@ -356,9 +356,9 @@ export async function getCategoriesGrouped(
   }));
 }
 
-export async function insertCategoryGroup(
+export async function inspectCategoryGroupInsertion(
   group: WithRequired<Partial<DbCategoryGroup>, 'name'>,
-): Promise<DbCategoryGroup['id']> {
+) {
   // Don't allow duplicate group
   const existingGroup = await first<
     Pick<DbCategoryGroup, 'id' | 'name' | 'hidden'>
@@ -383,31 +383,42 @@ export async function insertCategoryGroup(
     ...categoryGroupModel.validate(group),
     sort_order,
   };
-  const id: DbCategoryGroup['id'] = await insertWithUUID(
+  return group;
+}
+
+export async function insertCategoryGroup(
+  group: WithRequired<Partial<DbCategoryGroup>, 'name'>,
+): Promise<DbCategoryGroup['id']> {
+  return insertWithUUID(
     'category_groups',
-    group,
+    await inspectCategoryGroupInsertion(group),
   );
-  return id;
+}
+
+export async function inspectCategoryGroupUpdate(
+  group: WithRequired<Partial<DbCategoryGroup>, 'id'>,
+) {
+  group = categoryGroupModel.validate(group, { update: true });
+  if (group.name !== undefined) {
+    const existingGroup = await first<
+      Pick<DbCategoryGroup, 'id' | 'name' | 'hidden'>
+    >(
+      `SELECT id, name, hidden FROM category_groups WHERE UPPER(name) = ? AND id != ? AND tombstone = 0 LIMIT 1`,
+      [group.name.toUpperCase(), group.id],
+    );
+    if (existingGroup) {
+      throw new Error(
+        `A ${existingGroup.hidden ? 'hidden ' : ''}'${existingGroup.name}' category group already exists.`,
+      );
+    }
+  }
+  return group;
 }
 
 export async function updateCategoryGroup(
-  group: WithRequired<Partial<DbCategoryGroup>, 'id' | 'name' | 'is_income'>,
+  group: WithRequired<Partial<DbCategoryGroup>, 'id'>,
 ) {
-  const existingGroup = await first<
-    Pick<DbCategoryGroup, 'id' | 'name' | 'hidden'>
-  >(
-    `SELECT id, name, hidden FROM category_groups WHERE UPPER(name) = ? AND id != ? AND tombstone = 0 LIMIT 1`,
-    [group.name.toUpperCase(), group.id],
-  );
-  if (existingGroup) {
-    throw new Error(
-      `A ${
-        existingGroup.hidden ? 'hidden ' : ''
-      }'${existingGroup.name}' category group already exists.`,
-    );
-  }
-  group = categoryGroupModel.validate(group, { update: true });
-  return update('category_groups', group);
+  return update('category_groups', await inspectCategoryGroupUpdate(group));
 }
 
 export async function moveCategoryGroup(
@@ -425,69 +436,83 @@ export async function moveCategoryGroup(
   await update('category_groups', { id, sort_order });
 }
 
-export async function deleteCategoryGroup(
+export async function inspectCategoryGroupDeletion(
   group: Pick<DbCategoryGroup, 'id'>,
   transferId?: DbCategory['id'] | null,
 ) {
   const categories = await all<DbCategory>(
-    'SELECT * FROM categories WHERE cat_group = ?',
+    'SELECT * FROM categories WHERE cat_group = ? ORDER BY id',
     [group.id],
   );
+  return {
+    group: { id: group.id, tombstone: 1 } satisfies Pick<
+      DbCategoryGroup,
+      'id' | 'tombstone'
+    >,
+    categories: await Promise.all(
+      categories.map(category => inspectCategoryDeletion(category, transferId)),
+    ),
+  };
+}
 
-  // Delete all the categories within a group
-  await Promise.all(categories.map(cat => deleteCategory(cat, transferId)));
-  await delete_('category_groups', group.id);
+export async function deleteCategoryGroup(
+  group: Pick<DbCategoryGroup, 'id'>,
+  transferId?: DbCategory['id'] | null,
+) {
+  const plan = await inspectCategoryGroupDeletion(group, transferId);
+  for (const category of plan.categories) {
+    await applyCategoryDeletionPlan(category);
+  }
+  await delete_('category_groups', plan.group.id);
+}
+
+export async function inspectCategoryInsertion(
+  category: WithRequired<Partial<DbCategory>, 'name' | 'cat_group'>,
+  { atEnd }: { atEnd?: boolean | undefined } = { atEnd: undefined },
+) {
+  const validated = categoryModel.validate(category);
+  const existingCatInGroup = await first<Pick<DbCategory, 'id'>>(
+    `SELECT id FROM categories WHERE cat_group = ? and UPPER(name) = ? and tombstone = 0 LIMIT 1`,
+    [category.cat_group, category.name.toUpperCase()],
+  );
+  if (existingCatInGroup) {
+    throw new Error(
+      `Category '${category.name}' already exists in group '${category.cat_group}'`,
+    );
+  }
+  let sort_order: number;
+  let updates: Array<{ id: string; sort_order: number }> = [];
+  if (atEnd) {
+    const lastCat = await first<Pick<DbCategory, 'sort_order'>>(`
+      SELECT sort_order FROM categories WHERE tombstone = 0 ORDER BY sort_order DESC, id DESC LIMIT 1
+    `);
+    sort_order = (lastCat ? lastCat.sort_order : 0) + SORT_INCREMENT;
+  } else {
+    const categories = await all<Pick<DbCategory, 'id' | 'sort_order'>>(
+      `SELECT id, sort_order FROM categories WHERE cat_group = ? AND tombstone = 0 ORDER BY sort_order, id`,
+      [category.cat_group],
+    );
+    const plan = shoveSortOrders(
+      categories,
+      categories.length > 0 ? categories[0].id : null,
+    );
+    sort_order = plan.sort_order;
+    updates = plan.updates;
+  }
+  return { category: { ...validated, sort_order }, updates };
 }
 
 export async function insertCategory(
   category: WithRequired<Partial<DbCategory>, 'name' | 'cat_group'>,
-  { atEnd }: { atEnd?: boolean | undefined } = { atEnd: undefined },
+  options: { atEnd?: boolean | undefined } = { atEnd: undefined },
 ): Promise<DbCategory['id']> {
-  let sort_order;
-
   let id_: DbCategory['id'];
   await batchMessages(async () => {
-    // Dont allow duplicated names in groups
-    const existingCatInGroup = await first<Pick<DbCategory, 'id'>>(
-      `SELECT id FROM categories WHERE cat_group = ? and UPPER(name) = ? and tombstone = 0 LIMIT 1`,
-      [category.cat_group, category.name.toUpperCase()],
-    );
-    if (existingCatInGroup) {
-      throw new Error(
-        `Category '${category.name}' already exists in group '${category.cat_group}'`,
-      );
+    const plan = await inspectCategoryInsertion(category, options);
+    for (const info of plan.updates) {
+      await update('categories', info);
     }
-
-    if (atEnd) {
-      const lastCat = await first<Pick<DbCategory, 'sort_order'>>(`
-        SELECT sort_order FROM categories WHERE tombstone = 0 ORDER BY sort_order DESC, id DESC LIMIT 1
-      `);
-      sort_order = (lastCat ? lastCat.sort_order : 0) + SORT_INCREMENT;
-    } else {
-      // Unfortunately since we insert at the beginning, we need to shove
-      // the sort orders to make sure there's room for it
-      const categories = await all<Pick<DbCategory, 'id' | 'sort_order'>>(
-        `SELECT id, sort_order FROM categories WHERE cat_group = ? AND tombstone = 0 ORDER BY sort_order, id`,
-        [category.cat_group],
-      );
-
-      const { updates, sort_order: order } = shoveSortOrders(
-        categories,
-        categories.length > 0 ? categories[0].id : null,
-      );
-      for (const info of updates) {
-        await update('categories', info);
-      }
-      sort_order = order;
-    }
-
-    category = {
-      ...categoryModel.validate(category),
-      sort_order,
-    };
-
-    const id = await insertWithUUID('categories', category);
-    // Create an entry in the mapping table that points it to itself
+    const id = await insertWithUUID('categories', plan.category);
     await insert('category_mapping', { id, transferId: id });
     id_ = id;
   });
@@ -495,10 +520,7 @@ export async function insertCategory(
 }
 
 export function updateCategory(
-  category: WithRequired<
-    Partial<DbCategory>,
-    'name' | 'is_income' | 'cat_group'
-  >,
+  category: WithRequired<Partial<DbCategory>, 'id'>,
 ) {
   category = categoryModel.validate(category, { update: true });
   // Change from cat_group to group because category AQL schema named it group.
@@ -527,30 +549,46 @@ export async function moveCategory(
   await update('categories', { id, sort_order, cat_group: groupId });
 }
 
+// Inspect the canonical forwarding writes without changing categories or mappings.
+export async function inspectCategoryDeletion(
+  category: Pick<DbCategory, 'id'>,
+  transferId?: DbCategory['id'] | null,
+): Promise<{
+  category: Pick<DbCategory, 'id' | 'tombstone'>;
+  mappings: DbCategoryMapping[];
+}> {
+  const mappings: DbCategoryMapping[] = [];
+  if (transferId) {
+    const existingTransfers = await all<DbCategoryMapping>(
+      'SELECT * FROM category_mapping WHERE transferId = ? ORDER BY id',
+      [category.id],
+    );
+    for (const mapping of existingTransfers) {
+      mappings.push({ id: mapping.id, transferId });
+    }
+    // Preserve the owner's final self-mapping write, including when it also
+    // appears among the existing forwarding rows.
+    mappings.push({ id: category.id, transferId });
+  }
+  return { category: { id: category.id, tombstone: 1 }, mappings };
+}
+
 export async function deleteCategory(
   category: Pick<DbCategory, 'id'>,
   transferId?: DbCategory['id'] | null,
 ) {
-  if (transferId) {
-    // We need to update all the deleted categories that currently
-    // point to the one we're about to delete so they all are
-    // "forwarded" to the new transferred category.
-    const existingTransfers = await all<DbCategoryMapping>(
-      'SELECT * FROM category_mapping WHERE transferId = ?',
-      [category.id],
-    );
-    for (const mapping of existingTransfers) {
-      await update('category_mapping', {
-        id: mapping.id,
-        transferId,
-      });
-    }
+  return applyCategoryDeletionPlan(
+    await inspectCategoryDeletion(category, transferId),
+  );
+}
 
-    // Finally, map the category we're about to delete to the new one
-    await update('category_mapping', { id: category.id, transferId });
+async function applyCategoryDeletionPlan(
+  plan: Awaited<ReturnType<typeof inspectCategoryDeletion>>,
+) {
+  for (const mapping of plan.mappings) {
+    await update('category_mapping', mapping);
   }
-
-  return delete_('categories', category.id);
+  return delete_('categories', plan.category.id);
 }
 
 export async function getPayee(id: DbPayee['id']) {
@@ -565,10 +603,16 @@ export async function getCategory(id: DbCategory['id']) {
   return first<DbCategory>(`SELECT * FROM categories WHERE id = ?`, [id]);
 }
 
+export function inspectPayeeInsertion(
+  payee: WithRequired<Partial<DbPayee>, 'name'>,
+) {
+  return payeeModel.validate(payee);
+}
+
 export async function insertPayee(
   payee: WithRequired<Partial<DbPayee>, 'name'>,
 ) {
-  payee = payeeModel.validate(payee);
+  payee = inspectPayeeInsertion(payee);
   let id: DbPayee['id'];
   await batchMessages(async () => {
     id = await insertWithUUID('payees', payee);

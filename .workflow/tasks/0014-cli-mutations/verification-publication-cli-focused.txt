@@ -1,0 +1,55 @@
+✖ CLI publication receipts acknowledge and reuse one identity (encrypted=false) (9900.3867ms)
+✔ CLI publication receipts acknowledge and reuse one identity (encrypted=true) (4757.5776ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14724.5332
+
+✖ failing tests:
+
+test at packages\cli\integration\publication.test.mjs:10:3
+✖ CLI publication receipts acknowledge and reuse one identity (encrypted=false) (9900.3867ms)
+  AssertionError [ERR_ASSERTION]: {
+    "schemaVersion": 2,
+    "operation": "changes.apply",
+    "context": {
+      "budgetId": null,
+      "syncId": null,
+      "serverUrl": "http://127.0.0.1:56086",
+      "mode": "no-budget",
+      "currency": null,
+      "scale": 100,
+      "lastSyncedAt": null,
+      "freshness": "unknown",
+      "commit": "none"
+    },
+    "error": {
+      "code": "INVALID_INPUT",
+      "message": "Invalid publication proposal or encryption mode",
+      "retryable": false,
+      "details": {
+        "operationId": "publication-receipt"
+      }
+    },
+    "warnings": []
+  }
+  
+  
+  2 !== 0
+  
+      at invoke (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:23:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:55:25)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

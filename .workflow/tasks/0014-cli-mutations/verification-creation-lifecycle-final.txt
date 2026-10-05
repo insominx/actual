@@ -1,0 +1,11 @@
+✔ encrypted first publication survives a lost response, retries one identity, and preserves rename/archive semantics (10678.8161ms)
+✔ CLI clones an encrypted cached budget without modifying or publishing its source (5441.6365ms)
+✔ CLI creates a usable local budget without publishing to its configured server (5361.8882ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 21552.387

@@ -1,0 +1,13 @@
+✔ guarded account closure preserves its planned transfers and acknowledged retries (online) (6310.4521ms)
+✔ guarded account closure preserves its planned transfers and acknowledged retries (offline) (6187.692ms)
+✔ killed account closure at before-engine retains its exact outcome without replay (33810.4893ms)
+✔ killed account closure at after-engine retains its exact outcome without replay (33996.874ms)
+✔ killed account closure at before-sync retains its exact outcome without replay (35512.4884ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 115886.5318

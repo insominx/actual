@@ -1,0 +1,10 @@
+✔ guarded category creation acknowledges mapping and sibling shoves without replay (online) (6699.2349ms)
+✔ guarded category creation acknowledges mapping and sibling shoves without replay (offline) (6383.8589ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13152.0298

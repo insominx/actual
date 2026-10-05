@@ -1,0 +1,15 @@
+✔ guarded holds clamp funds and receipts preserve later hold and reset writes (online) (13010.7123ms)
+✔ guarded holds clamp funds and receipts preserve later hold and reset writes (offline) (12176.7978ms)
+✔ guarded carryover preserves preview domains and acknowledged retries (online) (8654.7897ms)
+✔ guarded carryover preserves preview domains and acknowledged retries (offline) (8429.1542ms)
+✔ direct allocation receipts prevent replay after another allocation (online) (6519.0138ms)
+✔ direct allocation receipts prevent replay after another allocation (offline) (5814.7281ms)
+✔ guarded allocation preview preserves all domains and applies only its selected amount (8684.3205ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 63363.5155

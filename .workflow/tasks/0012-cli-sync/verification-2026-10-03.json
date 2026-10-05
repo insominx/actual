@@ -1,0 +1,120 @@
+{
+  "ok": true,
+  "projectRoot": "D:\\Projects\\personal\\Budget\\actual",
+  "task": "0012-cli-sync",
+  "profile": "default",
+  "checks": [
+    {
+      "id": "api-unit",
+      "type": "scripted",
+      "command": "yarn workspace @actual-app/api test",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 37912,
+      "stdout": "\n RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/api\n\n ✓ methods.test.ts (37 tests) 28209ms\n   ✓ API setup and teardown (1)\n     ✓ successfully loads budget 691ms\n   ✓ API budget import/export (11)\n     ✓ createBudget loads a local budget and preserves currency after reload 1419ms\n     ✓ creation validates before closing the selected budget 723ms\n     ✓ creation removes incomplete files when the database copy fails 679ms\n     ✓ cloneBudget preserves ledger and preferences with a separate local identity 766ms\n     ✓ creation reports incomplete cleanup instead of inviting a blind retry 717ms\n     ✓ cloneBudget removes incomplete copies when copying the database fails 700ms\n     ✓ renaming preserves identity and local archiving is reversible 739ms\n     ✓ sync status reports local unpublished writes without synchronizing or changing them 1411ms\n     ✓ exportBudget returns bytes that importBudget loads back 757ms\n     ✓ importBudget imports from a file path 748ms\n     ✓ importBudget rejects with an Error on failure 696ms\n   ✓ API CRUD operations (18)\n     ✓ getBudgets 706ms\n     ✓ CategoryGroups: successfully update category groups 763ms\n     ✓ Categories: successfully update categories 743ms\n     ✓ Budgets: successfully update budgets 728ms\n     ✓ Accounts: successfully complete account operators 750ms\n     ✓ Payees: successfully update payees 713ms\n     ✓ Tags: successfully complete tag operations 706ms\n     ✓ Tags: create tag with minimal fields 708ms\n     ✓ Tags: update single field only 696ms\n     ✓ Tags: handle null values correctly 706ms\n     ✓ Tags: clear optional field 685ms\n     ✓ Notes: successfully get and update note 676ms\n     ✓ Rules: successfully update rules 744ms\n     ✓ Transactions: successfully update transactions 761ms\n     ✓ Transactions: successfully merge two transactions 712ms\n     ✓ Transactions: import notes are preserved when importing 776ms\n     ✓ Transactions: reimportDeleted=false prevents reimporting deleted transactions 750ms\n     ✓ Transactions: reimportDeleted=true reimports deleted transactions 721ms\n   ✓ Schedules: successfully complete schedules operations 853ms\n   ✓ Preferences: successfully read synced preferences 729ms\n   ✓ API preferences: setPreference (5)\n     ✓ successfully sets a single preference 696ms\n     ✓ can set multiple preferences 712ms\n     ✓ can set feature flag preferences 711ms\n     ✓ can set account-specific preferences 672ms\n     ✓ can set CSV import preferences 742ms\n\n Test Files  1 passed (1)\n      Tests  37 passed (37)\n   Start at  14:12:40\n   Duration  36.94s (tests 77%, transform 19%, import 5%)\n\n",
+      "stderr": "2:12:46 PM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/chevrotain/lib/src/api.js.\nError: An error occurred while trying to read the map file at api.js.map\nError: ENOENT: no such file or directory, open 'D:\\Projects\\personal\\Budget\\actual\\node_modules\\chevrotain\\lib\\src\\api.js.map'\n    at Object.readFileSync (node:fs:436:20)\n    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13\n    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)\n    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)\n    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)\n    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)\n    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)\nstderr | methods.test.ts > API budget import/export > importBudget rejects with an Error on failure\n[Exception] Error: Error importing budget: File not found at the provided path: /does/not/exist.zip\n    at importBudget (D:/Projects/personal/Budget/actual/packages/loot-core/src/server/budgetfiles/app.ts:532:15)\n\n"
+    },
+    {
+      "id": "cli-unit",
+      "type": "scripted",
+      "command": "yarn workspace @actual-app/cli test",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 1339,
+      "stdout": "\n RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli\n\n\n Test Files  14 passed (14)\n      Tests  210 passed (210)\n   Start at  14:13:18\n   Duration  481ms (transform 51%, import 24%, tests 22%, worker 3%)\n\n",
+      "stderr": "2:13:19 PM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/cosmiconfig/dist/index.js.\nError: An error occurred while trying to read the map file at index.js.map\nError: ENOENT: no such file or directory, open 'D:\\Projects\\personal\\Budget\\actual\\node_modules\\cosmiconfig\\dist\\index.js.map'\n    at Object.readFileSync (node:fs:436:20)\n    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13\n    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)\n    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)\n    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)\n    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)\n    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)\n"
+    },
+    {
+      "id": "server-unit",
+      "type": "scripted",
+      "command": "yarn workspace @actual-app/sync-server test app-sync.test.ts",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 2145,
+      "stdout": "\n RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/sync-server\n\nChecking if there are any migrations to run for direction \"up\"...\nMigrations: DONE\nstdout | src/app-sync.test.ts > initial encrypted publication > stores the key and encrypted file in the first upload\n2026-10-03T21:13:20.804Z info: POST 200 /upload-user-file\r\n\nstdout | src/app-sync.test.ts > initial encrypted publication > stores the key and encrypted file in the first upload\n2026-10-03T21:13:20.814Z info: POST 200 /user-get-key\r\n\nstdout | src/app-sync.test.ts > initial encrypted publication > rejects malformed initial keys before writing a file\n2026-10-03T21:13:20.818Z info: POST 400 /upload-user-file\r\n\nstdout | src/app-sync.test.ts > /user-get-key > returns encryption key details for a given fileId\n2026-10-03T21:13:20.830Z info: POST 200 /user-get-key\r\n\nstdout | src/app-sync.test.ts > /user-get-key > returns 400 if the file is not found\n2026-10-03T21:13:20.833Z info: POST 400 /user-get-key\r\n\nstdout | src/app-sync.test.ts > /user-get-key > returns 400 for invalid fileId format\n2026-10-03T21:13:20.836Z info: POST 400 /user-get-key\r\n\nstdout | src/app-sync.test.ts > /user-get-key > returns 403 when non-owner gets encryption key\n2026-10-03T21:13:20.844Z info: POST 403 /user-get-key\r\n\nstdout | src/app-sync.test.ts > /user-get-key > allows an admin to get encryption key for another user's file\n2026-10-03T21:13:20.852Z info: POST 200 /user-get-key\r\n\nstdout | src/app-sync.test.ts > /user-create-key > returns 400 if the file is not found\n2026-10-03T21:13:20.857Z info: POST 400 /user-create-key\r\n\nstdout | src/app-sync.test.ts > /user-create-key > returns 400 for invalid fileId format\n2026-10-03T21:13:20.859Z info: POST 400 /user-create-key\r\n\nstdout | src/app-sync.test.ts > /user-create-key > returns 403 when non-owner creates encryption key\n2026-10-03T21:13:20.867Z info: POST 403 /user-create-key\r\n\nstdout | src/app-sync.test.ts > /user-create-key > allows an admin to create encryption key for another user's file\n2026-10-03T21:13:20.879Z info: POST 200 /user-create-key\r\n\nstdout | src/app-sync.test.ts > /user-create-key > returns 403 when a shared user (user_access only) tries to create a key on a file owned by someone else\n2026-10-03T21:13:20.892Z info: POST 403 /user-create-key\r\n\nstdout | src/app-sync.test.ts > /user-create-key > creates a new encryption key for the file\n2026-10-03T21:13:20.905Z info: POST 200 /user-create-key\r\n\nstdout | src/app-sync.test.ts > /reset-user-file > resets the user file and deletes the group file\nUnable to delete sync data for group \"test-group-id\"\n2026-10-03T21:13:20.926Z info: POST 200 /reset-user-file\r\n\nstdout | src/app-sync.test.ts > /reset-user-file > returns 400 if the file is not found\n2026-10-03T21:13:20.930Z info: POST 400 /reset-user-file\r\n\nstdout | src/app-sync.test.ts > /reset-user-file > returns 400 for invalid fileId format\n2026-10-03T21:13:20.933Z info: POST 400 /reset-user-file\r\n\nstdout | src/app-sync.test.ts > /reset-user-file > returns 403 when non-owner resets another user file\n2026-10-03T21:13:20.940Z info: POST 403 /reset-user-file\r\n\nstdout | src/app-sync.test.ts > /reset-user-file > allows an admin to reset another user's file\nUnable to delete sync data for group \"admin-reset-group-id\"\n2026-10-03T21:13:20.952Z info: POST 200 /reset-user-file\r\n\nstdout | src/app-sync.test.ts > /reset-user-file > returns 403 when a shared user (user_access only) tries to reset a file owned by someone else\n2026-10-03T21:13:20.965Z info: POST 403 /reset-user-file\r\n\nstdout | src/app-sync.test.ts > /upload-user-file > returns 400 if x-actual-name header is missing\n2026-10-03T21:13:20.971Z info: POST 400 /upload-user-file\r\n\nstdout | src/app-sync.test.ts > /upload-user-file > returns 400 if fileId is missing\n2026-10-03T21:13:20.973Z info: POST 400 /upload-user-file\r\n\nstdout | src/app-sync.test.ts > /upload-user-file > returns 400 for invalid fileId format\n2026-10-03T21:13:20.975Z info: POST 400 /upload-user-file\r\n\nstdout | src/app-sync.test\n[truncated 7948 chars]",
+      "stderr": ""
+    },
+    {
+      "id": "root-types",
+      "type": "scripted",
+      "command": "yarn typecheck",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 4599,
+      "stdout": "@actual-app/ci-actions typecheck … queued\n@actual-app/components typecheck … queued\n@actual-app/crdt typecheck … queued\nplugins-service typecheck … queued\n@actual-app/ci-actions typecheck ➔ start\n@actual-app/components typecheck ➔ start\n@actual-app/ci-actions typecheck » skip - a15bf2f851e791f66552eb8704bef90aaa2afe3e\n@actual-app/crdt typecheck ➔ start\n@actual-app/crdt typecheck » skip - 1842a47eb61ba5c7646b83ea6db2760c1023b597\n@actual-app/core typecheck … queued\nplugins-service typecheck ➔ start\nplugins-service typecheck » skip - 7d72e72d9e5af9dfa737dcf25809c86147dd79e6\n@actual-app/core typecheck ➔ start\n@actual-app/components typecheck » skip - cfff67e84b2e8caef320ddc03f0bf7155f809eae\n@actual-app/core typecheck » skip - ae30cbe6102571385b26a2964835f7e6061449d6\n@actual-app/api typecheck … queued\n@actual-app/web typecheck … queued\n@actual-app/api typecheck ➔ start\n@actual-app/web typecheck ➔ start\n@actual-app/api typecheck » skip - 321540fb83c473830b86934d96c204a4b2c1d113\n@actual-app/cli typecheck … queued\n@actual-app/cli typecheck ➔ start\n@actual-app/web typecheck » skip - 39912469014135db15709120b98dba5cb20a1acc\n@actual-app/sync-server typecheck … queued\n@actual-app/sync-server typecheck ➔ start\n@actual-app/sync-server typecheck » skip - badabd48e9939c0fe6d312d5e421ba328aaac1f5\ndesktop-electron typecheck … queued\ndesktop-electron typecheck ➔ start\ndesktop-electron typecheck » skip - eaca791a0163f7e1285e76fb49b9e5c1628c2511\n@actual-app/cli typecheck ✓ done - 2.35s\n\nSummary\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n@actual-app/cli typecheck success, took 2.35s, queued for 0.00s\nsuccess: 1, skipped: 9, pending: 0, aborted: 0, failed: 0\nworker restarts: 0, max worker memory usage: 51.23 MB\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\nTook a total of 3.39s to complete. \n",
+      "stderr": ""
+    },
+    {
+      "id": "cli-build",
+      "type": "scripted",
+      "command": "yarn exec lage build --scope=@actual-app/cli --no-cache",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 7118,
+      "stdout": "@actual-app/crdt build … queued\n@actual-app/crdt build ➔ start\n@actual-app/crdt build ✓ done - 1.52s\n@actual-app/core build … queued\n@actual-app/core build ➔ start\n@actual-app/core build ✓ done - 0.59s\n@actual-app/api build … queued\n@actual-app/api build ➔ start\n@actual-app/api build ✓ done - 2.51s\n@actual-app/cli build … queued\n@actual-app/cli build ➔ start\n@actual-app/cli build ✓ done - 1.44s\n\nSummary\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n@actual-app/cli build success, took 1.44s, queued for 0.00s\n@actual-app/api build success, took 2.51s, queued for 0.00s\n@actual-app/crdt build success, took 1.52s, queued for 0.00s\n@actual-app/core build success, took 0.59s, queued for 0.00s\nsuccess: 4, skipped: 0, pending: 0, aborted: 0, failed: 0\nworker restarts: 0, max worker memory usage: 13.44 MB\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\nTook a total of 6.05s to complete. \n",
+      "stderr": ""
+    },
+    {
+      "id": "server-build",
+      "type": "scripted",
+      "command": "yarn workspace @actual-app/sync-server build",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 895,
+      "stdout": "vite v8.1.5 building ssr environment for production...\n\u001b[2K\rtransforming...✓ 115 modules transformed.\nrendering chunks...\ncomputing gzip size...\nbuild/scripts/run-migrations.js                                   0.27 kB │ gzip:  0.22 kB │ map:   0.43 kB\nbuild/app.js                                                      0.29 kB │ gzip:  0.23 kB │ map:   0.64 kB\nbuild/chunks/1694362247011-create-secret-table-CG-GivMF.js        0.47 kB │ gzip:  0.31 kB │ map:   0.65 kB\nbuild/chunks/1763873568237-server-global-prefs-Ci5s7i3D.js        0.48 kB │ gzip:  0.31 kB │ map:   0.72 kB\nbuild/chunks/1763873600000-backfill-files-owner-CNPMON4X.js       0.51 kB │ gzip:  0.35 kB │ map:   0.85 kB\nbuild/chunks/1702667624000-rename-nordigen-secrets-BW-LymBo.js    0.74 kB │ gzip:  0.31 kB │ map:   1.04 kB\nbuild/chunks/1694360479680-create-account-db-CRjaQQFg.js          0.84 kB │ gzip:  0.42 kB │ map:   1.05 kB\nbuild/chunks/1694360000000-create-folders-DP5YCxxz.js             0.85 kB │ gzip:  0.44 kB │ map:   1.38 kB\nbuild/scripts/health-check.js                                     0.92 kB │ gzip:  0.47 kB │ map:   1.59 kB\nbuild/chunks/1718889148000-openid-VFDfSyxT.js                     1.13 kB │ gzip:  0.53 kB │ map:   1.38 kB\nbuild/scripts/disable-openid.js                                   1.33 kB │ gzip:  0.61 kB │ map:   2.00 kB\nbuild/scripts/reset-password.js                                   1.59 kB │ gzip:  0.54 kB │ map:   2.48 kB\nbuild/scripts/enable-openid.js                                    1.61 kB │ gzip:  0.73 kB │ map:   2.39 kB\nbuild/chunks/prompt-DOMFdmgQ.js                                   1.62 kB │ gzip:  0.62 kB │ map:   3.03 kB\nbuild/chunks/migrations-CkMiXB0p.js                               2.34 kB │ gzip:  1.02 kB │ map:   3.38 kB\nbuild/bin/actual-server.js                                        2.49 kB │ gzip:  0.93 kB │ map:   4.59 kB\nbuild/chunks/1719409568000-multiuser-Cee_tIXg.js                  2.63 kB │ gzip:  0.88 kB │ map:   3.22 kB\nbuild/chunks/load-config-D2TXNvHj.js                              9.49 kB │ gzip:  2.89 kB │ map:  16.44 kB\nbuild/chunks/account-db-DP6HlniU.js                              28.08 kB │ gzip:  6.83 kB │ map:  50.77 kB\nbuild/chunks/app-DSx2Nfu2.js                                    209.35 kB │ gzip: 48.15 kB │ map: 414.59 kB\n\n✓ built in 137ms\n",
+      "stderr": ""
+    },
+    {
+      "id": "browser-build",
+      "type": "scripted",
+      "command": "yarn exec lage build:browser --to=@actual-app/web",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 24372,
+      "stdout": "plugins-service build … queued\n@actual-app/crdt build … queued\nplugins-service build ➔ start\n@actual-app/crdt build ➔ start\nplugins-service build » skip - 30be54c7e4d62a5f8fd35c6e78f8e3173522f548\n@actual-app/crdt build » skip - 2deb16b6d54eef12c9498dceab0466922f9046ca\n@actual-app/core build … queued\n@actual-app/core build ➔ start\n@actual-app/core build ✓ done - 1.24s\n@actual-app/web build:browser … queued\n@actual-app/web build:browser ➔ start\n@actual-app/web build:browser ✓ done - 21.91s\n\nSummary\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n@actual-app/web build:browser success, took 21.91s, queued for 0.00s\n@actual-app/core build success, took 1.24s, queued for 0.00s\nsuccess: 2, skipped: 2, pending: 0, aborted: 0, failed: 0\nworker restarts: 0, max worker memory usage: 28.66 MB\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\nTook a total of 23.32s to complete. \n",
+      "stderr": ""
+    },
+    {
+      "id": "real-integration",
+      "type": "scripted",
+      "command": "yarn workspace @actual-app/cli test:integration",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 22216,
+      "stdout": "✔ packaged discovery and validation work without personal configuration (548.5069ms)\n✔ encrypted remote sessions register keys across process restarts (3935.5705ms)\n✔ real server, import deduplication, two clients, and restart (12191.1051ms)\n✔ encrypted first publication survives a lost response, retries one identity, and preserves rename/archive semantics (10574.4134ms)\n✔ CLI clones an encrypted cached budget without modifying or publishing its source (5649.5331ms)\n✔ CLI creates a usable local budget without publishing to its configured server (5282.7892ms)\n✔ fresh server bootstraps through CLI and authenticates without a browser (2482.5808ms)\n✔ managed lifecycle checks ownership, port, executable, restart, and shutdown (6445.7859ms)\n✔ pending status is offline and refresh sends existing writes (encrypted=false) (7427.3964ms)\n✔ pending status is offline and refresh sends existing writes (encrypted=true) (6763.3547ms)\nℹ tests 10\nℹ suites 0\nℹ pass 10\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 21586.5184\n",
+      "stderr": ""
+    },
+    {
+      "id": "lint",
+      "type": "scripted",
+      "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/cli/vite.config.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/loot-core/src/server/sync/index.ts",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 1265,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "id": "format",
+      "type": "scripted",
+      "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/vite.config.ts packages/cli/README.md packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/docs/docs/api/cli.md .workflow/tasks/0010-cli-runtime .workflow/tasks/0011-cli-budget-lifecycle/plan.review.md .workflow/tasks/0011-cli-budget-lifecycle/execution-decisions.md .workflow/tasks/0011-cli-budget-lifecycle/verify.json upcoming-release-notes/agent-cli-runtime.md upcoming-release-notes/agent-cli-budget-creation.md packages/loot-core/src/server/sync/index.ts",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 991,
+      "stdout": "Checking formatting...\n\nAll matched files use the correct format.\nFinished in 274ms on 82 files using 32 threads.\n",
+      "stderr": ""
+    }
+  ],
+  "markdownRows": [
+    "| scripted | api-unit | pass | 37912ms |",
+    "| scripted | cli-unit | pass | 1339ms |",
+    "| scripted | server-unit | pass | 2145ms |",
+    "| scripted | root-types | pass | 4599ms |",
+    "| scripted | cli-build | pass | 7118ms |",
+    "| scripted | server-build | pass | 895ms |",
+    "| scripted | browser-build | pass | 24372ms |",
+    "| scripted | real-integration | pass | 22216ms |",
+    "| scripted | lint | pass | 1265ms |",
+    "| scripted | format | pass | 991ms |"
+  ]
+}

@@ -1,0 +1,54 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+ ❯ src/change-journal.test.ts (4 tests | 2 failed) 1381ms
+   × removes only matching redundant staging copies without promoting an uncertain receipt 19ms
+   × preserves orphan and malformed staging files and blocks a new apply intent before budget work 15ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/change-journal.test.ts > removes only matching redundant staging copies without promoting an uncertain receipt
+TypeError: Cannot read properties of undefined (reading 'total')
+ ❯ src/change-journal.test.ts:129:32
+    127|       expect(await journal.read('crash-commit')).toMatchObject({ state…
+    128|       const inventory = await journal.list(100);
+    129|       expect(inventory.staging.total).toBe(0);
+       |                                ^
+    130|       expect((await readdir(directory)).filter(name => name.endsWith('…
+    131|       expect(await readFile(join(directory, 'unrelated.txt'), 'utf8'))…
+ ❯ withChangeJournal src/change-journal.ts:71:12
+ ❯ src/change-journal.test.ts:126:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/change-journal.test.ts > preserves orphan and malformed staging files and blocks a new apply intent before budget work
+AssertionError: expected undefined to match object { total: 2, truncated: true, …(1) }
+
+- Expected:
+{
+  "blocksMutations": true,
+  "total": 2,
+  "truncated": true,
+}
+
++ Received:
+undefined
+
+ ❯ src/change-journal.test.ts:154:33
+    152|     await withChangeJournal(root, 1, async journal => {
+    153|       const inventory = await journal.list(1);
+    154|       expect(inventory.staging).toMatchObject({ total: 2, truncated: t…
+       |                                 ^
+    155|       await expect(journal.prepare('new-operation', proposal)).rejects…
+    156|       await expect(journal.write({ ...receipt, state: 'uncertain' })).…
+ ❯ withChangeJournal src/change-journal.ts:71:12
+ ❯ src/change-journal.test.ts:152:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  18:03:53
+   Duration  1.55s (tests 95%, transform 3%, import 1%)
+

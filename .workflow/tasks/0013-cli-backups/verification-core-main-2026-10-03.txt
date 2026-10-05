@@ -1,0 +1,34 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+ ❯ src/server/main.test.ts (8 tests | 2 failed) 1221ms
+   ❯ Budgets (2)
+     × budget is successfully loaded 808ms
+     × budget detects out of sync migrations 51ms
+   ✓ Accounts (1)
+     ✓ Transfers are properly updated 79ms
+   ✓ Budget (2)
+     ✓ new budgets should be created 59ms
+     ✓ budget updates when changing a category 53ms
+   ✓ Categories (3)
+     ✓ can be deleted 49ms
+     ✓ transfers properly when deleted 63ms
+     ✓ do not count as overspent when deleted 58ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/main.test.ts > Budgets > budget is successfully loaded
+ FAIL  src/server/main.test.ts > Budgets > budget detects out of sync migrations
+Error: EBUSY: resource busy or locked, unlink 'D:\Projects\personal\Budget\actual\packages\loot-core\src\mocks\files\budgets\test-budget\db.sqlite'
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/server/main.test.ts > Budgets > budget detects out of sync migrations
+Error: EEXIST: file already exists, mkdir 'D:\Projects\personal\Budget\actual\packages\loot-core\src\mocks\files\budgets\test-budget'
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 6 passed (8)
+   Start at  15:10:03
+   Duration  4.28s (setup 36%, tests 29%, transform 26%, import 10%)
+

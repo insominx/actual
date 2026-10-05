@@ -1,0 +1,101 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/api
+
+5:52:55 PM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/chevrotain/lib/src/api.js.
+Error: An error occurred while trying to read the map file at api.js.map
+Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\node_modules\chevrotain\lib\src\api.js.map'
+    at Object.readFileSync (node:fs:436:20)
+    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13
+    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)
+    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)
+    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)
+    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)
+    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)
+ ❯ methods.test.ts (44 tests | 2 failed | 42 skipped) 1455ms
+   ↓ API setup and teardown (1)
+     ↓ successfully loads budget
+   ↓ API budget import/export (14)
+     ↓ createBudget loads a local budget and preserves currency after reload
+     ↓ restoreBudget creates a new identity without replacing its source
+     ↓ restore removes invalid SQLite archives and incomplete writes without modifying existing budgets
+     ↓ restore never cleans up a directory when exclusive creation failed
+     ↓ creation validates before closing the selected budget
+     ↓ creation removes incomplete files when the database copy fails
+     ↓ cloneBudget preserves ledger and preferences with a separate local identity
+     ↓ creation reports incomplete cleanup instead of inviting a blind retry
+     ↓ cloneBudget removes incomplete copies when copying the database fails
+     ↓ renaming preserves identity and local archiving is reversible
+     ↓ sync status reports local unpublished writes without synchronizing or changing them
+     ↓ exportBudget returns bytes that importBudget loads back
+     ↓ importBudget imports from a file path
+     ↓ importBudget rejects with an Error on failure
+   ↓ API CRUD operations (18)
+     ↓ getBudgets
+     ↓ CategoryGroups: successfully update category groups
+     ↓ Categories: successfully update categories
+     ↓ Budgets: successfully update budgets
+     ↓ Accounts: successfully complete account operators
+     ↓ Payees: successfully update payees
+     ↓ Tags: successfully complete tag operations
+     ↓ Tags: create tag with minimal fields
+     ↓ Tags: update single field only
+     ↓ Tags: handle null values correctly
+     ↓ Tags: clear optional field
+     ↓ Notes: successfully get and update note
+     ↓ Rules: successfully update rules
+     ↓ Transactions: successfully update transactions
+     ↓ Transactions: successfully merge two transactions
+     ↓ Transactions: import notes are preserved when importing
+     ↓ Transactions: reimportDeleted=false prevents reimporting deleted transactions
+     ↓ Transactions: reimportDeleted=true reimports deleted transactions
+   ↓ Schedules: successfully complete schedules operations
+   ↓ Preferences: successfully read synced preferences
+   ↓ API preferences: setPreference (5)
+     ↓ successfully sets a single preference
+     ↓ can set multiple preferences
+     ↓ can set feature flag preferences
+     ↓ can set account-specific preferences
+     ↓ can set CSV import preferences
+   ↓ guarded transaction changes (2)
+     ↓ previews without writing, applies exact state, and rejects a stale repeat
+     ↓ rejects edited state, another budget, invalid fields, and unsupported split scope before a write
+   ❯ guarded allocation changes (2)
+     × previews a canonical allocation without writes and preserves carryover when applying 745ms
+     × rejects invalid inputs, changed allocation state, and another budget before a write 709ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  methods.test.ts > guarded allocation changes > previews a canonical allocation without writes and preserves carryover when applying
+TypeError: previewBudgetAmount is not a function
+ ❯ methods.test.ts:1673:32
+    1671|     await api.setBudgetCarryover('2023-10', categoryId, true);
+    1672|     const before = await api.getBudgetMonth('2023-10');
+    1673|     const proposal = await api.previewBudgetAmount({ month: '2023-10',…
+       |                                ^
+    1674|     expect(proposal.operation).toBe('budgets.set-amount');
+    1675|     expect(proposal.before.amount).toBe(100);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  methods.test.ts > guarded allocation changes > rejects invalid inputs, changed allocation state, and another budget before a write
+TypeError: previewBudgetAmount is not a function
+ ❯ methods.test.ts:1686:32
+    1684|     const group = await api.createCategoryGroup({ name: 'Allocation st…
+    1685|     const categoryId = await api.createCategory({ name: 'Allocation st…
+    1686|     const proposal = await api.previewBudgetAmount({ month: '2023-10',…
+       |                                ^
+    1687|     expect(proposal.before.amount).toBe(0);
+    1688|     expect(proposal.before.row).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 42 skipped (44)
+   Start at  17:52:50
+   Duration  10.65s (transform 70%, import 16%, tests 14%)
+
+  Transform  transforming modules took 7.36s · 70% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+

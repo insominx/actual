@@ -1,0 +1,10 @@
+✔ guarded publication API preserves preview, rejects stale input and publishes one identity (encrypted=false) (3132.7005ms)
+✔ guarded publication API preserves preview, rejects stale input and publishes one identity (encrypted=true) (3074.0579ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6262.0138

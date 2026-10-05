@@ -1,0 +1,55 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+ ❯ src/server/main.test.ts (19 tests | 1 failed | 18 skipped) 67ms
+   ↓ Budgets (2)
+     ↓ budget is successfully loaded
+     ↓ budget detects out of sync migrations
+   ❯ Accounts (12)
+     ↓ invalid remote unlink preserves account: missing bank
+     ↓ invalid remote unlink preserves account: missing server
+     × account closure inspection is read-only and includes future split balances 66ms
+     ↓ invalid account closure preserves provider and ledger: missing required destination
+     ↓ invalid account closure preserves provider and ledger: self transfer
+     ↓ invalid account closure preserves provider and ledger: missing destination
+     ↓ invalid account closure preserves provider and ledger: deleted destination
+     ↓ invalid account closure preserves provider and ledger: missing destination payee
+     ↓ invalid account closure preserves provider and ledger: missing closing category
+     ↓ invalid account closure preserves provider and ledger: missing deletion payee
+     ↓ invalid account closure preserves provider and ledger: missing closing payee
+     ↓ Transfers are properly updated
+   ↓ Budget (2)
+     ↓ new budgets should be created
+     ↓ budget updates when changing a category
+   ↓ Categories (3)
+     ↓ can be deleted
+     ↓ transfers properly when deleted
+     ↓ do not count as overspent when deleted
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/main.test.ts > Accounts > account closure inspection is read-only and includes future split balances
+AssertionError: expected -934 to be 934 // Object.is equality
+
+- Expected
++ Received
+
+- 934
++ -934
+
+ ❯ src/server/main.test.ts:214:32
+    212|       transferAccountId: 'destination',
+    213|     });
+    214|     expect(inspection.balance).toBe(934);
+       |                                ^
+    215|     expect(inspection.numTransactions).toBe(4);
+    216|     expect(inspection.sourceTransferPayee?.id).toBe('transfer-closing'…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 18 skipped (19)
+   Start at  12:29:50
+   Duration  3.16s (setup 62%, transform 35%, tests 2%, import 1%)
+

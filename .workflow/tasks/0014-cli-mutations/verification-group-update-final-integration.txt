@@ -1,0 +1,17 @@
+✔ guarded category updates preserve raw domains and acknowledged retries (online) (5659.2664ms)
+✔ guarded category updates preserve raw domains and acknowledged retries (offline) (5493.7303ms)
+✔ guarded group creation preserves raw domains and acknowledged identities (online) (6492.7816ms)
+✔ guarded group creation preserves raw domains and acknowledged identities (offline) (5998.2635ms)
+✔ guarded group updates preserve raw domains and acknowledged retries (online) (5939.4089ms)
+✔ guarded group updates preserve raw domains and acknowledged retries (offline) (5475.377ms)
+✔ killed group update at before-engine retains its exact outcome without replay (35323.7567ms)
+✔ killed group update at after-engine retains its exact outcome without replay (34721.8247ms)
+✔ killed group update at before-sync retains its exact outcome without replay (35285.0011ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 140482.0368

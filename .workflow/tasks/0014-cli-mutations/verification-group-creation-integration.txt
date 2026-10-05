@@ -1,0 +1,10 @@
+✔ guarded group creation preserves raw domains and acknowledged identities (online) (7258.5566ms)
+✔ guarded group creation preserves raw domains and acknowledged identities (offline) (6521.4218ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13869.0301

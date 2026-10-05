@@ -1,0 +1,45 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+ ❯ src/server/transactions/transfer.test.ts (4 tests | 1 failed | 3 skipped) 72ms
+   ❯ Transfer (4)
+     × updates a linked split child and recalculates its parent error without changing its total 71ms
+     ↓ transfers are properly inserted/updated/deleted
+     ↓ transfers are properly de-categorized
+     ↓ split transfers are retained on child transactions
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/transactions/transfer.test.ts > Transfer > updates a linked split child and recalculates its parent error without changing its total
+AssertionError: expected { id: 'id5', is_parent: true, …(19) } to match object { amount: -300, error: { …(3) } }
+(19 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "amount": -300,
+-   "error": {
+-     "difference": 10,
+-     "type": "SplitTransactionError",
+-     "version": 1,
+-   },
++   "error": null,
+  }
+
+ ❯ src/server/transactions/transfer.test.ts:93:47
+     91|       notes: 'counterpart edit',
+     92|     });
+     93|     expect(await db.getTransaction(parentId)).toMatchObject({
+       |                                               ^
+     94|       amount: -300,
+     95|       error: { type: 'SplitTransactionError', difference: 10, version:…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  18:50:38
+   Duration  3.01s (setup 62%, transform 35%, tests 2%)
+

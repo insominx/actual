@@ -5,8 +5,8 @@ import { resolveName } from '#server/spreadsheet/util';
 // @ts-strict-ignore
 import * as monthUtils from '#shared/months';
 import { q } from '#shared/query';
-import { getChangedValues } from '#shared/util';
-import type { CategoryGroupEntity } from '#types/models';
+import { getChangedValues, safeNumber } from '#shared/util';
+import type { CategoryEntity, CategoryGroupEntity } from '#types/models';
 
 import * as budgetActions from './actions';
 import * as envelopeBudget from './envelope';
@@ -242,27 +242,42 @@ export function triggerBudgetChanges(oldValues, newValues) {
   }
 }
 
-export async function doTransfer(categoryIds, transferId) {
+export function inspectBudgetTransfer(
+  categoryIds: ReadonlyArray<CategoryEntity['id']>,
+  transferId: CategoryEntity['id'],
+) {
   const { createdMonths: months } = sheet.get().meta();
-
-  [...months].forEach(month => {
-    const totalValue = categoryIds
-      .map(id => {
-        return budgetActions.getBudget({ month, category: id });
-      })
-      .reduce((total, value) => total + value, 0);
-
-    const transferValue = budgetActions.getBudget({
+  return [...months].sort().map(month => {
+    const sources = categoryIds.map(category => ({
+      category,
+      ...budgetActions.inspectBudgetAmount({ month, category }),
+    }));
+    const before = budgetActions.inspectBudgetAmount({
       month,
       category: transferId,
     });
-
-    void budgetActions.setBudget({
+    const totalValue = sources.reduce(
+      (total, source) => total + source.amount,
+      0,
+    );
+    return {
       month,
       category: transferId,
-      amount: totalValue + transferValue,
-    });
+      amount: safeNumber(totalValue + before.amount),
+      before,
+      sources,
+    };
   });
+}
+
+export async function doTransfer(
+  categoryIds: ReadonlyArray<CategoryEntity['id']>,
+  transferId: CategoryEntity['id'],
+) {
+  const plan = inspectBudgetTransfer(categoryIds, transferId);
+  for (const { month, category, amount } of plan) {
+    await budgetActions.setBudget({ month, category, amount });
+  }
 }
 
 export async function createBudget(months) {

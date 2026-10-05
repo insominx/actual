@@ -1,0 +1,17 @@
+✔ guarded category creation acknowledges mapping and sibling shoves without replay (online) (6772.7617ms)
+✔ guarded category creation acknowledges mapping and sibling shoves without replay (offline) (6121.2806ms)
+✔ guarded category deletion preserves raw domains and never replays acknowledged transfers (online) (8822.7071ms)
+✔ guarded category deletion preserves raw domains and never replays acknowledged transfers (offline) (7937.2589ms)
+✔ guarded group creation preserves raw domains and acknowledged identities (online) (6734.8776ms)
+✔ guarded group creation preserves raw domains and acknowledged identities (offline) (6192.6387ms)
+✔ killed group creation at before-engine retains its exact outcome without replay (34520.2666ms)
+✔ killed group creation at after-engine retains its exact outcome without replay (34968.5933ms)
+✔ killed group creation at before-sync retains its exact outcome without replay (35659.0647ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 147797.5472

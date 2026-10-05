@@ -1,0 +1,31 @@
+✖ guarded restore preserves the rich source and retries one destination without needing the retained archive (3315.2387ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3399.5547
+
+✖ failing tests:
+
+test at packages\cli\integration\changes.test.mjs:19:1
+✖ guarded restore preserves the rich source and retries one destination without needing the retained archive (3315.2387ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '7dd5d273d729d27d307007fd41cfa9e5b8e23ecdb3c737b47d317cd9bb95dfa9'
+  - undefined
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/changes.test.mjs:61:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '7dd5d273d729d27d307007fd41cfa9e5b8e23ecdb3c737b47d317cd9bb95dfa9',
+    expected: undefined,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

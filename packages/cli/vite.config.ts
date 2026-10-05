@@ -19,12 +19,19 @@ export default defineConfig({
     outDir: path.resolve(__dirname, 'dist'),
     emptyOutDir: true,
     lib: {
-      entry: path.resolve(__dirname, 'src/index.ts'),
+      entry: {
+        cli: path.resolve(__dirname, 'src/index.ts'),
+        'server-runner': path.resolve(__dirname, 'src/server-runner.ts'),
+        'sync-worker': path.resolve(__dirname, 'src/sync-worker.ts'),
+        'backup-worker': path.resolve(__dirname, 'src/backup-worker.ts'),
+        'budget-snapshot': path.resolve(__dirname, 'src/budget-snapshot.ts'),
+      },
       formats: ['es'],
     },
     rollupOptions: {
       output: {
-        entryFileNames: 'cli.js',
+        entryFileNames: '[name].js',
+        chunkFileNames: '[name]-[hash].js',
         banner: chunk => (chunk.isEntry ? '#!/usr/bin/env node' : ''),
       },
     },

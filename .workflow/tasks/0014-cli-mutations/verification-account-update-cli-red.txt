@@ -1,0 +1,41 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+11:25:03 AM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/cosmiconfig/dist/index.js.
+Error: An error occurred while trying to read the map file at index.js.map
+Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\node_modules\cosmiconfig\dist\index.js.map'
+    at Object.readFileSync (node:fs:436:20)
+    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13
+    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)
+    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)
+    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)
+    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)
+    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)
+ ❯ src/program.test.ts (26 tests | 1 failed | 25 skipped) 24ms
+   ❯ registered agent commands (26)
+     × requires an account update operation ID before connecting and advertises it 23ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/program.test.ts > registered agent commands > requires an account update operation ID before connecting and advertises it
+AssertionError: expected 'MISSING_CONTEXT' to be 'INVALID_INPUT' // Object.is equality
+
+Expected: "INVALID_INPUT"
+Received: "MISSING_CONTEXT"
+
+ ❯ src/program.test.ts:77:32
+     75|       'true',
+     76|     ]);
+     77|     expect(missing.error.code).toBe('INVALID_INPUT');
+       |                                ^
+     78|     expect(missing.error.details.field).toBe('operationId');
+     79|     const schema = await run(['schema', 'accounts.update']);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 25 skipped (26)
+   Start at  11:25:03
+   Duration  487ms (transform 71%, import 22%, tests 6%, worker 1%)
+

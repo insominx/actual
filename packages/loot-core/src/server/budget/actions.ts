@@ -123,6 +123,23 @@ export function getBudget({
   return existing ? existing.amount || 0 : 0;
 }
 
+// Guarded allocation preview uses the same mode/table/row authority as setBudget.
+export function inspectBudgetAmount({
+  category,
+  month,
+}: {
+  category: string;
+  month: string;
+}) {
+  const table = getBudgetTable();
+  const row =
+    db.firstSync<db.DbZeroBudget | db.DbReflectBudget>(
+      `SELECT * FROM ${table} WHERE month = ? AND category = ?`,
+      [dbMonth(month), category],
+    ) ?? null;
+  return { table, row, amount: getBudget({ category, month }) };
+}
+
 export function setBudget({
   category,
   month,
@@ -483,6 +500,27 @@ async function getFirstActivityMonth({
     : monthFromDbMonth(firstActivity.month);
 }
 
+export async function inspectBudgetHold(month: string, amount = 0) {
+  const row =
+    (await db.first<db.DbZeroBudgetMonth>(
+      'SELECT * FROM zero_budget_months WHERE id = ?',
+      [month],
+    )) ?? null;
+  const buffered = row?.buffered || 0;
+  const toBudget = await getSheetValue(
+    monthUtils.sheetForMonth(month),
+    'to-budget',
+  );
+  return {
+    row,
+    buffered,
+    toBudget,
+    tracking: isTrackingBudget(),
+    heldBuffer:
+      toBudget > 0 ? calcBufferedAmount(toBudget, buffered, amount) : buffered,
+  };
+}
+
 export async function holdForNextMonth({
   month,
   amount,
@@ -490,22 +528,9 @@ export async function holdForNextMonth({
   month: string;
   amount: number;
 }): Promise<boolean> {
-  const row = await db.first<Pick<db.DbZeroBudgetMonth, 'buffered'>>(
-    'SELECT buffered FROM zero_budget_months WHERE id = ?',
-    [month],
-  );
-
-  const sheetName = monthUtils.sheetForMonth(month);
-  const toBudget = await getSheetValue(sheetName, 'to-budget');
-
-  if (toBudget > 0) {
-    const bufferedAmount = calcBufferedAmount(
-      toBudget,
-      (row && row.buffered) || 0,
-      amount,
-    );
-
-    await setBuffer(month, bufferedAmount);
+  const inspection = await inspectBudgetHold(month, amount);
+  if (inspection.toBudget > 0) {
+    await setBuffer(month, inspection.heldBuffer);
     return true;
   }
   return false;
@@ -699,6 +724,19 @@ export async function copyUntilYearEnd({
       void setBudget({ category, month: futureMonth, amount });
     }
   });
+}
+
+export function inspectCategoryCarryover(startMonth: string, category: string) {
+  const table = getBudgetTable();
+  const months = getAllMonths(startMonth).map(month => {
+    const row =
+      db.firstSync<db.DbZeroBudget | db.DbReflectBudget>(
+        `SELECT * FROM ${table} WHERE month = ? AND category = ?`,
+        [dbMonth(month), category],
+      ) ?? null;
+    return { month, row, carryover: Boolean(row?.carryover) };
+  });
+  return { table, months };
 }
 
 export async function setCategoryCarryover({

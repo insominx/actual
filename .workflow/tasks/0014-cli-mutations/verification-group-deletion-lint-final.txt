@@ -1,0 +1,2 @@
+packages/api/methods.test.ts:4266:7: error eslint(curly): Expected { after 'if' condition. help: Replace `throw new Error('Fixture requires an outside category');` with `{throw new Error('Fixture requires an outside category');}`.
+packages/cli/integration/changes.test.mjs:6171:13: error eslint(curly): Expected { after 'if' condition. help: Replace `await legacy([ 'categories', 'create', '--name', 'Direct child', '--group-id', created.id, ]);` with `{await legacy([ 'categories', 'create', '--name', 'Direct child', '--group-id', created.id, ]);}`.

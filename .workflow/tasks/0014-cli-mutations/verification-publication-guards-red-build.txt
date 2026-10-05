@@ -1,0 +1,23 @@
+@actual-app/crdt build … queued
+@actual-app/crdt build ➔ start
+@actual-app/crdt build ✓ done - 1.44s
+@actual-app/core build … queued
+@actual-app/core build ➔ start
+@actual-app/core build ✓ done - 0.75s
+@actual-app/api build … queued
+@actual-app/api build ➔ start
+@actual-app/api build ✓ done - 2.56s
+@actual-app/cli build … queued
+@actual-app/cli build ➔ start
+@actual-app/cli build ✓ done - 1.45s
+
+Summary
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+@actual-app/cli build success, took 1.45s, queued for 0.00s
+@actual-app/api build success, took 2.56s, queued for 0.00s
+@actual-app/crdt build success, took 1.44s, queued for 0.00s
+@actual-app/core build success, took 0.75s, queued for 0.00s
+success: 4, skipped: 0, pending: 0, aborted: 0, failed: 0
+worker restarts: 0, max worker memory usage: 13.42 MB
+┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+Took a total of 6.20s to complete. 

@@ -1,0 +1,31 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+ ❯ src/change-journal.test.ts (15 tests | 1 failed) 1536ms
+   × expires category creation only with complete generated category and mapping acknowledgements 13ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/change-journal.test.ts > expires category creation only with complete generated category and mapping acknowledgements
+Error: The change receipt has an unsupported schema.
+ ❯ ChangeJournal.readPath src/change-journal.ts:244:15
+    242|         ].includes(String(value.proposal.operation))
+    243|       ) {
+    244|         throw new AgentError(
+       |               ^
+    245|           'INVALID_INPUT',
+    246|           'The change receipt has an unsupported schema.',
+ ❯ ChangeJournal.list src/change-journal.ts:373:23
+ ❯ ChangeJournal.prepare src/change-journal.ts:402:21
+ ❯ src/change-journal.test.ts:750:25
+ ❯ withChangeJournal src/change-journal.ts:175:12
+ ❯ src/change-journal.test.ts:748:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 14 passed (15)
+   Start at  16:36:49
+   Duration  1.69s (tests 95%, transform 3%, import 1%)
+

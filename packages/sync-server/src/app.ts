@@ -118,7 +118,13 @@ app.get('/info', (_req, res) => {
 });
 
 app.get('/health', (_req, res) => {
-  res.status(200).json({ status: 'UP' });
+  res.status(200).json({
+    status: 'UP',
+    capabilities: ['encrypted-initial-publication'],
+    ...(process.env.ACTUAL_CLI_RUNTIME_OWNER
+      ? { instanceId: process.env.ACTUAL_CLI_RUNTIME_OWNER }
+      : {}),
+  });
 });
 
 app.get('/metrics', (_req, res) => {

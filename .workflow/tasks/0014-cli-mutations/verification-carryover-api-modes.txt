@@ -1,0 +1,29 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/api
+
+11:23:15 PM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/chevrotain/lib/src/api.js.
+Error: An error occurred while trying to read the map file at api.js.map
+Error: ENOENT: no such file or directory, open 'D:\Projects\personal\Budget\actual\node_modules\chevrotain\lib\src\api.js.map'
+    at Object.readFileSync (node:fs:436:20)
+    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13
+    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)
+    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)
+    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)
+    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)
+    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)
+ ✓ methods.test.ts (62 tests | 58 skipped) 3298ms
+   ✓ guarded allocation changes (5)
+     ✓ carryover preview preserves rows and applies the complete future month range 828ms
+     ✓ carryover binds budget mode and preserves missing-row writer behavior 855ms
+     ✓ carryover rejects changed future rows and validates its entire proposal 816ms
+     ✓ previews a canonical allocation without writes and preserves carryover when applying 798ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed | 58 skipped (62)
+   Start at  23:23:09
+   Duration  13.92s (transform 62%, tests 24%, import 14%)
+
+  Transform  transforming modules took 8.56s · 62% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+

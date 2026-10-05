@@ -1,0 +1,21 @@
+✔ encrypted first publication survives a lost response, retries one identity, and preserves rename/archive semantics (10127.708ms)
+✔ CLI clones an encrypted cached budget without modifying or publishing its source (5396.8859ms)
+✔ CLI creates a usable local budget without publishing to its configured server (5402.4494ms)
+✔ CLI publication receipts acknowledge and reuse one identity (encrypted=false) (4941.8305ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=null) (2900.0327ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=before) (2819.3443ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=after) (2863.6265ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=false, uploadFault=source-race) (3057.0149ms)
+✔ CLI publication receipts acknowledge and reuse one identity (encrypted=true) (4932.0521ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=null) (2763.9946ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=before) (2954.0364ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=after) (3191.6924ms)
+✔ guarded publication API preserves preview and recovers only proven remote identity (encrypted=true, uploadFault=source-race) (3143.3519ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 33643.1363

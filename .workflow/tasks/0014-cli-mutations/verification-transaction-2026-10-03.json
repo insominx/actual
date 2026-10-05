@@ -1,0 +1,120 @@
+{
+  "ok": true,
+  "projectRoot": "D:\\Projects\\personal\\Budget\\actual",
+  "task": "0014-cli-mutations",
+  "profile": "transaction",
+  "checks": [
+    {
+      "id": "api-unit",
+      "type": "scripted",
+      "command": "yarn workspace @actual-app/api test methods.test.ts",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 39059,
+      "stdout": "\n RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/api\n\n ✓ methods.test.ts (42 tests) 30136ms\n   ✓ API setup and teardown (1)\n     ✓ successfully loads budget 678ms\n   ✓ API budget import/export (14)\n     ✓ createBudget loads a local budget and preserves currency after reload 1383ms\n     ✓ restoreBudget creates a new identity without replacing its source 740ms\n     ✓ restore removes invalid SQLite archives and incomplete writes without modifying existing budgets 702ms\n     ✓ restore never cleans up a directory when exclusive creation failed 678ms\n     ✓ creation validates before closing the selected budget 672ms\n     ✓ creation removes incomplete files when the database copy fails 636ms\n     ✓ cloneBudget preserves ledger and preferences with a separate local identity 751ms\n     ✓ creation reports incomplete cleanup instead of inviting a blind retry 655ms\n     ✓ cloneBudget removes incomplete copies when copying the database fails 638ms\n     ✓ renaming preserves identity and local archiving is reversible 711ms\n     ✓ sync status reports local unpublished writes without synchronizing or changing them 1334ms\n     ✓ exportBudget returns bytes that importBudget loads back 699ms\n     ✓ importBudget imports from a file path 726ms\n     ✓ importBudget rejects with an Error on failure 651ms\n   ✓ API CRUD operations (18)\n     ✓ getBudgets 682ms\n     ✓ CategoryGroups: successfully update category groups 683ms\n     ✓ Categories: successfully update categories 686ms\n     ✓ Budgets: successfully update budgets 679ms\n     ✓ Accounts: successfully complete account operators 752ms\n     ✓ Payees: successfully update payees 652ms\n     ✓ Tags: successfully complete tag operations 707ms\n     ✓ Tags: create tag with minimal fields 653ms\n     ✓ Tags: update single field only 685ms\n     ✓ Tags: handle null values correctly 662ms\n     ✓ Tags: clear optional field 690ms\n     ✓ Notes: successfully get and update note 701ms\n     ✓ Rules: successfully update rules 712ms\n     ✓ Transactions: successfully update transactions 713ms\n     ✓ Transactions: successfully merge two transactions 687ms\n     ✓ Transactions: import notes are preserved when importing 684ms\n     ✓ Transactions: reimportDeleted=false prevents reimporting deleted transactions 707ms\n     ✓ Transactions: reimportDeleted=true reimports deleted transactions 675ms\n   ✓ Schedules: successfully complete schedules operations 747ms\n   ✓ Preferences: successfully read synced preferences 680ms\n   ✓ API preferences: setPreference (5)\n     ✓ successfully sets a single preference 624ms\n     ✓ can set multiple preferences 675ms\n     ✓ can set feature flag preferences 672ms\n     ✓ can set account-specific preferences 641ms\n     ✓ can set CSV import preferences 686ms\n   ✓ guarded transaction changes (2)\n     ✓ previews without writing, applies exact state, and rejects a stale repeat 684ms\n     ✓ rejects edited state, another budget, invalid fields, and unsupported split scope before a write 662ms\n\n Test Files  1 passed (1)\n      Tests  42 passed (42)\n   Start at  16:12:44\n   Duration  38.09s (tests 79%, transform 17%, import 4%)\n\n",
+      "stderr": "4:12:49 PM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/chevrotain/lib/src/api.js.\nError: An error occurred while trying to read the map file at api.js.map\nError: ENOENT: no such file or directory, open 'D:\\Projects\\personal\\Budget\\actual\\node_modules\\chevrotain\\lib\\src\\api.js.map'\n    at Object.readFileSync (node:fs:436:20)\n    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13\n    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)\n    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)\n    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)\n    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)\n    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)\nstderr | methods.test.ts > API budget import/export > importBudget rejects with an Error on failure\n[Exception] Error: Error importing budget: File not found at the provided path: /does/not/exist.zip\n    at importBudget (D:/Projects/personal/Budget/actual/packages/loot-core/src/server/budgetfiles/app.ts:519:15)\n\n"
+    },
+    {
+      "id": "core-fixtures",
+      "type": "scripted",
+      "command": "yarn workspace @actual-app/core exec vitest run src/server/main.test.ts src/server/budgetfiles/backups.test.ts src/server/util/zip.test.ts",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 5451,
+      "stdout": "\n RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core\n\n ✓ src/server/util/zip.test.ts (20 tests) 8ms\n ✓ src/server/main.test.ts (8 tests) 1104ms\n   ✓ Budgets (2)\n     ✓ budget is successfully loaded 719ms\n ✓ src/server/budgetfiles/backups.test.ts (1 test) 5ms\n\n Test Files  3 passed (3)\n      Tests  29 passed (29)\n   Start at  16:13:23\n   Duration  4.57s (setup 63%, transform 21%, tests 13%, import 2%)\n\n",
+      "stderr": "stderr | src/server/main.test.ts > Budgets > budget detects out of sync migrations\nDatabase is out of sync with migrations (unknown migration from before the additive-only era): {\n  appliedIds: [ 1000, 1548957970627 ],\n  available: [\n    '1548957970627_remove-db-version.sql',\n    '1550601598648_payees.sql',\n    '1555786194328_remove_category_group_unique.sql',\n    '1561751833510_indexes.sql',\n    '1567699552727_budget.sql',\n    '1582384163573_cleared.sql',\n    '1597756566448_rules.sql',\n    '1608652596043_parent_field.sql',\n    '1608652596044_trans_views.sql',\n    '1612625548236_optimize.sql',\n    '1614782639336_trans_views2.sql',\n    '1615745967948_meta.sql',\n    '1616167010796_accounts_order.sql',\n    '1618975177358_schedules.sql',\n    '1632571489012_remove_cache.js',\n    '1679728867040_rules_conditions.sql',\n    '1681115033845_add_schedule_name.sql',\n    '1682974838138_remove_payee_rules.sql',\n    '1685007876842_add_category_hidden.sql',\n    '1686139660866_remove_account_type.sql',\n    '1688749527273_transaction_filters.sql',\n    '1688841238000_add_account_type.sql',\n    '1691233396000_add_schedule_next_date_tombstone.sql',\n    '1694438752000_add_goal_targets.sql',\n    '1697046240000_add_reconciled.sql',\n    '1704572023730_add_account_sync_source.sql',\n    '1704572023731_add_missing_goCardless_sync_source.sql',\n    '1707267033000_reports.sql',\n    '1712784523000_unhide_input_group.sql',\n    '1716359441000_include_current.sql',\n    '1720310586000_link_transfer_schedules.sql',\n    '1720664867241_add_payee_favorite.sql',\n    '1720665000000_goal_context.sql',\n    '1722717601000_reports_move_selected_categories.js',\n    '1722804019000_create_dashboard_table.js',\n    '1723665565000_prefs.js',\n    '1730744182000_fix_dashboard_table.sql',\n    '1736640000000_custom_report_sorting.sql',\n    '1737158400000_add_learn_categories_to_payees.sql',\n    '1738491452000_sorting_rename.sql',\n    '1739139550000_bank_sync_page.sql',\n    '1740506588539_add_last_reconciled_at.sql',\n    '1745425408000_update_budgetType_pref.sql',\n    '1749799110000_add_tags.sql',\n    '1749799110001_tags_tombstone.sql',\n    '1754611200000_add_category_template_settings.sql',\n    '1759260219000_add_trim_interval_report_setting.sql',\n    '1759842823172_add_isGlobal_to_preferences.sql',\n    '1762178745667_rename_csv_skip_lines_pref.sql',\n    '1765518577215_multiple_dashboards.js',\n    '1768872504000_add_payee_locations.sql',\n    '1769000000000_add_custom_upcoming_length.sql',\n    '1778510362740_add_cleanup_groups_and_def.sql',\n    '1780099200000_add_show_trend_lines_report_setting.sql',\n    '1780327681000_add_tags_hidden.sql',\n    '1780606215000_add_bank_sync_status.sql',\n    '1780606215001_add_performance_indexes.sql',\n    '1783004650757_schedule_sort_order.sql',\n    '1787013118115_add_account_groups.sql',\n    '1788468782000_add_messages_pending.js'\n  ]\n}\n\n"
+    },
+    {
+      "id": "cli-unit",
+      "type": "scripted",
+      "command": "yarn workspace @actual-app/cli test",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 2269,
+      "stdout": "\n RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli\n\n\n Test Files  17 passed (17)\n      Tests  219 passed (219)\n   Start at  16:13:29\n   Duration  1.44s (tests 40%, transform 40%, import 17%, worker 2%)\n\n",
+      "stderr": "4:13:29 PM [vite] (ssr) Failed to load source map for D:/Projects/personal/Budget/actual/node_modules/cosmiconfig/dist/index.js.\nError: An error occurred while trying to read the map file at index.js.map\nError: ENOENT: no such file or directory, open 'D:\\Projects\\personal\\Budget\\actual\\node_modules\\cosmiconfig\\dist\\index.js.map'\n    at Object.readFileSync (node:fs:436:20)\n    at file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19135:13\n    at readFromFileMap (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18835:13)\n    at Object.exports.fromMapFileComment (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18929:12)\n    at Object.exports.fromMapFileSource (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:18940:22)\n    at extractSourcemapFromFile (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:19121:87)\n    at loadAndTransform (file:///D:/Projects/personal/Budget/actual/node_modules/vite/dist/node/chunks/node.js:20090:22)\n"
+    },
+    {
+      "id": "root-types",
+      "type": "scripted",
+      "command": "yarn typecheck",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 4288,
+      "stdout": "@actual-app/ci-actions typecheck … queued\n@actual-app/components typecheck … queued\n@actual-app/crdt typecheck … queued\nplugins-service typecheck … queued\n@actual-app/ci-actions typecheck ➔ start\n@actual-app/components typecheck ➔ start\n@actual-app/ci-actions typecheck » skip - a15bf2f851e791f66552eb8704bef90aaa2afe3e\n@actual-app/crdt typecheck ➔ start\n@actual-app/crdt typecheck » skip - 1842a47eb61ba5c7646b83ea6db2760c1023b597\n@actual-app/core typecheck … queued\nplugins-service typecheck ➔ start\nplugins-service typecheck » skip - 7d72e72d9e5af9dfa737dcf25809c86147dd79e6\n@actual-app/core typecheck ➔ start\n@actual-app/components typecheck » skip - cfff67e84b2e8caef320ddc03f0bf7155f809eae\n@actual-app/core typecheck » skip - 34a87efa2bcf509b41021ceed96a4e512b6b9024\n@actual-app/api typecheck … queued\n@actual-app/web typecheck … queued\n@actual-app/api typecheck ➔ start\n@actual-app/web typecheck ➔ start\n@actual-app/api typecheck » skip - d5a28f6241c360041ce77504e189e042f70bf7e0\n@actual-app/cli typecheck … queued\n@actual-app/cli typecheck ➔ start\n@actual-app/web typecheck » skip - 5e433aaef00711d7caa70023e3366453e940f5c8\n@actual-app/sync-server typecheck … queued\n@actual-app/sync-server typecheck ➔ start\n@actual-app/sync-server typecheck » skip - 71b3588e81d37fc03d412809e3152d91a80fb5b5\ndesktop-electron typecheck … queued\ndesktop-electron typecheck ➔ start\ndesktop-electron typecheck » skip - 5d691cdb092ddb190463ff9f60003af6c16689ef\n@actual-app/cli typecheck ✓ done - 2.08s\n\nSummary\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n@actual-app/cli typecheck success, took 2.08s, queued for 0.00s\nsuccess: 1, skipped: 9, pending: 0, aborted: 0, failed: 0\nworker restarts: 0, max worker memory usage: 49.48 MB\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\nTook a total of 3.09s to complete. \n",
+      "stderr": ""
+    },
+    {
+      "id": "cli-build",
+      "type": "scripted",
+      "command": "yarn exec lage build --scope=@actual-app/cli --no-cache",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 7116,
+      "stdout": "@actual-app/crdt build … queued\n@actual-app/crdt build ➔ start\n@actual-app/crdt build ✓ done - 1.51s\n@actual-app/core build … queued\n@actual-app/core build ➔ start\n@actual-app/core build ✓ done - 0.58s\n@actual-app/api build … queued\n@actual-app/api build ➔ start\n@actual-app/api build ✓ done - 2.51s\n@actual-app/cli build … queued\n@actual-app/cli build ➔ start\n@actual-app/cli build ✓ done - 1.44s\n\nSummary\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n@actual-app/cli build success, took 1.44s, queued for 0.00s\n@actual-app/api build success, took 2.51s, queued for 0.00s\n@actual-app/crdt build success, took 1.51s, queued for 0.00s\n@actual-app/core build success, took 0.58s, queued for 0.00s\nsuccess: 4, skipped: 0, pending: 0, aborted: 0, failed: 0\nworker restarts: 0, max worker memory usage: 13.44 MB\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\nTook a total of 6.04s to complete. \n",
+      "stderr": ""
+    },
+    {
+      "id": "server-build",
+      "type": "scripted",
+      "command": "yarn workspace @actual-app/sync-server build",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 902,
+      "stdout": "vite v8.1.5 building ssr environment for production...\n\u001b[2K\rtransforming...✓ 115 modules transformed.\nrendering chunks...\ncomputing gzip size...\nbuild/scripts/run-migrations.js                                   0.27 kB │ gzip:  0.22 kB │ map:   0.43 kB\nbuild/app.js                                                      0.29 kB │ gzip:  0.23 kB │ map:   0.64 kB\nbuild/chunks/1694362247011-create-secret-table-CG-GivMF.js        0.47 kB │ gzip:  0.31 kB │ map:   0.65 kB\nbuild/chunks/1763873568237-server-global-prefs-Ci5s7i3D.js        0.48 kB │ gzip:  0.31 kB │ map:   0.72 kB\nbuild/chunks/1763873600000-backfill-files-owner-CNPMON4X.js       0.51 kB │ gzip:  0.35 kB │ map:   0.85 kB\nbuild/chunks/1702667624000-rename-nordigen-secrets-BW-LymBo.js    0.74 kB │ gzip:  0.31 kB │ map:   1.04 kB\nbuild/chunks/1694360479680-create-account-db-CRjaQQFg.js          0.84 kB │ gzip:  0.42 kB │ map:   1.05 kB\nbuild/chunks/1694360000000-create-folders-DP5YCxxz.js             0.85 kB │ gzip:  0.44 kB │ map:   1.38 kB\nbuild/scripts/health-check.js                                     0.92 kB │ gzip:  0.47 kB │ map:   1.59 kB\nbuild/chunks/1718889148000-openid-VFDfSyxT.js                     1.13 kB │ gzip:  0.53 kB │ map:   1.38 kB\nbuild/scripts/disable-openid.js                                   1.33 kB │ gzip:  0.61 kB │ map:   2.00 kB\nbuild/scripts/reset-password.js                                   1.59 kB │ gzip:  0.54 kB │ map:   2.48 kB\nbuild/scripts/enable-openid.js                                    1.61 kB │ gzip:  0.73 kB │ map:   2.39 kB\nbuild/chunks/prompt-DOMFdmgQ.js                                   1.62 kB │ gzip:  0.62 kB │ map:   3.03 kB\nbuild/chunks/migrations-CkMiXB0p.js                               2.34 kB │ gzip:  1.02 kB │ map:   3.38 kB\nbuild/bin/actual-server.js                                        2.49 kB │ gzip:  0.93 kB │ map:   4.59 kB\nbuild/chunks/1719409568000-multiuser-Cee_tIXg.js                  2.63 kB │ gzip:  0.88 kB │ map:   3.22 kB\nbuild/chunks/load-config-D2TXNvHj.js                              9.49 kB │ gzip:  2.89 kB │ map:  16.44 kB\nbuild/chunks/account-db-DP6HlniU.js                              28.08 kB │ gzip:  6.83 kB │ map:  50.77 kB\nbuild/chunks/app-DSx2Nfu2.js                                    209.35 kB │ gzip: 48.15 kB │ map: 414.59 kB\n\n✓ built in 122ms\n",
+      "stderr": ""
+    },
+    {
+      "id": "browser-build",
+      "type": "scripted",
+      "command": "yarn exec lage build:browser --to=@actual-app/web",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 34850,
+      "stdout": "plugins-service build … queued\n@actual-app/crdt build … queued\nplugins-service build ➔ start\n@actual-app/crdt build ➔ start\nplugins-service build » skip - 30be54c7e4d62a5f8fd35c6e78f8e3173522f548\n@actual-app/crdt build » skip - 2deb16b6d54eef12c9498dceab0466922f9046ca\n@actual-app/core build … queued\n@actual-app/core build ➔ start\n@actual-app/core build ✓ done - 1.18s\n@actual-app/web build:browser … queued\n@actual-app/web build:browser ➔ start\n@actual-app/web build:browser ✓ done - 32.46s\n\nSummary\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n@actual-app/web build:browser success, took 32.46s, queued for 0.00s\n@actual-app/core build success, took 1.18s, queued for 0.00s\nsuccess: 2, skipped: 2, pending: 0, aborted: 0, failed: 0\nworker restarts: 0, max worker memory usage: 28.89 MB\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\nTook a total of 33.82s to complete. \n",
+      "stderr": ""
+    },
+    {
+      "id": "real-integration",
+      "type": "scripted",
+      "command": "yarn workspace @actual-app/cli test:integration",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 41918,
+      "stdout": "✔ retention previews and applies per-source policy while preserving invalid and external artifacts (9040.8696ms)\n✔ restore creates independent local identities and preserves the encrypted source (10218.701ms)\n✔ isolated validation rejects corrupt archives and listing preserves complete artifacts (5638.5267ms)\n✔ an encrypted sync budget creates complete plaintext backups without replacing earlier artifacts (3279.4168ms)\n✔ guarded transaction preview preserves domains and receipts prevent repeat writes (10081.813ms)\n✔ packaged discovery and validation work without personal configuration (578.0577ms)\n✔ encrypted remote sessions register keys across process restarts (4261.1785ms)\n✔ real server, import deduplication, two clients, and restart (12627.7054ms)\n✔ encrypted first publication survives a lost response, retries one identity, and preserves rename/archive semantics (11274.9074ms)\n✔ CLI clones an encrypted cached budget without modifying or publishing its source (5687.2026ms)\n✔ CLI creates a usable local budget without publishing to its configured server (5618.9674ms)\n✔ fresh server bootstraps through CLI and authenticates without a browser (2639.7378ms)\n✔ managed lifecycle checks ownership, port, executable, restart, and shutdown (6845.7424ms)\n✔ watch freezes its selected budget while profiles switch and cache identities stay separate (7961.2603ms)\n✔ watch bounds a stalled worker and a subsequent writer can reopen its cache (6082.2989ms)\n✔ encrypted watch reconnects, cancels, and releases its cache for a writer (5641.3077ms)\n✔ a failed push preserves the local write and refresh does not replay it (encrypted=false) (4237.0926ms)\n✔ a failed push preserves the local write and refresh does not replay it (encrypted=true) (3811.4043ms)\n✔ pending status is offline and refresh sends existing writes (encrypted=false) (6859.6249ms)\n✔ pending status is offline and refresh sends existing writes (encrypted=true) (6513.2014ms)\nℹ tests 20\nℹ suites 0\nℹ pass 20\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 41268.219\n",
+      "stderr": ""
+    },
+    {
+      "id": "lint",
+      "type": "scripted",
+      "command": "yarn exec oxlint packages/cli/src packages/cli/integration packages/cli/vite.config.ts packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 1413,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "id": "format",
+      "type": "scripted",
+      "command": "yarn exec oxfmt --check packages/cli/src packages/cli/integration packages/cli/package.json packages/cli/vite.config.ts packages/cli/README.md packages/api/methods.ts packages/api/methods.test.ts packages/loot-core/src/server/api.ts packages/loot-core/src/server/budgetfiles/app.ts packages/loot-core/src/server/cloud-storage.ts packages/loot-core/src/server/encryption/app.ts packages/loot-core/src/types/api-handlers.ts packages/loot-core/src/types/prefs.ts packages/loot-core/src/types/budget.ts packages/sync-server/src/app.ts packages/sync-server/src/app-sync.ts packages/sync-server/src/app-sync.test.ts packages/sync-server/src/account-db.js packages/sync-server/migrations/1694360000000-create-folders.ts packages/docs/docs/api/cli.md .workflow/tasks/0010-cli-runtime .workflow/tasks/0011-cli-budget-lifecycle/plan.review.md .workflow/tasks/0011-cli-budget-lifecycle/execution-decisions.md .workflow/tasks/0011-cli-budget-lifecycle/verify.json upcoming-release-notes/agent-cli-runtime.md upcoming-release-notes/agent-cli-budget-creation.md packages/loot-core/src/server/sync/index.ts packages/loot-core/src/server/importers/actual.ts packages/loot-core/src/server/budgetfiles/new-budget-metadata.ts packages/docs/docs/api/reference.md upcoming-release-notes/agent-cli-backups.md packages/loot-core/src/shared/canonical-json.ts packages/loot-core/src/types/change-proposals.ts upcoming-release-notes/agent-cli-mutations.md .workflow/tasks/0014-cli-mutations/plan.md .workflow/tasks/0014-cli-mutations/plan.review.md .workflow/tasks/0014-cli-mutations/progress.md .workflow/tasks/0014-cli-mutations/implementation.md .workflow/tasks/0014-cli-mutations/execution-decisions.md .workflow/tasks/0014-cli-mutations/verify.json",
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 1053,
+      "stdout": "Checking formatting...\n\nAll matched files use the correct format.\nFinished in 366ms on 112 files using 32 threads.\n",
+      "stderr": ""
+    }
+  ],
+  "markdownRows": [
+    "| scripted | api-unit | pass | 39059ms |",
+    "| scripted | core-fixtures | pass | 5451ms |",
+    "| scripted | cli-unit | pass | 2269ms |",
+    "| scripted | root-types | pass | 4288ms |",
+    "| scripted | cli-build | pass | 7116ms |",
+    "| scripted | server-build | pass | 902ms |",
+    "| scripted | browser-build | pass | 34850ms |",
+    "| scripted | real-integration | pass | 41918ms |",
+    "| scripted | lint | pass | 1413ms |",
+    "| scripted | format | pass | 1053ms |"
+  ]
+}

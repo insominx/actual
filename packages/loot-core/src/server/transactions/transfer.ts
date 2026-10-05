@@ -1,7 +1,13 @@
 // @ts-strict-ignore
+import { aqlQuery } from '#server/aql';
 import * as db from '#server/db';
+import { q } from '#shared/query';
+import { ungroupTransactions } from '#shared/transactions';
+import type { TransactionEntity } from '#types/models';
 
+import { planLinkedTransferUpdate } from './linked-transfer-plan';
 import { runRules } from './transaction-rules';
+import type { RuleLedgerContext } from './transaction-rules';
 
 async function getPayee(acct) {
   return db.first<db.DbPayee>('SELECT * FROM payees WHERE transfer_acct = ?', [
@@ -9,7 +15,7 @@ async function getPayee(acct) {
   ]);
 }
 
-async function getTransferredAccount(transaction) {
+export async function getTransferredAccount(transaction: TransactionEntity) {
   if (transaction.payee) {
     const result = await db.first<Pick<db.DbViewPayee, 'transfer_acct'>>(
       'SELECT transfer_acct FROM v_payees WHERE id = ?',
@@ -19,6 +25,13 @@ async function getTransferredAccount(transaction) {
     return result?.transfer_acct || null;
   }
   return null;
+}
+
+export function transferClearsCategory(
+  fromOffBudget: number,
+  toOffBudget: number,
+) {
+  return fromOffBudget === toOffBudget;
 }
 
 async function clearCategory(transaction, transferAcct) {
@@ -31,7 +44,7 @@ async function clearCategory(transaction, transferAcct) {
 
   // If the transfer is between two on budget or two off budget accounts,
   // we should clear the category, because the category is not relevant
-  if (fromOffBudget === toOffBudget) {
+  if (transferClearsCategory(fromOffBudget, toOffBudget)) {
     await db.updateTransaction({ id: transaction.id, category: null });
     if (transaction.transfer_id) {
       await db.updateTransaction({
@@ -44,7 +57,11 @@ async function clearCategory(transaction, transferAcct) {
   return false;
 }
 
-export async function addTransfer(transaction, transferredAccount) {
+export async function prepareTransferTransaction(
+  transaction: TransactionEntity,
+  transferredAccount: string,
+  ledgerContext: RuleLedgerContext = {},
+) {
   if (transaction.is_parent) {
     // For split transactions, we should create transfers using child transactions.
     // This is to ensure that the amounts received by the transferred account
@@ -68,15 +85,31 @@ export async function addTransfer(transaction, transferredAccount) {
     schedule: transaction.schedule,
     cleared: false,
   };
-  const { notes, cleared, schedule } = await runRules(transferTransaction);
+  const { notes, cleared, schedule } = await runRules(
+    transferTransaction,
+    null,
+    ledgerContext,
+  );
   const matchedSchedule = schedule ?? transaction.schedule;
 
-  const id = await db.insertTransaction({
+  return {
     ...transferTransaction,
     notes,
     cleared,
     schedule: matchedSchedule,
-  });
+  };
+}
+
+export async function addTransfer(transaction, transferredAccount) {
+  const transferTransaction = await prepareTransferTransaction(
+    transaction,
+    transferredAccount,
+  );
+  if (!transferTransaction) {
+    return null;
+  }
+  const matchedSchedule = transferTransaction.schedule;
+  const id = await db.insertTransaction(transferTransaction);
 
   await db.updateTransaction({
     id: transaction.id,
@@ -117,19 +150,51 @@ export async function removeTransfer(transaction) {
   return { id: transaction.id, transfer_id: null };
 }
 
-export async function updateTransfer(transaction, transferredAccount) {
+export async function inspectTransferUpdate(
+  transaction: TransactionEntity,
+  transferredAccount: string,
+) {
   const payee = await getPayee(transaction.account);
+  const [fromAccount, toAccount, grouped] = await Promise.all([
+    db.first<db.DbAccount>('SELECT * FROM accounts WHERE id = ?', [
+      transaction.account,
+    ]),
+    db.first<db.DbAccount>('SELECT * FROM accounts WHERE id = ?', [
+      transferredAccount,
+    ]),
+    aqlQuery(
+      q('transactions')
+        .filter({ id: transaction.transfer_id })
+        .select('*')
+        .options({ splits: 'grouped' }),
+    ),
+  ]);
+  if (!payee || !fromAccount || !toAccount) {
+    throw new Error('Transfer reference not found');
+  }
+  const before = ungroupTransactions(grouped.data);
+  if (!before.some(row => row.id === transaction.transfer_id)) {
+    throw new Error('Transfer counterpart not found');
+  }
+  return {
+    before,
+    references: { fromAccount, toAccount, fromPayee: payee },
+    context: {
+      account: transferredAccount,
+      payee: payee.id,
+      clearCategory: fromAccount.offbudget === toAccount.offbudget,
+    },
+  };
+}
 
-  await db.updateTransaction({
-    id: transaction.transfer_id,
-    account: transferredAccount,
-    // Make sure to update the payee on the other side in case the
-    // user moved this transaction into another account
-    payee: payee.id,
-    notes: transaction.notes,
-    amount: -transaction.amount,
-    schedule: transaction.schedule,
-  });
+export async function updateTransfer(transaction, transferredAccount) {
+  const observed = await inspectTransferUpdate(transaction, transferredAccount);
+  const planned = planLinkedTransferUpdate(
+    observed.before,
+    transaction,
+    observed.context,
+  );
+  await Promise.all(planned.diff.updated.map(row => db.updateTransaction(row)));
 
   const categoryCleared = await clearCategory(transaction, transferredAccount);
   if (categoryCleared) {

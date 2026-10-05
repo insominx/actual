@@ -2,6 +2,11 @@ import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { withConnection } from '#connection';
+import {
+  executeCategoryCreation,
+  executeCategoryDeletion,
+  executeCategoryUpdate,
+} from '#guarded-changes';
 import { printOutput } from '#output';
 import { parseBoolFlag } from '#utils';
 
@@ -31,11 +36,24 @@ export function registerCategoriesCommand(program: Command) {
   categories
     .command('create')
     .description('Create a new category')
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
     .requiredOption('--name <name>', 'Category name')
     .requiredOption('--group-id <id>', 'Category group ID')
     .option('--is-income', 'Mark as income category', false)
     .action(async cmdOpts => {
       const opts = program.opts();
+      if (opts.outputVersion === '2') {
+        printOutput(
+          await executeCategoryCreation(opts, cmdOpts.operationId, {
+            name: cmdOpts.name,
+            group_id: cmdOpts.groupId,
+            is_income: cmdOpts.isIncome,
+            hidden: false,
+          }),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {
@@ -54,10 +72,11 @@ export function registerCategoriesCommand(program: Command) {
   categories
     .command('update <id>')
     .description('Update a category')
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
     .option('--name <name>', 'New category name')
     .option('--hidden <bool>', 'Set hidden status')
     .action(async (id: string, cmdOpts) => {
-      const fields: Record<string, unknown> = {};
+      const fields: api.CategoryUpdateRequest['fields'] = {};
       if (cmdOpts.name !== undefined) fields.name = cmdOpts.name;
       if (cmdOpts.hidden !== undefined) {
         fields.hidden = parseBoolFlag(cmdOpts.hidden, '--hidden');
@@ -66,6 +85,16 @@ export function registerCategoriesCommand(program: Command) {
         throw new Error('No update fields provided. Use --name or --hidden.');
       }
       const opts = program.opts();
+      if (opts.outputVersion === '2') {
+        printOutput(
+          await executeCategoryUpdate(opts, cmdOpts.operationId, {
+            id,
+            fields,
+          }),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {
@@ -79,9 +108,20 @@ export function registerCategoriesCommand(program: Command) {
   categories
     .command('delete <id>')
     .description('Delete a category')
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
     .option('--transfer-to <id>', 'Transfer transactions to this category')
     .action(async (id: string, cmdOpts) => {
       const opts = program.opts();
+      if (opts.outputVersion === '2') {
+        printOutput(
+          await executeCategoryDeletion(opts, cmdOpts.operationId, {
+            id,
+            transferCategoryId: cmdOpts.transferTo,
+          }),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {

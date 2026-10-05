@@ -1,0 +1,79 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+ ❯ src/change-journal.test.ts (6 tests | 1 failed | 5 skipped) 34ms
+   × expires acknowledged local archive receipts while preserving uncertainty and pending sync 33ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/change-journal.test.ts > expires acknowledged local archive receipts while preserving uncertainty and pending sync
+AssertionError: expected { schemaVersion: 1, …(7) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "createdAt": "2026-10-04T02:27:02.429Z",
+  "operationId": "local-ack",
+  "outcome": {
+    "affectedIds": [
+      "test-budget",
+    ],
+    "changed": true,
+    "checkpoint": "observed",
+    "status": "committed-local",
+  },
+  "proposal": {
+    "after": {
+      "archived": true,
+      "name": "Test",
+    },
+    "before": {
+      "archived": false,
+      "name": "Test",
+    },
+    "budget": {
+      "cloudFileId": null,
+      "id": "test-budget",
+      "syncId": null,
+    },
+    "delivery": "local-only",
+    "operation": "budgets.archive",
+    "references": {
+      "nameAvailable": true,
+    },
+    "request": {
+      "archived": true,
+      "id": "test-budget",
+      "operation": "budgets.archive",
+    },
+    "schemaVersion": 1,
+    "sideEffects": [
+      "device-local archive marker update",
+    ],
+  },
+  "schemaVersion": 1,
+  "state": "committed-local",
+  "token": "79ac6b117472c446f3ea2a28e265f4663252827888261fedfe6b36126c5fc9a2",
+  "updatedAt": "2000-01-01T00:00:00.000Z",
+}
+
+ ❯ src/change-journal.test.ts:124:47
+    122|       await journal.write(pending);
+    123|       await journal.prepare('next', proposal);
+    124|       expect(await journal.read('local-ack')).toBeNull();
+       |                                               ^
+    125|       expect((await journal.read('local-uncertain'))?.state).toBe('unc…
+    126|       expect((await journal.read('pending-sync'))?.state).toBe(
+ ❯ withChangeJournal src/change-journal.ts:73:12
+ ❯ src/change-journal.test.ts:104:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 skipped (6)
+   Start at  19:27:02
+   Duration  192ms (transform 43%, tests 34%, import 19%, worker 5%)
+

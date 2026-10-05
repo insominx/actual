@@ -1,0 +1,7 @@
+packages/loot-core/src/types/api-handlers.ts:54:3: error perfectionist(sort-named-imports): Expected "CategoryCreationProposal" to come before "CategoryGroupCreationRequest".
+packages/cli/src/change-journal.ts:20:3: error perfectionist(sort-named-imports): Expected "CategoryCreationOutcome" to come before "CategoryGroupCreationOutcome".
+packages/cli/src/change-journal.test.ts:24:3: error perfectionist(sort-named-imports): Expected "CategoryCreationProposal" to come before "CategoryGroupCreationProposal".
+packages/api/methods.ts:47:3: error perfectionist(sort-named-imports): Expected "CategoryCreationProposal" to come before "CategoryGroupCreationRequest".
+packages/loot-core/src/server/api.ts:61:3: error perfectionist(sort-named-imports): Expected "CategoryCreationProposal" to come before "CategoryGroupCreationRequest".
+packages/loot-core/src/server/api.ts:114:3: error perfectionist(sort-named-imports): Expected "inspectCategoryCreation" to come before "performCategoryGroupCreation".
+packages/api/methods.test.ts:3967:7: error eslint(curly): Expected { after 'if' condition. help: Replace `throw new Error('Group creation did not commit');` with `{throw new Error('Group creation did not commit');}`.

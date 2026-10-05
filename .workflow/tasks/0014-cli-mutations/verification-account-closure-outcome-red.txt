@@ -1,0 +1,95 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+ ❯ src/server/main.test.ts (26 tests | 4 failed | 22 skipped) 178ms
+   ↓ Budgets (2)
+     ↓ budget is successfully loaded
+     ↓ budget detects out of sync migrations
+   ❯ Accounts (19)
+     × closure outcome discloses provider removal: acknowledged 50ms
+     × closure outcome discloses provider removal: uncertain 39ms
+     × closure acknowledges exact generated transfers and its bound date 41ms
+     × forced closure acknowledges deleted rows and preserves transfer counterpart amount 48ms
+     ↓ remote unlink keeps provider removal scope: last linked account
+     ↓ remote unlink keeps provider removal scope: other linked account
+     ↓ remote unlink keeps provider removal scope: no token
+     ↓ invalid remote unlink preserves account: missing bank
+     ↓ invalid remote unlink preserves account: missing server
+     ↓ account closure inspection is read-only and includes future split balances
+     ↓ invalid account closure preserves provider and ledger: missing required destination
+     ↓ invalid account closure preserves provider and ledger: self transfer
+     ↓ invalid account closure preserves provider and ledger: missing destination
+     ↓ invalid account closure preserves provider and ledger: deleted destination
+     ↓ invalid account closure preserves provider and ledger: missing destination payee
+     ↓ invalid account closure preserves provider and ledger: missing closing category
+     ↓ invalid account closure preserves provider and ledger: missing deletion payee
+     ↓ invalid account closure preserves provider and ledger: missing closing payee
+     ↓ Transfers are properly updated
+   ↓ Budget (2)
+     ↓ new budgets should be created
+     ↓ budget updates when changing a category
+   ↓ Categories (3)
+     ↓ can be deleted
+     ↓ transfers properly when deleted
+     ↓ do not count as overspent when deleted
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/main.test.ts > Accounts > closure outcome discloses provider removal: acknowledged
+ FAIL  src/server/main.test.ts > Accounts > closure outcome discloses provider removal: uncertain
+TypeError: performAccountClosure is not a function
+ ❯ src/server/main.test.ts:149:11
+    147|         );
+    148|         const outcome = await runMutator(() =>
+    149|           performAccountClosure({ id: 'closing' }),
+       |           ^
+    150|         );
+    151|         expect(outcome).toMatchObject({
+ ❯ _runMutator src/server/mutators.ts:93:10
+ ❯ run src/shared/async.ts:37:32
+ ❯ sequenceState.queue.push.resolve.resolve src/shared/async.ts:52:16
+ ❯ Module.<anonymous> src/shared/async.ts:51:14
+ ❯ src/server/main.test.ts:148:31
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/server/main.test.ts > Accounts > closure acknowledges exact generated transfers and its bound date
+TypeError: performAccountClosure is not a function
+ ❯ src/server/main.test.ts:180:7
+    178|     });
+    179|     const outcome = await runMutator(() =>
+    180|       performAccountClosure({
+       |       ^
+    181|         id,
+    182|         transferAccountId: destination,
+ ❯ _runMutator src/server/mutators.ts:93:10
+ ❯ run src/shared/async.ts:37:32
+ ❯ sequenceState.queue.push.resolve.resolve src/shared/async.ts:52:16
+ ❯ Module.<anonymous> src/shared/async.ts:51:14
+ ❯ src/server/main.test.ts:179:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/server/main.test.ts > Accounts > forced closure acknowledges deleted rows and preserves transfer counterpart amount
+TypeError: performAccountClosure is not a function
+ ❯ src/server/main.test.ts:240:7
+    238|     const beforeCounterpart = await db.getTransaction(source.transfer_…
+    239|     const outcome = await runMutator(() =>
+    240|       performAccountClosure({ id, forced: true }),
+       |       ^
+    241|     );
+    242|     expect(outcome.action).toBe('deleted');
+ ❯ _runMutator src/server/mutators.ts:93:10
+ ❯ run src/shared/async.ts:37:32
+ ❯ sequenceState.queue.push.resolve.resolve src/shared/async.ts:52:16
+ ❯ Module.<anonymous> src/shared/async.ts:51:14
+ ❯ src/server/main.test.ts:239:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 22 skipped (26)
+   Start at  13:09:03
+   Duration  2.91s (setup 60%, transform 33%, tests 6%, import 1%)
+

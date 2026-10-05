@@ -1,0 +1,46 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+ ❯ src/server/db/index.test.ts (23 tests | 1 failed | 22 skipped) 64ms
+   ↓ Database (14)
+     ↓ all and first accept null params
+     ↓ inserting a category works
+     ↓ using a deleted category name works
+     ↓ transactions are sorted by date
+     ↓ transactions are sorted by starting balance flag
+     ↓ transactions are sorted by sort order
+     ↓ transactions are sorted by id as a last resort
+     ↓ schedules can be reordered
+     ↓ moving a schedule to the top uses a null targetId
+     ↓ moving a non-existent schedule throws
+     ↓ transactions get child transactions in the right order
+     ↓ transactions don't show orphaned child transactions
+     ↓ parent transactions never have a category
+     ↓ child transactions never appear if parent is deleted
+   ↓ read-only category insertion planning (4)
+     ↓ ordinary group ordering matches the canonical writer without preview writes
+     ↓ compact sibling shoves matches the canonical writer without preview writes
+     ↓ global append ordering matches the canonical writer without preview writes
+     ↓ duplicate-name rejection does not change category rows or synchronization messages
+   ↓ read-only category deletion mapping planning (2)
+     ↓ matches canonical forwarding effects with transfer=false without preview writes
+     ↓ matches canonical forwarding effects with transfer=true without preview writes
+   ↓ category group insertion inspection preserves rows and matches canonical global order
+   ↓ category group update inspection validates duplicates without writes and matches partial writer
+   × payee insertion inspection preserves exact names and duplicate behavior without writes and matches mapping owner 63ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/db/index.test.ts > payee insertion inspection preserves exact names and duplicate behavior without writes and matches mapping owner
+TypeError: inspectPayeeInsertion is not a function
+ ❯ src/server/db/index.test.ts:609:19
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 22 skipped (23)
+   Start at  19:36:36
+   Duration  3.08s (setup 63%, transform 35%, tests 2%)
+

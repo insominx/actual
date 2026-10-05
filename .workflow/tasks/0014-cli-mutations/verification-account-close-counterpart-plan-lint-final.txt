@@ -1,0 +1,1 @@
+packages/loot-core/src/server/transactions/transaction-rules.test.ts:1316:17: warning typescript(no-unsafe-type-assertion): Unsafe type assertion: type '{ prepare: (sql: string) => unknown; }' is more narrow than the original type.

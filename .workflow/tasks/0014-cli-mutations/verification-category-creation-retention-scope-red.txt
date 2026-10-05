@@ -1,0 +1,35 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+ ❯ src/change-journal.test.ts (15 tests | 1 failed) 1560ms
+   × expires category creation only with complete generated category and mapping acknowledgements 29ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/change-journal.test.ts > expires category creation only with complete generated category and mapping acknowledgements
+AssertionError: expected undefined to be 'synced' // Object.is equality
+
+- Expected:
+"synced"
+
++ Received:
+undefined
+
+ ❯ src/change-journal.test.ts:760:63
+    758|       await journal.prepare('category-next', proposal);
+    759|       expect(await journal.read('category-ack')).toBeNull();
+    760|       expect((await journal.read('category-missing'))?.state).toBe('sy…
+       |                                                               ^
+    761|       expect((await journal.read('category-incomplete'))?.state).toBe(…
+    762|       expect((await journal.read('category-uncertain'))?.state).toBe('…
+ ❯ withChangeJournal src/change-journal.ts:175:12
+ ❯ src/change-journal.test.ts:748:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 14 passed (15)
+   Start at  16:37:04
+   Duration  1.72s (tests 95%, transform 3%, import 1%)
+

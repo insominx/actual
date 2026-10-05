@@ -1,0 +1,6 @@
+Checking formatting...
+
+packages/cli/integration/changes.test.mjs (10ms)
+
+Format issues found in above 1 files. Run without `--check` to fix.
+Finished in 295ms on 16 files using 32 threads.

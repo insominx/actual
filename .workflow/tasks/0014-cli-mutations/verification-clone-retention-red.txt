@@ -1,0 +1,85 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/cli
+
+ ❯ src/change-journal.test.ts (8 tests | 1 failed | 7 skipped) 34ms
+   × expires acknowledged clone receipts while retaining ambiguous destination evidence 33ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/change-journal.test.ts > expires acknowledged clone receipts while retaining ambiguous destination evidence
+AssertionError: expected { schemaVersion: 1, …(7) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "createdAt": "2026-10-04T03:36:27.799Z",
+  "operationId": "creation-ack",
+  "outcome": {
+    "affectedIds": [
+      "new-actual-id",
+    ],
+    "changed": true,
+    "checkpoint": "observed",
+    "status": "committed-local",
+  },
+  "proposal": {
+    "after": {
+      "name": "New local budget",
+      "published": false,
+    },
+    "before": {
+      "archived": false,
+      "currency": null,
+      "name": "Source",
+      "sourceHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    },
+    "budget": {
+      "cloudFileId": null,
+      "id": "test-budget",
+      "syncId": null,
+    },
+    "delivery": "local-only",
+    "operation": "budgets.clone",
+    "references": {
+      "ignoredTables": [
+        "kvcache",
+        "kvcache_key",
+        "messages_clock",
+      ],
+      "nameAvailable": true,
+    },
+    "request": {
+      "id": "test-budget",
+      "name": "New local budget",
+    },
+    "schemaVersion": 1,
+    "sideEffects": [
+      "new local copy and identity",
+    ],
+  },
+  "schemaVersion": 1,
+  "state": "committed-local",
+  "token": "ba15d9f99d0aa7d5fb15f973c7b5b42bb088f64cfd3ac7202ea0981a857bf509",
+  "updatedAt": "2000-01-01T00:00:00.000Z",
+}
+
+ ❯ src/change-journal.test.ts:204:52
+    202|           'committed-local',
+    203|         );
+    204|         expect(await journal.read('creation-ack')).toBeNull();
+       |                                                    ^
+    205|         expect((await journal.read('creation-uncertain'))?.state).toBe(
+    206|           'uncertain',
+ ❯ withChangeJournal src/change-journal.ts:73:12
+ ❯ src/change-journal.test.ts:178:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 skipped (8)
+   Start at  20:36:27
+   Duration  180ms (transform 43%, tests 34%, import 18%, worker 5%)
+

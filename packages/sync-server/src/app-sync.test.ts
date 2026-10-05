@@ -31,6 +31,63 @@ function generateFileId() {
   return id;
 }
 
+describe('initial encrypted publication', () => {
+  it('stores the key and encrypted file in the first upload', async () => {
+    const fileId = generateFileId();
+    const keyId = crypto.randomUUID();
+    const salt = crypto.randomBytes(32).toString('base64');
+    const testContent = JSON.stringify({
+      value: 'AA==',
+      meta: {
+        keyId,
+        algorithm: 'aes-256-gcm',
+        iv: crypto.randomBytes(12).toString('base64'),
+        authTag: crypto.randomBytes(16).toString('base64'),
+      },
+    });
+    onTestFinished(() => {
+      if (fs.existsSync(getPathForUserFile(fileId))) {
+        fs.unlinkSync(getPathForUserFile(fileId));
+      }
+    });
+    const res = await request(app)
+      .post('/upload-user-file')
+      .set('Content-Type', 'application/encrypted-file')
+      .set('x-actual-token', 'valid-token')
+      .set('x-actual-file-id', fileId)
+      .set('x-actual-name', 'encrypted-first')
+      .set('x-actual-format', '2')
+      .set('x-actual-encrypt-meta', JSON.stringify({ keyId }))
+      .set('x-actual-initial-key', JSON.stringify({ salt, testContent }))
+      .send(Buffer.from('ciphertext'));
+    expect(res.statusCode).toBe(200);
+    const key = await request(app)
+      .post('/user-get-key')
+      .set('x-actual-token', 'valid-token')
+      .send({ fileId });
+    expect(key.body.data).toEqual({ id: keyId, salt, test: testContent });
+  });
+
+  it('rejects malformed initial keys before writing a file', async () => {
+    const fileId = generateFileId();
+    onTestFinished(() => {
+      if (fs.existsSync(getPathForUserFile(fileId))) {
+        fs.unlinkSync(getPathForUserFile(fileId));
+      }
+    });
+    const res = await request(app)
+      .post('/upload-user-file')
+      .set('Content-Type', 'application/encrypted-file')
+      .set('x-actual-token', 'valid-token')
+      .set('x-actual-file-id', fileId)
+      .set('x-actual-name', 'invalid')
+      .set('x-actual-initial-key', '{"salt":"bad","testContent":"bad"}')
+      .send(Buffer.from('content'));
+    expect(res.statusCode).toBe(400);
+    expect(fs.existsSync(getPathForUserFile(fileId))).toBe(false);
+  });
+});
+
 describe('/user-get-key', () => {
   it('returns 401 if the user is not authenticated', async () => {
     const res = await request(app).post('/user-get-key');

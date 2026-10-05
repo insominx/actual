@@ -21,6 +21,12 @@ const INTEGERS = new Set([
   'last',
   'cacheTtl',
   'lockTimeout',
+  'port',
+  'interval',
+  'timeout',
+  'samples',
+  'retries',
+  'keep',
 ]);
 const NONNEGATIVE = new Set([
   'limit',
@@ -32,7 +38,21 @@ const NONNEGATIVE = new Set([
 const DATES = new Set(['start', 'end', 'cutoff']);
 const MONTHS = new Set(['month']);
 const BOOLEANS = new Set(['offbudget', 'hidden', 'carryover']);
+const WATCH_RANGES: Record<string, { minimum: number; maximum: number }> = {
+  interval: { minimum: 1, maximum: 300 },
+  timeout: { minimum: 1, maximum: 120 },
+  samples: { minimum: 1, maximum: 1000 },
+  retries: { minimum: 0, maximum: 20 },
+};
 const READ_OPERATIONS = new Set([
+  'changes.preview',
+  'changes.status',
+  'budgets.inspect',
+  'budgets.compare',
+  'backups.validate',
+  'sync.status',
+  'sync.refresh',
+  'sync.watch',
   'budgets.download',
   'query.run',
   'query.tables',
@@ -44,6 +64,10 @@ const READ_OPERATIONS = new Set([
   'capabilities',
   'schema',
   'context',
+  'doctor',
+  'connection.test',
+  'server.status',
+  'server.logs',
   'profiles.list',
   'profiles.show',
 ]);
@@ -58,8 +82,18 @@ export function operationName(command: Command): string {
   return names.join('.');
 }
 
-function optionSchema(option: Option): PropertySchema {
+function optionSchema(option: Option, operation?: string): PropertySchema {
   const name = option.attributeName();
+  const bounds =
+    name === 'limit' && operation === 'changes.list'
+      ? { minimum: 1, maximum: 500 }
+      : (name === 'keep' && operation === 'backups.prune') ||
+          (name === 'limit' &&
+            ['budgets.compare', 'backups.prune', 'backups.list'].includes(
+              operation ?? '',
+            ))
+        ? { minimum: 1, maximum: 1000 }
+        : WATCH_RANGES[name];
   const type = INTEGERS.has(name)
     ? 'integer'
     : !option.required && !option.optional
@@ -73,8 +107,10 @@ function optionSchema(option: Option): PropertySchema {
     ...(option.argChoices ? { enum: option.argChoices } : {}),
     ...(type === 'integer'
       ? {
-          minimum: NONNEGATIVE.has(name) ? 0 : Number.MIN_SAFE_INTEGER,
-          maximum: Number.MAX_SAFE_INTEGER,
+          minimum:
+            bounds?.minimum ??
+            (NONNEGATIVE.has(name) ? 0 : Number.MIN_SAFE_INTEGER),
+          maximum: bounds?.maximum ?? Number.MAX_SAFE_INTEGER,
         }
       : {}),
     ...(DATES.has(name)
@@ -128,11 +164,38 @@ export function discoverOperations(root: Command) {
         type: 'object',
         additionalProperties: false,
         properties: Object.fromEntries(
-          command.options.map(o => [o.attributeName(), optionSchema(o)]),
+          command.options.map(o => [o.attributeName(), optionSchema(o, name)]),
         ),
-        required: command.options
-          .filter(o => o.mandatory)
-          .map(o => o.attributeName()),
+        required: [
+          ...command.options
+            .filter(o => o.mandatory)
+            .map(o => o.attributeName()),
+          ...([
+            'budgets.create',
+            'accounts.create',
+            'accounts.update',
+            'accounts.reopen',
+            'accounts.delete',
+            'accounts.close',
+            'category-groups.delete',
+            'categories.delete',
+            'category-groups.update',
+            'categories.update',
+            'category-groups.create',
+            'categories.create',
+            'budgets.clone',
+            'budgets.publish',
+            'backups.restore',
+            'budgets.rename',
+            'budgets.archive',
+            'budgets.set-amount',
+            'budgets.set-carryover',
+            'budgets.hold-next-month',
+            'budgets.reset-hold',
+          ].includes(name)
+            ? ['operationId']
+            : []),
+        ],
       },
       arguments: command.registeredArguments.map(a => ({
         name: a.name(),
@@ -144,7 +207,7 @@ export function discoverOperations(root: Command) {
         mutates,
         preview: false,
         reversal: false,
-        destructive: ['delete', 'merge', 'close'].includes(verb),
+        destructive: ['delete', 'merge', 'close', 'prune'].includes(verb),
       },
       examples: [`actual ${name.replaceAll('.', ' ')} --help`],
       globalOptions: Object.fromEntries(

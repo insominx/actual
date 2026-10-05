@@ -1,0 +1,11 @@
+✔ killed apply at before-engine preserves its durable outcome and never replays (35686.4452ms)
+✔ killed apply at after-engine preserves its durable outcome and never replays (34681.7207ms)
+✔ killed apply at before-sync preserves its durable outcome and never replays (35549.4666ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 105974.3821

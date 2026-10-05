@@ -1,0 +1,26 @@
+✔ guarded clone preserves the rich source and receipts prevent another destination on retries (9247.6975ms)
+✔ killed apply at before-engine (accounts.update) preserves its durable outcome and never replays (36047.1438ms)
+✔ killed apply at after-engine (accounts.update) preserves its durable outcome and never replays (35722.8064ms)
+✔ killed apply at before-sync (accounts.update) preserves its durable outcome and never replays (37483.1305ms)
+✔ killed apply at before-engine (accounts.reopen) preserves its durable outcome and never replays (36775.3306ms)
+✔ killed apply at after-engine (accounts.reopen) preserves its durable outcome and never replays (37123.6879ms)
+✔ killed apply at before-sync (accounts.reopen) preserves its durable outcome and never replays (38539.39ms)
+✔ guarded account reopening preserves provider fields and retries retain later closure (online) (10692.5401ms)
+✔ guarded account reopening preserves provider fields and retries retain later closure (offline) (9916.7165ms)
+✔ guarded account updates preserve ledger and retries retain later account edits (online) (10103.5354ms)
+✔ guarded account updates preserve ledger and retries retain later account edits (offline) (9376.1882ms)
+✔ guarded account creation acknowledges actual identities and retries one account (online) (9704.7887ms)
+✔ guarded account creation acknowledges actual identities and retries one account (offline) (8683.1133ms)
+✔ guarded account deletion preserves other domains and retries its exact outcome (online) (5058.2192ms)
+✔ guarded account deletion preserves other domains and retries its exact outcome (offline) (4975.9749ms)
+✔ killed account deletion at before-engine retains its exact outcome without replay (34416.9208ms)
+✔ killed account deletion at after-engine retains its exact outcome without replay (34042.9083ms)
+✔ killed account deletion at before-sync retains its exact outcome without replay (35019.1556ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 403009.1886

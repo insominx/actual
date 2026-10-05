@@ -1,0 +1,11 @@
+✔ packaged discovery and validation work without personal configuration (510.6115ms)
+✔ encrypted remote sessions register keys across process restarts (9347.1177ms)
+✔ real server, import deduplication, two clients, and restart (12609.6608ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 22526.0828

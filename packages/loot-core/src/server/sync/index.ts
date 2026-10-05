@@ -739,6 +739,35 @@ export function getMessagesSince(since: string): Message[] {
   );
 }
 
+/** Observe local synchronization state. Deferred messages are received schema gaps. */
+export async function getSyncStatus() {
+  const metadata = prefs.getPrefs();
+  if (!metadata?.id) throw new Error('No budget file is open');
+  const since = metadata.lastSyncedTimestamp ?? '';
+  const pending = await db.first<{ count: number }>(
+    'SELECT COUNT(*) AS count FROM messages_crdt WHERE timestamp > ?',
+    [since],
+  );
+  const deferred = await db.first<{ count: number }>(
+    'SELECT COUNT(*) AS count FROM messages_pending',
+  );
+  const pendingMessages = pending?.count ?? 0;
+  return {
+    budgetId: metadata.id,
+    syncId: metadata.groupId ?? null,
+    cloudFileId: metadata.cloudFileId ?? null,
+    state: !metadata.groupId
+      ? ('unpublished' as const)
+      : pendingMessages > 0 || !metadata.lastSyncedTimestamp
+        ? ('pending-sync' as const)
+        : ('observed-synced' as const),
+    pendingMessages,
+    deferredMessages: deferred?.count ?? 0,
+    lastSyncedTimestamp: metadata.lastSyncedTimestamp ?? null,
+    observedAt: Date.now(),
+  };
+}
+
 export function clearFullSyncTimeout(): void {
   if (syncTimeout) {
     clearTimeout(syncTimeout);

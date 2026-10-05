@@ -1,0 +1,140 @@
+✖ guarded publication API preserves preview, rejects stale input and publishes one identity (encrypted=false) (3953.188ms)
+✖ guarded publication API preserves preview, rejects stale input and publishes one identity (encrypted=true) (3757.1149ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7785.2
+
+✖ failing tests:
+
+test at packages\cli\integration\publication.test.mjs:8:3
+✖ guarded publication API preserves preview, rejects stale input and publishes one identity (encrypted=false) (3953.188ms)
+  AssertionError [ERR_ASSERTION]: [Breadcrumb] { message: 'Closing budget' }
+  [Breadcrumb] {
+    message: 'Loading budget C:\\Users\\mlinh\\AppData\\Local\\Temp\\actual-agent-cli-ko9hrZ\\guarded-publication\\Guarded-API-publication-8dbdc33'
+  }
+  [Breadcrumb] { message: 'loading spreadsheet', category: 'server' }
+  Loading fresh spreadsheet
+  [Breadcrumb] { message: 'loaded spreadsheet', category: 'server' }
+  [Breadcrumb] { message: 'Closing budget' }
+  [Breadcrumb] {
+    message: 'Loading budget C:\\Users\\mlinh\\AppData\\Local\\Temp\\actual-agent-cli-ko9hrZ\\guarded-publication\\Guarded-API-publication-8dbdc33'
+  }
+  [Breadcrumb] { message: 'loading spreadsheet', category: 'server' }
+  Loaded spreadsheet from cache (744 items)
+  [Breadcrumb] { message: 'loaded spreadsheet', category: 'server' }
+  Syncing since 2026-10-04T04:34:17.408Z-0000-0000000000000000 19 (attempt: 0)
+  PostError: PostError: invalid fileId
+      at throwIfNot200 (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:60021:9)
+      at postBinary (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:60147:2)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async _fullSync (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:62761:20)
+      at async D:\Projects\personal\Budget\actual\packages\api\dist\index.js:62691:14
+      at async sync$1 (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:124815:9) {
+    meta: undefined,
+    reason: 'invalid fileId',
+    type: 'PostError'
+  }
+  PostError: PostError: invalid fileId
+      at throwIfNot200 (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:60021:9)
+      at postBinary (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:60147:2)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async _fullSync (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:62761:20)
+      at async D:\Projects\personal\Budget\actual\packages\api\dist\index.js:62691:14
+      at async sync$1 (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:124815:9) {
+    meta: undefined,
+    reason: 'invalid fileId',
+    type: 'PostError'
+  }
+  [Breadcrumb] { message: 'Closing budget' }
+  file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-api.mjs:39
+    const proposal = await api.previewBudgetPublication(request);
+                               ^
+  
+  TypeError: api.previewBudgetPublication is not a function
+      at file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-api.mjs:39:30
+  
+  Node.js v26.3.0
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:29:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages\cli\integration\publication.test.mjs:8:3
+✖ guarded publication API preserves preview, rejects stale input and publishes one identity (encrypted=true) (3757.1149ms)
+  AssertionError [ERR_ASSERTION]: [Breadcrumb] { message: 'Closing budget' }
+  [Breadcrumb] {
+    message: 'Loading budget C:\\Users\\mlinh\\AppData\\Local\\Temp\\actual-agent-cli-LFGeu3\\guarded-publication\\Guarded-API-publication-5749deb'
+  }
+  [Breadcrumb] { message: 'loading spreadsheet', category: 'server' }
+  Loading fresh spreadsheet
+  [Breadcrumb] { message: 'loaded spreadsheet', category: 'server' }
+  [Breadcrumb] { message: 'Closing budget' }
+  [Breadcrumb] {
+    message: 'Loading budget C:\\Users\\mlinh\\AppData\\Local\\Temp\\actual-agent-cli-LFGeu3\\guarded-publication\\Guarded-API-publication-5749deb'
+  }
+  [Breadcrumb] { message: 'loading spreadsheet', category: 'server' }
+  Loaded spreadsheet from cache (744 items)
+  [Breadcrumb] { message: 'loaded spreadsheet', category: 'server' }
+  Syncing since 2026-10-04T04:34:21.166Z-0000-0000000000000000 19 (attempt: 0)
+  PostError: PostError: invalid fileId
+      at throwIfNot200 (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:60021:9)
+      at postBinary (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:60147:2)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async _fullSync (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:62761:20)
+      at async D:\Projects\personal\Budget\actual\packages\api\dist\index.js:62691:14
+      at async sync$1 (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:124815:9) {
+    meta: undefined,
+    reason: 'invalid fileId',
+    type: 'PostError'
+  }
+  PostError: PostError: invalid fileId
+      at throwIfNot200 (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:60021:9)
+      at postBinary (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:60147:2)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async _fullSync (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:62761:20)
+      at async D:\Projects\personal\Budget\actual\packages\api\dist\index.js:62691:14
+      at async sync$1 (D:\Projects\personal\Budget\actual\packages\api\dist\index.js:124815:9) {
+    meta: undefined,
+    reason: 'invalid fileId',
+    type: 'PostError'
+  }
+  [Breadcrumb] { message: 'Closing budget' }
+  file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-api.mjs:39
+    const proposal = await api.previewBudgetPublication(request);
+                               ^
+  
+  TypeError: api.previewBudgetPublication is not a function
+      at file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication-api.mjs:39:30
+  
+  Node.js v26.3.0
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Projects/personal/Budget/actual/packages/cli/integration/publication.test.mjs:29:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

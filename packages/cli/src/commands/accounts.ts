@@ -2,6 +2,13 @@ import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { withConnection } from '#connection';
+import {
+  executeAccountClosure,
+  executeAccountCreation,
+  executeAccountDeletion,
+  executeAccountReopen,
+  executeAccountUpdate,
+} from '#guarded-changes';
 import { printOutput } from '#output';
 import { parseBoolFlag, parseIntFlag } from '#utils';
 
@@ -43,6 +50,7 @@ export function registerAccountsCommand(program: Command) {
   accounts
     .command('create')
     .description('Create a new account')
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
     .requiredOption('--name <name>', 'Account name')
     .option('--offbudget', 'Create as off-budget account', false)
     .option(
@@ -53,6 +61,17 @@ export function registerAccountsCommand(program: Command) {
     .action(async cmdOpts => {
       const balance = parseIntFlag(cmdOpts.balance, '--balance');
       const opts = program.opts();
+      if (opts.outputVersion === '2') {
+        printOutput(
+          await executeAccountCreation(opts, cmdOpts.operationId, {
+            name: cmdOpts.name,
+            offbudget: cmdOpts.offbudget,
+            initialBalance: balance,
+          }),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {
@@ -69,11 +88,12 @@ export function registerAccountsCommand(program: Command) {
   accounts
     .command('update <id>')
     .description('Update an account')
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
     .option('--name <name>', 'New account name')
     .option('--offbudget <bool>', 'Set off-budget status')
     .action(async (id: string, cmdOpts) => {
       const opts = program.opts();
-      const fields: Record<string, unknown> = {};
+      const fields: api.AccountUpdateRequest['fields'] = {};
       if (cmdOpts.name !== undefined) {
         const trimmed = cmdOpts.name.trim();
         if (trimmed === '') {
@@ -89,6 +109,13 @@ export function registerAccountsCommand(program: Command) {
           'No update fields provided. Use --name or --offbudget.',
         );
       }
+      if (opts.outputVersion === '2') {
+        printOutput(
+          await executeAccountUpdate(opts, cmdOpts.operationId, { id, fields }),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {
@@ -102,6 +129,7 @@ export function registerAccountsCommand(program: Command) {
   accounts
     .command('close <id>')
     .description('Close an account')
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
     .option(
       '--transfer-account <id>',
       'Transfer remaining balance to this account',
@@ -112,6 +140,17 @@ export function registerAccountsCommand(program: Command) {
     )
     .action(async (id: string, cmdOpts) => {
       const opts = program.opts();
+      if (opts.outputVersion === '2') {
+        printOutput(
+          await executeAccountClosure(opts, cmdOpts.operationId, {
+            id,
+            transferAccountId: cmdOpts.transferAccount,
+            categoryId: cmdOpts.transferCategory,
+          }),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {
@@ -129,8 +168,16 @@ export function registerAccountsCommand(program: Command) {
   accounts
     .command('reopen <id>')
     .description('Reopen a closed account')
-    .action(async (id: string) => {
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
+    .action(async (id: string, cmdOpts) => {
       const opts = program.opts();
+      if (opts.outputVersion === '2') {
+        printOutput(
+          await executeAccountReopen(opts, cmdOpts.operationId, id),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {
@@ -144,8 +191,16 @@ export function registerAccountsCommand(program: Command) {
   accounts
     .command('delete <id>')
     .description('Delete an account')
-    .action(async (id: string) => {
+    .option('--operation-id <id>', 'Required for version 2; durable retry ID')
+    .action(async (id: string, cmdOpts) => {
       const opts = program.opts();
+      if (opts.outputVersion === '2') {
+        printOutput(
+          await executeAccountDeletion(opts, cmdOpts.operationId, id),
+          opts.format,
+        );
+        return;
+      }
       await withConnection(
         opts,
         async () => {

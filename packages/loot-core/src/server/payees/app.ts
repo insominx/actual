@@ -54,7 +54,11 @@ app.method('payee-locations-get', getPayeeLocations);
 app.method('payee-location-delete', mutator(deletePayeeLocation));
 app.method('payees-get-nearby', getNearbyPayees);
 
-async function createPayee({ name }: { name: PayeeEntity['name'] }) {
+export function inspectPayeeCreation({ name }: { name: PayeeEntity['name'] }) {
+  return db.inspectPayeeInsertion({ name });
+}
+
+export async function createPayee({ name }: { name: PayeeEntity['name'] }) {
   return db.insertPayee({ name });
 }
 

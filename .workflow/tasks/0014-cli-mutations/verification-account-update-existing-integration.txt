@@ -1,0 +1,11 @@
+✔ guarded clone preserves the rich source and receipts prevent another destination on retries (9850.0908ms)
+✔ guarded account creation acknowledges actual identities and retries one account (online) (9493.4608ms)
+✔ guarded account creation acknowledges actual identities and retries one account (offline) (8825.5752ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 28240.0878

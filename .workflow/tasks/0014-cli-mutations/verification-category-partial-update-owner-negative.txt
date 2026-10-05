@@ -1,0 +1,74 @@
+
+ RUN  v5.0.0 D:/Projects/personal/Budget/actual/packages/loot-core
+
+ ❯ src/server/main.test.ts (28 tests | 1 failed | 27 skipped) 56ms
+   ↓ Budgets (2)
+     ↓ budget is successfully loaded
+     ↓ budget detects out of sync migrations
+   ↓ Accounts (20)
+     ↓ forced closure rejects a missing transfer counterpart before unlinking
+     ↓ closure outcome discloses provider removal: acknowledged
+     ↓ closure outcome discloses provider removal: uncertain
+     ↓ closure acknowledges exact generated transfers and its bound date
+     ↓ forced closure acknowledges deleted rows and preserves transfer counterpart amount
+     ↓ remote unlink keeps provider removal scope: last linked account
+     ↓ remote unlink keeps provider removal scope: other linked account
+     ↓ remote unlink keeps provider removal scope: no token
+     ↓ invalid remote unlink preserves account: missing bank
+     ↓ invalid remote unlink preserves account: missing server
+     ↓ account closure inspection is read-only and includes future split balances
+     ↓ invalid account closure preserves provider and ledger: missing required destination
+     ↓ invalid account closure preserves provider and ledger: self transfer
+     ↓ invalid account closure preserves provider and ledger: missing destination
+     ↓ invalid account closure preserves provider and ledger: deleted destination
+     ↓ invalid account closure preserves provider and ledger: missing destination payee
+     ↓ invalid account closure preserves provider and ledger: missing closing category
+     ↓ invalid account closure preserves provider and ledger: missing deletion payee
+     ↓ invalid account closure preserves provider and ledger: missing closing payee
+     ↓ Transfers are properly updated
+   ↓ Budget (2)
+     ↓ new budgets should be created
+     ↓ budget updates when changing a category
+   ↓ Categories (3)
+     ↓ can be deleted
+     ↓ transfers properly when deleted
+     ↓ do not count as overspent when deleted
+   × partial category owner updates preserve template settings and other raw columns 55ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/main.test.ts > partial category owner updates preserve template settings and other raw columns
+AssertionError: expected { id: 'id3', …(9) } to deeply equal { id: 'id3', …(9) }
+
+- Expected
++ Received
+
+@@ -1,10 +1,10 @@
+  {
+    "cat_group": "id2",
+    "cleanup_def": "custom cleanup",
+    "goal_def": "custom goal",
+-   "hidden": 0,
++   "hidden": 1,
+    "id": "id3",
+    "is_income": 0,
+    "name": "Owner category",
+    "sort_order": 16384,
+    "template_settings": "{\"source\":\"ui\"}",
+
+ ❯ src/server/main.test.ts:981:73
+    979|   );
+    980|   await runHandler(handlers['category-update'], { id, hidden: true });
+    981|   expect(await db.first('SELECT * FROM categories WHERE id = ?', [id])…
+       |                                                                         ^
+    982|     { ...before, hidden: 0 },
+    983|   );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 27 skipped (28)
+   Start at  16:08:43
+   Duration  2.86s (setup 62%, transform 35%, tests 2%, import 1%)
+

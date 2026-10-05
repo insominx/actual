@@ -17,6 +17,58 @@ import type { batchUpdateTransactions } from '#server/transactions';
 import type { QueryState } from '#shared/query';
 
 import type {
+  AccountCloseOutcome,
+  AccountCloseProposal,
+  AccountCloseRequest,
+  AccountCreationOutcome,
+  AccountCreationProposal,
+  AccountCreationRequest,
+  AccountDeletionOutcome,
+  AccountDeletionProposal,
+  AccountDeletionRequest,
+  AccountReopenProposal,
+  AccountReopenRequest,
+  AccountUpdateProposal,
+  AccountUpdateRequest,
+  BudgetAmountProposal,
+  BudgetAmountRequest,
+  BudgetCarryoverProposal,
+  BudgetCarryoverRequest,
+  BudgetCloneProposal,
+  BudgetCloneRequest,
+  BudgetCreationProposal,
+  BudgetCreationRequest,
+  BudgetHoldProposal,
+  BudgetHoldRequest,
+  BudgetMetadataProposal,
+  BudgetMetadataRequest,
+  BudgetPublicationOutcome,
+  BudgetPublicationProposal,
+  BudgetPublicationRequest,
+  BudgetRestoreProposal,
+  BudgetRestoreRequest,
+  CategoryCreationOutcome,
+  CategoryCreationProposal,
+  CategoryCreationRequest,
+  CategoryDeletionProposal,
+  CategoryDeletionRequest,
+  PayeeCreationOutcome,
+  PayeeCreationProposal,
+  PayeeCreationRequest,
+  CategoryGroupCreationOutcome,
+  CategoryGroupCreationProposal,
+  CategoryGroupCreationRequest,
+  CategoryGroupDeletionProposal,
+  CategoryGroupDeletionRequest,
+  CategoryGroupUpdateProposal,
+  CategoryGroupUpdateRequest,
+  CategoryUpdateProposal,
+  CategoryUpdateRequest,
+  TransactionUpdateOutcome,
+  TransactionUpdateProposal,
+  TransactionUpdateRequest,
+} from './change-proposals';
+import type {
   AccountEntity,
   CategoryGroupEntity,
   ImportTransactionEntity,
@@ -36,7 +88,163 @@ export type ImportTransactionsOpts = {
   payeeNameNormalization?: PayeeNameNormalization;
 };
 
+export type BudgetInspection = {
+  id: string;
+  name: string;
+  syncId: string | null;
+  cloudFileId: string | null;
+  encryptKeyId: string | null;
+  currency: string | null;
+  archived: boolean;
+  publicationStatus: 'prepared' | 'published' | null;
+};
+
+export type SyncStatus = {
+  budgetId: string;
+  syncId: string | null;
+  cloudFileId: string | null;
+  state: 'unpublished' | 'pending-sync' | 'observed-synced';
+  pendingMessages: number;
+  deferredMessages: number;
+  lastSyncedTimestamp: string | null;
+  observedAt: number;
+};
+
 export type ApiHandlers = {
+  'api/budget-preview-publication': (
+    arg: BudgetPublicationRequest,
+  ) => Promise<BudgetPublicationProposal>;
+  'api/budget-apply-publication': (arg: {
+    proposal: BudgetPublicationProposal;
+    encryptionPassword?: string;
+  }) => Promise<BudgetPublicationOutcome>;
+  'api/budget-recover-publication': (arg: {
+    proposal: BudgetPublicationProposal;
+    encryptionPassword?: string;
+  }) => Promise<BudgetPublicationOutcome>;
+  'api/budget-preview-restore': (arg: {
+    buffer: ArrayBuffer;
+    request: BudgetRestoreRequest;
+  }) => Promise<BudgetRestoreProposal>;
+  'api/budget-apply-restore': (arg: {
+    buffer: ArrayBuffer;
+    proposal: BudgetRestoreProposal;
+  }) => Promise<TransactionUpdateOutcome>;
+  'api/budget-preview-clone': (
+    arg: BudgetCloneRequest,
+  ) => Promise<BudgetCloneProposal>;
+  'api/budget-apply-clone': (
+    arg: BudgetCloneProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/budget-preview-creation': (
+    arg: BudgetCreationRequest,
+  ) => Promise<BudgetCreationProposal>;
+  'api/budget-apply-creation': (
+    arg: BudgetCreationProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/budget-preview-metadata': (
+    arg: BudgetMetadataRequest,
+  ) => Promise<BudgetMetadataProposal>;
+  'api/budget-apply-metadata': (
+    arg: BudgetMetadataProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/budget-preview-amount': (
+    arg: BudgetAmountRequest,
+  ) => Promise<BudgetAmountProposal>;
+  'api/category-group-preview-deletion': (
+    arg: CategoryGroupDeletionRequest,
+  ) => Promise<CategoryGroupDeletionProposal>;
+  'api/category-group-apply-deletion': (
+    arg: CategoryGroupDeletionProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/category-group-preview-update': (
+    arg: CategoryGroupUpdateRequest,
+  ) => Promise<CategoryGroupUpdateProposal>;
+  'api/category-group-apply-update': (
+    arg: CategoryGroupUpdateProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/payee-preview-creation': (
+    arg: PayeeCreationRequest,
+  ) => Promise<PayeeCreationProposal>;
+  'api/payee-apply-creation': (
+    arg: PayeeCreationProposal,
+  ) => Promise<PayeeCreationOutcome>;
+  'api/category-group-preview-creation': (
+    arg: CategoryGroupCreationRequest,
+  ) => Promise<CategoryGroupCreationProposal>;
+  'api/category-group-apply-creation': (
+    arg: CategoryGroupCreationProposal,
+  ) => Promise<CategoryGroupCreationOutcome>;
+  'api/category-preview-creation': (
+    arg: CategoryCreationRequest,
+  ) => Promise<CategoryCreationProposal>;
+  'api/category-apply-creation': (
+    arg: CategoryCreationProposal,
+  ) => Promise<CategoryCreationOutcome>;
+  'api/category-preview-deletion': (
+    arg: CategoryDeletionRequest,
+  ) => Promise<CategoryDeletionProposal>;
+  'api/category-apply-deletion': (
+    arg: CategoryDeletionProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/category-preview-update': (
+    arg: CategoryUpdateRequest,
+  ) => Promise<CategoryUpdateProposal>;
+  'api/category-apply-update': (
+    arg: CategoryUpdateProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/account-preview-closure': (
+    arg: AccountCloseRequest,
+  ) => Promise<AccountCloseProposal>;
+  'api/account-apply-closure': (
+    arg: AccountCloseProposal,
+  ) => Promise<AccountCloseOutcome>;
+  'api/account-preview-deletion': (
+    arg: AccountDeletionRequest,
+  ) => Promise<AccountDeletionProposal>;
+  'api/account-apply-deletion': (
+    arg: AccountDeletionProposal,
+  ) => Promise<AccountDeletionOutcome>;
+  'api/account-preview-reopen': (
+    arg: AccountReopenRequest,
+  ) => Promise<AccountReopenProposal>;
+  'api/account-apply-reopen': (
+    arg: AccountReopenProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/account-preview-update': (
+    arg: AccountUpdateRequest,
+  ) => Promise<AccountUpdateProposal>;
+  'api/account-apply-update': (
+    arg: AccountUpdateProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/account-preview-creation': (
+    arg: AccountCreationRequest,
+  ) => Promise<AccountCreationProposal>;
+  'api/account-apply-creation': (
+    arg: AccountCreationProposal,
+  ) => Promise<AccountCreationOutcome>;
+  'api/budget-preview-carryover': (
+    arg: BudgetCarryoverRequest,
+  ) => Promise<BudgetCarryoverProposal>;
+  'api/budget-preview-hold': (
+    arg: BudgetHoldRequest,
+  ) => Promise<BudgetHoldProposal>;
+  'api/budget-apply-hold': (
+    arg: BudgetHoldProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/budget-apply-carryover': (
+    arg: BudgetCarryoverProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/budget-apply-amount': (
+    arg: BudgetAmountProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/transaction-preview-update': (
+    arg: TransactionUpdateRequest,
+  ) => Promise<TransactionUpdateProposal>;
+  'api/transaction-apply-update': (
+    arg: TransactionUpdateProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/sync-status': () => Promise<SyncStatus>;
   'api/batch-budget-start': () => Promise<void>;
 
   'api/batch-budget-end': () => Promise<void>;
@@ -53,6 +261,26 @@ export type ApiHandlers = {
   }) => Promise<void>;
 
   'api/get-budgets': () => Promise<APIFileEntity[]>;
+
+  'api/create-budget': (arg: {
+    name: string;
+    currency?: string;
+  }) => Promise<{ id: string }>;
+
+  'api/inspect-budget': () => Promise<BudgetInspection>;
+
+  'api/clone-budget': (arg: { name: string }) => Promise<{ id: string }>;
+  'api/restore-budget': (arg: {
+    buffer: ArrayBuffer;
+    name: string;
+  }) => Promise<{ id: string }>;
+
+  'api/rename-budget': (arg: { name: string }) => Promise<void>;
+  'api/archive-budget': (arg: { archived: boolean }) => Promise<void>;
+  'api/publish-budget': (arg: {
+    id: string;
+    encryptionPassword?: string;
+  }) => Promise<BudgetInspection>;
 
   'api/start-import': (arg: { budgetName: string }) => Promise<void>;
 
