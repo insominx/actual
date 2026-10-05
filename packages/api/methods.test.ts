@@ -5733,7 +5733,7 @@ describe('guarded batch categorization', () => {
       { date: '2026-08-01', amount: -100, notes: 'a' },
       { date: '2026-08-02', amount: -200, notes: 'b', category: food },
       { date: '2026-08-03', amount: -300, notes: 'c' },
-      { date: '2026-08-04', amount: -400, notes: 'r', reconciled: true },
+      { date: '2026-08-04', amount: -400, notes: 'r' },
       {
         date: '2026-08-05',
         amount: -500,
@@ -5751,6 +5751,14 @@ describe('guarded batch categorization', () => {
       [{ date: '2026-08-06', amount: -600, payee: transferPayee.id }],
       { runTransfers: true },
     );
+    const added = await api.getTransactions(
+      account,
+      '2026-08-01',
+      '2026-08-31',
+    );
+    await api.updateTransaction(added.find(row => row.notes === 'r')!.id, {
+      reconciled: true,
+    });
     const rows = await api.getTransactions(account, '2026-08-01', '2026-08-31');
     const byNotes = (notes: string) => rows.find(row => row.notes === notes)!;
     const [a, b, c, r] = ['a', 'b', 'c', 'r'].map(byNotes);
