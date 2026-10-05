@@ -588,6 +588,8 @@ export async function executeCatalogChange(
     | 'tags.delete'
     | 'notes.set'
     | 'preferences.set'
+    | 'account-groups.update'
+    | 'account-groups.delete'
     | 'rules.update'
     | 'rules.delete'
     | 'schedules.update'
@@ -646,6 +648,42 @@ export async function executeTagCreation(
     );
   }
   return { id: receipt.outcome.tagCreation.tagId, receipt };
+}
+
+export async function executeAccountGroupCreation(
+  opts: CliGlobalOpts,
+  operationId: string | undefined,
+  request: api.AccountGroupCreationRequest,
+) {
+  if (!operationId) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      'Account group creation requires --operation-id for durable retry.',
+      false,
+      { field: 'operationId' },
+    );
+  }
+  const prepared = await previewGuardedChange(
+    opts,
+    'account-groups.create',
+    undefined,
+    { operationId, data: JSON.stringify(request) },
+  );
+  const receipt = await applyGuardedChange(opts, operationId, {
+    token: prepared.token,
+  });
+  if (
+    receipt.outcome?.status !== 'committed-local' ||
+    !('accountGroupCreation' in receipt.outcome)
+  ) {
+    throw new AgentError(
+      'PARTIAL_COMPLETION',
+      'Account group creation has no acknowledged engine identity.',
+      false,
+      { operationId },
+    );
+  }
+  return { id: receipt.outcome.accountGroupCreation.groupId, receipt };
 }
 
 export async function executeTransactionAddition(
@@ -1229,6 +1267,24 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
     preview: r => api.previewPreferenceSet(r as api.PreferenceSetRequest),
     apply: p => api.applyPreferenceSet(p as api.PreferenceSetProposal),
   },
+  'account-groups.create': {
+    preview: r =>
+      api.previewAccountGroupCreation(r as api.AccountGroupCreationRequest),
+    apply: p =>
+      api.applyAccountGroupCreation(p as api.AccountGroupCreationProposal),
+  },
+  'account-groups.update': {
+    preview: r =>
+      api.previewAccountGroupUpdate(r as api.AccountGroupUpdateRequest),
+    apply: p =>
+      api.applyAccountGroupUpdate(p as api.AccountGroupUpdateProposal),
+  },
+  'account-groups.delete': {
+    preview: r =>
+      api.previewAccountGroupDeletion(r as api.AccountGroupDeletionRequest),
+    apply: p =>
+      api.applyAccountGroupDeletion(p as api.AccountGroupDeletionProposal),
+  },
   'rules.create': {
     preview: r => api.previewRuleCreation(r as api.RuleCreationRequest),
     apply: p => api.applyRuleCreation(p as api.RuleCreationProposal),
@@ -1350,6 +1406,9 @@ function changeRequest(
   | api.TagDeletionRequest
   | api.NoteSetRequest
   | api.PreferenceSetRequest
+  | api.AccountGroupCreationRequest
+  | api.AccountGroupUpdateRequest
+  | api.AccountGroupDeletionRequest
   | api.RuleCreationRequest
   | api.RuleUpdateRequest
   | api.RuleDeletionRequest
@@ -1503,6 +1562,41 @@ function changeRequest(
       );
     }
     return { id, fields: payload as api.TagUpdateRequest['fields'] };
+  }
+  if (operation === 'account-groups.create') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(key => key !== 'name') ||
+      typeof payload.name !== 'string'
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Account group creation takes {"name":"<name>"} and no target ID.',
+      );
+    }
+    return { name: payload.name };
+  }
+  if (operation === 'account-groups.update') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(key => key !== 'name') ||
+      typeof payload.name !== 'string'
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Account group update takes {"name":"<name>"}; the group is the change ID.',
+      );
+    }
+    return { id, fields: { name: payload.name } };
+  }
+  if (operation === 'account-groups.delete') {
+    if (isRecord(payload) && Object.keys(payload).length) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Deletion takes only the target ID and no payload.',
+      );
+    }
+    return { id };
   }
   if (operation === 'preferences.set') {
     if (

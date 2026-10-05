@@ -31,6 +31,13 @@ import type {
   AccountDeletionOutcome,
   AccountDeletionProposal,
   AccountDeletionRequest,
+  AccountGroupCreationOutcome,
+  AccountGroupCreationProposal,
+  AccountGroupCreationRequest,
+  AccountGroupDeletionProposal,
+  AccountGroupDeletionRequest,
+  AccountGroupUpdateProposal,
+  AccountGroupUpdateRequest,
   AccountReopenProposal,
   AccountReopenRequest,
   AccountUpdateProposal,
@@ -258,6 +265,24 @@ export type ApiHandlers = {
   'api/note-target': (arg: {
     id: string;
   }) => Promise<{ target: NoteTarget; note: string | null }>;
+  'api/account-group-preview-creation': (
+    arg: AccountGroupCreationRequest,
+  ) => Promise<AccountGroupCreationProposal>;
+  'api/account-group-apply-creation': (
+    arg: AccountGroupCreationProposal,
+  ) => Promise<AccountGroupCreationOutcome>;
+  'api/account-group-preview-update': (
+    arg: AccountGroupUpdateRequest,
+  ) => Promise<AccountGroupUpdateProposal>;
+  'api/account-group-apply-update': (
+    arg: AccountGroupUpdateProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/account-group-preview-deletion': (
+    arg: AccountGroupDeletionRequest,
+  ) => Promise<AccountGroupDeletionProposal>;
+  'api/account-group-apply-deletion': (
+    arg: AccountGroupDeletionProposal,
+  ) => Promise<TransactionUpdateOutcome>;
   'api/preference-preview-set': (
     arg: PreferenceSetRequest,
   ) => Promise<PreferenceSetProposal>;

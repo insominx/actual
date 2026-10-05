@@ -6,6 +6,7 @@ import {
   validateCommandInput,
 } from './agent-contract';
 import { AgentError, beginAgentOutput, flushAgentOutput } from './agent-output';
+import { registerAccountGroupsCommand } from './commands/account-groups';
 import { registerAccountsCommand } from './commands/accounts';
 import { registerBackupsCommand } from './commands/backups';
 import { registerBudgetsCommand } from './commands/budgets';
@@ -152,6 +153,7 @@ export function createProgram(
     .option('--verbose', 'Show informational messages', false);
 
   registerAccountsCommand(program);
+  registerAccountGroupsCommand(program);
   registerBackupsCommand(program);
   registerBudgetsCommand(program);
   registerCategoriesCommand(program);

@@ -153,6 +153,34 @@ export type NoteSetProposal = CatalogProposal<
   { target: NoteTarget; note: { id: string; note: string } }
 >;
 
+export type AccountGroupCreationRequest = { name: string };
+export type AccountGroupCreationProposal = CatalogProposal<
+  'account-groups.create',
+  AccountGroupCreationRequest,
+  Record<never, never>,
+  { group: Record<string, unknown> }
+>;
+export type AccountGroupCreationOutcome = CatalogCommit<{
+  accountGroupCreation: { groupId: string };
+}>;
+export type AccountGroupUpdateRequest = {
+  id: string;
+  fields: { name: string };
+};
+export type AccountGroupUpdateProposal = CatalogProposal<
+  'account-groups.update',
+  AccountGroupUpdateRequest,
+  { group: Record<string, unknown> },
+  { group: Record<string, unknown> }
+>;
+export type AccountGroupDeletionRequest = { id: string };
+export type AccountGroupDeletionProposal = CatalogProposal<
+  'account-groups.delete',
+  AccountGroupDeletionRequest,
+  { group: Record<string, unknown> },
+  { action: 'tombstone'; ungroupedAccountIds: string[] }
+>;
+
 export type PreferenceSetRequest = { id: string; value: string | null };
 export type PreferenceSetProposal = CatalogProposal<
   'preferences.set',
@@ -676,6 +704,9 @@ export type ChangeProposal =
   | TagDeletionProposal
   | NoteSetProposal
   | PreferenceSetProposal
+  | AccountGroupCreationProposal
+  | AccountGroupUpdateProposal
+  | AccountGroupDeletionProposal
   | RuleCreationProposal
   | RuleUpdateProposal
   | RuleDeletionProposal

@@ -75,6 +75,12 @@ describe('registered agent commands', () => {
     ['notes.set', ['notes', 'set', '--account', 'a1', '--note', 'x']],
     ['preferences.set', ['preferences', 'set', 'dateFormat', 'yyyy-MM-dd']],
     ['preferences.reset', ['preferences', 'reset', 'dateFormat']],
+    ['account-groups.create', ['account-groups', 'create', '--name', 'Cash']],
+    [
+      'account-groups.update',
+      ['account-groups', 'update', 'g1', '--name', 'Cards'],
+    ],
+    ['account-groups.delete', ['account-groups', 'delete', 'g1']],
     [
       'rules.create',
       [

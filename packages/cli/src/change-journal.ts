@@ -15,6 +15,7 @@ import type {
   AccountCloseOutcome,
   AccountCreationOutcome,
   AccountDeletionOutcome,
+  AccountGroupCreationOutcome,
   BudgetPublicationOutcome,
   CategoryCreationOutcome,
   CategoryGroupCreationOutcome,
@@ -61,7 +62,8 @@ export type ChangeReceipt = {
     | TransactionImportOutcome
     | AccountCreationOutcome
     | AccountDeletionOutcome
-    | AccountCloseOutcome;
+    | AccountCloseOutcome
+    | AccountGroupCreationOutcome;
   artifact?: { path: string; timeout: number };
 };
 
@@ -207,6 +209,20 @@ function canExpireTagCreation(receipt: ChangeReceipt) {
     Boolean(outcome.tagCreation.tagId) &&
     outcome.affectedIds.length === 1 &&
     outcome.affectedIds[0] === outcome.tagCreation.tagId
+  );
+}
+
+function canExpireAccountGroupCreation(receipt: ChangeReceipt) {
+  if (receipt.proposal.operation !== 'account-groups.create') return true;
+  const outcome = receipt.outcome;
+  return (
+    outcome?.status === 'committed-local' &&
+    'accountGroupCreation' in outcome &&
+    isRecord(outcome.accountGroupCreation) &&
+    typeof outcome.accountGroupCreation.groupId === 'string' &&
+    Boolean(outcome.accountGroupCreation.groupId) &&
+    outcome.affectedIds.length === 1 &&
+    outcome.affectedIds[0] === outcome.accountGroupCreation.groupId
   );
 }
 
@@ -556,6 +572,7 @@ export class ChangeJournal {
             canExpireGroupCreation(row) &&
             canExpirePayeeCreation(row) &&
             canExpireTagCreation(row) &&
+            canExpireAccountGroupCreation(row) &&
             canExpireRuleCreation(row) &&
             canExpireScheduleCreation(row) &&
             canExpireTransactionAddition(row) &&

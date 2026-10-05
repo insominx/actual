@@ -29,6 +29,12 @@ import type {
   AccountCreationRequest,
   AccountDeletionProposal,
   AccountDeletionRequest,
+  AccountGroupCreationProposal,
+  AccountGroupCreationRequest,
+  AccountGroupDeletionProposal,
+  AccountGroupDeletionRequest,
+  AccountGroupUpdateProposal,
+  AccountGroupUpdateRequest,
   AccountReopenProposal,
   AccountReopenRequest,
   AccountUpdateProposal,
@@ -149,6 +155,13 @@ export type {
   NoteSetRequest,
   NoteSetProposal,
   NoteTarget,
+  AccountGroupCreationRequest,
+  AccountGroupCreationProposal,
+  AccountGroupCreationOutcome,
+  AccountGroupUpdateRequest,
+  AccountGroupUpdateProposal,
+  AccountGroupDeletionRequest,
+  AccountGroupDeletionProposal,
   PreferenceSetRequest,
   PreferenceSetProposal,
   PayeeMergeOutcome,
@@ -340,6 +353,32 @@ export function previewNoteSet(request: NoteSetRequest) {
 }
 export function applyNoteSet(proposal: NoteSetProposal) {
   return send('api/note-apply-set', proposal);
+}
+export function previewAccountGroupCreation(
+  request: AccountGroupCreationRequest,
+) {
+  return send('api/account-group-preview-creation', request);
+}
+export function applyAccountGroupCreation(
+  proposal: AccountGroupCreationProposal,
+) {
+  return send('api/account-group-apply-creation', proposal);
+}
+export function previewAccountGroupUpdate(request: AccountGroupUpdateRequest) {
+  return send('api/account-group-preview-update', request);
+}
+export function applyAccountGroupUpdate(proposal: AccountGroupUpdateProposal) {
+  return send('api/account-group-apply-update', proposal);
+}
+export function previewAccountGroupDeletion(
+  request: AccountGroupDeletionRequest,
+) {
+  return send('api/account-group-preview-deletion', request);
+}
+export function applyAccountGroupDeletion(
+  proposal: AccountGroupDeletionProposal,
+) {
+  return send('api/account-group-apply-deletion', proposal);
 }
 export function previewPreferenceSet(request: PreferenceSetRequest) {
   return send('api/preference-preview-set', request);

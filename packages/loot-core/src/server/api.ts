@@ -86,6 +86,14 @@ import type {
 import type { ServerHandlers } from '#types/server-handlers';
 
 import {
+  performAccountGroupCreation,
+  performAccountGroupDeletion,
+  performAccountGroupUpdate,
+  prepareAccountGroupCreation,
+  prepareAccountGroupDeletion,
+  prepareAccountGroupUpdate,
+} from './account-groups/guarded';
+import {
   inspectAccountClosure,
   makeAccountClosingTransaction,
   performAccountClosure,
@@ -3293,6 +3301,39 @@ function guardedCatalogHandlers<
   );
   handlers['api/preference-preview-set'] = preferenceSet.preview;
   handlers['api/preference-apply-set'] = preferenceSet.apply;
+  const accountGroupCreation = guardedCatalogHandlers(
+    prepareAccountGroupCreation,
+    guardedApply({
+      operation: 'account-groups.create',
+      noun: 'Account group creation',
+      prepare: prepareAccountGroupCreation,
+      perform: performAccountGroupCreation,
+    }),
+  );
+  handlers['api/account-group-preview-creation'] = accountGroupCreation.preview;
+  handlers['api/account-group-apply-creation'] = accountGroupCreation.apply;
+  const accountGroupUpdate = guardedCatalogHandlers(
+    prepareAccountGroupUpdate,
+    guardedApply({
+      operation: 'account-groups.update',
+      noun: 'Account group update',
+      prepare: prepareAccountGroupUpdate,
+      perform: performAccountGroupUpdate,
+    }),
+  );
+  handlers['api/account-group-preview-update'] = accountGroupUpdate.preview;
+  handlers['api/account-group-apply-update'] = accountGroupUpdate.apply;
+  const accountGroupDeletion = guardedCatalogHandlers(
+    prepareAccountGroupDeletion,
+    guardedApply({
+      operation: 'account-groups.delete',
+      noun: 'Account group deletion',
+      prepare: prepareAccountGroupDeletion,
+      perform: performAccountGroupDeletion,
+    }),
+  );
+  handlers['api/account-group-preview-deletion'] = accountGroupDeletion.preview;
+  handlers['api/account-group-apply-deletion'] = accountGroupDeletion.apply;
   const transactionImport = guardedCatalogHandlers(
     prepareTransactionImport,
     guardedApply({
