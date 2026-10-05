@@ -46,14 +46,14 @@ Defect found and fixed: workflow findings with identical messages collapsed into
 
 ## Package and suite checks (A2)
 
-| Check                                                                                | Result                                        |
-| ------------------------------------------------------------------------------------ | --------------------------------------------- |
-| Root `yarn typecheck`                                                                | See final verification in `implementation.md` |
-| CLI unit (`vitest run`)                                                              | 333/333                                       |
-| Packed CLI and API tarball install (`ACTUAL_TEST_PACKED=1`)                          | 3/3 (0034)                                    |
-| CLI integration suites per task                                                      | See each task's verification file             |
-| Browser interop (`integration/browser-*.test.mjs`, built desktop client in Chromium) | See `verification-browser-linux.txt`          |
-| Desktop/mobile Playwright suites (`packages/desktop-client/e2e`)                     | Not run in full (D9)                          |
+| Check                                                                                | Result                                 |
+| ------------------------------------------------------------------------------------ | -------------------------------------- |
+| Root `yarn typecheck`                                                                | Pass                                   |
+| CLI unit (`vitest run`)                                                              | 333/333                                |
+| Packed CLI and API tarball install (`ACTUAL_TEST_PACKED=1`)                          | 3/3 (0034)                             |
+| CLI integration suites per task                                                      | See each task's verification file      |
+| Browser interop (`integration/browser-*.test.mjs`, built desktop client in Chromium) | 4/4 (`verification-browser-linux.txt`) |
+| Desktop/mobile Playwright suites (`packages/desktop-client/e2e`)                     | Not run in full (D9)                   |
 
 ## Performance baseline (A3)
 

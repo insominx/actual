@@ -18,14 +18,14 @@
 
 ## Verification (Linux)
 
-| Check                             | Command                                                                         | Result                                    |
-| --------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------- |
-| Acceptance                        | `node --test integration/acceptance.test.mjs` (with `ACTUAL_TEST_METRICS_OUT`)  | 2/2 (`verification-acceptance-linux.txt`) |
-| Workflows regression after D4 fix | `node --test integration/workflows.test.mjs`                                    | 1/1                                       |
-| Browser interop                   | `node --test integration/browser-{sync,imports,catalog,cash-planning}.test.mjs` | 4/4 (`verification-browser-linux.txt`)    |
-| CLI unit                          | `yarn workspace @actual-app/cli exec vitest run`                                | 333/333                                   |
-| Root types                        | `yarn typecheck`                                                                | see final PR verification                 |
-| Lint/format                       | `oxlint --type-aware`, `oxfmt` on touched files                                 | clean                                     |
+| Check                             | Command                                                                         | Result                                                    |
+| --------------------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Acceptance                        | `node --test integration/acceptance.test.mjs` (with `ACTUAL_TEST_METRICS_OUT`)  | 2/2 (`verification-acceptance-linux.txt`)                 |
+| Workflows regression after D4 fix | `node --test integration/workflows.test.mjs`                                    | 1/1                                                       |
+| Browser interop                   | `node --test integration/browser-{sync,imports,catalog,cash-planning}.test.mjs` | 4/4 (`verification-browser-linux.txt`)                    |
+| CLI unit                          | `yarn workspace @actual-app/cli exec vitest run`                                | 333/333                                                   |
+| Root types                        | `yarn typecheck`                                                                | pass (after type-only fixes in loot-core guarded modules) |
+| Lint/format                       | `oxlint --type-aware`, `oxfmt` on touched files                                 | clean                                                     |
 
 Acceptance mapping:
 
