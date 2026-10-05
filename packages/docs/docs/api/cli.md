@@ -472,7 +472,18 @@ actual rules update --data '{"id":"...","stage":"pre",...}'
 
 # Delete a rule
 actual rules delete <id>
+
+# Test the rules on a sample transaction (read-only)
+actual rules test --data '{"account":"<id>","date":"2026-10-04","amount":-450,"payee_name":"coffee bar"}' [--payee-names original]
+
+# Transactions a rule selects now, then apply its actions to a frozen list (guarded)
+actual rules matches <ruleId> [--limit 500]
+actual rules apply <ruleId> --ids <id1,id2> --operation-id <unique-id> [--allow-reconciled]
 ```
+
+`rules test` runs the sample through the same steps as an imported row: the payee name is normalized and resolved (title case by default, as imports do), then the rules run in their engine order (stage `pre`, then default, then `post`). It returns the sample as resolved, the result, the fields that changed, the rules whose actions ran in order with their definitions, and payee names an import would create (including a name set by a rule). Nothing is written: no payee is created and no rule is learned. Use it to check that a merchant is categorized before importing.
+
+`rules apply` is the rule editor's "apply actions" as a guarded change: the rule's actions (including splits, formulas and `delete-transaction`) are applied to the listed transactions only; other rules and category learning do not run. Preview (`changes preview rules.apply --data '{"ruleId":"...","ids":[...]}'`) lists each row before and after, split children as `newChildOf` with their position, deletions as `tombstone`, and payee names that would be created. Every listed transaction must still match the rule's conditions and must not be a split parent (a splitting rule also excludes split children). Reconciled transactions need `--allow-reconciled`. Apply rejects with `STALE_PREVIEW` if the rule, the transactions or the ledger changed since preview, and verifies the written rows against the plan. `rules matches` lists the candidate IDs, newest first.
 
 ### Schedules
 

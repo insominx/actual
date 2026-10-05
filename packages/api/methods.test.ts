@@ -6772,3 +6772,65 @@ describe('guarded file import', () => {
     }
   });
 });
+
+describe('rule tests and historical rule application', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('tests rules without writing and applies one rule to frozen transactions', async () => {
+    const account = await api.createAccount({ name: 'Rule apply' }, 0);
+    const group = await api.createCategoryGroup({ name: 'Rule group' });
+    const category = await api.createCategory({
+      name: 'Rule category',
+      group_id: group,
+    });
+    const rule = await api.createRule({
+      stage: null,
+      conditionsOp: 'and',
+      conditions: [{ field: 'imported_payee', op: 'contains', value: 'Bar' }],
+      actions: [{ op: 'set', field: 'category', value: category }],
+    });
+    const payeesBefore = await api.getPayees();
+    const tested = await api.testRules({
+      transaction: {
+        account,
+        date: '2026-10-04',
+        amount: -450,
+        payee_name: 'coffee bar',
+      },
+    });
+    expect(tested.result.category).toBe(category);
+    expect(tested.appliedRules.map(r => r.id)).toEqual([rule.id]);
+    expect(tested.newPayees).toEqual(['Coffee Bar']);
+    expect(await api.getPayees()).toEqual(payeesBefore);
+
+    await api.addTransactions(account, [
+      { date: '2026-10-05', amount: -100, imported_payee: 'Bar One' },
+      { date: '2026-10-06', amount: -200, imported_payee: 'Elsewhere' },
+    ]);
+    const matches = await api.findRuleMatches(rule.id);
+    expect(matches.ids).toHaveLength(1);
+    const proposal = await api.previewRuleApply({
+      ruleId: rule.id,
+      ids: matches.ids,
+    });
+    expect(proposal.after.rows[0].category).toBe(category);
+    const all = await api.getTransactions(account, '2026-10-01', '2026-10-31');
+    expect(all.find(t => t.id === matches.ids[0])?.category).toBeNull();
+    const outcome = await api.applyRuleApply(proposal);
+    expect(outcome.status).toBe('committed-local');
+    const after = await api.getTransactions(
+      account,
+      '2026-10-01',
+      '2026-10-31',
+    );
+    expect(after.find(t => t.id === matches.ids[0])?.category).toBe(category);
+    const other = all.find(t => t.id !== matches.ids[0]);
+    await expect(
+      api.previewRuleApply({ ruleId: rule.id, ids: [other!.id] }),
+    ).rejects.toThrow(/no longer match/);
+    await expect(
+      api.previewRuleApply({ ruleId: 'missing', ids: matches.ids }),
+    ).rejects.toThrow(/Rule does not exist/);
+  });
+});

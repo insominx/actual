@@ -232,7 +232,9 @@ export async function prepareRuleApply(
     request,
     before: {
       sourceHash: await guardedSourceHash(),
-      rule: serialized as unknown as Record<string, unknown>,
+      // JSON round trip drops undefined option keys so the proposal is
+      // stable once stored in a receipt.
+      rule: JSON.parse(JSON.stringify(serialized)) as Record<string, unknown>,
       rows: project(await readRows(sorted), frozen),
     },
     after: {
