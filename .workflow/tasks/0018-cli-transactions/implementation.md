@@ -7,6 +7,13 @@
 - Public `previewTransactionCategorization`, `applyTransactionCategorization` in `packages/api/methods.ts`.
 - CLI `transactions categorize --ids --category [--allow-reconciled] --operation-id`, `changes preview transactions.categorize`, payload schema in `json-schema.ts`, generic `executeScopedChange`.
 
+## Slice 2: guarded duplicate merge (A3)
+
+- Core `packages/loot-core/src/server/transactions/guarded-merge.ts` (`prepareTransactionMerge`, `performTransactionMerge`), `determineKeepDrop` exported from `merge.ts`.
+- Types `TransactionMergeRequest|Proposal|Outcome`; handlers `api/transactions-preview-merge` and `api/transactions-apply-merge`; public `previewTransactionMerge`, `applyTransactionMerge`.
+- CLI `transactions merge --ids a,b [--allow-reconciled] --operation-id`; journal outcome union includes `TransactionMergeOutcome`.
+- API `guarded duplicate merge` 1/1; packaged `guarded-transaction-merge.test.mjs` 6/6.
+
 ## Verification (Linux)
 
 | Check    | Command                                                                            | Result                                      |

@@ -16,3 +16,14 @@
 ℹ skipped 0
 ℹ todo 0
 ℹ duration_ms 149153.796885
+
+# Merge (Linux, 2026-10-05 00:49 PDT): node --test integration/guarded-transaction-merge.test.mjs after CLI and server build
+✔ guarded transaction merge preserves raw domains and acknowledgements (online) (9406.854681ms)
+✔ guarded transaction merge preserves raw domains and acknowledgements (offline) (8829.215452ms)
+✔ killed guarded transaction merge at before-engine retains its exact outcome without replay (37650.234152ms)
+✔ killed guarded transaction merge at after-engine retains its exact outcome without replay (36558.005746ms)
+✔ killed guarded transaction merge at before-sync retains its exact outcome without replay (38464.708225ms)
+ℹ pass 5
+ℹ fail 1
+# The rejection case first failed on message matching (the CLI returns a generic INVALID_INPUT message); after asserting the code it passed on rerun:
+✔ merge rejects reconciled, mismatched and stale duplicates without writes

@@ -293,9 +293,14 @@ actual transactions delete <id>
 
 # Set one category on a frozen list of transactions (guarded; "none" clears it)
 actual transactions categorize --ids <id>,<id> --category <id> --operation-id <unique-id> [--allow-reconciled]
+
+# Merge two duplicate transactions (guarded; the engine keeps the imported or earlier one)
+actual transactions merge --ids <id>,<id> --operation-id <unique-id> [--allow-reconciled]
 ```
 
 `transactions categorize` freezes the selected IDs and their current categories in the preview. Apply rejects the batch with `STALE_PREVIEW` if any record changed after preview, instead of widening or narrowing it. Split parents are rejected (categorize their children), transfers between two on-budget accounts and off-budget transactions cannot take a category, and reconciled transactions need `--allow-reconciled`; the proposal lists them in `reconciledIds`. Rules are not rerun. Preview the same batch with `actual changes preview transactions.categorize --operation-id <unique-id> --data '{"ids":["<id>"],"category":"<id>"}'`.
+
+`transactions merge` uses the engine's merge owner. The preview names `keepId` (imported over manual, then the earlier date) and `dropId`, split children that move or are deleted, and transfer counterparts merged by the same rule. Both rows must be in the same account with the same amount, split children cannot be merged, and reconciled rows need `--allow-reconciled`. The kept row fills its empty payee, category, notes and schedule from the dropped row; the dropped row is tombstoned.
 
 ### Payees
 
