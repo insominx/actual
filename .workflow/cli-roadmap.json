@@ -267,7 +267,7 @@
         "0012-cli-sync",
         "0019-cli-transfers"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-workflows",

@@ -192,7 +192,8 @@ void test('prerequisites before linking, then per-account outcomes for duplicate
     ]);
     const sf1 = linked.find(a => a.name === 'Fake checking').id;
     const sf2 = linked.find(a => a.name === 'Fake savings').id;
-    const afterLink = await cli(['bank-sync', 'status']);
+    // The links were written by another client; pull them first.
+    const afterLink = await cli(['--refresh', 'bank-sync', 'status']);
     assert.equal(afterLink.linkedCount, 2);
     assert.equal(
       afterLink.accounts.find(a => a.id === sf1).provider,

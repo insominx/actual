@@ -214,6 +214,7 @@ Example `.actualrc.json`:
 | `reconcile`       | Reconcile an account against a statement; finish; adjust             |
 | `reports`         | Cash flow, category and net worth reports; CSV/HTML export           |
 | `checkup`         | Data-quality findings, month coverage and statement evidence         |
+| `bank-sync`       | Bank sync status, refresh of linked accounts and run results         |
 | `schedules`       | Manage schedules; list upcoming occurrences; post or skip the next   |
 | `query`           | Run an ActualQL query                                                |
 | `server`          | Server utilities and lookups                                         |

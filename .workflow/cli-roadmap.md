@@ -144,3 +144,5 @@ Known baseline: prior cash-planning verification recorded repository-wide format
 2026-10-05 03:10 PT checkpoint: 0028-cli-data-quality is completed locally on Linux: read-only `checkup data-quality` (stable finding codes with evidence, uncertainty and suggested operations; coverage that stays unknown without statement evidence) and device-local `checkup statement add|list|remove` (packaged 3/3, API 1/1; D1-D9).
 
 2026-10-05 03:21 PT checkpoint: 0029-cli-reversal is completed locally on Linux: `changes inspect` (receipt diagnosis, next steps, backup recovery) and guarded `changes reverse` for `transactions.categorize`, `budgets.move` and `cash-planning.save`, refusing with conflicts when records changed and never reversing merges, deletions or imports (packaged 3/3, unit 5/5; D1-D9).
+
+2026-10-05 03:40 PT checkpoint: 0030-cli-bank-sync is completed locally on Linux: `bank-sync status` (no secrets), `bank-sync refresh` with per-account outcomes for linked accounts only and a consent prerequisite otherwise, and device-local `bank-sync results`; proven with a disposable fake SimpleFIN provider (packaged 1/1, unit 1/1; D1-D7). No real credentials were needed.

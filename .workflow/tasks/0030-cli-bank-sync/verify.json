@@ -1,0 +1,30 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        { "id": "cli-unit", "command": "yarn workspace @actual-app/cli test" },
+        { "id": "root-types", "command": "yarn typecheck" },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "bank-sync-integration",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/bank-sync.test.mjs"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/loot-core/src/server/accounts/bank-sync-status.ts packages/cli/src/commands/bank-sync.ts packages/cli/src/bank-sync-runs.ts packages/sync-server/src/app-simplefin/app-simplefin.js"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/loot-core/src/server/accounts/bank-sync-status.ts packages/cli/src/commands/bank-sync.ts packages/cli/src/bank-sync-runs.ts packages/cli/integration/bank-sync.test.mjs packages/cli/integration/bank-link.mjs"
+        }
+      ]
+    }
+  }
+}

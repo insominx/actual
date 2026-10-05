@@ -484,6 +484,21 @@ actual changes reverse <operation-id> --operation-id <new-id> [--preview]
 
 `changes reverse` supports `transactions.categorize` (all changed rows must have had one prior category), `budgets.move` and `cash-planning.save` (including `set-target` and `reset-target`). It builds the inverse from the receipt's before-values, prepares it as a new guarded change under the new operation ID, and refuses with `STALE_PREVIEW` and the list of `conflicts` when the records no longer hold the original after-values (for example a later recategorization, an edited amount, a transfer leg changed through its counterpart, or changed budgeted amounts). Engine refusals, such as a transaction reconciled since, are `INVALID_INPUT`. `--preview` stops after preparing; apply it with `actual changes apply <new-id> --token <token>`. Retrying with the same new ID returns the same receipt and never writes twice. Merges, deletions, imports, added rows, reconciliation finishes, uncertain receipts and changes that were never applied are not reversed: the error explains why and lists backup recovery steps (`backups list`, `backups restore` into a new local budget, `budgets compare`, then explicit changes). A restore never replaces the live budget. `capabilities.reversal` in `actual schema <operation>` is `true` for the reversible operations.
 
+### Bank sync
+
+```bash
+# Linked accounts, last sync, persisted status and provider configuration (read-only, no secrets)
+actual bank-sync status
+
+# Refresh already-linked accounts; one outcome per account
+actual bank-sync refresh [--accounts <id,id>]
+
+# Device-local run records (latest first), or one run
+actual bank-sync results [run-id] [--limit 10]
+```
+
+`bank-sync refresh` runs the engine's bank sync only for open accounts that are already linked to a provider. Each outcome is `imported` (with `addedIds` and `matchedIds`), `no-new-transactions`, `not-linked`, `auth-required`, `rate-limited` (retryable), `attention-required`, `account-missing` or `provider-error`, with a `prerequisite` when you need to act in the app. With no linked accounts the result is a `prerequisite` and no provider is contacted: linking and reauthentication need provider consent in the Actual app, and file imports (`actual imports`) keep working. An empty feed is not verified history coverage; record statement evidence with `actual checkup statement add`. Every run is recorded in `bank-sync-runs/` in the CLI data directory as `committed-local` before the push and `synced` after it; if the push fails, the command returns `PARTIAL_COMPLETION` with the run ID so `actual bank-sync results <run-id>` still shows the outcomes. The legacy `actual server bank-sync` command is unchanged.
+
 ### Checkup
 
 ```bash
