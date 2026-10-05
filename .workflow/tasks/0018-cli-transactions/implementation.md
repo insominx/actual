@@ -21,6 +21,13 @@
 - CLI `transactions split <id> --data|--file [--allow-reconciled] --operation-id`; read-only `transactions get <id>` (split children, balance, transfer counterparts) via public `aqlQuery`.
 - API `guarded split edits` 1/1; packaged `guarded-transaction-split.test.mjs` 6/6.
 
+## Slice 4: explicit clearing and unlocking
+
+- Core `packages/loot-core/src/server/transactions/guarded-clear.ts` (`prepareTransactionClearing`, `performTransactionClearing`) writes through `batchUpdateTransactions` and verifies every frozen row after apply.
+- Types `TransactionClearingRequest|Proposal`; handlers `api/transactions-preview-clearing` and `api/transactions-apply-clearing`; public `previewTransactionClearing`, `applyTransactionClearing`.
+- CLI `transactions clear --ids [--uncleared] [--unlock] --operation-id`; `changes preview transactions.clear` payload schema.
+- API `guarded clearing and unlocking` 1/1; packaged `guarded-transaction-clear.test.mjs`.
+
 ## Verification (Linux)
 
 | Check    | Command                                                                            | Result                                      |
@@ -32,6 +39,6 @@
 
 Fix during verification: the core proposal first normalized `allowReconciled: false` into the request, so a direct retry with the same operation ID looked like a different request. The proposal now keeps the request verbatim.
 
-Limitations: Windows not run; no browser check.
+Limitations: Windows not run. Browser: `browser-sync.test.mjs` passed alongside the split proof; no dedicated browser check for categorize/merge/clear.
 
-Decision audit: D1-D5 in execution-decisions.md.
+Decision audit: D1-D11 in execution-decisions.md.

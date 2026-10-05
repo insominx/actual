@@ -24,7 +24,7 @@
 | Types    | `npx tsc -b packages/loot-core`, API and CLI `tsc`                                                                             | clean                                                                               |
 | Packaged | `node --test integration/catalog-inspect.test.mjs integration/guarded-notes.test.mjs integration/guarded-preferences.test.mjs` | 10/10 (`verification-catalog-settings-linux.txt`)                                   |
 
-| Browser  | `node --test integration/browser-catalog.test.mjs`                                                                             | 1/1 (`verification-catalog-browser-linux.txt`)                                      |
+| Browser | `node --test integration/browser-catalog.test.mjs` | 1/1 (`verification-catalog-browser-linux.txt`) |
 
 Limitations: Windows not run.
 

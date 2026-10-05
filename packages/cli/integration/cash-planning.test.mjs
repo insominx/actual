@@ -6,6 +6,29 @@ import { createFixture } from './harness.mjs';
 // Packaged proof for cash planning: signed balances, history averages,
 // transient scenarios and guarded saves that change only cashPlanning.
 
+const DAY = 86400000;
+const iso = ms => new Date(ms).toISOString().slice(0, 10);
+
+// Independent calendar-month walk: each forecast month counts by the share of
+// its days still ahead, so partial and leap months weigh by day count.
+function expectedDateAfterMonths(asOf, months) {
+  let remaining = months;
+  let cursor = iso(Date.parse(asOf) + DAY);
+  for (;;) {
+    const d = new Date(cursor);
+    const last = iso(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0));
+    const daysInMonth = Number(last.slice(8));
+    const available = (Date.parse(last) - Date.parse(cursor)) / DAY + 1;
+    const fraction = available / daysInMonth;
+    if (remaining <= fraction + 1e-10) {
+      const days = Math.max(1, Math.ceil(remaining * daysInMonth - 1e-10));
+      return iso(Date.parse(cursor) + (days - 1) * DAY);
+    }
+    remaining -= fraction;
+    cursor = iso(Date.parse(last) + DAY);
+  }
+}
+
 void test('cash plan balances, averages, scenarios and guarded saves on a clean budget', async () => {
   const f = await createFixture();
   try {
@@ -130,7 +153,18 @@ void test('cash plan balances, averages, scenarios and guarded saves on a clean 
     ]);
     assert.equal(goal.projections.historical.remaining, 1200000);
     assert.equal(goal.projections.historical.goalState, 'reachable');
-    assert.ok(goal.projections.historical.completionDate > goal.asOf);
+    assert.equal(
+      goal.projections.historical.completionDate,
+      expectedDateAfterMonths(goal.asOf, 6),
+    );
+    // Six forecast months from asOf lands in the sixth calendar month ahead.
+    const monthIndex = date =>
+      Number(date.slice(0, 4)) * 12 + Number(date.slice(5, 7));
+    assert.equal(
+      monthIndex(goal.projections.historical.completionDate) -
+        monthIndex(goal.asOf),
+      6,
+    );
 
     // A3: a target scenario changes only the target projection, transiently.
     const scenario = await run([
@@ -150,6 +184,36 @@ void test('cash plan balances, averages, scenarios and guarded saves on a clean 
       false,
       'scenario was stored',
     );
+
+    // Already-reached, unreachable and depletion states.
+    const reached = await run([
+      'cash-planning',
+      'inspect',
+      ...range,
+      '--scenario',
+      JSON.stringify({ goal: { balance: 1000000 } }),
+    ]);
+    assert.equal(reached.projections.historical.goalState, 'reached');
+    assert.equal(reached.projections.historical.remaining, 0);
+    assert.equal(reached.projections.historical.completionDate, reached.asOf);
+    const depleting = await run([
+      'cash-planning',
+      'inspect',
+      ...range,
+      '--scenario',
+      JSON.stringify({
+        goal: { balance: 2400000 },
+        categoryTargets: { [rent]: 900000 },
+      }),
+    ]);
+    assert.equal(depleting.projections.targets.monthlySurplus, -300000);
+    assert.equal(depleting.projections.targets.goalState, 'unreachable');
+    assert.equal(depleting.projections.targets.completionDate, null);
+    assert.equal(
+      depleting.projections.targets.depletionDate,
+      expectedDateAfterMonths(depleting.asOf, 4),
+    );
+    assert.equal(depleting.projections.historical.goalState, 'reachable');
 
     const plan = {
       startDate: '2026-08-01',

@@ -25,11 +25,11 @@ None to review this planned contract. This request creates tasks only; implement
 
 ## Acceptance trace
 
-| ID  | Required outcome                                                                                                                                               | Evidence                                                                                                    | Status                                     |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| A1  | Payee merge and category retirement preserve transaction totals and update references in CLI and browser.                                                      | `catalog-inspect.test.mjs`; `browser-catalog.test.mjs` (`verification-catalog-browser-linux.txt`)          | Met on Linux (CLI and browser)             |
-| A2  | Hidden/deleted categories remain discoverable where needed; duplicate names are explicit.                                                                      | `catalog-inspect.test.mjs` (`--include-deleted`, `mappedTo`, `sameNameIds`)                                 | Met on Linux                               |
-| A3  | Notes and allowed synced preferences survive reload/sync; invalid keys fail, missing reads do not write defaults, and cashPlanning uses its typed domain tool. | `guarded-notes.test.mjs` (6), `guarded-preferences.test.mjs` (3), `verification-catalog-settings-linux.txt` | Met on Linux                               |
+| ID  | Required outcome                                                                                                                                               | Evidence                                                                                                    | Status                         |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| A1  | Payee merge and category retirement preserve transaction totals and update references in CLI and browser.                                                      | `catalog-inspect.test.mjs`; `browser-catalog.test.mjs` (`verification-catalog-browser-linux.txt`)           | Met on Linux (CLI and browser) |
+| A2  | Hidden/deleted categories remain discoverable where needed; duplicate names are explicit.                                                                      | `catalog-inspect.test.mjs` (`--include-deleted`, `mappedTo`, `sameNameIds`)                                 | Met on Linux                   |
+| A3  | Notes and allowed synced preferences survive reload/sync; invalid keys fail, missing reads do not write defaults, and cashPlanning uses its typed domain tool. | `guarded-notes.test.mjs` (6), `guarded-preferences.test.mjs` (3), `verification-catalog-settings-linux.txt` | Met on Linux                   |
 
 ## Execution decision ledger
 
