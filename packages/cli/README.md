@@ -198,6 +198,7 @@ Example `.actualrc.json`:
 | Command           | Description                    |
 | ----------------- | ------------------------------ |
 | `accounts`        | Manage accounts                |
+| `account-groups`  | Manage account groups          |
 | `budgets`         | Manage budgets and allocations |
 | `categories`      | Manage categories              |
 | `category-groups` | Manage category groups         |

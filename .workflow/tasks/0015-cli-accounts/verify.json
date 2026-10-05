@@ -1,0 +1,40 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        {
+          "id": "api-unit",
+          "command": "yarn workspace @actual-app/api test"
+        },
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "accounts-integration",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/accounts-inspect.test.mjs"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/loot-core/src/server/accounts/inspect.ts packages/loot-core/src/server/account-groups/guarded.ts packages/cli/src/commands/accounts.ts packages/cli/src/commands/account-groups.ts packages/cli/src/guarded-changes.ts packages/cli/integration/accounts-inspect.test.mjs packages/api/methods.ts packages/loot-core/src/server/api.ts"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/loot-core/src/server/accounts/inspect.ts packages/loot-core/src/server/account-groups/guarded.ts packages/cli/src/commands/accounts.ts packages/cli/src/commands/account-groups.ts packages/cli/src/guarded-changes.ts packages/cli/integration/accounts-inspect.test.mjs packages/api/methods.ts packages/loot-core/src/server/api.ts packages/docs/docs/api/cli.md packages/cli/README.md"
+        }
+      ]
+    }
+  }
+}

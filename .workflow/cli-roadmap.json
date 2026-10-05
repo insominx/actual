@@ -88,7 +88,7 @@
       "stage": "Domain tools",
       "mode": "AFK",
       "dependencies": ["0011-cli-budget-lifecycle", "0014-cli-mutations"],
-      "status": "planned-prerequisite-hold"
+      "status": "partially-implemented"
     },
     {
       "key": "cli-catalog-settings",

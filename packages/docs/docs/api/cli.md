@@ -168,8 +168,12 @@ actual accounts list [--include-closed]
 # Create an account
 actual accounts create --name "Checking" [--offbudget] [--balance 50000]
 
-# Update an account
-actual accounts update <id> [--name "New Name"] [--offbudget true]
+# Inspect balances: ledger, cleared, uncleared, reconciled and future activity,
+# with on-budget/off-budget totals, account groups and duplicate names
+actual accounts inspect [--cutoff 2026-01-31] [--include-closed]
+
+# Update an account (use --account-group-id none to ungroup it)
+actual accounts update <id> [--name "New Name"] [--offbudget true] [--account-group-id <id>]
 
 # Close an account (with optional transfer)
 actual accounts close <id> [--transfer-account <id>] [--transfer-category <id>]
@@ -183,6 +187,22 @@ actual accounts delete <id>
 # Get account balance
 actual accounts balance <id> [--cutoff 2026-01-31]
 ```
+
+`accounts inspect` is read-only. Balances mirror the engine's account leaf rows. The cutoff defaults to today; transactions dated after it are reported as `future` with a count and are excluded from `ledger`. Totals count open accounts only, so on-budget money and off-budget equity stay separate. Closed accounts are listed with `--include-closed` but never counted. `sameNameIds` lists other accounts with the same name; resolve names with `actual query resolve accounts <name>`, which reports ambiguous matches instead of guessing.
+
+### Account Groups
+
+```bash
+# List account groups
+actual account-groups list
+
+# Create, rename or delete a group through guarded changes
+actual account-groups create --name "Everyday" --operation-id <unique-id>
+actual account-groups update <id> --name "Daily" --operation-id <unique-id>
+actual account-groups delete <id> --operation-id <unique-id>
+```
+
+Account group writes always use the guarded change protocol and require `--operation-id`. Retrying a committed creation returns the same group. Deleting a group ungroups its member accounts; their balances and transactions are unchanged. Move an account with `actual accounts update <id> --account-group-id <group-id>`.
 
 ### Budgets
 
@@ -228,7 +248,7 @@ actual categories inspect [--include-deleted] [--name <text>]
 actual categories create --name "Groceries" --group-id <id> [--is-income]
 
 # Update a category
-actual categories update <id> [--name "Food"] [--hidden true]
+actual categories update <id> [--name "Food"] [--hidden true] [--group-id <id>]
 
 # Delete a category (with optional transfer)
 actual categories delete <id> [--transfer-to <id>]
