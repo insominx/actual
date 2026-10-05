@@ -22,6 +22,7 @@ import type {
   TransferUnmatchProposal,
   TransferUnmatchRequest,
 } from '#types/change-proposals';
+import type { TransactionEntity } from '#types/models';
 
 import { classifyTransfer, inspectTransfer } from './inspect';
 
@@ -227,12 +228,17 @@ async function writeAndVerify(
   noun: string,
 ) {
   await batchUpdateTransactions({
-    updated: plan.map(row => ({
-      id: row.id,
-      payee: row.payee,
-      transfer_id: row.transferId,
-      category: row.category,
-    })),
+    // Null payee, transfer_id or category clears the field; the entity type
+    // omits null.
+    updated: plan.map(
+      row =>
+        ({
+          id: row.id,
+          payee: row.payee,
+          transfer_id: row.transferId,
+          category: row.category,
+        }) as unknown as Partial<TransactionEntity>,
+    ),
     runTransfers: false,
   });
   for (const row of plan) {

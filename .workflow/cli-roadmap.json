@@ -333,7 +333,7 @@
       "stage": "Personal adoption",
       "mode": "HITL",
       "dependencies": ["0035-cli-acceptance"],
-      "status": "planned-prerequisite-hold"
+      "status": "blocked-hitl"
     }
   ]
 }

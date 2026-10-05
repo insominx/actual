@@ -218,7 +218,8 @@ export async function performTransactionSplit(
   }
   const { diff } = sharedUpdateTransaction(ungrouped, {
     ...parent,
-    category: null,
+    // A null category clears the parent's category; the entity type omits null.
+    category: null as unknown as undefined,
     is_parent: true,
     subtransactions: current.after.children.map((child, index) => ({
       amount: child.amount,

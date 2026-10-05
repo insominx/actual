@@ -1,7 +1,7 @@
 # Task Progress: Personal account setup and institution-export validation
 
-Current status: active
-Current phase: planned; prerequisite hold
+Current status: blocked on HITL (no real budget or personal exports; fixture-only checklist delivered)
+Current phase: checklist delivered; waiting on Michael for representative exports and budget selection
 
 ## Dependencies
 
@@ -13,8 +13,8 @@ At personal adoption only: representative exports, statement dates/balances, and
 
 ## Agent next actions
 
-- [ ] Confirm prerequisite acceptance and reread produced APIs/schemas before review-plan.
-- [ ] Review this contract, then implement its first complete operation path.
+- [x] Confirm prerequisite acceptance and reread produced APIs/schemas before review-plan.
+- [x] Review this contract, then deliver the personal setup checklist (HITL blocked).
 
 ## Implementation checklist
 
@@ -25,11 +25,11 @@ At personal adoption only: representative exports, statement dates/balances, and
 
 ## Acceptance trace
 
-| ID  | Required outcome                                                                                                                                        | Evidence      | Status  |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------- |
-| A1  | Representative Chase/Capital One/Robinhood files match statement totals and dates or produce a documented format gap.                                   | Not collected | Pending |
-| A2  | Transfer/card payments reconcile once; included account totals match verified signed balances and historical coverage is stated.                        | Not collected | Pending |
-| A3  | A backup exists before personal mutations; final plan/reload/sync results and any limitations are recorded privately without committing financial data. | Not collected | Pending |
+| ID  | Required outcome                                                                                                                                        | Evidence                                                                                 | Status         |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------- |
+| A1  | Representative Chase/Capital One/Robinhood files match statement totals and dates or produce a documented format gap.                                   | Blocked: representative exports not supplied. Fixture-only path is 0035 A1.              | Blocked (HITL) |
+| A2  | Transfer/card payments reconcile once; included account totals match verified signed balances and historical coverage is stated.                        | Blocked: no personal clone or statement evidence. Recipe in personal-setup-checklist.md. | Blocked (HITL) |
+| A3  | A backup exists before personal mutations; final plan/reload/sync results and any limitations are recorded privately without committing financial data. | Blocked: no personal mutations. Backup and private-evidence rules documented.            | Blocked (HITL) |
 
 ## Execution decision ledger
 
@@ -38,3 +38,4 @@ Create `execution-decisions.md` only for material choices/departures during impl
 ## Execution log
 
 - 2026-10-02: Created the sequenced task contract. No production implementation or feature verification performed.
+- 2026-10-05 04:17 PT: Delivered personal-setup-checklist.md and blocked the task on HITL. No real budget opened; fixture-only validation points at 0035. Decisions D1-D5.

@@ -264,7 +264,8 @@ export async function findRuleMatches(request: {
     );
   }
   const splitRule = serialized.actions.some(
-    action => (action.options?.splitIndex ?? 0) > 0,
+    (action: { options?: { splitIndex?: number } }) =>
+      (action.options?.splitIndex ?? 0) > 0,
   );
   const op = serialized.conditionsOp === 'or' ? '$or' : '$and';
   const { data } = await aqlQuery(

@@ -179,7 +179,10 @@ export async function prepareFileImport(
       if (candidate[key] != null) row[key] = candidate[key];
     }
     if (candidate.category != null) {
-      const id = parseCategoryFields(candidate, categories);
+      const id = parseCategoryFields(
+        { category: candidate.category },
+        categories,
+      );
       if (id) row.category = id;
       else unresolved.add(candidate.category);
     }

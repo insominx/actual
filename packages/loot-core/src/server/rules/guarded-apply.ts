@@ -150,7 +150,8 @@ export async function prepareRuleApply(
   if (!rule) throw APIError(`Rule does not exist: ${ruleId}`);
   const serialized = rule.serialize();
   const splitRule = serialized.actions.some(
-    action => (action.options?.splitIndex ?? 0) > 0,
+    (action: { options?: { splitIndex?: number } }) =>
+      (action.options?.splitIndex ?? 0) > 0,
   );
 
   const sorted = [...ids].sort();

@@ -13,6 +13,7 @@ import type {
   TransactionCategorizationProposal,
   TransactionCategorizationRequest,
 } from '#types/change-proposals';
+import type { TransactionEntity } from '#types/models';
 
 import { batchUpdateTransactions } from '.';
 
@@ -185,7 +186,10 @@ export async function performTransactionCategorization(
   const category = current.request.category;
   if (changedIds.length) {
     await batchUpdateTransactions({
-      updated: changedIds.map(id => ({ id, category })),
+      // A null category clears the field; the entity type omits null.
+      updated: changedIds.map(
+        id => ({ id, category }) as unknown as Partial<TransactionEntity>,
+      ),
     });
   }
   for (const before of current.before.transactions) {
