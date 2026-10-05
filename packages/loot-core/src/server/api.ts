@@ -204,6 +204,10 @@ import {
   prepareTransactionAddition,
 } from './transactions/guarded-add';
 import {
+  performTransactionCategorization,
+  prepareTransactionCategorization,
+} from './transactions/guarded-categorize';
+import {
   performTransactionDeletion,
   prepareTransactionDeletion,
 } from './transactions/guarded-delete';
@@ -3367,6 +3371,19 @@ function guardedCatalogHandlers<
   );
   handlers['api/transaction-preview-deletion'] = transactionDeletion.preview;
   handlers['api/transaction-apply-deletion'] = transactionDeletion.apply;
+  const transactionCategorization = guardedCatalogHandlers(
+    prepareTransactionCategorization,
+    guardedApply({
+      operation: 'transactions.categorize',
+      noun: 'Transaction categorization',
+      prepare: prepareTransactionCategorization,
+      perform: performTransactionCategorization,
+    }),
+  );
+  handlers['api/transactions-preview-categorization'] =
+    transactionCategorization.preview;
+  handlers['api/transactions-apply-categorization'] =
+    transactionCategorization.apply;
   const scheduleCreation = guardedCatalogHandlers(
     prepareScheduleCreation,
     guardedApply({

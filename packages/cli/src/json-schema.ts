@@ -189,6 +189,14 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
           object({ name: string }, ['name']),
           object({ name: string, transfer_acct: string }, ['name']),
           object({ mergeIds: { type: 'array', items: string } }, ['mergeIds']),
+          object(
+            {
+              ids: { type: 'array', items: string },
+              category: nullableId,
+              allowReconciled: boolean,
+            },
+            ['ids', 'category'],
+          ),
           object(ruleFields, [
             'stage',
             'conditionsOp',

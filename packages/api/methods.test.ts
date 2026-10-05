@@ -5718,3 +5718,129 @@ describe('guarded account groups', () => {
     ).rejects.toThrow();
   });
 });
+
+describe('guarded batch categorization', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('changes only frozen IDs, guards splits, transfers and reconciled rows, and rejects stale previews', async () => {
+    const group = await api.createCategoryGroup({ name: 'Batch group' });
+    const food = await api.createCategory({ name: 'Food', group_id: group });
+    const fun = await api.createCategory({ name: 'Fun', group_id: group });
+    const account = await api.createAccount({ name: 'Batch checking' }, 0);
+    const savings = await api.createAccount({ name: 'Batch savings' }, 0);
+    await api.addTransactions(account, [
+      { date: '2026-08-01', amount: -100, notes: 'a' },
+      { date: '2026-08-02', amount: -200, notes: 'b', category: food },
+      { date: '2026-08-03', amount: -300, notes: 'c' },
+      { date: '2026-08-04', amount: -400, notes: 'r', reconciled: true },
+      {
+        date: '2026-08-05',
+        amount: -500,
+        subtransactions: [
+          { amount: -200, notes: 's1' },
+          { amount: -300, notes: 's2' },
+        ],
+      },
+    ]);
+    const transferPayee = (await api.getPayees()).find(
+      payee => payee.transfer_acct === savings,
+    )!;
+    await api.addTransactions(
+      account,
+      [{ date: '2026-08-06', amount: -600, payee: transferPayee.id }],
+      { runTransfers: true },
+    );
+    const rows = await api.getTransactions(account, '2026-08-01', '2026-08-31');
+    const byNotes = (notes: string) => rows.find(row => row.notes === notes)!;
+    const [a, b, c, r] = ['a', 'b', 'c', 'r'].map(byNotes);
+    const parent = rows.find(row => row.is_parent)!;
+    const child = parent.subtransactions![0];
+    const transfer = rows.find(row => row.transfer_id)!;
+
+    const proposal = await api.previewTransactionCategorization({
+      ids: [b.id, a.id, child.id],
+      category: food,
+    });
+    expect(proposal.after).toEqual({
+      category: { id: food, name: 'Food' },
+      changedIds: [a.id, child.id].sort(),
+      unchangedIds: [b.id],
+      reconciledIds: [],
+    });
+    expect(
+      await api.getTransactions(account, '2026-08-01', '2026-08-31'),
+    ).toEqual(rows);
+    const applied = await api.applyTransactionCategorization(proposal);
+    expect(applied).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+      affectedIds: [a.id, child.id].sort(),
+    });
+    const after = await api.getTransactions(
+      account,
+      '2026-08-01',
+      '2026-08-31',
+    );
+    const find = (id: string) =>
+      after
+        .flatMap(row => [row, ...(row.subtransactions ?? [])])
+        .find(row => row.id === id)!;
+    expect(find(a.id).category).toBe(food);
+    expect(find(child.id).category).toBe(food);
+    expect(find(c.id).category ?? null).toBeNull();
+    expect(find(parent.id).amount).toBe(-500);
+    expect(await api.applyTransactionCategorization(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+
+    // A change to an affected record after preview makes it stale.
+    const stale = await api.previewTransactionCategorization({
+      ids: [c.id],
+      category: fun,
+    });
+    await api.updateTransaction(c.id, { notes: 'edited' });
+    expect(await api.applyTransactionCategorization(stale)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+    expect(
+      (await api.getTransactions(account, '2026-08-01', '2026-08-31')).find(
+        row => row.id === c.id,
+      )?.category ?? null,
+    ).toBeNull();
+
+    await expect(
+      api.previewTransactionCategorization({ ids: [r.id], category: fun }),
+    ).rejects.toThrow(/reconciled/);
+    const unlocked = await api.previewTransactionCategorization({
+      ids: [r.id],
+      category: fun,
+      allowReconciled: true,
+    });
+    expect(unlocked.after.reconciledIds).toEqual([r.id]);
+    await expect(
+      api.previewTransactionCategorization({ ids: [parent.id], category: fun }),
+    ).rejects.toThrow(/split parent/);
+    await expect(
+      api.previewTransactionCategorization({
+        ids: [transfer.id],
+        category: fun,
+      }),
+    ).rejects.toThrow(/transfer/);
+    for (const request of [
+      { ids: [], category: fun },
+      { ids: [a.id, a.id], category: fun },
+      { ids: [a.id], category: 'missing' },
+      { ids: ['missing'], category: fun },
+      { ids: [a.id], category: fun, extra: 1 },
+    ]) {
+      await expect(
+        api.previewTransactionCategorization(
+          request as unknown as Parameters<
+            typeof api.previewTransactionCategorization
+          >[0],
+        ),
+      ).rejects.toThrow();
+    }
+  });
+});

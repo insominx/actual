@@ -616,6 +616,32 @@ export async function executeCatalogChange(
   return { success: true, id, receipt };
 }
 
+// Direct version 2 path for guarded operations scoped by their payload, such
+// as batch categorization over frozen transaction IDs.
+export async function executeScopedChange(
+  opts: CliGlobalOpts,
+  operationId: string | undefined,
+  operation: 'transactions.categorize',
+  payload: Record<string, unknown>,
+) {
+  if (!operationId) {
+    throw new AgentError(
+      'INVALID_INPUT',
+      `Version 2 ${operation} requires --operation-id for durable retry.`,
+      false,
+      { field: 'operationId' },
+    );
+  }
+  const prepared = await previewGuardedChange(opts, operation, undefined, {
+    operationId,
+    data: JSON.stringify(payload),
+  });
+  const receipt = await applyGuardedChange(opts, operationId, {
+    token: prepared.token,
+  });
+  return { success: true, receipt };
+}
+
 export async function executeTagCreation(
   opts: CliGlobalOpts,
   operationId: string | undefined,
@@ -1315,6 +1341,16 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
     apply: p =>
       api.applyTransactionDeletion(p as api.TransactionDeletionProposal),
   },
+  'transactions.categorize': {
+    preview: r =>
+      api.previewTransactionCategorization(
+        r as api.TransactionCategorizationRequest,
+      ),
+    apply: p =>
+      api.applyTransactionCategorization(
+        p as api.TransactionCategorizationProposal,
+      ),
+  },
   'transactions.add': {
     preview: r =>
       api.previewTransactionAddition(r as api.TransactionAdditionRequest),
@@ -1416,6 +1452,7 @@ function changeRequest(
   | api.ScheduleUpdateRequest
   | api.ScheduleDeletionRequest
   | api.TransactionDeletionRequest
+  | api.TransactionCategorizationRequest
   | api.TransactionAdditionRequest
   | api.TransactionImportRequest
   | api.CategoryGroupDeletionRequest
@@ -1481,6 +1518,33 @@ function changeRequest(
       );
     }
     return { targetId: id, mergeIds: payload.mergeIds as string[] };
+  }
+  if (operation === 'transactions.categorize') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['ids', 'category', 'allowReconciled'].includes(key),
+      ) ||
+      !Array.isArray(payload.ids) ||
+      !payload.ids.every(value => typeof value === 'string') ||
+      !(payload.category === null || typeof payload.category === 'string') ||
+      !(
+        payload.allowReconciled === undefined ||
+        typeof payload.allowReconciled === 'boolean'
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Categorization takes ids, category (ID or null) and optional allowReconciled.',
+      );
+    }
+    return {
+      ids: payload.ids as string[],
+      category: payload.category,
+      ...(payload.allowReconciled === undefined
+        ? {}
+        : { allowReconciled: payload.allowReconciled }),
+    };
   }
   if (operation === 'transactions.add' || operation === 'transactions.import') {
     if (!Array.isArray(payload)) {

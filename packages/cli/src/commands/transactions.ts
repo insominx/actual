@@ -5,6 +5,7 @@ import { AgentError } from '#agent-output';
 import { withConnection } from '#connection';
 import {
   executeCatalogChange,
+  executeScopedChange,
   executeTransactionAddition,
   executeTransactionImport,
 } from '#guarded-changes';
@@ -166,6 +167,59 @@ export function registerTransactionsCommand(program: Command) {
         { mutates: true },
       );
     });
+
+  transactions
+    .command('categorize')
+    .description(
+      'Set one category on a frozen list of transactions through a guarded change',
+    )
+    .option('--operation-id <id>', 'Required; durable retry ID')
+    .requiredOption('--ids <ids>', 'Comma-separated transaction IDs')
+    .requiredOption(
+      '--category <id>',
+      'Category ID, or "none" to clear the category',
+    )
+    .option(
+      '--allow-reconciled',
+      'Allow changing reconciled transactions (they are listed in the receipt)',
+      false,
+    )
+    .action(
+      async (cmdOpts: {
+        operationId?: string;
+        ids: string;
+        category: string;
+        allowReconciled: boolean;
+      }) => {
+        const opts = program.opts();
+        const ids = cmdOpts.ids
+          .split(',')
+          .map(id => id.trim())
+          .filter(Boolean);
+        if (!ids.length) {
+          throw new Error(
+            'Invalid --ids: provide at least one transaction ID.',
+          );
+        }
+        const category = cmdOpts.category.trim();
+        if (!category) {
+          throw new Error('Invalid --category: use a category ID or "none".');
+        }
+        printOutput(
+          await executeScopedChange(
+            opts,
+            cmdOpts.operationId,
+            'transactions.categorize',
+            {
+              ids,
+              category: category === 'none' ? null : category,
+              ...(cmdOpts.allowReconciled ? { allowReconciled: true } : {}),
+            },
+          ),
+          opts.format,
+        );
+      },
+    );
 
   transactions
     .command('delete <id>')

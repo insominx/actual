@@ -100,6 +100,8 @@ import type {
   TagUpdateRequest,
   TransactionAdditionProposal,
   TransactionAdditionRequest,
+  TransactionCategorizationProposal,
+  TransactionCategorizationRequest,
   TransactionDeletionProposal,
   TransactionDeletionRequest,
   TransactionImportProposal,
@@ -126,6 +128,8 @@ export type {
   TransactionAdditionOutcome,
   TransactionDeletionRequest,
   TransactionDeletionProposal,
+  TransactionCategorizationRequest,
+  TransactionCategorizationProposal,
   ScheduleCreationRequest,
   ScheduleUpdateRequest,
   ScheduleDeletionRequest,
@@ -421,6 +425,16 @@ export function previewScheduleDeletion(request: ScheduleDeletionRequest) {
 }
 export function applyScheduleDeletion(proposal: ScheduleDeletionProposal) {
   return send('api/schedule-apply-deletion', proposal);
+}
+export function previewTransactionCategorization(
+  request: TransactionCategorizationRequest,
+) {
+  return send('api/transactions-preview-categorization', request);
+}
+export function applyTransactionCategorization(
+  proposal: TransactionCategorizationProposal,
+) {
+  return send('api/transactions-apply-categorization', proposal);
 }
 export function previewTransactionDeletion(
   request: TransactionDeletionRequest,

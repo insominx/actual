@@ -276,6 +276,34 @@ export type TransactionDeletionProposal = CatalogProposal<
   }
 >;
 
+export type TransactionCategorizationRequest = {
+  ids: string[];
+  category: string | null;
+  allowReconciled?: boolean;
+};
+export type TransactionCategorizationProposal = CatalogProposal<
+  'transactions.categorize',
+  TransactionCategorizationRequest,
+  {
+    transactions: Array<{
+      id: string;
+      account: string;
+      amount: number;
+      date: number;
+      category: string | null;
+      parentId: string | null;
+      transferId: string | null;
+      reconciled: boolean;
+    }>;
+  },
+  {
+    category: { id: string; name: string } | null;
+    changedIds: string[];
+    unchangedIds: string[];
+    reconciledIds: string[];
+  }
+>;
+
 export type TransactionAdditionRequest = {
   accountId: string;
   transactions: Array<Record<string, unknown>>;
@@ -714,6 +742,7 @@ export type ChangeProposal =
   | ScheduleUpdateProposal
   | ScheduleDeletionProposal
   | TransactionDeletionProposal
+  | TransactionCategorizationProposal
   | TransactionAdditionProposal
   | TransactionImportProposal
   | CategoryGroupCreationProposal

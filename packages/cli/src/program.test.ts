@@ -102,6 +102,10 @@ describe('registered agent commands', () => {
     ['rules.delete', ['rules', 'delete', 'rule-id']],
     ['schedules.delete', ['schedules', 'delete', 'schedule-id']],
     ['transactions.delete', ['transactions', 'delete', 'transaction-id']],
+    [
+      'transactions.categorize',
+      ['transactions', 'categorize', '--ids', 'a,b', '--category', 'none'],
+    ],
   ])(
     'requires a %s operation ID before connecting and advertises it',
     async (command, args) => {
