@@ -304,6 +304,26 @@ export type TransactionCategorizationProposal = CatalogProposal<
   }
 >;
 
+export type TransactionMergeRequest = {
+  ids: [string, string];
+  allowReconciled?: boolean;
+};
+export type TransactionMergeProposal = CatalogProposal<
+  'transactions.merge',
+  TransactionMergeRequest,
+  { transactions: Array<Record<string, unknown>> },
+  {
+    keepId: string;
+    dropId: string;
+    movedChildIds: string[];
+    deletedChildIds: string[];
+    transfer: { keepId: string; dropId: string } | null;
+  }
+>;
+export type TransactionMergeOutcome = CatalogCommit<{
+  transactionMerge: { keptId: string };
+}>;
+
 export type TransactionAdditionRequest = {
   accountId: string;
   transactions: Array<Record<string, unknown>>;
@@ -743,6 +763,7 @@ export type ChangeProposal =
   | ScheduleDeletionProposal
   | TransactionDeletionProposal
   | TransactionCategorizationProposal
+  | TransactionMergeProposal
   | TransactionAdditionProposal
   | TransactionImportProposal
   | CategoryGroupCreationProposal

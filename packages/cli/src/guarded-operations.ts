@@ -31,6 +31,7 @@ export const DOMAIN_OPERATIONS = [
   'schedules.delete',
   'transactions.delete',
   'transactions.categorize',
+  'transactions.merge',
   'transactions.add',
   'transactions.import',
   'accounts.create',
@@ -70,6 +71,7 @@ export const PAYLOAD_SCOPED_OPERATIONS: readonly string[] = [
   'rules.create',
   'schedules.create',
   'transactions.categorize',
+  'transactions.merge',
   'budgets.hold-next-month',
   'budgets.reset-hold',
 ];
@@ -115,6 +117,7 @@ export const DIRECT_GUARDED_COMMANDS: readonly string[] = [
   'schedules.delete',
   'transactions.delete',
   'transactions.categorize',
+  'transactions.merge',
   'transactions.add',
   'transactions.import',
   'budgets.clone',

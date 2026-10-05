@@ -222,6 +222,52 @@ export function registerTransactionsCommand(program: Command) {
     );
 
   transactions
+    .command('merge')
+    .description(
+      'Merge two duplicate transactions through a guarded change; the engine keeps the imported or earlier one',
+    )
+    .option('--operation-id <id>', 'Required; durable retry ID')
+    .requiredOption(
+      '--ids <ids>',
+      'Exactly two comma-separated transaction IDs',
+    )
+    .option(
+      '--allow-reconciled',
+      'Allow merging reconciled transactions',
+      false,
+    )
+    .action(
+      async (cmdOpts: {
+        operationId?: string;
+        ids: string;
+        allowReconciled: boolean;
+      }) => {
+        const opts = program.opts();
+        const ids = cmdOpts.ids
+          .split(',')
+          .map(id => id.trim())
+          .filter(Boolean);
+        if (ids.length !== 2) {
+          throw new Error(
+            'Invalid --ids: provide exactly two transaction IDs.',
+          );
+        }
+        printOutput(
+          await executeScopedChange(
+            opts,
+            cmdOpts.operationId,
+            'transactions.merge',
+            {
+              ids,
+              ...(cmdOpts.allowReconciled ? { allowReconciled: true } : {}),
+            },
+          ),
+          opts.format,
+        );
+      },
+    );
+
+  transactions
     .command('delete <id>')
     .description('Delete a transaction')
     .option('--operation-id <id>', 'Required for version 2; durable retry ID')

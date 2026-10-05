@@ -215,6 +215,10 @@ import {
   performTransactionImport,
   prepareTransactionImport,
 } from './transactions/guarded-import';
+import {
+  performTransactionMerge,
+  prepareTransactionMerge,
+} from './transactions/guarded-merge';
 import { planLinkedTransferUpdate } from './transactions/linked-transfer-plan';
 import {
   getTransferredAccount,
@@ -3384,6 +3388,17 @@ function guardedCatalogHandlers<
     transactionCategorization.preview;
   handlers['api/transactions-apply-categorization'] =
     transactionCategorization.apply;
+  const transactionMerge = guardedCatalogHandlers(
+    prepareTransactionMerge,
+    guardedApply({
+      operation: 'transactions.merge',
+      noun: 'Transaction merge',
+      prepare: prepareTransactionMerge,
+      perform: performTransactionMerge,
+    }),
+  );
+  handlers['api/transactions-preview-merge'] = transactionMerge.preview;
+  handlers['api/transactions-apply-merge'] = transactionMerge.apply;
   const scheduleCreation = guardedCatalogHandlers(
     prepareScheduleCreation,
     guardedApply({

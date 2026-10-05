@@ -106,6 +106,8 @@ import type {
   TransactionDeletionRequest,
   TransactionImportProposal,
   TransactionImportRequest,
+  TransactionMergeProposal,
+  TransactionMergeRequest,
   TransactionUpdateProposal,
   TransactionUpdateRequest,
 } from '@actual-app/core/types/change-proposals';
@@ -130,6 +132,9 @@ export type {
   TransactionDeletionProposal,
   TransactionCategorizationRequest,
   TransactionCategorizationProposal,
+  TransactionMergeRequest,
+  TransactionMergeProposal,
+  TransactionMergeOutcome,
   ScheduleCreationRequest,
   ScheduleUpdateRequest,
   ScheduleDeletionRequest,
@@ -435,6 +440,12 @@ export function applyTransactionCategorization(
   proposal: TransactionCategorizationProposal,
 ) {
   return send('api/transactions-apply-categorization', proposal);
+}
+export function previewTransactionMerge(request: TransactionMergeRequest) {
+  return send('api/transactions-preview-merge', request);
+}
+export function applyTransactionMerge(proposal: TransactionMergeProposal) {
+  return send('api/transactions-apply-merge', proposal);
 }
 export function previewTransactionDeletion(
   request: TransactionDeletionRequest,

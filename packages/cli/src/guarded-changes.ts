@@ -621,7 +621,7 @@ export async function executeCatalogChange(
 export async function executeScopedChange(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  operation: 'transactions.categorize',
+  operation: 'transactions.categorize' | 'transactions.merge',
   payload: Record<string, unknown>,
 ) {
   if (!operationId) {
@@ -1351,6 +1351,10 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
         p as api.TransactionCategorizationProposal,
       ),
   },
+  'transactions.merge': {
+    preview: r => api.previewTransactionMerge(r as api.TransactionMergeRequest),
+    apply: p => api.applyTransactionMerge(p as api.TransactionMergeProposal),
+  },
   'transactions.add': {
     preview: r =>
       api.previewTransactionAddition(r as api.TransactionAdditionRequest),
@@ -1453,6 +1457,7 @@ function changeRequest(
   | api.ScheduleDeletionRequest
   | api.TransactionDeletionRequest
   | api.TransactionCategorizationRequest
+  | api.TransactionMergeRequest
   | api.TransactionAdditionRequest
   | api.TransactionImportRequest
   | api.CategoryGroupDeletionRequest
@@ -1518,6 +1523,32 @@ function changeRequest(
       );
     }
     return { targetId: id, mergeIds: payload.mergeIds as string[] };
+  }
+  if (operation === 'transactions.merge') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['ids', 'allowReconciled'].includes(key),
+      ) ||
+      !Array.isArray(payload.ids) ||
+      payload.ids.length !== 2 ||
+      !payload.ids.every(value => typeof value === 'string') ||
+      !(
+        payload.allowReconciled === undefined ||
+        typeof payload.allowReconciled === 'boolean'
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Merge takes exactly two ids and optional allowReconciled.',
+      );
+    }
+    return {
+      ids: [payload.ids[0], payload.ids[1]] as [string, string],
+      ...(payload.allowReconciled === undefined
+        ? {}
+        : { allowReconciled: payload.allowReconciled }),
+    };
   }
   if (operation === 'transactions.categorize') {
     if (

@@ -197,6 +197,13 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
             },
             ['ids', 'category'],
           ),
+          object(
+            {
+              ids: { type: 'array', items: string },
+              allowReconciled: boolean,
+            },
+            ['ids'],
+          ),
           object(ruleFields, [
             'stage',
             'conditionsOp',

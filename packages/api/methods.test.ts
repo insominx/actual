@@ -5852,3 +5852,94 @@ describe('guarded batch categorization', () => {
     }
   });
 });
+
+describe('guarded duplicate merge', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('previews the engine-chosen kept row, guards reconciled rows and rejects invalid or stale merges', async () => {
+    const account = await api.createAccount({ name: 'Merge checking' }, 0);
+    await api.addTransactions(account, [
+      { date: '2026-08-02', amount: -700, notes: 'manual' },
+      { date: '2026-08-05', amount: -900, notes: 'other amount' },
+      { date: '2026-08-06', amount: -300, notes: 'late' },
+      { date: '2026-08-04', amount: -300, notes: 'early' },
+    ]);
+    await api.addTransactions(account, [
+      {
+        date: '2026-08-03',
+        amount: -700,
+        imported_id: 'bank-1',
+      },
+    ]);
+    const rows = await api.getTransactions(account, '2026-08-01', '2026-08-31');
+    const byNotes = (notes: string) => rows.find(row => row.notes === notes)!;
+    const imported = rows.find(row => row.imported_id === 'bank-1')!;
+    const manual = byNotes('manual');
+
+    const proposal = await api.previewTransactionMerge({
+      ids: [manual.id, imported.id],
+    });
+    expect(proposal.after).toMatchObject({
+      keepId: imported.id,
+      dropId: manual.id,
+      movedChildIds: [],
+      deletedChildIds: [],
+      transfer: null,
+    });
+    expect(
+      await api.getTransactions(account, '2026-08-01', '2026-08-31'),
+    ).toEqual(rows);
+    const merged = await api.applyTransactionMerge(proposal);
+    if (merged.status !== 'committed-local') {
+      throw new Error('Expected committed merge');
+    }
+    expect(merged.transactionMerge.keptId).toBe(imported.id);
+    const after = await api.getTransactions(
+      account,
+      '2026-08-01',
+      '2026-08-31',
+    );
+    expect(after.some(row => row.id === manual.id)).toBe(false);
+    expect(after.find(row => row.id === imported.id)?.notes).toBe('manual');
+    expect(await api.applyTransactionMerge(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+
+    const early = byNotes('early');
+    const late = byNotes('late');
+    await api.updateTransaction(late.id, { reconciled: true });
+    await expect(
+      api.previewTransactionMerge({ ids: [early.id, late.id] }),
+    ).rejects.toThrow(/reconciled/);
+    const unlocked = await api.previewTransactionMerge({
+      ids: [late.id, early.id],
+      allowReconciled: true,
+    });
+    expect(unlocked.after.keepId).toBe(early.id);
+    await api.updateTransaction(early.id, { notes: 'changed' });
+    expect(await api.applyTransactionMerge(unlocked)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+
+    await expect(
+      api.previewTransactionMerge({
+        ids: [early.id, byNotes('other amount').id],
+      }),
+    ).rejects.toThrow(/different amounts/);
+    for (const request of [
+      { ids: [early.id] },
+      { ids: [early.id, early.id] },
+      { ids: [early.id, 'missing'] },
+      { ids: [early.id, late.id], extra: true },
+    ]) {
+      await expect(
+        api.previewTransactionMerge(
+          request as unknown as Parameters<
+            typeof api.previewTransactionMerge
+          >[0],
+        ),
+      ).rejects.toThrow();
+    }
+  });
+});

@@ -119,6 +119,9 @@ import type {
   TransactionImportOutcome,
   TransactionImportProposal,
   TransactionImportRequest,
+  TransactionMergeOutcome,
+  TransactionMergeProposal,
+  TransactionMergeRequest,
   TransactionUpdateOutcome,
   TransactionUpdateProposal,
   TransactionUpdateRequest,
@@ -350,6 +353,12 @@ export type ApiHandlers = {
   'api/transactions-apply-categorization': (
     arg: TransactionCategorizationProposal,
   ) => Promise<TransactionUpdateOutcome>;
+  'api/transactions-preview-merge': (
+    arg: TransactionMergeRequest,
+  ) => Promise<TransactionMergeProposal>;
+  'api/transactions-apply-merge': (
+    arg: TransactionMergeProposal,
+  ) => Promise<TransactionMergeOutcome>;
   'api/transactions-preview-addition': (
     arg: TransactionAdditionRequest,
   ) => Promise<TransactionAdditionProposal>;
