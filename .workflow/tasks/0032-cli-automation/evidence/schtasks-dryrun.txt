@@ -1,0 +1,6 @@
+TASK_NAME=Actual win-schedule-dryrun
+QUERY_EXIT=1
+ERROR: The system cannot find the file specified.
+
+
+DRY_RUN_OK: recipe printed; schtasks /Create NOT executed; task absent

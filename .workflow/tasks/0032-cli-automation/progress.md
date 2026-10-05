@@ -1,6 +1,6 @@
 # Task Progress: Saved jobs, file intake, and unattended execution
 
-Current status: completed locally on Linux; Windows rerun pending
+Current status: completed on Linux; Windows Task Scheduler dry-run done on liftoff (recipe only, no /Create)
 Current phase: three slices implemented and verified on Linux
 
 ## Dependencies
@@ -39,3 +39,4 @@ Create `execution-decisions.md` only for material choices/departures during impl
 
 - 2026-10-02: Created the sequenced task contract. No production implementation or feature verification performed.
 - 2026-10-05 03:54 PT: Implemented `jobs create|list|status|run|disable|enable|schedule` over the 0031 intake workflow with stable-file intake, hash/account/settings dedupe, declared-directory moves, overlap lock, resume, dry run and local results. Packaged `jobs.test.mjs` 1/1 and unit 2/2 (CLI unit 327) on Linux; Windows Task Scheduler execution pending. Decisions D1-D11. Completed locally on Linux.
+- 2026-10-05 09:55 PT: Windows `jobs schedule` dry-run on liftoff — schtasks recipe printed; `/Create` not executed; task absent (`verification-scheduler-windows.txt`).

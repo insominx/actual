@@ -1,6 +1,6 @@
 # Task Progress: Packaging, cross-platform documentation, and upgrades
 
-Current status: completed locally on Linux; Windows rerun pending (PowerShell tutorial not executed)
+Current status: completed on Linux + Windows liftoff (PowerShell tutorial, packed install, upgrade check)
 Current phase: three slices implemented and verified on Linux
 
 ## Dependencies
@@ -27,8 +27,8 @@ None to review this planned contract. This request creates tasks only; implement
 
 | ID  | Required outcome                                                                                                                    | Evidence                                                                                                                               | Status       |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| A1  | Install local packed artifacts in isolated clean directories and run schema/context/setup/import/backup workflows.                  | `distribution.test.mjs` (packed case with `ACTUAL_TEST_PACKED=1`), `src/upgrade-check.test.ts` (`verification-distribution-linux.txt`) | Met on Linux |
-| A2  | PowerShell and bash examples execute with paths containing spaces and JSON/stdin safely.                                            | `distribution.test.mjs` (packed case with `ACTUAL_TEST_PACKED=1`), `src/upgrade-check.test.ts` (`verification-distribution-linux.txt`) | Met on Linux |
+| A1  | Install local packed artifacts in isolated clean directories and run schema/context/setup/import/backup workflows.                  | Linux packed 3/3; Windows yarn pack + npm install + capabilities(172) + first-run (`verification-distribution-windows.txt`) | Met on Linux + Windows |
+| A2  | PowerShell and bash examples execute with paths containing spaces and JSON/stdin safely.                                            | Linux bash + packed (`verification-distribution-linux.txt`); Windows `first-run.ps1` + packed first-run (`verification-distribution-windows.txt`) | Met on Linux + Windows |
 | A3  | Supported previous configuration/receipt versions migrate deterministically or return actionable incompatibility without data loss. | `distribution.test.mjs` (packed case with `ACTUAL_TEST_PACKED=1`), `src/upgrade-check.test.ts` (`verification-distribution-linux.txt`) | Met on Linux |
 
 ## Execution decision ledger
@@ -39,3 +39,4 @@ Create `execution-decisions.md` only for material choices/departures during impl
 
 - 2026-10-02: Created the sequenced task contract. No production implementation or feature verification performed.
 - 2026-10-05 04:03 PT: Added the packed-artifact smoke test, `actual upgrade check`, install/upgrade docs and bash/PowerShell first-run tutorials. Packaged `distribution.test.mjs` 3/3 (including the packed install) and unit 2/2 (CLI unit 333) on Linux. PowerShell tutorial and Windows install pending the Windows rerun. Decisions D1-D6.
+- 2026-10-05 09:55 PT: Windows liftoff verification — PowerShell first-run.ps1, packed yarn-pack/npm install (172 ops), offline upgrade check. Decision D7.

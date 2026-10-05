@@ -116,3 +116,4 @@ storybook-static
 .actualrc.yaml
 .actualrc.yml
 actual.config.js
+.windows-verification-evidence/

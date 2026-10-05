@@ -1,0 +1,22 @@
+Windows verification on liftoff (machine 0182d10a-c5b3-4e63-9e32-ea3c8a69e467)
+Checkout: D:\Projects\personal\Budget\actual @ 802e9c12d (workflow/complete-remaining-tasks; was stale master 7ca3ba01e, fetched+checked out safely)
+Host: Windows, Node v26.3.0, PowerShell 7.6.6, Yarn 4.17.1, npm 11.17.0
+Note: packages/cli/dist and packages/api/dist were missing/stale after checkout; refreshed from the box build for this run (api vite build produced dist; cli dist copied from Linux box). No real personal budget opened.
+
+A2 PowerShell first-run tutorial
+  cmd: ACTUAL_CLI_JS=<repo>/packages/cli/dist/cli.js
+       pwsh -File packages/cli/examples/first-run.ps1 -Work "...\tutorial dir with spaces"
+  result: EXIT 0; printed budget id Tutorial-budget-bc1a3a3
+  artifacts: setup/import/backup under path with spaces
+  evidence: evidence/first-run-ps1.txt
+
+A1 Packed install smoke (Windows)
+  yarn pack @actual-app/api + @actual-app/cli into "...\actual packed clean install"
+  npm install via package.json file: deps + overrides into "...\clean install"
+  installed cli capabilities → 172 operations (>150)
+  installed cli first-run.ps1 → EXIT 0 (Tutorial-budget-fad21c3)
+  upgrade check --offline → compatible:true (schema v1 stores)
+  evidence: evidence/packed-install-windows.txt, packed-first-run-ps1.txt,
+            packed-upgrade-check-offline.json
+
+Not run: live server bootstrap inside packed test (no disposable sync-server required for offline tutorial path).

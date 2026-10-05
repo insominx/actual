@@ -158,3 +158,5 @@ Checkpoint 2026-10-05 04:03 PT: 0034 distribution completed locally on Linux. Pa
 Checkpoint 2026-10-05 04:15 PT: 0035 acceptance completed locally on Linux. Six personal workflows on synthetic Chase, Capital One and Robinhood exports trace to receipts; 6000-row history baseline, bounded output, paging and two-client contention recorded; browser interop 4/4. Fixed a 0031 workflow-finding de-duplication defect. Decisions D2, D3, D6 and D9 are for Michael.
 
 Checkpoint 2026-10-05 09:35 PT: 0036 personal-setup completed locally as fixture-only (D6). Michael declined real personal financial data; A1-A3 met on disposable synthetic Chase/Capital One/Robinhood exports via `integration/personal-setup.test.mjs` (1/1). No real budget opened. Real-budget HITL remains optional if Michael later supplies exports and an explicit budget id.
+
+Checkpoint 2026-10-05 09:55 PT: Windows liftoff verified PowerShell `first-run.ps1`, packed yarn-pack/npm install (172 ops), and `jobs schedule` schtasks dry-run (no `/Create`). Branch `workflow/complete-remaining-tasks` @ 802e9c12d on liftoff.

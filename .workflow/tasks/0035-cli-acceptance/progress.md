@@ -1,6 +1,6 @@
 # Task Progress: Agent-only workflow acceptance and performance proof
 
-Current status: completed locally on Linux; Windows rerun pending (functional Playwright 167/167 on Linux; VRT not run)
+Current status: completed on Linux + Windows liftoff distribution/scheduler checks (functional Playwright 167/167; VRT not run)
 Current phase: three slices + Linux functional Playwright verified
 
 ## Dependencies

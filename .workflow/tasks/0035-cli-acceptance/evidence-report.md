@@ -1,6 +1,6 @@
 # Evidence report and capability matrix: agent-only CLI (Linux)
 
-All results are from the disposable integration harness on this Linux host. No real budget was opened. Windows reruns (install, PowerShell tutorial, Task Scheduler) are pending for every task.
+Linux harness results plus Windows liftoff verification for PowerShell tutorial, packed install, and Task Scheduler dry-run (0034/0032). No real personal budget was opened.
 
 ## Capability matrix
 
@@ -24,9 +24,9 @@ All results are from the disposable integration harness on this Linux host. No r
 | 0029 | `changes inspect`, reversal                                                                                                | `0029-cli-reversal/verification-reversal-linux.txt`                    | Completed locally                               |
 | 0030 | Bank sync with a fake SimpleFIN provider                                                                                   | `0030-cli-bank-sync/verification-bank-sync-linux.txt`                  | Completed locally (live provider not exercised) |
 | 0031 | `workflow setup/intake/weekly-checkup/monthly-close/goal-review`, run list/inspect/resume/cancel                           | `0031-cli-workflows/verification-workflows-linux.txt`                  | Completed locally                               |
-| 0032 | `jobs create/list/status/run/disable/enable/schedule`                                                                      | `0032-cli-automation/verification-automation-linux.txt`                | Completed locally (Task Scheduler not executed) |
+| 0032 | `jobs create/list/status/run/disable/enable/schedule`                                                                      | Linux + Windows schedule dry-run (`verification-scheduler-windows.txt`) | Completed (schtasks /Create not executed) |
 | 0033 | `actual mcp serve` stdio adapter                                                                                           | `0033-cli-mcp/verification-mcp-linux.txt` (official SDK client)        | Completed locally; live host E2E blocked        |
-| 0034 | Packed install smoke, `upgrade check`, tutorials                                                                           | `0034-cli-distribution/verification-distribution-linux.txt`            | Completed locally (PowerShell not executed)     |
+| 0034 | Packed install smoke, `upgrade check`, tutorials                                                                           | Linux + Windows (`verification-distribution-windows.txt`)              | Completed (PS + packed on liftoff)     |
 | 0035 | Agent-only acceptance and large-history baseline                                                                           | `verification-acceptance-linux.txt`, `performance-baseline-linux.json` | Completed locally                               |
 
 ## Correctness (A1)
@@ -71,7 +71,7 @@ The query page returns at most 100 rows with a truncation flag, data-quality hon
 
 ## Unresolved limits
 
-- Windows: install, PowerShell tutorial and Task Scheduler jobs not executed.
+- Windows: PowerShell tutorial, packed install, and Task Scheduler *dry-run* completed on liftoff; `schtasks /Create` was not executed.
 - Live bank sync and a live MCP host app not exercised (fake provider and official SDK client only).
 - Opening balances from `workflow setup` are dated on the setup day (D3); back-filled history needs them moved.
 - Functional Playwright completed on Linux 167/167 (D10); VRT screenshot baselines not asserted.
