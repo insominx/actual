@@ -302,6 +302,9 @@ actual transactions merge --ids <id>,<id> --operation-id <unique-id> [--allow-re
 
 # Split a transaction, or replace its split children (guarded; children must sum to the amount)
 actual transactions split <id> --data '[{"amount":-400,"category":"<id>"},{"amount":-600,"category":"<id>"}]' --operation-id <unique-id> [--allow-reconciled]
+
+# Mark transactions cleared (or --uncleared); --unlock removes the reconciled lock (guarded)
+actual transactions clear --ids <id>,<id> --operation-id <unique-id> [--uncleared] [--unlock]
 ```
 
 `transactions categorize` freezes the selected IDs and their current categories in the preview. Apply rejects the batch with `STALE_PREVIEW` if any record changed after preview, instead of widening or narrowing it. Split parents are rejected (categorize their children), transfers between two on-budget accounts and off-budget transactions cannot take a category, and reconciled transactions need `--allow-reconciled`; the proposal lists them in `reconciledIds`. Rules are not rerun. Preview the same batch with `actual changes preview transactions.categorize --operation-id <unique-id> --data '{"ids":["<id>"],"category":"<id>"}'`.
@@ -309,6 +312,8 @@ actual transactions split <id> --data '[{"amount":-400,"category":"<id>"},{"amou
 `transactions split` writes through the shared split helpers. Children take `amount` and optional `category`, `notes` and `payee` (inheriting the parent payee). Their amounts must sum to the parent amount, so an invalid split fails before any write. Re-splitting a parent lists the replaced children in `removedChildIds`; the parent amount, date, account and cleared flag stay unchanged and the parent category is cleared. Split children, transfers and, without `--allow-reconciled`, reconciled transactions are rejected. The receipt outcome lists the new child IDs.
 
 `transactions merge` uses the engine's merge owner. The preview names `keepId` (imported over manual, then the earlier date) and `dropId`, split children that move or are deleted, and transfer counterparts merged by the same rule. Both rows must be in the same account with the same amount, split children cannot be merged, and reconciled rows need `--allow-reconciled`. The kept row fills its empty payee, category, notes and schedule from the dropped row; the dropped row is tombstoned.
+
+`transactions clear` sets the cleared flag on a frozen list of transactions. Reconciled transactions are rejected unless `--unlock` is passed, which removes their reconciled lock (listed in `unlockedIds`); it never marks anything reconciled, which belongs to reconciliation. Select a split parent rather than its children: the children follow the parent's cleared and reconciled state. Amounts, dates, accounts and categories are unchanged and rules are not rerun. To reverse a clearing, run it again with the opposite flag; to reverse a categorization, categorize back to the category in the receipt's `before` record.
 
 ### Payees
 

@@ -1,0 +1,16 @@
+# 0026 cash planning packaged and browser proofs (Linux, box)
+# Build: yarn exec lage build --scope=@actual-app/cli --no-cache; yarn workspace @actual-app/sync-server build
+
+## 2026-10-05 01:04 PDT: node --test integration/cash-planning.test.mjs integration/browser-cash-planning.test.mjs integration/browser-catalog.test.mjs
+✔ cash plan saves round-trip between the CLI and the browser (7077.551586ms)
+✔ browser sees CLI category retirement and payee merge with totals preserved (10076.867018ms)
+✔ cash plan balances, averages, scenarios and guarded saves on a clean budget (14665.283769ms)
+ℹ tests 3
+ℹ pass 3
+ℹ fail 0
+
+## 2026-10-05 01:16 PDT: node --test integration/cash-planning.test.mjs (adds exact six-month goal date, reached, unreachable and four-month depletion checks)
+✔ cash plan balances, averages, scenarios and guarded saves on a clean budget (14603.131197ms)
+ℹ tests 1
+ℹ pass 1
+ℹ fail 0
