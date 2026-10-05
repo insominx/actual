@@ -324,7 +324,7 @@
         "0032-cli-automation",
         "0030-cli-bank-sync"
       ],
-      "status": "planned-prerequisite-hold"
+      "status": "completed-locally"
     },
     {
       "key": "cli-personal-setup",

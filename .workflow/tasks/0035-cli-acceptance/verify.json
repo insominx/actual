@@ -1,0 +1,40 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        {
+          "id": "cli-unit",
+          "command": "yarn workspace @actual-app/cli test"
+        },
+        {
+          "id": "root-types",
+          "command": "yarn typecheck"
+        },
+        {
+          "id": "cli-build",
+          "command": "yarn exec lage build --scope=@actual-app/cli --no-cache"
+        },
+        {
+          "id": "server-build",
+          "command": "yarn workspace @actual-app/sync-server build"
+        },
+        {
+          "id": "acceptance-integration",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/acceptance.test.mjs integration/workflows.test.mjs"
+        },
+        {
+          "id": "browser-interop",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/browser-sync.test.mjs integration/browser-imports.test.mjs integration/browser-catalog.test.mjs integration/browser-cash-planning.test.mjs"
+        },
+        {
+          "id": "lint",
+          "command": "yarn exec oxlint packages/cli/src/workflows.ts packages/cli/integration/acceptance.test.mjs"
+        },
+        {
+          "id": "format",
+          "command": "yarn exec oxfmt --check packages/cli/src/workflows.ts packages/cli/integration/acceptance.test.mjs"
+        }
+      ]
+    }
+  }
+}
