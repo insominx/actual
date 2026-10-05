@@ -1,0 +1,14 @@
+0016 A1 browser check, Linux (box), 2026-10-05 01:04 PT
+Command: cd packages/cli && node --test integration/browser-catalog.test.mjs (run together with the 0026 files via /workspace/ev/quick.sh after lage CLI build and sync-server build)
+The test retires a category with `categories delete --transfer-to` and merges payees with `payees merge` through the CLI, syncs, then opens the desktop-client build in Chromium, reads categories/payees/transactions with window.$send and checks the Budget page shows the destination category and not the retired one. Transaction totals are unchanged.
+
+✔ browser sees CLI category retirement and payee merge with totals preserved (10076.867018ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14736.101477
+(The 3 tests in that run include the 0026 cash-planning and browser-cash-planning files.)

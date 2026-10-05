@@ -305,6 +305,33 @@ export type TransactionCategorizationProposal = CatalogProposal<
   }
 >;
 
+export type TransactionClearingRequest = {
+  ids: string[];
+  cleared: boolean;
+  unlock?: boolean;
+};
+export type TransactionClearingProposal = CatalogProposal<
+  'transactions.clear',
+  TransactionClearingRequest,
+  {
+    transactions: Array<{
+      id: string;
+      account: string;
+      amount: number;
+      date: number;
+      parentId: string | null;
+      cleared: boolean;
+      reconciled: boolean;
+    }>;
+  },
+  {
+    cleared: boolean;
+    changedIds: string[];
+    unchangedIds: string[];
+    unlockedIds: string[];
+  }
+>;
+
 export type TransactionMergeRequest = {
   ids: [string, string];
   allowReconciled?: boolean;
@@ -806,6 +833,7 @@ export type ChangeProposal =
   | ScheduleDeletionProposal
   | TransactionDeletionProposal
   | TransactionCategorizationProposal
+  | TransactionClearingProposal
   | TransactionMergeProposal
   | TransactionSplitProposal
   | CashPlanSaveProposal

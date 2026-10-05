@@ -107,6 +107,7 @@ describe('registered agent commands', () => {
       ['transactions', 'categorize', '--ids', 'a,b', '--category', 'none'],
     ],
     ['transactions.merge', ['transactions', 'merge', '--ids', 'a,b']],
+    ['transactions.clear', ['transactions', 'clear', '--ids', 'a,b']],
     ['cash-planning.reset', ['cash-planning', 'reset']],
     [
       'cash-planning.set-target',

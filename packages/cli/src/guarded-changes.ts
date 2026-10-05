@@ -624,6 +624,7 @@ export async function executeScopedChange(
   operationId: string | undefined,
   operation:
     | 'transactions.categorize'
+    | 'transactions.clear'
     | 'transactions.merge'
     | 'cash-planning.save',
   payload: Record<string, unknown>,
@@ -1355,6 +1356,12 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
         p as api.TransactionCategorizationProposal,
       ),
   },
+  'transactions.clear': {
+    preview: r =>
+      api.previewTransactionClearing(r as api.TransactionClearingRequest),
+    apply: p =>
+      api.applyTransactionClearing(p as api.TransactionClearingProposal),
+  },
   'transactions.merge': {
     preview: r => api.previewTransactionMerge(r as api.TransactionMergeRequest),
     apply: p => api.applyTransactionMerge(p as api.TransactionMergeProposal),
@@ -1469,6 +1476,7 @@ function changeRequest(
   | api.ScheduleDeletionRequest
   | api.TransactionDeletionRequest
   | api.TransactionCategorizationRequest
+  | api.TransactionClearingRequest
   | api.TransactionMergeRequest
   | api.TransactionSplitRequest
   | api.CashPlanSaveRequest
@@ -1602,6 +1610,28 @@ function changeRequest(
       ...(payload.allowReconciled === undefined
         ? {}
         : { allowReconciled: payload.allowReconciled }),
+    };
+  }
+  if (operation === 'transactions.clear') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['ids', 'cleared', 'unlock'].includes(key),
+      ) ||
+      !Array.isArray(payload.ids) ||
+      !payload.ids.every(value => typeof value === 'string') ||
+      typeof payload.cleared !== 'boolean' ||
+      !(payload.unlock === undefined || typeof payload.unlock === 'boolean')
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Clearing takes ids, cleared (boolean) and optional unlock.',
+      );
+    }
+    return {
+      ids: payload.ids as string[],
+      cleared: payload.cleared,
+      ...(payload.unlock === undefined ? {} : { unlock: payload.unlock }),
     };
   }
   if (operation === 'transactions.categorize') {

@@ -238,6 +238,52 @@ export function registerTransactionsCommand(program: Command) {
     );
 
   transactions
+    .command('clear')
+    .description(
+      'Mark a frozen list of transactions cleared or uncleared, optionally removing their reconciled lock, through a guarded change',
+    )
+    .option('--operation-id <id>', 'Required; durable retry ID')
+    .requiredOption('--ids <ids>', 'Comma-separated transaction IDs')
+    .option('--uncleared', 'Mark the transactions uncleared instead', false)
+    .option(
+      '--unlock',
+      'Remove the reconciled lock from reconciled transactions (required to change them; never marks anything reconciled)',
+      false,
+    )
+    .action(
+      async (cmdOpts: {
+        operationId?: string;
+        ids: string;
+        uncleared: boolean;
+        unlock: boolean;
+      }) => {
+        const opts = program.opts();
+        const ids = cmdOpts.ids
+          .split(',')
+          .map(id => id.trim())
+          .filter(Boolean);
+        if (!ids.length) {
+          throw new Error(
+            'Invalid --ids: provide at least one transaction ID.',
+          );
+        }
+        printOutput(
+          await executeScopedChange(
+            opts,
+            cmdOpts.operationId,
+            'transactions.clear',
+            {
+              ids,
+              cleared: !cmdOpts.uncleared,
+              ...(cmdOpts.unlock ? { unlock: true } : {}),
+            },
+          ),
+          opts.format,
+        );
+      },
+    );
+
+  transactions
     .command('merge')
     .description(
       'Merge two duplicate transactions through a guarded change; the engine keeps the imported or earlier one',

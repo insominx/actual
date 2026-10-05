@@ -120,6 +120,8 @@ import type {
   TransactionAdditionRequest,
   TransactionCategorizationProposal,
   TransactionCategorizationRequest,
+  TransactionClearingProposal,
+  TransactionClearingRequest,
   TransactionDeletionProposal,
   TransactionDeletionRequest,
   TransactionImportOutcome,
@@ -361,6 +363,12 @@ export type ApiHandlers = {
   ) => Promise<TransactionCategorizationProposal>;
   'api/transactions-apply-categorization': (
     arg: TransactionCategorizationProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/transactions-preview-clearing': (
+    arg: TransactionClearingRequest,
+  ) => Promise<TransactionClearingProposal>;
+  'api/transactions-apply-clearing': (
+    arg: TransactionClearingProposal,
   ) => Promise<TransactionUpdateOutcome>;
   'api/transactions-preview-merge': (
     arg: TransactionMergeRequest,

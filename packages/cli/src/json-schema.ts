@@ -206,6 +206,14 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
           ),
           object(
             {
+              ids: { type: 'array', items: string },
+              cleared: boolean,
+              unlock: boolean,
+            },
+            ['ids', 'cleared'],
+          ),
+          object(
+            {
               subtransactions: {
                 type: 'array',
                 items: object(

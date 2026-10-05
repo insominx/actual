@@ -213,6 +213,10 @@ import {
   prepareTransactionCategorization,
 } from './transactions/guarded-categorize';
 import {
+  performTransactionClearing,
+  prepareTransactionClearing,
+} from './transactions/guarded-clear';
+import {
   performTransactionDeletion,
   prepareTransactionDeletion,
 } from './transactions/guarded-delete';
@@ -3397,6 +3401,17 @@ function guardedCatalogHandlers<
     transactionCategorization.preview;
   handlers['api/transactions-apply-categorization'] =
     transactionCategorization.apply;
+  const transactionClearing = guardedCatalogHandlers(
+    prepareTransactionClearing,
+    guardedApply({
+      operation: 'transactions.clear',
+      noun: 'Transaction clearing',
+      prepare: prepareTransactionClearing,
+      perform: performTransactionClearing,
+    }),
+  );
+  handlers['api/transactions-preview-clearing'] = transactionClearing.preview;
+  handlers['api/transactions-apply-clearing'] = transactionClearing.apply;
   const transactionMerge = guardedCatalogHandlers(
     prepareTransactionMerge,
     guardedApply({

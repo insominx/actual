@@ -27,6 +27,10 @@
           "command": "yarn workspace @actual-app/cli exec node --test integration/catalog-inspect.test.mjs integration/guarded-notes.test.mjs integration/guarded-preferences.test.mjs"
         },
         {
+          "id": "browser-integration",
+          "command": "yarn workspace @actual-app/cli exec node --test integration/browser-catalog.test.mjs"
+        },
+        {
           "id": "lint",
           "command": "yarn exec oxlint packages/loot-core/src/server/notes/guarded.ts packages/loot-core/src/server/preferences/catalog.ts packages/loot-core/src/server/catalog-inspect.ts packages/cli/src/commands/notes.ts packages/cli/src/commands/preferences.ts packages/cli/src/commands/categories.ts packages/cli/src/commands/payees.ts packages/cli/integration/catalog-inspect.test.mjs packages/cli/integration/guarded-notes.test.mjs packages/cli/integration/guarded-preferences.test.mjs"
         },

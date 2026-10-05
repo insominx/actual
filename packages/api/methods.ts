@@ -104,6 +104,8 @@ import type {
   TransactionAdditionRequest,
   TransactionCategorizationProposal,
   TransactionCategorizationRequest,
+  TransactionClearingProposal,
+  TransactionClearingRequest,
   TransactionDeletionProposal,
   TransactionDeletionRequest,
   TransactionImportProposal,
@@ -137,6 +139,8 @@ export type {
   TransactionDeletionProposal,
   TransactionCategorizationRequest,
   TransactionCategorizationProposal,
+  TransactionClearingRequest,
+  TransactionClearingProposal,
   TransactionMergeRequest,
   TransactionMergeProposal,
   TransactionMergeOutcome,
@@ -450,6 +454,16 @@ export function applyTransactionCategorization(
   proposal: TransactionCategorizationProposal,
 ) {
   return send('api/transactions-apply-categorization', proposal);
+}
+export function previewTransactionClearing(
+  request: TransactionClearingRequest,
+) {
+  return send('api/transactions-preview-clearing', request);
+}
+export function applyTransactionClearing(
+  proposal: TransactionClearingProposal,
+) {
+  return send('api/transactions-apply-clearing', proposal);
 }
 export function previewTransactionMerge(request: TransactionMergeRequest) {
   return send('api/transactions-preview-merge', request);

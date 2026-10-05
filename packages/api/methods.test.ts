@@ -6131,3 +6131,108 @@ describe('cash plan inspection and guarded saves', () => {
     ).rejects.toThrow();
   });
 });
+
+describe('guarded clearing and unlocking', () => {
+  beforeEach(async () => {
+    await api.loadBudget(budgetName);
+  });
+  test('sets cleared on frozen IDs, carries split children, and needs unlock for reconciled rows', async () => {
+    const account = await api.createAccount({ name: 'Clear checking' }, 0);
+    await api.addTransactions(account, [
+      { date: '2026-08-01', amount: -100, notes: 'a', cleared: false },
+      { date: '2026-08-02', amount: -200, notes: 'b', cleared: true },
+      { date: '2026-08-03', amount: -300, notes: 'r', cleared: true },
+      {
+        date: '2026-08-05',
+        amount: -500,
+        cleared: false,
+        subtransactions: [
+          { amount: -200, notes: 's1' },
+          { amount: -300, notes: 's2' },
+        ],
+      },
+    ]);
+    const initial = await api.getTransactions(
+      account,
+      '2026-08-01',
+      '2026-08-31',
+    );
+    await api.updateTransaction(initial.find(row => row.notes === 'r')!.id, {
+      reconciled: true,
+    });
+    const rows = await api.getTransactions(account, '2026-08-01', '2026-08-31');
+    const byNotes = (notes: string) => rows.find(row => row.notes === notes)!;
+    const [a, b, r] = ['a', 'b', 'r'].map(byNotes);
+    const parent = rows.find(row => row.is_parent)!;
+    const childIds = parent.subtransactions!.map(row => row.id);
+
+    const proposal = await api.previewTransactionClearing({
+      ids: [a.id, b.id, parent.id],
+      cleared: true,
+    });
+    expect(proposal.after).toEqual({
+      cleared: true,
+      changedIds: expect.arrayContaining([a.id, parent.id, ...childIds]),
+      unchangedIds: [b.id],
+      unlockedIds: [],
+    });
+    expect(proposal.after.changedIds).toHaveLength(2 + childIds.length);
+    expect(
+      await api.getTransactions(account, '2026-08-01', '2026-08-31'),
+    ).toEqual(rows);
+    expect(await api.applyTransactionClearing(proposal)).toMatchObject({
+      status: 'committed-local',
+      changed: true,
+    });
+    const after = await api.getTransactions(
+      account,
+      '2026-08-01',
+      '2026-08-31',
+    );
+    const all = after.flatMap(row => [row, ...(row.subtransactions ?? [])]);
+    for (const id of [a.id, b.id, parent.id, ...childIds]) {
+      expect(all.find(row => row.id === id)!.cleared).toBe(true);
+    }
+    expect(all.find(row => row.id === parent.id)!.amount).toBe(-500);
+    expect(await api.applyTransactionClearing(proposal)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+
+    await expect(
+      api.previewTransactionClearing({ ids: [childIds[0]], cleared: false }),
+    ).rejects.toThrow(/split child/);
+    await expect(
+      api.previewTransactionClearing({ ids: [r.id], cleared: false }),
+    ).rejects.toThrow(/reconciled/);
+    await expect(
+      api.previewTransactionClearing({ ids: [a.id], cleared: 'yes' as never }),
+    ).rejects.toThrow(/cleared must be a boolean/);
+
+    const stale = await api.previewTransactionClearing({
+      ids: [a.id],
+      cleared: false,
+    });
+    await api.updateTransaction(a.id, { notes: 'edited' });
+    expect(await api.applyTransactionClearing(stale)).toMatchObject({
+      code: 'STALE_PREVIEW',
+    });
+
+    const unlock = await api.previewTransactionClearing({
+      ids: [r.id],
+      cleared: true,
+      unlock: true,
+    });
+    expect(unlock.after).toEqual({
+      cleared: true,
+      changedIds: [r.id],
+      unchangedIds: [],
+      unlockedIds: [r.id],
+    });
+    await api.applyTransactionClearing(unlock);
+    const unlocked = (
+      await api.getTransactions(account, '2026-08-01', '2026-08-31')
+    ).find(row => row.id === r.id)!;
+    expect(unlocked).toMatchObject({ cleared: true, reconciled: false });
+    expect(unlocked.amount).toBe(-300);
+  });
+});
