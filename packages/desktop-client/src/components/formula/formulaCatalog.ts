@@ -1139,7 +1139,7 @@ export function getFormulaFunctionCatalog(): Record<
       category: 'other',
       modes: ['query', 'transaction'],
       description: t(
-        "Balance for an account. In rule formulas, this is the running stored balance at this transaction, same cutoff as balance (use the balance variable instead for the current account; use INTEGER_TO_AMOUNT to convert a stored amount to major units). In report/query formulas, this is the account's current balance in major units. Use a quoted account id for a deterministic match, or a quoted account name.",
+        "Balance for an account. In rule formulas, this is the running balance at this transaction, same cutoff as balance (use the balance variable instead for the current account). In report/query formulas, this is the account's current balance. Use a quoted account id for a deterministic match, or a quoted account name.",
       ),
       parameters: [
         {
@@ -1341,7 +1341,7 @@ export function getRuleFieldCompletions(): Completion[] {
       section: ruleFieldSection,
       boost: 5,
       info: t(
-        'Stored transaction amount. Use for calculations and comparisons.\n\nExample: =INTEGER_TO_AMOUNT(amount) for the major-unit value',
+        'Transaction amount. Use for calculations and comparisons.\n\nExample: =amount * 1.05 to add 5%',
       ),
     },
     {
@@ -1458,7 +1458,7 @@ export function getRuleFieldCompletions(): Completion[] {
       section: ruleFieldSection,
       boost: 5,
       info: t(
-        'The stored amount of the parent transaction in a split.\n\nExample: =INTEGER_TO_AMOUNT(parent_amount) * .05',
+        'The amount of the parent transaction in split transactions.\n\nExample: =parent_amount * .05',
       ),
     },
     {

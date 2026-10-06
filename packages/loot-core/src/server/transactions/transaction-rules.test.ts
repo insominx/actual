@@ -2055,7 +2055,7 @@ test('planned closing source affects canonical balance formulas without ledger w
   const preview = await runRules(target, null, { plannedTransactions: added });
   expect(preview.notes).not.toBe(withoutPlan.notes);
   expect(preview._ruleErrors).toEqual([]);
-  expect(preview.notes).toBe('source=500;destination=200');
+  expect(preview.notes).toBe('source=5;destination=2');
   expect(await db.all('SELECT * FROM transactions ORDER BY id')).toEqual(
     before,
   );
