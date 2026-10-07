@@ -242,10 +242,6 @@ export function calculateRunningBalancesTopDown(
         return acc;
       }
 
-      // No special case for the last row: with a complete list the same
-      // formula yields its own amount, and with a partially loaded (paged) list
-      // the last loaded row is not the oldest transaction, so its balance must
-      // still follow from the row above it.
       const previousTransaction = arr[index - 1];
       const previousRunningBalance = acc.get(previousTransaction.id) ?? 0;
       const previousAmount = previousTransaction.amount ?? 0;

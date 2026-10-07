@@ -5,34 +5,46 @@ import {
   calculateRunningBalancesTopDown,
 } from './useTransactions';
 
-// Newest first, as the account register lists them
-const tx = (id: string, amount: number) =>
-  ({ id, amount }) as unknown as TransactionEntity;
+function tx(id: string, amount: number, parent_id?: string) {
+  return { id, amount, parent_id } as TransactionEntity;
+}
 
-describe('running balances', () => {
-  const all = [tx('c', -300), tx('b', 200), tx('a', 1000)];
-
-  it('top-down: the balance after each row follows from the account balance', () => {
-    // Account balance after the newest row is 900
-    const balances = calculateRunningBalancesTopDown(all, 'inline', 900);
-    expect([...balances]).toEqual([
-      ['c', 900],
-      ['b', 1200],
-      ['a', 1000],
-    ]);
-  });
-
-  it('top-down: a partially loaded list does not treat its last row as the oldest', () => {
-    // Only the two newest rows are loaded; 'b' is not the first transaction
+describe('calculateRunningBalancesTopDown', () => {
+  it('full history: last balance equals its own amount', () => {
     const balances = calculateRunningBalancesTopDown(
-      all.slice(0, 2),
-      'inline',
-      900,
+      [tx('a', 100), tx('b', -50), tx('c', 200)],
+      'none',
+      250,
     );
-    expect(balances.get('b')).toBe(1200);
+
+    expect(Object.fromEntries(balances)).toEqual({ a: 250, b: 150, c: 200 });
   });
 
-  it('top-down and bottom-up agree on a complete list', () => {
+  it('does not reset the last balance to its amount when older transactions are not in the list', () => {
+    // An older transaction (e.g. reconciled and hidden) contributes 1000.
+    const balances = calculateRunningBalancesTopDown(
+      [tx('a', 100), tx('b', -10)],
+      'none',
+      1090,
+    );
+
+    expect(Object.fromEntries(balances)).toEqual({ a: 1090, b: 990 });
+  });
+
+  it('skips split children when splits is "all"', () => {
+    const balances = calculateRunningBalancesTopDown(
+      [tx('p', -30), tx('c1', -10, 'p'), tx('c2', -20, 'p'), tx('o', 100)],
+      'all',
+      70,
+    );
+
+    expect(Object.fromEntries(balances)).toEqual({ p: 70, o: 100 });
+  });
+});
+
+describe('calculateRunningBalancesBottomUp', () => {
+  it('agrees with top-down on a complete list', () => {
+    const all = [tx('c', -300), tx('b', 200), tx('a', 1000)];
     const top = calculateRunningBalancesTopDown(all, 'inline', 900);
     const bottom = calculateRunningBalancesBottomUp(all, 'inline', 0);
     // Same balances; the maps only differ in insertion order
