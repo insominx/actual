@@ -355,6 +355,7 @@ function NetWorthInner({ widget }: NetWorthInnerProps) {
       >
         <View
           style={{
+            alignItems: 'flex-end',
             textAlign: 'right',
             paddingTop: 20,
           }}
