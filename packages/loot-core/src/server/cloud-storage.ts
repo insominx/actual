@@ -267,7 +267,7 @@ export function readBudgetArchive(buffer: Uint8Array) {
 export async function importBuffer(
   fileData,
   buffer,
-  { newName }: { newName?: string } = {},
+  { newName, localId }: { newName?: string; localId?: string } = {},
 ) {
   const { dbContent, meta: sourceMetadata } = readBudgetArchive(buffer);
   let meta = sourceMetadata;
@@ -307,8 +307,19 @@ export async function importBuffer(
     }
   }
 
-  const budgetDir = fs.getBudgetDir(meta.id);
-
+  // Only local selection can authorize replacement. Archive IDs are never
+  // used as destinations, including for archives imported from disk.
+  const id = localId || uuidv4();
+  if (localId) {
+    const localMeta = JSON.parse(
+      await fs.readFile(fs.join(fs.getBudgetDir(id), 'metadata.json')),
+    );
+    if (!fileData.fileId || localMeta.cloudFileId !== fileData.fileId) {
+      throw FileDownloadError('mismatched-cloud-file');
+    }
+  }
+  meta = { ...meta, id };
+  const budgetDir = fs.getBudgetDir(id);
   if (await fs.exists(budgetDir)) {
     // Don't remove the directory so that backups are retained
     const dbFile = fs.join(budgetDir, 'db.sqlite');
@@ -495,7 +506,7 @@ export async function listRemoteFiles(): Promise<RemoteFile[]> {
     .filter(Boolean);
 }
 
-export async function download(cloudFileId) {
+export async function download(cloudFileId, localId?: string) {
   const userToken = await asyncStorage.getItem('user-token');
   const syncServer = getServer().SYNC_SERVER;
 
@@ -541,6 +552,9 @@ export async function download(cloudFileId) {
   }
 
   const fileData = userFileInfoRes.data;
+  if (fileData.fileId !== cloudFileId) {
+    throw FileDownloadError('mismatched-cloud-file');
+  }
   let buffer = userFileRes;
 
   // The download process checks if the server gave us decrypt
@@ -556,5 +570,5 @@ export async function download(cloudFileId) {
     }
   }
 
-  return importBuffer(fileData, buffer);
+  return importBuffer(fileData, buffer, { localId });
 }

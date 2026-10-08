@@ -8,6 +8,7 @@ export * from './methods';
 export * as utils from './utils';
 
 let worker: Worker | null = null;
+let ownsSession = false;
 
 // Terminate the current backend worker. The client connection is dropped
 // first: messages posted to a terminated worker are silently discarded, so
@@ -29,6 +30,7 @@ export async function init(
 
   try {
     await startBackendWorker(ownWorker, config);
+    ownsSession = Boolean(config.serverURL && config.password);
   } catch (error) {
     // A concurrent init() may already have replaced (and terminated) this
     // worker; only tear down the connection if it still belongs to us.
@@ -53,7 +55,14 @@ export async function shutdown() {
     try {
       await send('close-budget');
     } finally {
-      stopWorker('The API was shut down');
+      try {
+        if (ownsSession) {
+          await send('subscribe-sign-out');
+        }
+      } finally {
+        ownsSession = false;
+        stopWorker('The API was shut down');
+      }
     }
   }
 }

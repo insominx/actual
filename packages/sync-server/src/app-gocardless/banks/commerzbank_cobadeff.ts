@@ -41,22 +41,23 @@ export default {
     // Clean up remittanceInformation, deduplicate payee (removing slashes ...
     // ... that are added to the remittanceInformation field), and ...
     // ... remove clutter like "End-to-End-Ref.: NOTPROVIDED"
-    const payee = escapeRegExp(
-      transaction.creditorName || transaction.debtorName || '',
-    );
-    // An empty payee would build an empty regex, which matches between every
-    // character and spaces out the whole text.
-    let cleaned = editedTrans.remittanceInformationUnstructured.replace(
+    const payeeTokens = (
+      transaction.creditorName ||
+      transaction.debtorName ||
+      ''
+    )
+      .split(/[\s/]+/)
+      .filter(Boolean)
+      .map(escapeRegExp);
+    let notes = editedTrans.remittanceInformationUnstructured.replace(
       /\s*(,)?\s+/g,
       '$1 ',
     );
-    if (payee) {
-      cleaned = cleaned.replace(
-        RegExp(payee.split(' ').join('(/*| )'), 'gi'),
-        ' ',
-      );
+    if (payeeTokens.length > 0) {
+      // Separators consume at least one character and cannot overlap tokens.
+      notes = notes.replace(new RegExp(payeeTokens.join('[\\s/]+'), 'gi'), ' ');
     }
-    editedTrans.remittanceInformationUnstructured = cleaned
+    editedTrans.remittanceInformationUnstructured = notes
       .replace(', End-to-End-Ref.: NOTPROVIDED', '')
       .trim();
 

@@ -876,7 +876,9 @@ Returns a list of all budget files either locally cached or on the remote server
 
 <Method name="loadBudget" args={[{ properties: [{ name: 'budgetId', type: 'string' }, { name: 'options', type: '{ offline?: boolean }' }] }]} returns="Promise<void>" />
 
-Load a locally cached budget file.
+Load a locally cached budget file using its local `id` from `getBudgets()`. Downloaded budgets receive a local ID that can differ between devices; do not use the Budget ID from another device.
+
+To download and open a budget using its Sync ID, use `downloadBudget()`.
 
 For an explicit offline session, initialize the API without a server and pass `{ offline: true }`. This records local changes for later synchronization. The default behavior remains unchanged. Offline loading rejects an API instance initialized with a server.
 

@@ -26,6 +26,8 @@ import {
 import { syncRangeEnd } from './sync-range';
 import { EnableBankingError } from './utils/errors';
 
+const debugSensitive = createDebug('actual-sensitive:enable-banking');
+
 const debug = createDebug('actual:enable-banking:app');
 
 const app = express();
@@ -76,7 +78,12 @@ async function buildSessionResult(
         );
         balances = balanceResult.balances.map(normalizeBalance);
       } catch (err) {
-        debug('Failed to fetch balances for account %s: %s', account.uid, err);
+        debug('Failed to fetch account balances');
+        debugSensitive(
+          'Failed to fetch balances for account %s: %O',
+          account.uid,
+          err,
+        );
       }
 
       const preferredBalance =
@@ -124,11 +131,8 @@ app.get('/auth_callback', async (req: Request, res: Response) => {
 
   try {
     const session = await enableBankingService.createSession(code);
-    debug(
-      'Callback session created: %s with %d accounts',
-      session.session_id,
-      session.accounts.length,
-    );
+    debug('Callback session created with %d accounts', session.accounts.length);
+    debugSensitive('Callback session created: %s', session.session_id);
 
     const result = await buildSessionResult(session, extractPsuHeaders(req));
 
@@ -160,7 +164,8 @@ app.get('/auth_callback', async (req: Request, res: Response) => {
       cleanupPendingAuth(state);
     }
 
-    debug('Callback auth error: %s', error);
+    debug('Callback authentication failed');
+    debugSensitive('Callback authentication failed: %O', error);
     res
       .status(500)
       .send(
@@ -248,9 +253,14 @@ app.post(
         applicationId,
         secretKey,
       );
-      debug('Enable Banking application validated: %o', appInfo);
+      debug('Enable Banking application validated');
+      debugSensitive('Enable Banking application validated: %O', appInfo);
     } catch (error) {
-      debug('Enable Banking configuration validation failed: %s', error);
+      debug('Enable Banking configuration validation failed');
+      debugSensitive(
+        'Enable Banking configuration validation failed: %O',
+        error,
+      );
       res.send({
         status: 'ok',
         data: {
@@ -360,11 +370,8 @@ app.post(
 
     try {
       const session = await enableBankingService.createSession(code);
-      debug(
-        'Session created: %s with %d accounts',
-        session.session_id,
-        session.accounts.length,
-      );
+      debug('Session created with %d accounts', session.accounts.length);
+      debugSensitive('Session created: %s', session.session_id);
 
       const result = await buildSessionResult(session, extractPsuHeaders(req));
 
@@ -560,7 +567,7 @@ app.post(
         // non-numeric amount) — one of them would otherwise abort the entire
         // account sync. Pending transactions that carry a date are unaffected.
         if (!isImportableTransaction(normalized)) {
-          debug(
+          debugSensitive(
             'Skipping unimportable transaction id=%s date=%s amount=%s',
             normalized.transactionId,
             normalized.date,
@@ -590,7 +597,8 @@ app.post(
         },
       });
     } catch (error) {
-      debug('Error fetching transactions: %s', error);
+      debug('Error fetching transactions');
+      debugSensitive('Error fetching transactions: %O', error);
 
       // Return structured error codes so the client can show
       // appropriate UI (e.g. re-auth prompt for expired sessions)
