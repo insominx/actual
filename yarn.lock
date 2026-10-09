@@ -2078,12 +2078,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@capacitor/android@npm:^8.4.2":
-  version: 8.4.2
-  resolution: "@capacitor/android@npm:8.4.2"
+"@capacitor/android@npm:^8.4.3":
+  version: 8.4.3
+  resolution: "@capacitor/android@npm:8.4.3"
   peerDependencies:
     "@capacitor/core": ^8.4.0
-  checksum: 10/892510a8db66400c8123d6d15538fb4d13db738365dd235109b6deed0390694de2f5466b0343b030a53ca082bb5eb8892f42cc86fdf2dd4c2eff2453b2cfa926
+  checksum: 10/931b319de1f33e9d0d9e8dbd8b594059567d8348ca33f3b3fb225165fa8f63e7ed8a346b4f6f5e5f91ccf8d6e633cc82cda271f3fb29796d0f3e470b59d61cc6
   languageName: node
   linkType: hard
 
@@ -2124,12 +2124,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@capacitor/ios@npm:^8.4.2":
-  version: 8.4.2
-  resolution: "@capacitor/ios@npm:8.4.2"
+"@capacitor/ios@npm:^8.5.3":
+  version: 8.5.3
+  resolution: "@capacitor/ios@npm:8.5.3"
   peerDependencies:
-    "@capacitor/core": ^8.4.0
-  checksum: 10/afecf7636eef0949a772663274098c2cddf973bbf16abd63105a495cc816369cfd1e79cf3a99f4022944a34d9cac0c4231845a2f9494fb11b00c0b779f637b4c
+    "@capacitor/core": ^8.5.0
+  checksum: 10/e574fbe99a9339220f44859ea127abf1ae412542f668d92e7b935dc6a6cdeefbe0f75d77f74848323210727ba9b329ac42bda21f28d9a181967649fa99d15a80
   languageName: node
   linkType: hard
 
@@ -16704,9 +16704,9 @@ __metadata:
   linkType: hard
 
 "http-cache-semantics@npm:^4.0.0, http-cache-semantics@npm:^4.1.1":
-  version: 4.2.0
-  resolution: "http-cache-semantics@npm:4.2.0"
-  checksum: 10/4efd2dfcfeea9d5e88c84af450b9980be8a43c2c8179508b1c57c7b4421c855f3e8efe92fa53e0b3f4a43c85824ada930eabbc306d1b3beab750b6dcc5187693
+  version: 4.3.0
+  resolution: "http-cache-semantics@npm:4.3.0"
+  checksum: 10/3f7b17565d3a046f069ecfc220d790ccfbef4a94a486502c5d1a23c50d71880393175416845579487a91bfefca393614d16a99bd566d474807a4ebb1139da9cd
   languageName: node
   linkType: hard
 
@@ -20160,10 +20160,10 @@ __metadata:
   resolution: "mobile-client@workspace:packages/mobile-client"
   dependencies:
     "@actual-app/web": "workspace:*"
-    "@capacitor/android": "npm:^8.4.2"
+    "@capacitor/android": "npm:^8.4.3"
     "@capacitor/cli": "npm:^8.4.2"
     "@capacitor/core": "npm:^8.4.2"
-    "@capacitor/ios": "npm:^8.4.2"
+    "@capacitor/ios": "npm:^8.5.3"
     "@capacitor/splash-screen": "npm:^8.0.2"
   languageName: unknown
   linkType: soft
@@ -22923,12 +22923,12 @@ __metadata:
   linkType: hard
 
 "proxy-addr@npm:^2.0.7, proxy-addr@npm:~2.0.7":
-  version: 2.0.7
-  resolution: "proxy-addr@npm:2.0.7"
+  version: 2.0.8
+  resolution: "proxy-addr@npm:2.0.8"
   dependencies:
     forwarded: "npm:0.2.0"
     ipaddr.js: "npm:1.9.1"
-  checksum: 10/f24a0c80af0e75d31e3451398670d73406ec642914da11a2965b80b1898ca6f66a0e3e091a11a4327079b2b268795f6fa06691923fef91887215c3d0e8ea3f68
+  checksum: 10/6922b732c5625a9ba174c053bf3a750a80c87f19b7c62919f88ff01834eb80e2467834cfa72fc48b3a7ed6b3d18daadf773f6efb21db1c5fcc76d784509fcf1f
   languageName: node
   linkType: hard
 
