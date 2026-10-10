@@ -110,40 +110,30 @@ export function runQuery<T>(
 
   const stmt = typeof sql === 'string' ? db.prepare(sql) : sql;
 
-  // A statement prepared here from a string is only ever used once, and
-  // sql.js keeps it (and its wasm memory) alive until it is freed
-  const freeIfOwned = () => {
+  try {
+    if (fetchAll) {
+      try {
+        stmt.bind(params);
+        const rows = [];
+
+        while (stmt.step()) {
+          rows.push(stmt.getAsObject());
+        }
+        return rows;
+      } catch (e) {
+        logger.log(sql);
+        throw e;
+      }
+    }
+
+    stmt.run(params);
+    return { changes: db.getRowsModified() };
+  } finally {
+    // sql.js keeps statements alive in the WASM heap until they are freed.
     if (typeof sql === 'string') {
       stmt.free();
-    }
-  };
-
-  if (fetchAll) {
-    try {
-      stmt.bind(params);
-      const rows = [];
-
-      while (stmt.step()) {
-        rows.push(stmt.getAsObject());
-      }
-
-      if (typeof sql === 'string') {
-        stmt.free();
-      } else {
-        stmt.reset();
-      }
-      return rows;
-    } catch (e) {
-      freeIfOwned();
-      logger.log(sql);
-      throw e;
-    }
-  } else {
-    try {
-      stmt.run(params);
-      return { changes: db.getRowsModified() };
-    } finally {
-      freeIfOwned();
+    } else {
+      stmt.reset();
     }
   }
 }
