@@ -1579,6 +1579,8 @@ function TransactionEditUnconnected({
   >([]);
   const isAdding = useRef(false);
   const isDeleted = useRef(false);
+  const [learnCategories = 'true'] = useSyncedPref('learn-categories');
+  const isLearnCategoriesEnabled = String(learnCategories) === 'true';
 
   const searchParamCategory = useMemo(
     () => categories.find(c => c.name === searchParams.get('category'))?.id,
@@ -1816,6 +1818,7 @@ function TransactionEditUnconnected({
           added: changes.added,
           deleted: changes.deleted,
           updated: changes.updated,
+          learnCategories: isLearnCategoriesEnabled,
         });
 
         // if (onTransactionsChange) {
@@ -1832,7 +1835,7 @@ function TransactionEditUnconnected({
         dispatch(setLastTransaction({ transaction: newTransactions[0] }));
       }
     },
-    [dispatch, fetchedTransactions],
+    [dispatch, fetchedTransactions, isLearnCategoriesEnabled],
   );
 
   const onDelete = useCallback(
