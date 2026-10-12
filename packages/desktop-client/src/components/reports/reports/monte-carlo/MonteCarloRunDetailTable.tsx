@@ -7,6 +7,7 @@ import {
   SvgCheveronDown,
   SvgCheveronRight,
 } from '@actual-app/components/icons/v1';
+import { ModeButton } from '@actual-app/components/mode-button';
 import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
@@ -62,6 +63,8 @@ type MonteCarloRunDetailTableProps = {
   withdrawalRule: MonteCarloWithdrawalRuleConfig;
   /** Rendered between the header row and the table - the cashflow chart */
   cashflowGraph?: ReactNode;
+  /** The pot balances chart; with both charts given, buttons switch between them */
+  potBalancesGraph?: ReactNode;
   onBack: () => void;
 };
 
@@ -75,6 +78,7 @@ export function MonteCarloRunDetailTable({
   incomeStreams,
   withdrawalRule,
   cashflowGraph,
+  potBalancesGraph,
   onBack,
 }: MonteCarloRunDetailTableProps) {
   const { t } = useTranslation();
@@ -82,6 +86,9 @@ export function MonteCarloRunDetailTable({
   const [expandedYears, setExpandedYears] = useState<Set<number>>(new Set());
   // Years whose detailed working is shown under the summary
   const [workingYears, setWorkingYears] = useState<Set<number>>(new Set());
+  // Which of the two single-run charts sits above the table; one at a
+  // time keeps the table within reach
+  const [chartView, setChartView] = useState<'cashflow' | 'pots'>('cashflow');
 
   const hasIncome = incomeStreams.length > 0;
   const surplusPotName = getMonteCarloSurplusPotLabel(pots, t);
@@ -422,7 +429,25 @@ export function MonteCarloRunDetailTable({
         </Button>
       </View>
 
-      {cashflowGraph}
+      {cashflowGraph != null && potBalancesGraph != null && (
+        <View style={{ flexDirection: 'row', gap: 5, marginBottom: 10 }}>
+          <ModeButton
+            selected={chartView === 'cashflow'}
+            onSelect={() => setChartView('cashflow')}
+          >
+            <Trans>Cashflow</Trans>
+          </ModeButton>
+          <ModeButton
+            selected={chartView === 'pots'}
+            onSelect={() => setChartView('pots')}
+          >
+            <Trans>Pots</Trans>
+          </ModeButton>
+        </View>
+      )}
+      {chartView === 'pots' && potBalancesGraph != null
+        ? potBalancesGraph
+        : (cashflowGraph ?? potBalancesGraph)}
 
       <Text style={{ fontSize: 13, color: theme.pageText, marginBottom: 10 }}>
         <PrivacyFilter>
