@@ -162,6 +162,8 @@ async function resetBudgetCache() {
   spreadsheet.startCacheBarrier();
 
   try {
+    sheet.clearCache();
+
     let seededCells: string[] = [];
 
     // One transaction around the whole reset. `loadUserBudgets` would
