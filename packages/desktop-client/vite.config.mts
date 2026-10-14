@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import type { ChildProcess } from 'node:child_process';
-import { createReadStream } from 'node:fs';
+import { createReadStream, readFileSync } from 'node:fs';
 import { cp, mkdir, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
@@ -98,6 +98,23 @@ const pluginsServiceDistDir = path.resolve(
 );
 const serviceWorkerDir = path.resolve(__dirname, 'service-worker');
 
+const repoRoot = path.resolve(__dirname, '../..');
+
+// The repo pins the Yarn release it expects via `.yarnrc.yml`, so resolve that
+// path and launch it through Node directly. Spawning `yarn` by name does not
+// work on Windows, where it resolves to a `.cmd` shim that `spawn` cannot
+// execute without a shell.
+function resolveYarnCli(): string {
+  const yarnRc = readFileSync(path.resolve(repoRoot, '.yarnrc.yml'), 'utf8');
+  const yarnPath = /^yarnPath:\s*(.+?)\s*$/m.exec(yarnRc)?.[1];
+
+  if (!yarnPath) {
+    throw new Error('Could not resolve "yarnPath" from .yarnrc.yml');
+  }
+
+  return path.resolve(repoRoot, yarnPath);
+}
+
 const WORKER_FILENAME_RE = /^kcab\.worker\.(.+)\.js$/;
 
 async function extractWorkerHash(): Promise<string> {
@@ -161,28 +178,13 @@ async function stagePublicData(): Promise<void> {
   );
 }
 
-// Node on Windows cannot execute the extensionless Yarn shim (ENOENT) or
-// yarn.cmd directly (EINVAL). cmd.exe resolves yarn.cmd from PATH.
-function spawnYarn(
-  args: readonly string[],
-  options: Parameters<typeof spawn>[2],
-): ChildProcess {
-  if (process.platform === 'win32') {
-    return spawn(
-      process.env.ComSpec ?? 'cmd.exe',
-      ['/d', '/s', '/c', 'yarn', ...args],
-      options,
-    );
-  }
-
-  return spawn('yarn', [...args], options);
-}
-
 const lootCoreBackend = (): Plugin => ({
   name: 'loot-core-backend',
   configureServer(server) {
-    const child: ChildProcess = spawnYarn(
+    const child: ChildProcess = spawn(
+      process.execPath,
       [
+        resolveYarnCli(),
         'vite',
         'build',
         '--config',
