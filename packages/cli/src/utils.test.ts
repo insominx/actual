@@ -1,4 +1,4 @@
-import { parseBoolFlag, parseIntFlag } from './utils';
+import { errorMessage, parseBoolFlag, parseIntFlag } from './utils';
 
 describe('parseBoolFlag', () => {
   it('parses "true"', () => {
@@ -61,5 +61,22 @@ describe('parseIntFlag', () => {
 
   it('includes the flag name in the error message', () => {
     expect(() => parseIntFlag('x', '--amount')).toThrow('Invalid --amount');
+  });
+});
+
+describe('errorMessage', () => {
+  it('reads Error instances', () => {
+    expect(errorMessage(new Error('boom'))).toBe('boom');
+  });
+
+  it('reads the engine plain-object APIError instead of [object Object]', () => {
+    expect(
+      errorMessage({ type: 'APIError', message: 'Import file changed' }),
+    ).toBe('Import file changed');
+  });
+
+  it('falls back to String for other values', () => {
+    expect(errorMessage('plain')).toBe('plain');
+    expect(errorMessage({ message: 1 })).toBe('[object Object]');
   });
 });

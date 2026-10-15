@@ -83,3 +83,16 @@ export function filterByName<T extends { name: string | null }>(
   const needle = text.trim().toLowerCase();
   return rows.filter(row => (row.name ?? '').toLowerCase().includes(needle));
 }
+
+/**
+ * Message of a thrown value. The engine rejects with plain `{ type, message }`
+ * objects (APIError) rather than Error instances, so `String(error)` would
+ * print "[object Object]" and hide why a request was refused.
+ */
+export function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (isRecord(error) && typeof error.message === 'string') {
+    return error.message;
+  }
+  return String(error);
+}

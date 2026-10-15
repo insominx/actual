@@ -9,6 +9,7 @@ import { withConnection } from '#connection';
 import { printOutput } from '#output';
 import { centsToDecimal, toCsv, toHtml } from '#report-export';
 import type { ExportDocument, ExportFormat, ExportTable } from '#report-export';
+import { errorMessage } from '../utils';
 
 type CashFlow = Awaited<ReturnType<typeof api.getCashFlowReport>>;
 type Categories = Awaited<ReturnType<typeof api.getCategoryReport>>;
@@ -184,7 +185,7 @@ async function writeExport(path: string, content: string) {
       'INVALID_INPUT',
       code === 'EEXIST'
         ? `Refusing to overwrite existing file: ${path}`
-        : `Cannot write ${path}: ${error instanceof Error ? error.message : String(error)}`,
+        : `Cannot write ${path}: ${errorMessage(error)}`,
     );
   }
   try {
@@ -252,10 +253,7 @@ function addReport(
           try {
             result = await run(request);
           } catch (error) {
-            throw new AgentError(
-              'INVALID_INPUT',
-              error instanceof Error ? error.message : String(error),
-            );
+            throw new AgentError('INVALID_INPUT', errorMessage(error));
           }
           if (!format || !cmdOpts.out) {
             printOutput(result, opts.format);

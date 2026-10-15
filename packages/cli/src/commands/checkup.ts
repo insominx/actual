@@ -11,6 +11,7 @@ import {
   removeStatement,
 } from '#statement-evidence';
 import { parseIntFlag } from '#utils';
+import { errorMessage } from '../utils';
 
 async function budgetKey(program: Command) {
   const resolved = await resolveConfig(program.opts());
@@ -93,10 +94,7 @@ export function registerCheckupCommand(program: Command) {
             try {
               result = await api.getDataQualityCheckup(request);
             } catch (error) {
-              throw new AgentError(
-                'INVALID_INPUT',
-                error instanceof Error ? error.message : String(error),
-              );
+              throw new AgentError('INVALID_INPUT', errorMessage(error));
             }
             printOutput(result, opts.format);
           },

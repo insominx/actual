@@ -21,7 +21,7 @@ import { AgentError } from './agent-output';
 import type { CliGlobalOpts } from './config';
 import { withConnection } from './connection';
 import { acquireExclusive } from './lock';
-import { isRecord } from './utils';
+import { errorMessage, isRecord } from './utils';
 import { newRunId, readRun, withRunLock, writeRun } from './workflow-runs';
 import type { WorkflowRun } from './workflow-runs';
 import { advanceRun, budgetOpts, cancelRun, createRun } from './workflows';
@@ -585,7 +585,7 @@ export async function runJob(
                 previews.push({
                   file: c.name,
                   account: c.account,
-                  error: error instanceof Error ? error.message : String(error),
+                  error: errorMessage(error),
                   moveTo: job.directories.error,
                 });
               }

@@ -9,6 +9,7 @@ import { validateOperationId, withChangeJournal } from '#change-journal';
 import { withConnection } from '#connection';
 import { executeScopedChange, resolveGuardConfig } from '#guarded-changes';
 import { printOutput } from '#output';
+import { errorMessage } from '../utils';
 
 function parseSettings(value: string | undefined) {
   if (value === undefined) return undefined;
@@ -364,10 +365,7 @@ export function registerImportsCommand(program: Command) {
         } catch (error) {
           // The engine rejects unreadable files, invalid rows and stale
           // hashes with an explanatory message; surface it as input error.
-          throw new AgentError(
-            'INVALID_INPUT',
-            error instanceof Error ? error.message : String(error),
-          );
+          throw new AgentError('INVALID_INPUT', errorMessage(error));
         }
         printOutput(proposal, opts.format);
       },
@@ -461,8 +459,7 @@ export function registerImportsCommand(program: Command) {
                     path: request.path,
                     accountId: request.accountId,
                     status: 'rejected',
-                    message:
-                      error instanceof Error ? error.message : String(error),
+                    message: errorMessage(error),
                   });
                 }
               }
@@ -546,10 +543,7 @@ export function registerImportsCommand(program: Command) {
             failed =
               error instanceof AgentError
                 ? error
-                : new AgentError(
-                    'ENGINE_FAILURE',
-                    error instanceof Error ? error.message : String(error),
-                  );
+                : new AgentError('ENGINE_FAILURE', errorMessage(error));
             files.push({
               index,
               path: request.path,

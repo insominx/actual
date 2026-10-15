@@ -6,6 +6,7 @@ import { withConnection } from '#connection';
 import { executeScopedChange } from '#guarded-changes';
 import { printOutput } from '#output';
 import { parseIntFlag } from '#utils';
+import { errorMessage } from '../utils';
 
 function ids(value: string) {
   return value
@@ -50,10 +51,7 @@ export function registerReconcileCommand(program: Command) {
             try {
               result = await api.getReconciliationStatus(request);
             } catch (error) {
-              throw new AgentError(
-                'INVALID_INPUT',
-                error instanceof Error ? error.message : String(error),
-              );
+              throw new AgentError('INVALID_INPUT', errorMessage(error));
             }
             printOutput(result, opts.format);
           },

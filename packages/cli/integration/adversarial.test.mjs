@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import test from 'node:test';
 
 import { readRaw } from './guarded-kit.mjs';
@@ -312,6 +314,41 @@ void test(
         { accountId: checking, amount: 100 },
         'adjust-through-ghost-rule',
       );
+    } finally {
+      await f.dispose();
+    }
+  },
+);
+
+void test(
+  'file import refusals explain themselves instead of printing [object Object]',
+  { timeout: 240000 },
+  async () => {
+    const f = await createFixture({ richBackup: true });
+    try {
+      const { checking } = f.fixture;
+      await f.cli(['accounts', 'list']);
+      const file = join(f.root, 'bad-date.csv');
+      await writeFile(file, 'Date,Amount,Payee\n2026-02-30,-5.00,Shop\n');
+      const settings = {
+        fields: { date: 'Date', amount: 'Amount', payee: 'Payee' },
+        dateFormat: 'yyyy mm dd',
+        hasHeaderRow: true,
+      };
+      const result = await f.cli([
+        'imports',
+        'preview',
+        file,
+        '--account',
+        checking,
+        '--no-saved',
+        '--settings',
+        JSON.stringify(settings),
+      ]);
+      assert.equal(result.code, 2, result.stdout + result.stderr);
+      const message = parse(result)?.error?.message ?? '';
+      assert.doesNotMatch(message, /object Object/);
+      assert.match(message, /invalid|row 1/i);
     } finally {
       await f.dispose();
     }

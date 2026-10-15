@@ -10,6 +10,7 @@ import {
 } from '#guarded-changes';
 import { readJsonInput } from '#input';
 import { printOutput } from '#output';
+import { errorMessage } from '../utils';
 
 export function registerRulesCommand(program: Command) {
   const rules = program
@@ -220,10 +221,7 @@ export function registerRulesCommand(program: Command) {
                   : {}),
               });
             } catch (error) {
-              throw new AgentError(
-                'INVALID_INPUT',
-                error instanceof Error ? error.message : String(error),
-              );
+              throw new AgentError('INVALID_INPUT', errorMessage(error));
             }
             printOutput(result, opts.format);
           },

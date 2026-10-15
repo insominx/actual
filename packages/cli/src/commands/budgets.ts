@@ -24,6 +24,7 @@ import { acquireExclusive } from '#lock';
 import { printOutput } from '#output';
 import { readProfiles, saveProfiles, validateProfile } from '#profiles';
 import { parseBoolFlag, parseIntFlag } from '#utils';
+import { errorMessage } from '../utils';
 
 export function registerBudgetsCommand(program: Command) {
   const budgets = program.command('budgets').description('Manage budgets');
@@ -632,10 +633,7 @@ export function registerBudgetsCommand(program: Command) {
         try {
           result = await read();
         } catch (error) {
-          throw new AgentError(
-            'INVALID_INPUT',
-            error instanceof Error ? error.message : String(error),
-          );
+          throw new AgentError('INVALID_INPUT', errorMessage(error));
         }
         printOutput(result, opts.format);
       },

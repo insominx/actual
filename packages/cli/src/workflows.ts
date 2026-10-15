@@ -20,7 +20,7 @@ import {
   executeScopedChange,
 } from './guarded-changes';
 import { listStatements } from './statement-evidence';
-import { isEngineAmount, isRecord } from './utils';
+import { errorMessage, isEngineAmount, isRecord } from './utils';
 import type {
   UnresolvedItem,
   WorkflowName,
@@ -44,10 +44,7 @@ function invalid(message: string, field?: string): never {
 function engine<T>(f: () => Promise<T>): Promise<T> {
   return f().catch((error: unknown) => {
     if (error instanceof AgentError) throw error;
-    throw new AgentError(
-      'INVALID_INPUT',
-      error instanceof Error ? error.message : String(error),
-    );
+    throw new AgentError('INVALID_INPUT', errorMessage(error));
   });
 }
 
@@ -944,7 +941,7 @@ function errorOf(error: unknown) {
     ? { code: error.code, message: error.message }
     : {
         code: 'ENGINE_FAILURE',
-        message: error instanceof Error ? error.message : String(error),
+        message: errorMessage(error),
       };
 }
 
