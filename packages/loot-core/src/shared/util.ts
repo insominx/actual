@@ -426,6 +426,19 @@ export type IntegerAmount = number;
 export const MAX_SAFE_NUMBER = 2 ** 51 - 1;
 const MIN_SAFE_NUMBER = -MAX_SAFE_NUMBER;
 
+// True for an integer amount the budget engine can add without tripping
+// safeNumber. Requests are validated with this rather than
+// Number.isSafeInteger (2**53), because an amount between 2**51 and 2**53
+// is accepted and written but makes every later spreadsheet sum throw.
+export function isEngineAmount(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value <= MAX_SAFE_NUMBER &&
+    value >= MIN_SAFE_NUMBER
+  );
+}
+
 export function safeNumber(value: number) {
   if (!Number.isInteger(value)) {
     throw new Error(

@@ -112,3 +112,44 @@ void test(
     }
   },
 );
+
+void test(
+  'amounts beyond the budget engine limit are refused instead of bricking the budget',
+  { timeout: 240000 },
+  async () => {
+    const f = await createFixture({ richBackup: true });
+    try {
+      const { checking, dining } = f.fixture;
+      await f.cli(['accounts', 'list']);
+      const tooBig = 2 ** 52;
+      const day = { date: '2026-09-17', amount: tooBig };
+      await assertRefused(f, 'transactions.add', checking, [day], 'big-add');
+      await assertRefused(
+        f,
+        'transactions.import',
+        checking,
+        [{ ...day, imported_id: 'big' }],
+        'big-import',
+      );
+      await assertRefused(
+        f,
+        'accounts.create',
+        null,
+        { name: 'Huge', offbudget: false, initialBalance: tooBig },
+        'big-account',
+      );
+      await assertRefused(
+        f,
+        'budgets.set-amount',
+        dining,
+        { month: '2026-08', amount: tooBig },
+        'big-budget',
+      );
+      // The budget still answers: no refused request left a poisoned sum.
+      const listed = await f.cli(['accounts', 'list'], { timeout: 20000 });
+      assert.equal(listed.code, 0, listed.stdout + listed.stderr);
+    } finally {
+      await f.dispose();
+    }
+  },
+);

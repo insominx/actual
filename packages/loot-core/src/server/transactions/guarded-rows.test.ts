@@ -56,6 +56,19 @@ describe('assertPlannableTransactionRows', () => {
     ['unknown payee', () => ({ payee: 'nope' }), 'payee does not exist'],
     ['date before 1995', () => ({ date: '1994-12-31' }), 'date must be'],
     ['impossible date', () => ({ date: '2026-02-30' }), 'date must be'],
+    [
+      'amount beyond the engine limit',
+      () => ({ amount: 2 ** 52 }),
+      'engine limit',
+    ],
+    [
+      'split child beyond the engine limit',
+      () => ({
+        amount: 2 ** 52,
+        subtransactions: [{ amount: 2 ** 52 }],
+      }),
+      'engine limit',
+    ],
     ['forged transfer link', () => ({ transfer_id: 'abc' }), 'transfer_id'],
     [
       'unbalanced split',

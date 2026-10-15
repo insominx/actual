@@ -6,6 +6,7 @@ import type { CliGlobalOpts } from '#config';
 import { withConnection } from '#connection';
 import { executeScopedChange } from '#guarded-changes';
 import { printOutput } from '#output';
+import { isEngineAmount } from '#utils';
 
 type CashPlanConfig = Awaited<ReturnType<typeof api.inspectCashPlan>>['config'];
 
@@ -26,7 +27,7 @@ function parseJson(value: string, field: string): unknown {
 
 function parseAmount(value: string, field: string) {
   const amount = Number(value);
-  if (!Number.isSafeInteger(amount)) {
+  if (!isEngineAmount(amount)) {
     throw new AgentError(
       'INVALID_INPUT',
       `${field} must be an integer amount in cents.`,

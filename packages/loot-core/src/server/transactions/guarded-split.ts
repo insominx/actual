@@ -14,6 +14,7 @@ import {
   updateTransaction as sharedUpdateTransaction,
   ungroupTransactions,
 } from '#shared/transactions';
+import { isEngineAmount } from '#shared/util';
 import type {
   TransactionSplitProposal,
   TransactionSplitRequest,
@@ -115,7 +116,7 @@ export async function prepareTransactionSplit(
       typeof child !== 'object' ||
       child === null ||
       Object.keys(child).some(key => !CHILD_KEYS.includes(key)) ||
-      !Number.isSafeInteger(child.amount)
+      !isEngineAmount(child.amount)
     ) {
       invalid(
         `subtransaction ${index} needs an integer amount and only category, notes or payee`,

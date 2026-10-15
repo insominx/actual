@@ -1,5 +1,5 @@
 import { AgentError } from './agent-output';
-import { isRecord } from './utils';
+import { isEngineAmount, isRecord } from './utils';
 
 export type JsonSchema = {
   type?:
@@ -457,7 +457,7 @@ export function validateJson(
       }
       break;
     case 'integer':
-      if (typeof value !== 'number' || !Number.isSafeInteger(value)) fail();
+      if (!isEngineAmount(value)) fail();
       break;
     case 'number':
       if (typeof value !== 'number' || !Number.isFinite(value)) fail();

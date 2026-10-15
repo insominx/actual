@@ -14,6 +14,7 @@ import * as sheet from '#server/sheet';
 import { canonicalJson } from '#shared/canonical-json';
 import * as monthUtils from '#shared/months';
 import { q } from '#shared/query';
+import { isEngineAmount } from '#shared/util';
 import type {
   BudgetMoveCell,
   BudgetMoveProposal,
@@ -124,7 +125,7 @@ export async function prepareBudgetMove(
     invalid(noun, 'from and to must be category IDs or to-budget');
   }
   if (request.from === request.to) invalid(noun, 'from and to must differ');
-  if (!Number.isSafeInteger(request.amount) || request.amount <= 0) {
+  if (!isEngineAmount(request.amount) || request.amount <= 0) {
     invalid(noun, 'amount must be a positive integer in cents');
   }
   if (

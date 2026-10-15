@@ -7,6 +7,7 @@
 // before any plan or token exists.
 import * as db from '#server/db';
 import { APIError } from '#server/errors';
+import { isEngineAmount } from '#shared/util';
 
 // aql/schema-helpers.ts rejects earlier dates when a row is inserted.
 export const MINIMUM_TRANSACTION_DATE = '1995-01-01';
@@ -96,6 +97,11 @@ export async function assertPlannableTransactionRows(
         `${label}: date must be a real YYYY-MM-DD date on or after ${MINIMUM_TRANSACTION_DATE}`,
       );
     }
+    if (row.amount !== undefined && !isEngineAmount(row.amount)) {
+      throw APIError(
+        `${label}: amount must be integer cents within the budget engine limit`,
+      );
+    }
     if (row.transfer_id != null) {
       throw APIError(
         `${label}: transfer_id cannot be set; transfers are linked by the transfers operations`,
@@ -111,6 +117,11 @@ export async function assertPlannableTransactionRows(
         for (const child of row.subtransactions) {
           if (!isRecord(child)) {
             throw APIError(`${label}: each subtransaction must be an object`);
+          }
+          if (!isEngineAmount(child.amount)) {
+            throw APIError(
+              `${label}: subtransaction amount must be integer cents within the budget engine limit`,
+            );
           }
           await check(child, `${label} subtransaction`);
           sum += typeof child.amount === 'number' ? child.amount : NaN;

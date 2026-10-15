@@ -27,9 +27,22 @@ export function parseBoolFlag(value: string, flagName: string): boolean {
   return value === 'true';
 }
 
+// The budget engine's amount limit (loot-core shared/util MAX_SAFE_NUMBER).
+// Amounts between 2**51 and 2**53 are valid JS safe integers but make every
+// later spreadsheet sum throw, so request validation uses this bound.
+export const MAX_ENGINE_AMOUNT = 2 ** 51 - 1;
+
+export function isEngineAmount(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    Math.abs(value) <= MAX_ENGINE_AMOUNT
+  );
+}
+
 export function parseIntFlag(value: string, flagName: string): number {
   const parsed = value.trim() === '' ? NaN : Number(value);
-  if (!Number.isSafeInteger(parsed)) {
+  if (!isEngineAmount(parsed)) {
     throw new Error(`Invalid ${flagName}: "${value}". Expected an integer.`);
   }
   return parsed;

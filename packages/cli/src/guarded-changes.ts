@@ -22,7 +22,7 @@ import {
 } from './guarded-operations';
 import { readJsonInput } from './input';
 import { acquireExclusive } from './lock';
-import { isRecord, stableJson } from './utils';
+import { isEngineAmount, isRecord, stableJson } from './utils';
 
 function publicationAcknowledged(
   outcome: ChangeReceipt['outcome'],
@@ -1718,7 +1718,7 @@ function changeRequest(
           ),
       ) ||
       typeof payload.accountId !== 'string' ||
-      !Number.isSafeInteger(payload.statementBalance) ||
+      !isEngineAmount(payload.statementBalance) ||
       !(
         payload.statementDate === undefined ||
         typeof payload.statementDate === 'string'
@@ -1747,7 +1747,7 @@ function changeRequest(
         key => !['accountId', 'amount', 'date'].includes(key),
       ) ||
       typeof payload.accountId !== 'string' ||
-      !Number.isSafeInteger(payload.amount) ||
+      !isEngineAmount(payload.amount) ||
       !(payload.date === undefined || typeof payload.date === 'string')
     ) {
       throw new AgentError(
@@ -1771,7 +1771,7 @@ function changeRequest(
       typeof payload.month !== 'string' ||
       typeof payload.from !== 'string' ||
       typeof payload.to !== 'string' ||
-      !Number.isSafeInteger(payload.amount) ||
+      !isEngineAmount(payload.amount) ||
       !(
         payload.allowOverspend === undefined ||
         typeof payload.allowOverspend === 'boolean'

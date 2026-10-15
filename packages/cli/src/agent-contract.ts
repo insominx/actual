@@ -5,6 +5,7 @@ import { DIRECT_GUARDED_COMMANDS } from './guarded-operations';
 import { operationPayloadSchema } from './json-schema';
 import type { JsonSchema } from './json-schema';
 import { REVERSIBLE_COMMANDS } from './reversal';
+import { isEngineAmount } from './utils';
 
 type PropertySchema = {
   type: 'string' | 'integer' | 'boolean';
@@ -253,10 +254,7 @@ export function validateCommandInput(
           : typeof value === 'string' && value.trim()
             ? Number(value)
             : NaN;
-      if (
-        !Number.isSafeInteger(number) ||
-        (NONNEGATIVE.has(name) && number < 0)
-      ) {
+      if (!isEngineAmount(number) || (NONNEGATIVE.has(name) && number < 0)) {
         throw new AgentError(
           'INVALID_INPUT',
           `Invalid --${option.long?.slice(2) ?? name}: expected ${NONNEGATIVE.has(name) ? 'a nonnegative' : 'a safe'} integer.`,

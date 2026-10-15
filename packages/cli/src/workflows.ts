@@ -20,7 +20,7 @@ import {
   executeScopedChange,
 } from './guarded-changes';
 import { listStatements } from './statement-evidence';
-import { isRecord } from './utils';
+import { isEngineAmount, isRecord } from './utils';
 import type {
   UnresolvedItem,
   WorkflowName,
@@ -59,7 +59,7 @@ function str(value: unknown, field: string) {
 }
 
 function int(value: unknown, field: string) {
-  if (!Number.isSafeInteger(value)) {
+  if (!isEngineAmount(value)) {
     invalid(`${field} must be an integer amount in cents.`, field);
   }
   return value as number;

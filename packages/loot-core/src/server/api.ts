@@ -21,7 +21,7 @@ import {
   ungroupTransactions,
   updateTransaction,
 } from '#shared/transactions';
-import { amountToInteger, integerToAmount } from '#shared/util';
+import { amountToInteger, integerToAmount, isEngineAmount } from '#shared/util';
 import type {
   AccountCloseOutcome,
   AccountCloseProposal,
@@ -1780,7 +1780,7 @@ async function prepareBudgetAmount(
     typeof request.month !== 'string' ||
     !/^\d{4}-(0[1-9]|1[0-2])$/.test(request.month) ||
     typeof request.categoryId !== 'string' ||
-    !Number.isSafeInteger(request.amount) ||
+    !isEngineAmount(request.amount) ||
     Object.keys(request).some(
       key => !['month', 'categoryId', 'amount'].includes(key),
     )
@@ -2068,7 +2068,7 @@ async function prepareBudgetHold(
         ].includes(key),
     ) ||
     (request.operation === 'budgets.hold-next-month' &&
-      (!Number.isSafeInteger(request.amount) || request.amount <= 0))
+      (!isEngineAmount(request.amount) || request.amount <= 0))
   ) {
     throw APIError('Invalid budget hold request');
   }
@@ -2318,7 +2318,7 @@ async function prepareTransactionUpdate(
         case 'notes':
           return typeof value !== 'string';
         case 'amount':
-          return !Number.isSafeInteger(value);
+          return !isEngineAmount(value);
         case 'cleared':
           return typeof value !== 'boolean';
         case 'category':
@@ -2624,7 +2624,7 @@ async function prepareAccountCreation(
     typeof request.name !== 'string' ||
     !request.name.trim() ||
     typeof request.offbudget !== 'boolean' ||
-    !Number.isSafeInteger(request.initialBalance) ||
+    !isEngineAmount(request.initialBalance) ||
     (request.closed !== undefined && typeof request.closed !== 'boolean') ||
     Object.keys(request).some(
       key => !['name', 'offbudget', 'initialBalance', 'closed'].includes(key),
@@ -2808,7 +2808,7 @@ async function prepareAccountUpdate(
         : key === 'offbudget' || key === 'closed'
           ? typeof value === 'boolean'
           : key === 'balance_current'
-            ? value === null || Number.isSafeInteger(value)
+            ? value === null || isEngineAmount(value)
             : key === 'account_group_id'
               ? value === null ||
                 (typeof value === 'string' && Boolean(value.trim()))

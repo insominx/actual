@@ -19,6 +19,7 @@ import { projectAddedTransaction } from '#server/transactions/guarded-add';
 import { canonicalJson } from '#shared/canonical-json';
 import * as monthUtils from '#shared/months';
 import { q } from '#shared/query';
+import { isEngineAmount } from '#shared/util';
 import type {
   ReconcileAdjustProposal,
   ReconcileAdjustRequest,
@@ -99,7 +100,7 @@ export async function reconciliationStatus(
   }
   if (
     request.statementBalance !== undefined &&
-    !Number.isSafeInteger(request.statementBalance)
+    !isEngineAmount(request.statementBalance)
   ) {
     invalid(noun, 'statementBalance must be integer cents');
   }
@@ -313,7 +314,7 @@ export async function prepareReconcileAdjust(
   ) {
     invalid(noun, 'provide accountId, amount and optional date');
   }
-  if (!Number.isSafeInteger(request.amount) || request.amount === 0) {
+  if (!isEngineAmount(request.amount) || request.amount === 0) {
     invalid(noun, 'amount must be non-zero integer cents');
   }
   if (
