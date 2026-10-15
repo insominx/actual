@@ -146,7 +146,7 @@ export function toolArgv(binding: ToolBinding, input: unknown): string[] {
   const values = input as Record<string, unknown>;
   const schema = binding.tool.inputSchema;
   for (const key of Object.keys(values)) {
-    if (!(key in schema.properties)) {
+    if (!Object.prototype.hasOwnProperty.call(schema.properties, key)) {
       throw new ToolInputError(`Unknown argument "${key}".`);
     }
   }
@@ -171,11 +171,12 @@ export function toolArgv(binding: ToolBinding, input: unknown): string[] {
     }
   }
   const argv = [...binding.path];
+  const operands: string[] = [];
   for (const positional of binding.positionals) {
     const value = values[positional.property];
     if (value === undefined) continue;
-    if (Array.isArray(value)) argv.push(...(value as string[]));
-    else argv.push(String(value));
+    if (Array.isArray(value)) operands.push(...(value as string[]));
+    else operands.push(String(value));
   }
   const seen = new Set<string>();
   for (const option of binding.options) {
@@ -199,6 +200,9 @@ export function toolArgv(binding: ToolBinding, input: unknown): string[] {
     }
     argv.push(flag(false) ?? option.long ?? `--${name}`, String(value));
   }
+  // Operands follow `--` so a value such as "--sync-id=other" is data, never a
+  // flag that could retarget the budget the server was started for.
+  if (operands.length) argv.push('--', ...operands);
   return argv;
 }
 

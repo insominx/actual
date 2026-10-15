@@ -42,14 +42,29 @@ describe('mcp adapter', () => {
     ).toEqual([
       'imports',
       'preview',
-      'a.csv',
       '--account',
       'acct',
       '--no-saved',
       '--skip-invalid',
       '--no-reimport-deleted',
+      '--',
+      'a.csv',
     ]);
     expect(() => toolArgv(preview, { file: 'a.csv' })).toThrow(ToolInputError);
+    // Flag-looking operands stay operands, and inherited names are not arguments.
+    expect(
+      toolArgv(preview, { file: '--sync-id=other', account: 'acct' }),
+    ).toEqual([
+      'imports',
+      'preview',
+      '--account',
+      'acct',
+      '--',
+      '--sync-id=other',
+    ]);
+    expect(() =>
+      toolArgv(preview, { file: 'a.csv', account: 'x', constructor: 'y' }),
+    ).toThrow(/Unknown argument/);
     expect(() =>
       toolArgv(preview, { file: 'a.csv', account: 'x', extra: 1 }),
     ).toThrow(/Unknown argument/);
