@@ -24,6 +24,7 @@ import type {
 import type { TransactionEntity } from '#types/models';
 
 import { projectAddedTransaction } from './guarded-add';
+import { assertPlannableTransactionRows } from './guarded-rows';
 
 const UPDATE_FIELDS = [
   'imported_id',
@@ -74,6 +75,11 @@ function byId(a: Row, b: Row) {
 }
 
 export async function planTransactionImport(request: TransactionImportRequest) {
+  await assertPlannableTransactionRows(
+    request.accountId,
+    request.transactions,
+    { allowTransferPayees: true },
+  );
   const { added, updated, payeesToCreate } = await planReconciledTransactions(
     request.accountId,
     structuredClone(request.transactions),

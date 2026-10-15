@@ -18,6 +18,8 @@ import type {
 } from '#types/change-proposals';
 import type { TransactionEntity } from '#types/models';
 
+import { assertPlannableTransactionRows } from './guarded-rows';
+
 const PROJECTED = [
   'account',
   'date',
@@ -100,6 +102,11 @@ export async function prepareTransactionAddition(
   if (!account || account.closed) {
     throw APIError('Transactions can only be added to a live open account');
   }
+  await assertPlannableTransactionRows(
+    request.accountId,
+    request.transactions,
+    { allowTransferPayees: false },
+  );
   let planned;
   try {
     planned = await plan(request);

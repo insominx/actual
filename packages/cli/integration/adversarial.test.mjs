@@ -1,0 +1,114 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+
+import { readRaw } from './guarded-kit.mjs';
+import { createFixture } from './harness.mjs';
+
+// Adversarial regressions found by the fork bug hunt. Each case is a minimal
+// request that used to pass preview and then either wrote a bad row or failed
+// the apply acknowledgement after writing. They run on one disposable budget
+// and assert the request is refused at preview with no state change.
+
+function parse(result) {
+  try {
+    return JSON.parse(result.stdout);
+  } catch {
+    return null;
+  }
+}
+
+async function preview(f, operation, target, data, id) {
+  return f.cli([
+    'changes',
+    'preview',
+    operation,
+    ...(target ? [target] : []),
+    '--operation-id',
+    id,
+    '--data',
+    JSON.stringify(data),
+  ]);
+}
+
+async function assertRefused(f, operation, target, data, id) {
+  const before = await readRaw(f);
+  const result = await preview(f, operation, target, data, id);
+  assert.equal(
+    result.code,
+    2,
+    `${id} must be refused at preview: ${result.stdout}${result.stderr}`,
+  );
+  assert.deepEqual(await readRaw(f), before, `${id} wrote state`);
+}
+
+void test(
+  'transaction add and import refuse rows that would corrupt or fail after writing',
+  { timeout: 240000 },
+  async () => {
+    const f = await createFixture({ richBackup: true });
+    try {
+      const { checking, equity, dining, deletedCategory, savings } = f.fixture;
+      await f.cli(['accounts', 'list']);
+      const listed = parse(await f.cli(['payees', 'list'], { version: '1' }));
+      const payees = listed.data ?? listed;
+      const transferPayee = payees.find(p => p.transfer_acct === savings).id;
+      const day = { date: '2026-09-17', amount: -100 };
+      const cases = [
+        ['unknown category', checking, { ...day, category: 'nope' }],
+        ['deleted category', checking, { ...day, category: deletedCategory }],
+        ['unknown payee', checking, { ...day, payee: 'nope' }],
+        ['date before 1995', checking, { ...day, date: '1994-12-31' }],
+        ['forged transfer link', checking, { ...day, transfer_id: 'abc' }],
+        [
+          'unbalanced split',
+          checking,
+          { ...day, subtransactions: [{ amount: -60 }, { amount: -60 }] },
+        ],
+        [
+          'split child with unknown category',
+          checking,
+          {
+            ...day,
+            subtransactions: [
+              { amount: -60, category: 'nope' },
+              { amount: -40 },
+            ],
+          },
+        ],
+        [
+          'category on an off-budget account',
+          equity,
+          { ...day, category: dining },
+        ],
+      ];
+      let n = 0;
+      for (const [label, account, row] of cases) {
+        await assertRefused(
+          f,
+          'transactions.add',
+          account,
+          [row],
+          `add-${++n}`,
+        );
+        await assertRefused(
+          f,
+          'transactions.import',
+          account,
+          [{ ...row, imported_id: `imp-${n}` }],
+          `import-${n}`,
+        );
+        void label;
+      }
+      // A transfer payee needs a linked counterpart: add cannot make one.
+      await assertRefused(
+        f,
+        'transactions.add',
+        checking,
+        [{ ...day, payee: transferPayee }],
+        'add-transfer-payee',
+      );
+    } finally {
+      await f.dispose();
+    }
+  },
+);
