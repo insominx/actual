@@ -188,3 +188,54 @@ void test(
     }
   },
 );
+
+void test(
+  'schedule create and update refuse recurrences the schedule engine cannot evaluate',
+  { timeout: 240000 },
+  async () => {
+    const f = await createFixture({ richBackup: true });
+    try {
+      const { checking, schedule } = f.fixture;
+      await f.cli(['accounts', 'list']);
+      const listed = parse(await f.cli(['payees', 'list'], { version: '1' }));
+      const payee = (listed.data ?? listed)[0].id;
+      const create = date => ({
+        name: 'Adversarial',
+        posts_transaction: false,
+        payee,
+        account: checking,
+        amount: -4200,
+        amountOp: 'is',
+        date,
+      });
+      const bad = [
+        { frequency: 'bogus', start: '2026-01-01', endMode: 'never' },
+        {
+          frequency: 'weekly',
+          start: '2026-01-01',
+          interval: -1,
+          endMode: 'never',
+        },
+      ];
+      let n = 0;
+      for (const date of bad) {
+        await assertRefused(
+          f,
+          'schedules.create',
+          null,
+          create(date),
+          `sched-create-${++n}`,
+        );
+        await assertRefused(
+          f,
+          'schedules.update',
+          schedule,
+          { fields: { date } },
+          `sched-update-${n}`,
+        );
+      }
+    } finally {
+      await f.dispose();
+    }
+  },
+);

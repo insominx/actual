@@ -14,7 +14,7 @@ import {
 } from '#server/guarded-proposal';
 import { ruleModel } from '#server/transactions/transaction-rules';
 import { q } from '#shared/query';
-import { extractScheduleConds } from '#shared/schedules';
+import { extractScheduleConds, getNextDate } from '#shared/schedules';
 import type {
   ScheduleCreationProposal,
   ScheduleCreationRequest,
@@ -48,6 +48,20 @@ const CREATE_FIELDS = [
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+// Apply computes the next date from the date condition. A recurrence the
+// schedule engine cannot evaluate (unknown frequency, non-positive interval)
+// throws there, after preview succeeded and the operation id is spent.
+function assertSchedulableDate(conditions: unknown) {
+  const dateCond = extractScheduleConds(
+    conditions as RuleConditionEntity[],
+  ).date;
+  try {
+    getNextDate(dateCond, new Date());
+  } catch {
+    throw APIError('The schedule date or recurrence is not valid');
+  }
 }
 
 function serializedConditions(conditions: unknown[]) {
@@ -125,6 +139,7 @@ export async function prepareScheduleCreation(
   if (extractScheduleConds(internal._conditions).date?.value == null) {
     throw APIError('A schedule date is required');
   }
+  assertSchedulableDate(internal._conditions);
   return {
     schemaVersion: 1,
     operation: 'schedules.create',
@@ -224,6 +239,7 @@ async function planUpdate(request: ScheduleUpdateRequest) {
   if (extractScheduleConds(conditions).date?.value == null) {
     throw APIError('A schedule date is required');
   }
+  assertSchedulableDate(conditions);
   const actions = updateActions(conditions, stored.actions) ?? stored.actions;
   return { row, rule, sched, name, conditions, actions };
 }
