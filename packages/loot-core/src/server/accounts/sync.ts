@@ -28,6 +28,7 @@ import {
   amountToInteger,
   hasFieldsChanged,
   integerToAmount,
+  isEngineAmount,
 } from '#shared/util';
 import type {
   AccountEntity,
@@ -461,6 +462,11 @@ export async function normalizeTransactions(
         `Amount is invalid, must be an integer: ${trans.amount}`,
       );
     }
+    if (trans.amount != null && !isEngineAmount(trans.amount)) {
+      throw new TransactionError(
+        `Amount is outside the supported range: ${trans.amount}`,
+      );
+    }
 
     if (subtransactions) {
       for (const sub of subtransactions) {
@@ -575,10 +581,19 @@ async function normalizeBankSyncTransactions(transactions, acctId) {
     trans.account = acctId;
     trans.payee = await resolvePayee(trans, payeeName, payeesToCreate);
 
+    const amount = amountToInteger(trans.amount);
+    if (!isEngineAmount(amount)) {
+      // A single out-of-range amount would otherwise be stored and break every
+      // balance and budget sum that includes it.
+      throw new TransactionError(
+        `Amount from the bank is outside the supported range: ${String(trans.amount)}`,
+      );
+    }
+
     normalized.push({
       payee_name: payeeName,
       trans: {
-        amount: amountToInteger(trans.amount),
+        amount,
         payee: trans.payee,
         account: trans.account,
         date,

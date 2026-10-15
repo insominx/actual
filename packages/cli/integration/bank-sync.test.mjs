@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { readRaw } from './guarded-kit.mjs';
 import { createFixture } from './harness.mjs';
 
 // Packaged proof for 0030 with a disposable fake SimpleFIN provider (no real
@@ -269,6 +270,57 @@ void test('prerequisites before linking, then per-account outcomes for duplicate
     const read = await cli(['bank-sync', 'results', one.runId]);
     assert.deepEqual(read.result, one.result);
     assert.equal(read.commit, 'synced');
+  } finally {
+    fake.server.closeAllConnections();
+    fake.server.close();
+    await f.dispose();
+  }
+});
+
+void test('a provider amount beyond the engine limit fails that account instead of poisoning balances', async () => {
+  const f = await createFixture();
+  const fake = await fakeProvider();
+  try {
+    const cli = strict(f);
+    await cli(['accounts', 'list']);
+    await setSecrets(f, fake.port);
+    const [linked] = await link(f, [
+      {
+        account_id: 'sf-1',
+        name: 'Fake checking',
+        institution: 'Fake Bank',
+        orgDomain: 'fake.example',
+        balance: 0,
+      },
+    ]);
+    await cli(['--refresh', 'bank-sync', 'status']);
+    const posted = Math.floor(Date.now() / 1000) - 86400;
+    fake.state.transactions['sf-1'] = [
+      {
+        id: 'ok-1',
+        posted,
+        amount: '-1.00',
+        description: 'fine',
+        payee: 'Cafe',
+      },
+      {
+        id: 'huge-1',
+        posted,
+        amount: '99999999999999999.99',
+        description: 'huge',
+        payee: 'Cafe',
+      },
+    ];
+    const before = await readRaw(f);
+    const result = await cli(['bank-sync', 'refresh', '--accounts', linked.id]);
+    assert.notEqual(result.result.outcomes[0].status, 'imported');
+    assert.deepEqual(result.result.outcomes[0].addedIds, []);
+    const after = await readRaw(f);
+    assert.equal(after.transactions.length, before.transactions.length);
+    assert.ok(
+      after.transactions.every(row => Math.abs(row.amount) <= 2 ** 51 - 1),
+      'an out-of-range amount was stored',
+    );
   } finally {
     fake.server.closeAllConnections();
     fake.server.close();
