@@ -22,7 +22,7 @@ import type {
   FieldMapping,
   ImportTransaction,
 } from '#shared/import-mapping';
-import { amountToInteger } from '#shared/util';
+import { amountToInteger, looselyParseAmount } from '#shared/util';
 
 import { parseFile } from './parse-file';
 import type { ParseFileOptions } from './parse-file';
@@ -496,7 +496,11 @@ export async function inspectImportFile(
       : [mapped.amount];
     const malformed = amountSource.some(
       value =>
-        typeof value === 'string' && value.trim() !== '' && !/\d/.test(value),
+        typeof value === 'string' &&
+        value.trim() !== '' &&
+        // An amount beyond the engine limit parses to null, which the shared
+        // mapping turns into 0; that would import the row as a zero amount.
+        (!/\d/.test(value) || looselyParseAmount(value) === null),
     );
     const { amount } = parseAmountFields(
       mapped,

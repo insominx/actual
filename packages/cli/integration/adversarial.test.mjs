@@ -354,3 +354,38 @@ void test(
     }
   },
 );
+
+void test(
+  'file import refuses an amount beyond the engine limit instead of importing zero',
+  { timeout: 240000 },
+  async () => {
+    const f = await createFixture({ richBackup: true });
+    try {
+      const { checking } = f.fixture;
+      await f.cli(['accounts', 'list']);
+      const file = join(f.root, 'huge.csv');
+      await writeFile(
+        file,
+        'Date,Amount,Payee\n2026-09-07,99999999999999999,Shop\n',
+      );
+      const result = await f.cli([
+        'imports',
+        'preview',
+        file,
+        '--account',
+        checking,
+        '--no-saved',
+        '--settings',
+        JSON.stringify({
+          fields: { date: 'Date', amount: 'Amount', payee: 'Payee' },
+          dateFormat: 'yyyy mm dd',
+          hasHeaderRow: true,
+        }),
+      ]);
+      assert.equal(result.code, 2, result.stdout + result.stderr);
+      assert.match(parse(result)?.error?.message ?? '', /not a number/);
+    } finally {
+      await f.dispose();
+    }
+  },
+);
