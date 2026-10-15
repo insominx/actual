@@ -431,7 +431,14 @@ export function validateJson(
       if (!isRecord(value)) return fail();
       for (const field of schema.required ?? []) if (!(field in value)) fail();
       for (const [key, child] of Object.entries(value)) {
-        const property = schema.properties?.[key];
+        // Own properties only: inherited names such as constructor or
+        // toString must not look like declared fields and skip the
+        // additionalProperties check.
+        const property =
+          schema.properties &&
+          Object.prototype.hasOwnProperty.call(schema.properties, key)
+            ? schema.properties[key]
+            : undefined;
         if (property) {
           validateJson(child, property, `${path}.${key}`);
         } else if (schema.additionalProperties === false) {
