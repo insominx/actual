@@ -56,6 +56,32 @@ function normalizeRule(fields: RuleFieldsRequest): NewRuleEntity {
   return rule;
 }
 
+const ACTION_REFERENCE_TABLES: Record<string, string> = {
+  category: 'categories',
+  payee: 'payees',
+  account: 'accounts',
+};
+
+// A rule that sets a missing category, payee or account writes dangling
+// references into every transaction it touches (imports, additions, bank
+// sync). The rule form only offers live rows, so refuse anything else here.
+async function assertActionReferences(actions: unknown[]) {
+  for (const action of actions) {
+    if (!isRecord(action) || action.op !== 'set') continue;
+    const table = ACTION_REFERENCE_TABLES[String(action.field)];
+    if (!table || typeof action.value !== 'string') continue;
+    const live = await db.first(
+      `SELECT id FROM ${table} WHERE id = ? AND tombstone = 0`,
+      [action.value],
+    );
+    if (!live) {
+      throw APIError(
+        `Rule action sets ${String(action.field)} to a row that does not exist`,
+      );
+    }
+  }
+}
+
 function serializedRow(rule: NewRuleEntity) {
   return ruleModel.fromJS(rule) as Record<string, unknown>;
 }
@@ -102,6 +128,7 @@ export async function prepareRuleCreation(
     );
   }
   const rule = normalizeRule(request);
+  await assertActionReferences(rule.actions);
   return {
     schemaVersion: 1,
     operation: 'rules.create',
@@ -159,6 +186,9 @@ export async function prepareRuleUpdate(
     actions: current.actions,
     ...request.fields,
   });
+  if (request.fields.actions !== undefined) {
+    await assertActionReferences(rule.actions);
+  }
   return {
     schemaVersion: 1,
     operation: 'rules.update',

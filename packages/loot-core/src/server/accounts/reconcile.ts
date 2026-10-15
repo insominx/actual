@@ -16,7 +16,10 @@ import {
 } from '#server/guarded-proposal';
 import { batchUpdateTransactions } from '#server/transactions';
 import { projectAddedTransaction } from '#server/transactions/guarded-add';
-import { assertPlannableTransactionRows } from '#server/transactions/guarded-rows';
+import {
+  assertPlannableTransactionRows,
+  assertPlannedCategories,
+} from '#server/transactions/guarded-rows';
 import { canonicalJson } from '#shared/canonical-json';
 import * as monthUtils from '#shared/months';
 import { q } from '#shared/query';
@@ -337,6 +340,7 @@ export async function prepareReconcileAdjust(
     request.accountId,
     [adjustmentRow(request)],
   );
+  await assertPlannedCategories(added);
   if (payeesToCreate.size > 0) {
     throw APIError(
       'Rules would create a new payee for the adjustment; adjust it in the app instead',

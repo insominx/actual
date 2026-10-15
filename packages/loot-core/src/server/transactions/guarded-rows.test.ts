@@ -3,7 +3,10 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import * as db from '#server/db';
 import { loadMappings } from '#server/db/mappings';
 
-import { assertPlannableTransactionRows } from './guarded-rows';
+import {
+  assertPlannableTransactionRows,
+  assertPlannedCategories,
+} from './guarded-rows';
 
 let onBudget: string;
 let offBudget: string;
@@ -134,5 +137,22 @@ describe('assertPlannableTransactionRows', () => {
         strict,
       ),
     ).resolves.toBeUndefined();
+  });
+});
+
+describe('assertPlannedCategories', () => {
+  it('accepts uncategorized and live categories', async () => {
+    await expect(
+      assertPlannedCategories([{ category }, { category: null }, {}]),
+    ).resolves.toBeUndefined();
+  });
+
+  it.each([
+    ['unknown', () => 'nope'],
+    ['deleted', () => deletedCategory],
+  ])('refuses a rule-set %s category', async (_label, pick) => {
+    await expect(
+      assertPlannedCategories([{ category }, { category: pick() }]),
+    ).rejects.toThrow('rule would set a category that does not exist');
   });
 });

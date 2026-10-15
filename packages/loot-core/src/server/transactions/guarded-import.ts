@@ -24,7 +24,10 @@ import type {
 import type { TransactionEntity } from '#types/models';
 
 import { projectAddedTransaction } from './guarded-add';
-import { assertPlannableTransactionRows } from './guarded-rows';
+import {
+  assertPlannableTransactionRows,
+  assertPlannedCategories,
+} from './guarded-rows';
 
 const UPDATE_FIELDS = [
   'imported_id',
@@ -85,6 +88,7 @@ export async function planTransactionImport(request: TransactionImportRequest) {
     structuredClone(request.transactions),
     { ...options(request), isPreview: true },
   );
+  await assertPlannedCategories([...added, ...(updated as Row[])]);
   const newPayees = new Map<string, string>();
   for (const payee of payeesToCreate.values()) {
     newPayees.set(payee.id, payee.name);

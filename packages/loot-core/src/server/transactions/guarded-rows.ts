@@ -135,3 +135,27 @@ export async function assertPlannableTransactionRows(
     }
   }
 }
+
+// Rules run while a plan is built and can set a category that no longer
+// exists (the rule predates a category deletion). The row is then stored with
+// a dangling category, the receipt read-back sees it as uncategorized, and the
+// operation is left uncertain after committing. Refuse such plans.
+export async function assertPlannedCategories(
+  rows: Array<{ category?: unknown }>,
+) {
+  const checked = new Set<string>();
+  for (const row of rows) {
+    if (row.category == null || typeof row.category !== 'string') continue;
+    if (checked.has(row.category)) continue;
+    const live = await db.first(
+      'SELECT id FROM categories WHERE id = ? AND tombstone = 0',
+      [row.category],
+    );
+    if (!live) {
+      throw APIError(
+        'A rule would set a category that does not exist; fix or delete that rule first',
+      );
+    }
+    checked.add(row.category);
+  }
+}

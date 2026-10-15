@@ -239,3 +239,81 @@ void test(
     }
   },
 );
+
+void test(
+  'rules cannot point at missing rows and stale rules cannot write dangling categories',
+  { timeout: 240000 },
+  async () => {
+    const f = await createFixture({ richBackup: true });
+    try {
+      const { checking } = f.fixture;
+      await f.cli(['accounts', 'list']);
+      const listed = parse(await f.cli(['payees', 'list'], { version: '1' }));
+      const payee = (listed.data ?? listed)[0].id;
+      const rule = action => ({
+        stage: 'default',
+        conditionsOp: 'and',
+        conditions: [{ field: 'account', op: 'is', value: checking }],
+        actions: [{ op: 'set', ...action }],
+      });
+      let n = 0;
+      for (const action of [
+        { field: 'category', value: 'ghost-category' },
+        { field: 'payee', value: 'ghost-payee' },
+        { field: 'account', value: 'ghost-account' },
+      ]) {
+        await assertRefused(
+          f,
+          'rules.create',
+          null,
+          rule(action),
+          `rule-ghost-${++n}`,
+        );
+      }
+      void payee;
+      // The legacy (unguarded) rule command still accepts a missing category.
+      const legacy = await f.cli(
+        [
+          'rules',
+          'create',
+          '--data',
+          JSON.stringify(rule({ field: 'category', value: 'ghost-category' })),
+        ],
+        { version: '1' },
+      );
+      assert.equal(legacy.code, 0, legacy.stdout + legacy.stderr);
+      // A guarded add would run that rule, store a dangling category, then fail
+      // the receipt read-back after committing. It must be refused at preview.
+      await assertRefused(
+        f,
+        'transactions.add',
+        checking,
+        [{ date: '2026-09-17', amount: -123, notes: 'hello' }],
+        'add-through-ghost-rule',
+      );
+      await assertRefused(
+        f,
+        'transactions.import',
+        checking,
+        [
+          {
+            date: '2026-09-17',
+            amount: -124,
+            notes: 'hello',
+            imported_id: 'ghost-rule-import',
+          },
+        ],
+        'import-through-ghost-rule',
+      );
+      await assertRefused(
+        f,
+        'reconcile.adjust',
+        null,
+        { accountId: checking, amount: 100 },
+        'adjust-through-ghost-rule',
+      );
+    } finally {
+      await f.dispose();
+    }
+  },
+);

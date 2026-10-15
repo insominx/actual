@@ -18,7 +18,10 @@ import type {
 } from '#types/change-proposals';
 import type { TransactionEntity } from '#types/models';
 
-import { assertPlannableTransactionRows } from './guarded-rows';
+import {
+  assertPlannableTransactionRows,
+  assertPlannedCategories,
+} from './guarded-rows';
 
 const PROJECTED = [
   'account',
@@ -58,6 +61,7 @@ async function plan(request: TransactionAdditionRequest) {
     request.accountId,
     structuredClone(request.transactions),
   );
+  await assertPlannedCategories(added);
   const newPayees = new Map<string, string>();
   for (const payee of payeesToCreate.values()) {
     newPayees.set(payee.id, payee.name);

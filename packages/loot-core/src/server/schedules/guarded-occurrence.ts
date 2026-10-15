@@ -14,6 +14,7 @@ import {
   guardedSourceHash,
 } from '#server/guarded-proposal';
 import { projectAddedTransaction } from '#server/transactions/guarded-add';
+import { assertPlannedCategories } from '#server/transactions/guarded-rows';
 import { canonicalJson } from '#shared/canonical-json';
 import * as monthUtils from '#shared/months';
 import { q } from '#shared/query';
@@ -142,6 +143,7 @@ export async function prepareSchedulePost(
       `Rules would create a new payee for schedule ${request.id}; post it in the app or set the payee first`,
     );
   }
+  await assertPlannedCategories(added);
   const ids = added.map(row => row.id);
   return JSON.parse(
     JSON.stringify({
