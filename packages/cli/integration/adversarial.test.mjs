@@ -153,3 +153,38 @@ void test(
     }
   },
 );
+
+void test(
+  'transaction update and reconcile adjust refuse dates the engine cannot store',
+  { timeout: 240000 },
+  async () => {
+    const f = await createFixture({ richBackup: true });
+    try {
+      const { checking } = f.fixture;
+      await f.cli(['accounts', 'list']);
+      const existing = (await readRaw(f)).transactions.find(
+        row => row.acct === checking && !row.tombstone,
+      );
+      assert.ok(existing, 'fixture has a checking transaction');
+      for (const date of ['1990-01-01', '2026-02-30']) {
+        await assertRefused(
+          f,
+          'transactions.update',
+          existing.id,
+          { date },
+          `update-${date}`,
+        );
+        // A date that is not a real day used to be stored as 20260230.
+        await assertRefused(
+          f,
+          'reconcile.adjust',
+          null,
+          { accountId: checking, amount: 100, date },
+          `adjust-${date}`,
+        );
+      }
+    } finally {
+      await f.dispose();
+    }
+  },
+);

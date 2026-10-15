@@ -262,6 +262,7 @@ import {
   performTransactionMerge,
   prepareTransactionMerge,
 } from './transactions/guarded-merge';
+import { MINIMUM_TRANSACTION_DATE } from './transactions/guarded-rows';
 import {
   performTransactionSplit,
   prepareTransactionSplit,
@@ -2330,7 +2331,8 @@ async function prepareTransactionUpdate(
             typeof value !== 'string' ||
             !/^\d{4}-\d{2}-\d{2}$/.test(value) ||
             !Number.isFinite(Date.parse(value)) ||
-            new Date(value).toISOString().slice(0, 10) !== value
+            new Date(value).toISOString().slice(0, 10) !== value ||
+            value < MINIMUM_TRANSACTION_DATE
           );
         default:
           return true;

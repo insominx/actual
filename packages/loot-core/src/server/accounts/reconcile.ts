@@ -16,6 +16,7 @@ import {
 } from '#server/guarded-proposal';
 import { batchUpdateTransactions } from '#server/transactions';
 import { projectAddedTransaction } from '#server/transactions/guarded-add';
+import { assertPlannableTransactionRows } from '#server/transactions/guarded-rows';
 import { canonicalJson } from '#shared/canonical-json';
 import * as monthUtils from '#shared/months';
 import { q } from '#shared/query';
@@ -327,6 +328,11 @@ export async function prepareReconcileAdjust(
   if (status.account.closed) {
     throw APIError(`Account ${status.account.name} is closed`);
   }
+  await assertPlannableTransactionRows(
+    request.accountId,
+    [adjustmentRow(request)],
+    { allowTransferPayees: false },
+  );
   const { added, payeesToCreate } = await planAddedTransactions(
     request.accountId,
     [adjustmentRow(request)],
