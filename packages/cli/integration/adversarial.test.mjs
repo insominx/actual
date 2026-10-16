@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
-import { writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { cp, mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
+
+import { unzipSync, zipSync } from 'fflate';
 
 import { readRaw } from './guarded-kit.mjs';
 import { createFixture } from './harness.mjs';
@@ -429,6 +434,64 @@ void test(
         assert.equal(result.code, 2, result.stdout + result.stderr);
         assert.match(parse(result)?.error?.message ?? '', expected);
       }
+    } finally {
+      await f.dispose();
+    }
+  },
+);
+
+void test(
+  'restore refuses an archive whose database carries a trigger',
+  { timeout: 240000 },
+  async () => {
+    const f = await createFixture({ richBackup: true });
+    try {
+      await f.cli(['accounts', 'list']);
+      const directory = join(f.root, 'backups');
+      const created = await f.cli([
+        '--offline',
+        'backups',
+        'create',
+        '--directory',
+        directory,
+      ]);
+      assert.equal(created.code, 0, created.stderr);
+      const source = parse(created).data.path;
+      // Rewrite the archive with a trigger that would delete accounts on the
+      // next transaction insert, then fix the manifest hash so only the
+      // database content is suspicious.
+      const evil = join(directory, 'trigger.actualbackup');
+      await cp(source, evil, { recursive: true });
+      const entries = unzipSync(await readFile(join(evil, 'budget.zip')));
+      const scratch = join(await mkdtemp(join(tmpdir(), 'adv-trigger-')), 'db');
+      await writeFile(scratch, entries['db.sqlite']);
+      const database = new DatabaseSync(scratch);
+      database.exec(
+        'CREATE TRIGGER evil AFTER INSERT ON transactions BEGIN DELETE FROM accounts; END;',
+      );
+      database.close();
+      entries['db.sqlite'] = new Uint8Array(await readFile(scratch));
+      const zip = zipSync(entries);
+      await writeFile(join(evil, 'budget.zip'), zip);
+      const manifest = JSON.parse(
+        await readFile(join(evil, 'manifest.json'), 'utf8'),
+      );
+      manifest.bytes = zip.length;
+      manifest.sha256 = createHash('sha256').update(zip).digest('hex');
+      await writeFile(join(evil, 'manifest.json'), JSON.stringify(manifest));
+      const before = (await readdir(join(f.root, 'a'))).sort();
+      const restored = await f.cli([
+        '--offline',
+        'backups',
+        'restore',
+        evil,
+        '--name',
+        'Trigger restore',
+        '--operation-id',
+        'trigger-restore',
+      ]);
+      assert.equal(restored.code, 2, restored.stdout + restored.stderr);
+      assert.deepEqual((await readdir(join(f.root, 'a'))).sort(), before);
     } finally {
       await f.dispose();
     }

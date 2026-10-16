@@ -759,6 +759,19 @@ async function prepareBudgetRestore(
     ) {
       throw APIError('Archive database integrity check failed');
     }
+    // Actual never creates triggers; one in an archive would run SQL of the
+    // archive author's choosing on every later write to the restored budget.
+    const triggers = sqlite.runQuery(
+      database,
+      "SELECT name FROM sqlite_master WHERE type = 'trigger'",
+      [],
+      true,
+    );
+    if (!Array.isArray(triggers) || triggers.length > 0) {
+      throw APIError(
+        'Archive database contains triggers, which are not allowed',
+      );
+    }
     // The canonical restore clears these tables before loading the destination.
     sqlite.execQuery(
       database,
