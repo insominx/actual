@@ -2367,10 +2367,20 @@ export async function previewGuardedChange(
                         request as api.BudgetPublicationRequest,
                       )
                     : await domainAdapter(operation).preview(request);
-          } catch {
+          } catch (error) {
+            // Planner refusals are deliberate APIError objects written for
+            // the caller; other failures stay generic to avoid leaking internals.
+            const reason =
+              isRecord(error) &&
+              error.type === 'APIError' &&
+              typeof error.message === 'string'
+                ? error.message.slice(0, 500)
+                : null;
             throw new AgentError(
               'INVALID_INPUT',
-              'Cannot preview this change. Check the identity, fields, and supported operation scope.',
+              reason
+                ? `Cannot preview this change: ${reason}`
+                : 'Cannot preview this change. Check the identity, fields, and supported operation scope.',
             );
           }
           return journal.prepare(

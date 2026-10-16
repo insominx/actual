@@ -41,6 +41,7 @@ async function assertRefused(f, operation, target, data, id) {
     `${id} must be refused at preview: ${result.stdout}${result.stderr}`,
   );
   assert.deepEqual(await readRaw(f), before, `${id} wrote state`);
+  return result;
 }
 
 void test(
@@ -169,12 +170,17 @@ void test(
       );
       assert.ok(existing, 'fixture has a checking transaction');
       for (const date of ['1990-01-01', '2026-02-30']) {
-        await assertRefused(
+        const refused = await assertRefused(
           f,
           'transactions.update',
           existing.id,
           { date },
           `update-${date}`,
+        );
+        // The refusal says why instead of a generic "cannot preview".
+        assert.doesNotMatch(
+          parse(refused)?.error?.message ?? '',
+          /Check the identity/,
         );
         // A date that is not a real day used to be stored as 20260230.
         await assertRefused(
