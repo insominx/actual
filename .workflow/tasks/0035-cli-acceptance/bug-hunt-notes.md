@@ -2,13 +2,12 @@
 
 ## RESUME (replace, do not append)
 
-State: findings 1-17 fixed and merged (finding 17 = plain Errors reported as ENGINE_FAILURE, now INVALID_INPUT). Tree clean after the docs commit that follows e01c4cb45. vitest 348 pass, tsgo clean; integration transfers 6/6, guarded-transaction-merge 6/6, jobs, cli, rules-apply, imports, cash-planning, adversarial pass.
-Verified clean (no further bugs): schedules post/skip, jobs inbox abuse, preferences.set, payees merge/delete, account close/delete, imports settings, reports vs raw sums, randomised tx op sequences (fuzz42, 3 seeds), 149-command junk-argument sweep (fuzz56).
-Full integration suite (copy /workspace/actual-suite, older build): pass except browser-* (Playwright chromium not installed: environmental), changes (2 hold tests were my own regression, fixed in d7f1daccc; file also hit its 25-minute timeout), reversal 1 fail ("Could not resolve on-disk budget id after download", probably load flake: re-run alone).
-Next 3 steps: (1) `cd packages/cli && node --test integration/reversal.test.mjs` alone (record flake or fix); (2) run the rest of changes.test.mjs in background (nohup script, log to /workspace/adv) and the remaining suite files after `sync` in fullsuite.log; (3) new rounds: MCP tools/call with junk args, Windows path handling (schtasks trailing backslash/quotes), budgets.create/clone/archive fuzz, bank-sync/sync conflict edge cases.
-Running processes: fullsuite.sh PIDs 2930432 and 3062397 (log /workspace/adv/fullsuite.log, ends FULLDONE). Kill by exact PID only. Push with plain `git push origin HEAD:refs/heads/<branch|master>` (publish.sh gets blocked by auto-review).
-Heads: branch = master = e01c4cb45b8b9bd1b054cb7643d0a2f3445e8f1a after this push (see git log for the docs commit on top).
-Ledger: findings-ledger.md in this folder.
+State: findings 1-20 fixed, merged and pushed (ledger: findings-ledger.md). Heads at the time of writing: branch = master = the commit after f10b75e25 (docs commit; run `git log -3`). Tree clean. CLI vitest 351 pass, tsgo clean; integration mcp, jobs, lifecycle, sync, reversal (x3), transfers, guarded-transaction-merge, imports, cash-planning, adversarial pass.
+Verified clean this segment: reversal was a load flake (3 clean runs; root cause is finding 19); MCP junk-argument fuzz (736 calls, server alive), budgets create/clone name fuzz (ids are sanitized, nothing escapes the data dir), schedules, jobs, preferences, payees, accounts.
+Playwright Chromium was missing from ~/.cache/ms-playwright (cache dir gone); reinstalled with `yarn playwright install chromium chromium-headless-shell` (chromium_headless_shell-1228). Browser integration tests and e2e can run again; not re-run yet.
+changes.test.mjs: the earlier "timeout" is almost certainly just slowness (about 100 tests, 30-40 s each, 25-minute cap per file in fullsuite.sh), not a hang: tests completed steadily. A full uncapped run with --test-timeout=300000 per test is in progress (log /workspace/adv/changes.log, ends with a CHANGESDONE line). Any test over 300 s would be a real hang: investigate it.
+Next 3 steps: (1) read /workspace/adv/changes.log when CHANGESDONE appears; list any failures, root-cause hangs; (2) run browser-*.test.mjs (now that Chromium is back) and rest of the fullsuite on the final build; (3) new rounds: sync conflict edge cases between two clients (rename vs delete, schedule edits), Windows-specific behavior in backups/reports --out (reserved names, trailing dots), CSV/OFX/QIF parser fuzz with odd encodings.
+Running processes: changes.sh PID 3088659 with node --test children 3088666 and 3088691 (cwd /workspace/actual/packages/cli). Do NOT rebuild dist (yarn build:cli) while it runs; kill by exact PID if needed. Push with plain `git push origin HEAD:refs/heads/<workflow/complete-remaining-tasks|master>`.
 <!-- RESUME-END -->
 
 # Adversarial bug hunt notes (resume log)
