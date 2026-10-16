@@ -159,10 +159,17 @@ it('accepts supported preferences and validates query anchors', () => {
     start: '2024-01-01',
     endExclusive: '2025-01-01',
   });
-  for (const anchor of ['2025-13', 'bogus', '2025', '0000-01', '9999-12']) {
+  for (const anchor of [
+    '2025-13',
+    'bogus',
+    '2025',
+    '0000-01',
+    '0099-12',
+    '9999-12',
+  ]) {
     expect(() => getExpenseRange('month', anchor)).toThrow();
   }
-  for (const anchor of ['2025-01', 'bogus', '0', '0000', '9999']) {
+  for (const anchor of ['2025-01', 'bogus', '0', '0000', '0099', '9999']) {
     expect(() => getExpenseRange('year', anchor)).toThrow();
   }
 });

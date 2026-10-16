@@ -5,6 +5,11 @@ import type {
 import * as monthUtils from '@actual-app/core/shared/months';
 import type { CategoryGroupEntity } from '@actual-app/core/types/models';
 
+// Native dates read years 0 to 99 as 1900 to 1999, which would label the
+// columns with the wrong days, so the first supported year is 100.
+export const FIRST_YEAR = 100;
+const FIRST_YEAR_TEXT = String(FIRST_YEAR).padStart(4, '0');
+
 export type ExpensePeriod = 'month' | 'year';
 export type ExpenseRow = {
   id: string;
@@ -35,7 +40,7 @@ export function getExpenseRange(
   if (period === 'year') {
     if (
       !/^\d{4}$/.test(anchor) ||
-      Number(anchor) < 1 ||
+      Number(anchor) < FIRST_YEAR ||
       Number(anchor) >= 9999
     ) {
       throw new Error('Invalid expense year');
@@ -47,7 +52,7 @@ export function getExpenseRange(
   }
   if (
     !monthUtils.isValidYearMonth(anchor) ||
-    anchor < '0001-01' ||
+    anchor < `${FIRST_YEAR_TEXT}-01` ||
     anchor >= '9999-01'
   ) {
     throw new Error('Invalid expense month');

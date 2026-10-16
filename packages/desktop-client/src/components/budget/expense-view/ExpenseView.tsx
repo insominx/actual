@@ -10,7 +10,7 @@ import { useLocale } from '#hooks/useLocale';
 import { useLocalPref } from '#hooks/useLocalPref';
 import { useMetadataPref } from '#hooks/useMetadataPref';
 
-import { parseExpensePeriod } from './expenseData';
+import { FIRST_YEAR, parseExpensePeriod } from './expenseData';
 import { ExpenseTable } from './ExpenseTable';
 
 export function ExpenseView({ initialMonth }: { initialMonth: string }) {
@@ -23,7 +23,7 @@ export function ExpenseView({ initialMonth }: { initialMonth: string }) {
   const period = parseExpensePeriod(periodPref);
   const [month, setMonth] = useState(() =>
     monthUtils.isValidYearMonth(initialMonth) &&
-    initialMonth >= '0001-01' &&
+    initialMonth >= `${String(FIRST_YEAR).padStart(4, '0')}-01` &&
     initialMonth < '9999-01'
       ? initialMonth
       : monthUtils.currentMonth(),
@@ -48,7 +48,11 @@ export function ExpenseView({ initialMonth }: { initialMonth: string }) {
         <Button
           style={controlStyle}
           aria-label={t('Previous expense period')}
-          isDisabled={period === 'year' ? anchor <= '0001' : month <= '0001-01'}
+          isDisabled={
+            period === 'year'
+              ? Number(anchor) <= FIRST_YEAR
+              : month <= `${String(FIRST_YEAR).padStart(4, '0')}-01`
+          }
           onPress={() => setMonth(monthUtils.subMonths(month, step))}
         >
           ‹
