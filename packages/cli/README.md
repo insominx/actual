@@ -55,7 +55,7 @@ Startup waits at most 15 seconds. Requests have bounded timeouts. When a stop re
 
 `server logs` returns up to 100 lifecycle events from the last 64 KiB. It omits raw server output to keep credentials and provider data out of agent results. Diagnostic issues distinguish authentication, encryption, connection, incompatible metadata, missing modules, and native binding failures. A broken installation that prevents the CLI entrypoint from loading cannot return CLI JSON. Browser-dependent identity-provider setup remains outside these commands.
 
-These commands are verified locally on Windows. Linux lifecycle behavior remains unverified. Local budget creation and publication remain the next prerequisite.
+These commands are verified on Windows and Linux.
 
 ## Configuration
 
@@ -86,15 +86,15 @@ Version 2 writes one JSON document after the command finishes. Success contains 
 
 Errors contain a stable code, a message, retryability, and optional field details. Unknown engine errors use a generic message to avoid disclosing credentials. Diagnostics use stderr.
 
-| Exit code | Error code           | Meaning                                                 |
-| --------- | -------------------- | ------------------------------------------------------- |
-| 2         | `INVALID_INPUT`      | The command or JSON input is invalid.                   |
-| 3         | `MISSING_CONTEXT`    | Required configuration or budget selection is missing.  |
-| 4         | `STALE_PREVIEW`      | Reserved for the future preview protocol.               |
-| 5         | `ENGINE_FAILURE`     | The engine, authentication, lock, or connection failed. |
-| 6         | `PARTIAL_COMPLETION` | Local changes committed but synchronization failed.     |
+| Exit code | Error code           | Meaning                                                           |
+| --------- | -------------------- | ----------------------------------------------------------------- |
+| 2         | `INVALID_INPUT`      | The command or JSON input is invalid.                             |
+| 3         | `MISSING_CONTEXT`    | Required configuration or budget selection is missing.            |
+| 4         | `STALE_PREVIEW`      | A prepared change no longer matches the budget; prepare it again. |
+| 5         | `ENGINE_FAILURE`     | The engine, authentication, lock, or connection failed.           |
+| 6         | `PARTIAL_COMPLETION` | Local changes committed but synchronization failed.               |
 
-When a push fails, synchronize again instead of repeating the mutation. Preview, receipts, and reversal are not implemented yet. Discovery reports those capabilities as unavailable. Lists retain their existing payloads; paging and truncation metadata are planned separately.
+When a push fails, synchronize again instead of repeating the mutation. Guarded writes use `changes preview` and `changes apply` with durable receipts. `capabilities.preview` stays `false` for every operation, because previewing is a separate command (`changes preview <operation>`); `capabilities.reversal` is `true` for the operations `changes reverse` can compensate. Lists retain their existing payloads; paging and truncation metadata are planned separately.
 
 ### Device-local profiles and offline mode
 
@@ -268,6 +268,19 @@ All monetary amounts are **integer cents** when passed as input (flags, JSON):
 
 **Output formatting:** Table (`--format table`) and CSV (`--format csv`) output automatically converts cent values to decimal (e.g. `1665.00` instead of `166500`). JSON output always returns raw cents for programmatic use.
 
+### Input limits and refusals
+
+Writes are checked before anything is stored, so a refused request changes nothing:
+
+- Amounts are integer cents with an absolute value of at most 2,251,799,813,685,247 (2^51 - 1, the engine's own limit); larger values are refused everywhere, including bank-sync and file imports.
+- Transaction dates must be real calendar days on or after 1995-01-01 (the query engine's floor).
+- `transactions add` and `reconcile adjust` refuse transfer payees and `transfer_id`; a linked transfer pair cannot be created by adding one row, so use `transfers`. Rows may not reference deleted or unknown categories or payees, or put a category on an off-budget account, and split children must add up to the parent.
+- Schedules whose recurrence the schedule engine cannot evaluate are refused.
+- `cash-planning` forecast end dates are limited to 50 years after the as-of date.
+- Job names cannot be Windows device names (`con`, `nul`, `com1`, ...), and a job's inbox, processed and error folders may not be nested inside each other.
+- An import file or `--data` document that is too large or malformed is refused with the reason (exit code 2).
+- Usage errors, such as a missing required option, are structured `INVALID_INPUT` errors in version 2 output.
+
 ### Tips & Common Pitfalls
 
 - **Split transactions:** When summing or counting transactions, filter `"is_parent": false` to avoid double-counting. A split parent holds the total amount, and its children hold the individual parts — including both would count the total twice.
@@ -305,7 +318,7 @@ Watch prints progress events to stderr and one version 2 result when it finishes
 
 ### Concurrency
 
-The CLI takes a shared lock for reads and an exclusive lock for writes on the per-budget cache directory. Many parallel reads are safe; writes serialize. If another CLI process is holding the lock, subsequent invocations wait up to `--lock-timeout` seconds (default `10`) before failing with an error. Pass `--no-lock` to opt out in trusted single-process setups.
+The CLI takes a shared lock for reads and an exclusive lock for writes on the per-budget cache directory. Many parallel reads are safe; writes serialize. If another CLI process is holding the lock, subsequent invocations wait up to `--lock-timeout` seconds (default `10`) before failing with an error. If the lock is still held when the wait ends, the command fails with exit code 5 and a retryable error that says the budget is held by another process; a lock left behind by a killed process clears itself after about 30 seconds. Pass `--no-lock` to opt out in trusted single-process setups.
 
 ## Running Locally (Development)
 
@@ -380,7 +393,7 @@ yarn workspace @actual-app/sync-server build
 yarn workspace @actual-app/cli test:integration
 ```
 
-The harness creates a temporary server, budgets, credentials, and two client caches. It removes them after each test. Type checking emits files into some build directories, so rebuild before running packaged integration tests. Linux execution remains to be verified; this implementation was tested on Windows.
+The harness creates a temporary server, budgets, credentials, and two client caches. It removes them after each test. Type checking emits files into some build directories, so rebuild before running packaged integration tests. The `changes` file alone takes about 40 minutes (each test starts a server and a budget), so run integration files individually. Type checking and API tests also clear `packages/api/dist` and `packages/sync-server/build`; rebuild (`yarn build:cli`, `yarn build:server`) afterwards.
 
 If you're working on the CLI within the monorepo:
 
@@ -413,7 +426,7 @@ Preview returns before/after values, budget identities, reference preconditions,
 
 Receipts move from prepared to uncertain before the engine call. An acknowledged outcome becomes committed-local, then synced after successful synchronization. Unknown engine outcomes remain uncertain and never automatically replay. Repeating a committed operation retries synchronization without executing the mutation again. A rejected proposal becomes failed-before-commit; prepare a new operation ID after inspecting the changed state. Use `actual changes status <operation-id>` and `actual changes list --limit 100` to inspect receipts without synchronizing or replaying.
 
-Receipts reside in `<data-dir>/.actual-cli/changes`. They contain sensitive before/after records but no credentials. The journal retains up to 500 records and removes terminal synced/failed records and acknowledged local-only creation/clone/restore/archive records older than 30 days, or the oldest terminal entries when capacity is needed. Prepared, uncertain, and committed receipts that still require synchronization are preserved. If unresolved entries fill the journal, preparation fails before mutation. Files use private creation permissions where the platform supports them. Status inspection does not prove causation from matching ledger values. Real browser stale-edit and three process-interruption tests cover this transaction checkpoint on Windows. General version 2 mutation adapters remain required before task 0014 is complete.
+Receipts reside in `<data-dir>/.actual-cli/changes`. They contain sensitive before/after records but no credentials. The journal retains up to 500 records and removes terminal synced/failed records and acknowledged local-only creation/clone/restore/archive records older than 30 days, or the oldest terminal entries when capacity is needed. Prepared, uncertain, and committed receipts that still require synchronization are preserved. If unresolved entries fill the journal, preparation fails before mutation. Files use private creation permissions where the platform supports them. Status inspection does not prove causation from matching ledger values. Real browser stale-edit and three process-interruption tests cover this transaction checkpoint on Windows.
 
 After forced process termination, the existing cache and journal locks can remain until their approximately 30-second stale window expires. Use `--lock-timeout 45` when inspecting the interrupted operation. An uncertain receipt stays uncertain even when current values resemble the proposal. Inspect the receipt and selected budget before preparing further work; the same ID never automatically replays.
 

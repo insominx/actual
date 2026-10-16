@@ -43,7 +43,7 @@ The server package must be installed or built. Use `--server-entry` when it cann
 
 Set `ACTUAL_PASSWORD_FILE` to a protected password file before bootstrap. Bootstrap refuses an initialized server and never exposes a session token. Connection tests need no budget. Doctor also validates a selected budget when configured. Lifecycle logs omit raw server output. These commands use version 2 JSON by default. A lost stop response returns exit code 6; inspect status before another action.
 
-Windows lifecycle tests pass. Linux execution and headless budget creation remain pending. These commands do not install services or complete browser-dependent identity-provider authentication.
+Lifecycle tests pass on Windows and Linux. These commands do not install services or complete browser-dependent identity-provider authentication.
 
 Online commands require a running Actual sync server. Explicit offline commands use an existing local budget or downloaded cache. Configuration accepts CLI flags, environment variables, device-local profiles, and existing config files, in that priority order.
 
@@ -783,6 +783,19 @@ actual server get-id --type categories --name "Groceries"
 actual server bank-sync [--account <id>]
 ```
 
+## Input limits and refusals
+
+Writes are checked before anything is stored, so a refused request changes nothing:
+
+- Amounts are integer cents with an absolute value of at most 2,251,799,813,685,247 (2^51 - 1, the engine's own limit); larger values are refused everywhere, including bank-sync and file imports.
+- Transaction dates must be real calendar days on or after 1995-01-01 (the query engine's floor).
+- `transactions add` and `reconcile adjust` refuse transfer payees and `transfer_id`; a linked transfer pair cannot be created by adding one row, so use `transfers`. Rows may not reference deleted or unknown categories or payees, or put a category on an off-budget account, and split children must add up to the parent.
+- Schedules whose recurrence the schedule engine cannot evaluate are refused.
+- `cash-planning` forecast end dates are limited to 50 years after the as-of date.
+- Job names cannot be Windows device names (`con`, `nul`, `com1`, ...), and a job's inbox, processed and error folders may not be nested inside each other.
+- An import file or `--data` document that is too large or malformed is refused with the reason (exit code 2).
+- Usage errors, such as a missing required option, are structured `INVALID_INPUT` errors in version 2 output.
+
 ## Amount Convention
 
 All monetary amounts are represented as **integer cents**:
@@ -922,7 +935,7 @@ Preview returns before/after values, budget identities, reference preconditions,
 
 Receipts move from prepared to uncertain before the engine call. An acknowledged outcome becomes committed-local, then synced after successful synchronization. Unknown engine outcomes remain uncertain and never automatically replay. Repeating a committed operation retries synchronization without executing the mutation again. A rejected proposal becomes failed-before-commit; prepare a new operation ID after inspecting the changed state. Use `actual changes status <operation-id>` and `actual changes list --limit 100` to inspect receipts without synchronizing or replaying.
 
-Receipts reside in `<data-dir>/.actual-cli/changes`. They contain sensitive before/after records but no credentials. The journal retains up to 500 records and removes terminal synced/failed records and acknowledged local-only creation/clone/restore/archive records older than 30 days, or the oldest terminal entries when capacity is needed. Prepared, uncertain, and committed receipts that still require synchronization are preserved. If unresolved entries fill the journal, preparation fails before mutation. Files use private creation permissions where the platform supports them. Status inspection does not prove causation from matching ledger values. Real browser stale-edit and three process-interruption tests cover this transaction checkpoint on Windows. General version 2 mutation adapters remain required before task 0014 is complete.
+Receipts reside in `<data-dir>/.actual-cli/changes`. They contain sensitive before/after records but no credentials. The journal retains up to 500 records and removes terminal synced/failed records and acknowledged local-only creation/clone/restore/archive records older than 30 days, or the oldest terminal entries when capacity is needed. Prepared, uncertain, and committed receipts that still require synchronization are preserved. If unresolved entries fill the journal, preparation fails before mutation. Files use private creation permissions where the platform supports them. Status inspection does not prove causation from matching ledger values. Real browser stale-edit and three process-interruption tests cover this transaction checkpoint on Windows.
 
 After forced process termination, the existing cache and journal locks can remain until their approximately 30-second stale window expires. Use `--lock-timeout 45` when inspecting the interrupted operation. An uncertain receipt stays uncertain even when current values resemble the proposal. Inspect the receipt and selected budget before preparing further work; the same ID never automatically replays.
 
