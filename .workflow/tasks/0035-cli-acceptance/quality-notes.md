@@ -4,7 +4,7 @@
 
 ## RESUME (replace, do not append)
 
-Written Fri Oct 16 16:29 PDT 2026 (segment started 16:22). Round 3 rows 32-46, decisions D30-D44; summary in .workflow/tasks/0035-cli-acceptance/round3-summary.md. startRuntime race fixed in commit 2bf1837cc (unit test server-runtime.test.ts; runtime and lifecycle integration tests passed 3 of 3 on the rebuilt dist). BACKGROUND JOB: /workspace/adv/gate4.sh PID in /workspace/adv/gate4.pid runs the full CLI integration suite on the final dist (log /workspace/adv/integ3.log, status /workspace/adv/gate4.log, look for '=== GATE4 DONE'); started 16:28, takes about 18 min. Run no builds, typecheck or other suites until it ends. After it ends: if green, run VRT only for 'import csv file twice' plus a 2-worker accounts+budget run (E2E_USE_BUILD=1 E2E_PORT=3017 VRT=true npx playwright test --browser=chromium --reporter=line, no package-browser), then say done with the final master SHA. GitHub is not used (D42). Windows checks never ran (liftoff offline). Push with bash /workspace/adv/publish.sh as its own Shell call. Next ledger row 47, next decision D45.
+Written Fri Oct 16 16:51 PDT 2026. Round 3 is closed: rows 32-46, decisions D30-D45, summary in round3-summary.md. Final gates all green (D45): CLI integration 318 of 320 with 2 env skips, unit, lint, typecheck, api vitest, Playwright functional and targeted VRT; the one VRT flake passed on every rerun. No background jobs running. Only open item: Windows PowerShell checks never ran (liftoff offline). GitHub is not used (D42). Next ledger row 47, next decision D46.
 
 <!-- QRESUME-END -->
 
