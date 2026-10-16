@@ -4,7 +4,9 @@
 
 ## RESUME (replace, do not append)
 
-Segment ended Fri Oct 16 14:25 PDT (started 14:00). Round 3 ledger rows 32-39 and D30-D35 done; all pushed through the commit that follows 97bee0084. No background jobs running. Remaining angles: DST/pay-period/expense-only calculations in desktop-client, reservations and cash planning vs hand-computed, sync-server concurrency/version mismatch/corrupt cache, Playwright UI adversarial inputs; Windows only if liftoff connects (offline at 14:17). Final gate pass (lint, typecheck, knip, build:cli, build:server, CLI integration, api vitest) and a list_workflow_runs re-check still to do before reporting done. Hazards: yarn typecheck clears api dist and sync-server build; run yarn build:cli and yarn build:server after, never during suites. Push with `bash /workspace/adv/publish.sh`. Next ledger row 40, next decision D36.
+Segment ended Fri Oct 16 14:54 PDT 2026 (started 14:25). Round 3 ledger rows 32-41 and D30-D37 done; all pushed. Gate stage 1 green at 14:54 (/workspace/adv/gate1.log: lint, typecheck, knip baseline hints only, build:cli, build:server, cli unit 389, loot-core node 1409, desktop-client 1263). No background jobs running. Liftoff and blacktop offline (checked 14:25 and 14:17). Done this segment: reservations vs hand-computed (6 cases match), cash-planning and reservation property tests, expense-view bound fix (row 40), sync angle (concurrent clients, SIGKILL writers, corrupt cache: row 41). Remaining: api vitest (clears api dist and sync-server build; run yarn build:cli and yarn build:server after), key CLI integration suites in the background (node --test integration/*.test.mjs, log to /workspace/adv), Playwright functional and VRT, sync-server version-mismatch probe, Playwright adversarial UI inputs (reservations, expense view, column resizing, cash planning), list_workflow_runs re-check (0 at last check), Windows only if liftoff connects. Then report done only after a full pass finds nothing new. Push with Everything up-to-date
+Everything up-to-date
+f0775482653a56c3251ac9edcf2000da7fd8f055. Next ledger row 42, next decision D38.
 
 <!-- QRESUME-END -->
 
