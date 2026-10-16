@@ -4,7 +4,7 @@
 
 ## RESUME (replace, do not append)
 
-Round 2 (R1-R7) is complete except two items that need Michael or liftoff: (a) Windows-path checks on liftoff, which was offline (retry when connected: existing checkout, fetch/checkout master, disposable budgets only); (b) GitHub Actions on insominx/actual has 0 runs, so R1 CI is unverified until Actions is enabled in repo settings. Hazards: `yarn typecheck`, api tests and `yarn lint --fix` can clear `packages/api/dist` and `packages/sync-server/build`; run `yarn build:cli` and `yarn build:server` before integration tests, and never while a suite runs. loot-core tests need `ENV=node`. Push with `bash /workspace/adv/publish.sh` (needs the approval card). Next decision number is D30.
+Round 3 adversarial sweep in progress (ledger 32-36, D30-D32). Done: differential CLI-vs-SQL, random-sequence money invariants, hostile shells, unusual names, JSON input encoding, receipt size. Remaining: 100k-transaction scale run (/workspace/adv/scale1.mjs), DST/TZ and pay-period/expense-only, reservations and cash-planning vs hand-computed, MCP protocol abuse, sync-server concurrency/version mismatch/corrupt cache, Playwright UI inputs; Windows checks only if liftoff is connected (offline at last check). Hazards: yarn typecheck clears api dist and sync-server build; run yarn build:cli and yarn build:server after, never during suites. Push with `bash /workspace/adv/publish.sh` (approval card). Next decision D33.
 
 <!-- QRESUME-END -->
 
