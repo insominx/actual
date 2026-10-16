@@ -11,7 +11,7 @@
   "workspaces": {
     ".": {
       "entry": ["bin/*.mts"],
-      "ignore": ["lage.config.js", ".claude/**", ".agents/**"]
+      "ignore": ["lage.config.js", ".claude/**", ".agents/**", ".workflow/**"]
     },
     "packages/api": {
       "entry": ["index.browser.ts", "browser-worker.ts", "e2e/**/*.{ts,mjs}"],
@@ -28,6 +28,10 @@
       "ignoreBinaries": ["bin/tsx"],
       "ignoreDependencies": ["extensionless"]
     },
+    "packages/cli": {
+      "entry": ["src/index.ts", "integration/*.{mjs,ts}"],
+      "ignoreDependencies": ["better-sqlite3"]
+    },
     "packages/component-library": {
       "entry": ["src/icons/index-template.ts", "src/icons/template.ts"],
       "ignore": ["src/icons/.svgrrc.js", "src/icons/add-attribute.ts"],
@@ -42,7 +46,8 @@
         "bin/*.mjs",
         "globals.ts",
         "src/globals.ts",
-        "src/build-shims.js"
+        "src/build-shims.js",
+        "e2e/expense-view-smoke.mjs"
       ],
       "ignore": ["playwright.config.d.ts"],
       "ignoreDependencies": ["plugins-service"]
