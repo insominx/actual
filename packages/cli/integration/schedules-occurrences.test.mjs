@@ -465,6 +465,31 @@ const skip = {
   },
 };
 
+void test('posting an occurrence dated before the engine floor is refused at preview, not left uncertain', async () => {
+  const f = await createFixture({ encrypted: true });
+  try {
+    const cli = strict(f);
+    await cli(['accounts', 'list']);
+    const ctx = await setup(f);
+    const old = await createSchedule(f, ctx, 'Ancient', '1900-01-01');
+    const result = await f.cli([
+      'schedules',
+      'post',
+      old,
+      '--date',
+      '1900-01-01',
+      '--operation-id',
+      'post-ancient',
+    ]);
+    const body = JSON.parse(result.stdout);
+    assert.equal(result.code, 2, result.stdout + result.stderr);
+    assert.equal(body.error.code, 'INVALID_INPUT');
+    assert.match(body.error.message, /1995-01-01/);
+  } finally {
+    await f.dispose();
+  }
+});
+
 guardedRegularCases(post);
 guardedInterruptionCases(post);
 guardedRegularCases(skip);

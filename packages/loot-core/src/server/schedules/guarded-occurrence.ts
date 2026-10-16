@@ -14,7 +14,10 @@ import {
   guardedSourceHash,
 } from '#server/guarded-proposal';
 import { projectAddedTransaction } from '#server/transactions/guarded-add';
-import { assertPlannedCategories } from '#server/transactions/guarded-rows';
+import {
+  assertPlannedCategories,
+  MINIMUM_TRANSACTION_DATE,
+} from '#server/transactions/guarded-rows';
 import { canonicalJson } from '#shared/canonical-json';
 import * as monthUtils from '#shared/months';
 import { q } from '#shared/query';
@@ -24,6 +27,7 @@ import {
   getScheduledAmount,
   getScheduleOccurrenceMatchStartDate,
 } from '#shared/schedules';
+import { isEngineAmount } from '#shared/util';
 import type {
   ScheduleOccurrenceRequest,
   SchedulePostProposal,
@@ -116,6 +120,20 @@ export async function prepareSchedulePost(
   }
   if (!schedule._account) {
     throw APIError(`Schedule ${request.id} has no account to post to`);
+  }
+  // The engine cannot store a transaction dated before its query floor or
+  // with an amount past its integer limit; it fails after the operation id is
+  // spent and the receipt is uncertain. Refuse both at preview.
+  const postDate = request.today ? monthUtils.currentDay() : schedule.next_date;
+  if (!postDate || postDate < MINIMUM_TRANSACTION_DATE) {
+    throw APIError(
+      `The ${request.date} occurrence of schedule ${request.id} is dated before ${MINIMUM_TRANSACTION_DATE} and cannot be posted; skip it or post it with today set`,
+    );
+  }
+  if (!isEngineAmount(getScheduledAmount(schedule._amount))) {
+    throw APIError(
+      `Schedule ${request.id} has an amount outside the budget engine limit`,
+    );
   }
   const account = await db.first<{ closed: number }>(
     'SELECT closed FROM accounts WHERE id = ? AND tombstone = 0',

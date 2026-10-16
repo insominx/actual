@@ -2370,6 +2370,11 @@ export async function previewGuardedChange(
                       )
                     : await domainAdapter(operation).preview(request);
           } catch (error) {
+            // Failures the CLI itself raised while loading and validating a
+            // restore archive already carry a specific, safe message.
+            if (error instanceof AgentError) {
+              throw error;
+            }
             // Planner refusals are deliberate APIError objects written for
             // the caller; other failures stay generic to avoid leaking internals.
             const reason =

@@ -527,3 +527,47 @@ void test(
     }
   },
 );
+
+void test(
+  'restore refusals name the cause instead of a generic preview failure',
+  { timeout: 90000 },
+  async () => {
+    const f = await createFixture({ encrypted: false, richBackup: true });
+    try {
+      const loaded = await f.cli(['accounts', 'list']);
+      assert.equal(loaded.code, 0, loaded.stderr);
+      const directory = join(f.root, 'backups');
+      const created = await f.cli([
+        '--offline',
+        'backups',
+        'create',
+        '--directory',
+        directory,
+      ]);
+      assert.equal(created.code, 0, created.stderr);
+      const path = JSON.parse(created.stdout).data.path;
+
+      // Tamper with the archive so its size and hash no longer match.
+      const archive = join(path, 'budget.zip');
+      const bytes = await readFile(archive);
+      bytes[bytes.length - 1] ^= 0xff;
+      await writeFile(archive, bytes);
+      const tampered = await f.cli([
+        '--offline',
+        'backups',
+        'restore',
+        path,
+        '--name',
+        'Tampered',
+        '--operation-id',
+        'restore-tampered',
+      ]);
+      const body = JSON.parse(tampered.stdout);
+      assert.equal(tampered.code, 2, tampered.stdout + tampered.stderr);
+      assert.equal(body.error.code, 'INVALID_INPUT');
+      assert.match(body.error.message, /size, hash, or file boundary/);
+    } finally {
+      await f.dispose();
+    }
+  },
+);
