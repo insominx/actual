@@ -1,6 +1,7 @@
 import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
+import { AgentError } from '#agent-output';
 import { withConnection } from '#connection';
 import {
   executeCategoryGroupCreation,
@@ -79,7 +80,10 @@ export function registerCategoryGroupsCommand(program: Command) {
         fields.hidden = parseBoolFlag(cmdOpts.hidden, '--hidden');
       }
       if (Object.keys(fields).length === 0) {
-        throw new Error('No update fields provided. Use --name or --hidden.');
+        throw new AgentError(
+          'INVALID_INPUT',
+          'No update fields provided. Use --name or --hidden.',
+        );
       }
       const opts = program.opts();
       if (opts.outputVersion === '2') {

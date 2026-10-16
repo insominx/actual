@@ -1,6 +1,7 @@
 import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
+import { AgentError } from '#agent-output';
 import { withConnection } from '#connection';
 import { executeCatalogChange, executePayeeCreation } from '#guarded-changes';
 import { printOutput } from '#output';
@@ -107,7 +108,8 @@ export function registerPayeesCommand(program: Command) {
       const fields: Record<string, unknown> = {};
       if (cmdOpts.name) fields.name = cmdOpts.name;
       if (Object.keys(fields).length === 0) {
-        throw new Error(
+        throw new AgentError(
+          'INVALID_INPUT',
           'No fields to update. Use --name to specify a new name.',
         );
       }
@@ -181,7 +183,8 @@ export function registerPayeesCommand(program: Command) {
           .map(id => id.trim())
           .filter(id => id.length > 0);
         if (mergeIds.length === 0) {
-          throw new Error(
+          throw new AgentError(
+            'INVALID_INPUT',
             'No valid payee IDs provided in --ids. Provide comma-separated IDs.',
           );
         }

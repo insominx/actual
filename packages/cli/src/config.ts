@@ -79,14 +79,18 @@ const configFileKeys: readonly string[] = [
 
 function validateConfigFileContent(value: unknown): ConfigFileContent {
   if (!isRecord(value)) {
-    throw new Error(
+    throw new AgentError(
+      'INVALID_INPUT',
       'Invalid config file: expected an object with keys: ' +
         configFileKeys.join(', '),
     );
   }
   for (const key of Object.keys(value)) {
     if (!configFileKeys.includes(key)) {
-      throw new Error(`Invalid config file: unknown key "${key}"`);
+      throw new AgentError(
+        'INVALID_INPUT',
+        `Invalid config file: unknown key "${key}"`,
+      );
     }
     const v = value[key];
     if (v === undefined) continue;
@@ -94,7 +98,8 @@ function validateConfigFileContent(value: unknown): ConfigFileContent {
       (stringKeys as readonly string[]).includes(key) &&
       typeof v !== 'string'
     ) {
-      throw new Error(
+      throw new AgentError(
+        'INVALID_INPUT',
         `Invalid config file: key "${key}" must be a string, got ${typeof v}`,
       );
     }
@@ -102,7 +107,8 @@ function validateConfigFileContent(value: unknown): ConfigFileContent {
       (numberKeys as readonly string[]).includes(key) &&
       (typeof v !== 'number' || !Number.isInteger(v) || v < 0)
     ) {
-      throw new Error(
+      throw new AgentError(
+        'INVALID_INPUT',
         `Invalid config file: key "${key}" must be a non-negative integer`,
       );
     }
@@ -110,7 +116,8 @@ function validateConfigFileContent(value: unknown): ConfigFileContent {
       (booleanKeys as readonly string[]).includes(key) &&
       typeof v !== 'boolean'
     ) {
-      throw new Error(
+      throw new AgentError(
+        'INVALID_INPUT',
         `Invalid config file: key "${key}" must be a boolean, got ${typeof v}`,
       );
     }
@@ -152,7 +159,8 @@ function readFileEnv(fileEnvVar: string): string | undefined {
     return readFileSync(filePath, 'utf-8').trim();
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
-    throw new Error(
+    throw new AgentError(
+      'INVALID_INPUT',
       `Could not read ${fileEnvVar} from "${filePath}": ${reason}`,
     );
   }
@@ -167,7 +175,8 @@ function parseNonNegativeIntEnv(
 
 function validateNonNegativeInt(value: number, name: string): number {
   if (!Number.isInteger(value) || value < 0) {
-    throw new Error(
+    throw new AgentError(
+      'INVALID_INPUT',
       `Invalid ${name}: expected a non-negative integer, got ${value}`,
     );
   }

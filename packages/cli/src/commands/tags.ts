@@ -1,6 +1,7 @@
 import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
+import { AgentError } from '#agent-output';
 import { withConnection } from '#connection';
 import { executeCatalogChange, executeTagCreation } from '#guarded-changes';
 import { printOutput } from '#output';
@@ -79,7 +80,8 @@ export function registerTagsCommand(program: Command) {
         fields.description = cmdOpts.description;
       }
       if (Object.keys(fields).length === 0) {
-        throw new Error(
+        throw new AgentError(
+          'INVALID_INPUT',
           'At least one of --tag, --color, or --description is required',
         );
       }

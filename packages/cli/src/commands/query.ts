@@ -21,7 +21,10 @@ export function parseOrderBy(
   return input.split(',').map(part => {
     const trimmed = part.trim();
     if (!trimmed) {
-      throw new Error('--order-by contains an empty field');
+      throw new AgentError(
+        'INVALID_INPUT',
+        '--order-by contains an empty field',
+      );
     }
     const colonIndex = trimmed.indexOf(':');
     if (colonIndex === -1) {
@@ -29,13 +32,15 @@ export function parseOrderBy(
     }
     const field = trimmed.slice(0, colonIndex).trim();
     if (!field) {
-      throw new Error(
+      throw new AgentError(
+        'INVALID_INPUT',
         `Invalid order field in "${trimmed}". Field name cannot be empty.`,
       );
     }
     const direction = trimmed.slice(colonIndex + 1);
     if (direction !== 'asc' && direction !== 'desc') {
-      throw new Error(
+      throw new AgentError(
+        'INVALID_INPUT',
         `Invalid order direction "${direction}" for field "${field}". Expected "asc" or "desc".`,
       );
     }
@@ -326,7 +331,8 @@ function buildQueryFromFile(
 ) {
   const table = typeof parsed.table === 'string' ? parsed.table : fallbackTable;
   if (!table) {
-    throw new Error(
+    throw new AgentError(
+      'INVALID_INPUT',
       '--table is required when the input file lacks a "table" field',
     );
   }
@@ -351,20 +357,27 @@ function buildQueryFromFlags(cmdOpts: Record<string, string | undefined>) {
 
   if (last !== undefined) {
     if (cmdOpts.table && cmdOpts.table !== 'transactions') {
-      throw new Error(
+      throw new AgentError(
+        'INVALID_INPUT',
         '--last implies --table transactions. Cannot use with --table ' +
           cmdOpts.table,
       );
     }
     if (cmdOpts.limit) {
-      throw new Error('--last and --limit are mutually exclusive');
+      throw new AgentError(
+        'INVALID_INPUT',
+        '--last and --limit are mutually exclusive',
+      );
     }
   }
 
   const table =
     cmdOpts.table ?? (last !== undefined ? 'transactions' : undefined);
   if (!table) {
-    throw new Error('--table is required (or use --file or --last)');
+    throw new AgentError(
+      'INVALID_INPUT',
+      '--table is required (or use --file or --last)',
+    );
   }
 
   if (!coreTableNames().includes(table)) {
@@ -372,11 +385,17 @@ function buildQueryFromFlags(cmdOpts: Record<string, string | undefined>) {
   }
 
   if (cmdOpts.where && cmdOpts.filter) {
-    throw new Error('--where and --filter are mutually exclusive');
+    throw new AgentError(
+      'INVALID_INPUT',
+      '--where and --filter are mutually exclusive',
+    );
   }
 
   if (cmdOpts.count && cmdOpts.select) {
-    throw new Error('--count and --select are mutually exclusive');
+    throw new AgentError(
+      'INVALID_INPUT',
+      '--count and --select are mutually exclusive',
+    );
   }
 
   let queryObj = api.q(table);
@@ -511,7 +530,10 @@ export function registerQueryCommand(program: Command) {
       const opts = program.opts();
       const parsed = cmdOpts.file ? readJsonInput(cmdOpts) : undefined;
       if (parsed !== undefined && !isRecord(parsed)) {
-        throw new Error('Query file must contain a JSON object');
+        throw new AgentError(
+          'INVALID_INPUT',
+          'Query file must contain a JSON object',
+        );
       }
       const queryObj = parsed
         ? buildQueryFromFile(parsed, cmdOpts.table)
@@ -664,7 +686,8 @@ export function registerQueryCommand(program: Command) {
       }
       const schema = LEGACY_TABLE_SCHEMA[table];
       if (!schema) {
-        throw new Error(
+        throw new AgentError(
+          'INVALID_INPUT',
           `Unknown table "${table}". Available tables: ${Object.keys(LEGACY_TABLE_SCHEMA).join(', ')}`,
         );
       }

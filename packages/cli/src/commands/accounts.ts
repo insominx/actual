@@ -1,6 +1,7 @@
 import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
+import { AgentError } from '#agent-output';
 import { withConnection } from '#connection';
 import {
   executeAccountClosure,
@@ -127,7 +128,10 @@ export function registerAccountsCommand(program: Command) {
       if (cmdOpts.name !== undefined) {
         const trimmed = cmdOpts.name.trim();
         if (trimmed === '') {
-          throw new Error('Invalid --name: must be a non-empty string.');
+          throw new AgentError(
+            'INVALID_INPUT',
+            'Invalid --name: must be a non-empty string.',
+          );
         }
         fields.name = trimmed;
       }
@@ -137,14 +141,16 @@ export function registerAccountsCommand(program: Command) {
       if (cmdOpts.accountGroupId !== undefined) {
         const groupId = String(cmdOpts.accountGroupId).trim();
         if (groupId === '') {
-          throw new Error(
+          throw new AgentError(
+            'INVALID_INPUT',
             'Invalid --account-group-id: use a group ID or "none".',
           );
         }
         fields.account_group_id = groupId === 'none' ? null : groupId;
       }
       if (Object.keys(fields).length === 0) {
-        throw new Error(
+        throw new AgentError(
+          'INVALID_INPUT',
           'No update fields provided. Use --name, --offbudget or --account-group-id.',
         );
       }
@@ -259,7 +265,8 @@ export function registerAccountsCommand(program: Command) {
       if (cmdOpts.cutoff) {
         const cutoffDate = new Date(cmdOpts.cutoff);
         if (Number.isNaN(cutoffDate.getTime())) {
-          throw new Error(
+          throw new AgentError(
+            'INVALID_INPUT',
             'Invalid cutoff date: expected a valid date (e.g. YYYY-MM-DD).',
           );
         }

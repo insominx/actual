@@ -24,7 +24,8 @@ async function requireSyncIdAndMeta(
 ): Promise<{ config: CliConfig; meta: string }> {
   const config = await resolveConfig(opts);
   if (!config.syncId) {
-    throw new Error(
+    throw new AgentError(
+      'MISSING_CONTEXT',
       `Sync ID is required for sync ${flag}. Set --sync-id or ACTUAL_SYNC_ID.`,
     );
   }

@@ -650,6 +650,32 @@ void test(
           ['rules', 'test', '--data', '{}', '--file', 'zzz'],
           /--data and --file/,
         ],
+        // Usage errors on subcommands are structured too (they used to print
+        // text and exit 1), and validation errors keep their reason.
+        [['accounts', 'create'], /required option '--name <name>'/],
+        [['transactions', 'list'], /required option '--account <id>'/],
+        [['query', 'run'], /--table is required/],
+        [
+          [
+            'query',
+            'run',
+            '--table',
+            'transactions',
+            '--last',
+            '1',
+            '--limit',
+            '2',
+          ],
+          /mutually exclusive/,
+        ],
+        [
+          ['categories', 'update', 'zzz', '--operation-id', 'u1'],
+          /No update fields/,
+        ],
+        [
+          ['payees', 'update', 'zzz', '--operation-id', 'u2'],
+          /No fields to update/,
+        ],
       ]) {
         const result = await f.cli(args, { version: '2' });
         assert.equal(result.code, 2, `${args.join(' ')}: ${result.stdout}`);
