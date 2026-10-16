@@ -6,6 +6,7 @@ import {
   dateAfterMonths,
   defaultCashPlanningConfig,
   isPlanningDate,
+  maxForecastEndDate,
   parseCashPlanningConfig,
   projectCashPlanning,
 } from './cash-planning';
@@ -170,6 +171,20 @@ describe('cash planning projections', () => {
     ).toEqual({ food: 0 });
     expect(parseCashPlanningConfig('invalid', summary.asOf)).toEqual(
       defaultCashPlanningConfig(summary.asOf),
+    );
+  });
+
+  it('ignores a persisted forecast horizon beyond fifty years', () => {
+    const far = JSON.stringify({ ...config, forecastEndDate: '9999-12-31' });
+    expect(
+      parseCashPlanningConfig(far, summary.asOf).forecastEndDate,
+    ).toBeUndefined();
+    const ok = JSON.stringify({
+      ...config,
+      forecastEndDate: maxForecastEndDate(summary.asOf),
+    });
+    expect(parseCashPlanningConfig(ok, summary.asOf).forecastEndDate).toBe(
+      maxForecastEndDate(summary.asOf),
     );
   });
 });

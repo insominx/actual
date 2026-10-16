@@ -497,3 +497,44 @@ void test(
     }
   },
 );
+
+void test(
+  'cash plan refuses a forecast horizon that would never finish computing',
+  { timeout: 240000 },
+  async () => {
+    const f = await createFixture({ richBackup: true });
+    try {
+      await f.cli(['accounts', 'list']);
+      const inspected = await f.cli(
+        [
+          'cash-planning',
+          'inspect',
+          '--scenario',
+          JSON.stringify({ forecastEndDate: '9999-12-31' }),
+        ],
+        { timeout: 20000 },
+      );
+      assert.notEqual(inspected.code, 0, inspected.stdout + inspected.stderr);
+      const saved = await preview(
+        f,
+        'cash-planning.save',
+        null,
+        {
+          config: {
+            startDate: '2026-01-01',
+            endDate: '2026-09-30',
+            forecastEndDate: '9999-12-31',
+          },
+        },
+        'cash-far',
+      );
+      assert.equal(saved.code, 2, saved.stdout + saved.stderr);
+      const fine = await f.cli(['cash-planning', 'inspect'], {
+        timeout: 20000,
+      });
+      assert.equal(fine.code, 0, fine.stdout + fine.stderr);
+    } finally {
+      await f.dispose();
+    }
+  },
+);

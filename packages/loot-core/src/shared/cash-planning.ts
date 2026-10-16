@@ -17,6 +17,14 @@ export function isPlanningDate(value: string): boolean {
   );
 }
 
+// The forecast chart builds one point per month and each point walks the months
+// since today, so its cost grows with the square of the horizon: 9999-12-31
+// never finishes. Fifty years is far past any realistic plan.
+export function maxForecastEndDate(asOf: string): string {
+  const monthDay = asOf.slice(4) === '-02-29' ? '-02-28' : asOf.slice(4);
+  return `${Number(asOf.slice(0, 4)) + 50}${monthDay}`;
+}
+
 export function nextPlanningDay(date: string): string {
   return new Date(Date.parse(date) + DAY).toISOString().slice(0, 10);
 }
@@ -142,7 +150,8 @@ export function parseCashPlanningConfig(
       forecastEndDate:
         config.forecastEndDate &&
         isPlanningDate(config.forecastEndDate) &&
-        config.forecastEndDate > asOf
+        config.forecastEndDate > asOf &&
+        config.forecastEndDate <= maxForecastEndDate(asOf)
           ? config.forecastEndDate
           : undefined,
     };
