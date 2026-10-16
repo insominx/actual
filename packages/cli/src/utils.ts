@@ -43,8 +43,16 @@ export function isEngineAmount(value: unknown): value is number {
   );
 }
 
+// Number() also accepts '', ' ', '0x10', '0b11', '1e3' and '1.0'. For a count or
+// an amount in cents only plain decimal digits (with an optional sign) are an
+// integer; anything else is NaN so callers refuse it.
+export function plainInteger(value: string): number {
+  const text = value.trim();
+  return /^[+-]?\d+$/.test(text) ? Number(text) : NaN;
+}
+
 export function parseIntFlag(value: string, flagName: string): number {
-  const parsed = value.trim() === '' ? NaN : Number(value);
+  const parsed = plainInteger(value);
   if (!isEngineAmount(parsed)) {
     throw new AgentError(
       'INVALID_INPUT',

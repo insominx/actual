@@ -1,4 +1,10 @@
-import { errorMessage, parseBoolFlag, parseIntFlag } from './utils';
+import { AgentError } from './agent-output';
+import {
+  errorMessage,
+  parseBoolFlag,
+  parseIntFlag,
+  plainInteger,
+} from './utils';
 
 describe('parseBoolFlag', () => {
   it('parses "true"', () => {
@@ -78,5 +84,26 @@ describe('errorMessage', () => {
   it('falls back to String for other values', () => {
     expect(errorMessage('plain')).toBe('plain');
     expect(errorMessage({ message: 1 })).toBe('[object Object]');
+  });
+});
+
+describe('plain integer parsing', () => {
+  it.each(['0x10', '0b11', '0o7', '1e3', '1.0', '', ' ', '--5', '5 5', '١٢'])(
+    'refuses %j',
+    value => {
+      expect(Number.isNaN(plainInteger(value))).toBe(true);
+      expect(() => parseIntFlag(value, '--amount')).toThrow(AgentError);
+    },
+  );
+
+  it.each([
+    ['7', 7],
+    [' 7 ', 7],
+    ['-5', -5],
+    ['+5', 5],
+    ['007', 7],
+  ])('accepts %j', (value, expected) => {
+    expect(plainInteger(value)).toBe(expected);
+    expect(parseIntFlag(value, '--amount')).toBe(expected);
   });
 });

@@ -6,7 +6,7 @@ import { withConnection } from '#connection';
 import { api } from '#engine';
 import { executeScopedChange } from '#guarded-changes';
 import { printOutput } from '#output';
-import { errorMessage, isEngineAmount } from '#utils';
+import { errorMessage, isEngineAmount, plainInteger } from '#utils';
 
 type CashPlanConfig = Awaited<ReturnType<typeof api.inspectCashPlan>>['config'];
 
@@ -26,7 +26,7 @@ function parseJson(value: string, field: string): unknown {
 }
 
 function parseAmount(value: string, field: string) {
-  const amount = Number(value);
+  const amount = plainInteger(value);
   if (!isEngineAmount(amount)) {
     throw new AgentError(
       'INVALID_INPUT',

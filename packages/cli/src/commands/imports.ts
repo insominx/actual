@@ -10,7 +10,7 @@ import { withConnection } from '#connection';
 import { api } from '#engine';
 import { executeScopedChange, resolveGuardConfig } from '#guarded-changes';
 import { printOutput } from '#output';
-import { errorMessage } from '#utils';
+import { errorMessage, plainInteger } from '#utils';
 
 function parseSettings(value: string | undefined) {
   if (value === undefined) return undefined;
@@ -35,7 +35,7 @@ function parseSettings(value: string | undefined) {
 }
 
 function parseLimit(value: string) {
-  const limit = Number(value);
+  const limit = plainInteger(value);
   if (!Number.isInteger(limit)) {
     throw new AgentError('INVALID_INPUT', 'limit must be an integer.', false, {
       field: 'limit',

@@ -127,16 +127,24 @@ async function main(argv) {
   const files = [];
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
-    if (arg === '--runs') options.runs = Number(argv[++i]);
-    else if (arg === '--jobs') options.jobs = Number(argv[++i]);
-    else if (arg === '--timeout') options.timeout = Number(argv[++i]);
-    else if (arg === '--keep-logs') logDir = argv[++i];
-    else if (arg === '--vitest') options.vitest = true;
-    else if (arg === '--cwd') cwd = resolve(argv[++i]);
-    else if (arg.startsWith('--')) {
+    if (arg === '--runs') {
+      options.runs = Number(argv[++i]);
+    } else if (arg === '--jobs') {
+      options.jobs = Number(argv[++i]);
+    } else if (arg === '--timeout') {
+      options.timeout = Number(argv[++i]);
+    } else if (arg === '--keep-logs') {
+      logDir = argv[++i];
+    } else if (arg === '--vitest') {
+      options.vitest = true;
+    } else if (arg === '--cwd') {
+      cwd = resolve(argv[++i]);
+    } else if (arg.startsWith('--')) {
       console.error(`Unknown option ${arg}`);
       return 2;
-    } else files.push(arg);
+    } else {
+      files.push(arg);
+    }
   }
   if (
     !files.length ||
@@ -188,10 +196,12 @@ async function main(argv) {
       `FLAKY  ${f.name}: passed ${f.passed}, failed ${f.failed}, missing ${f.missing}`,
     );
   }
-  for (const f of alwaysFailing)
+  for (const f of alwaysFailing) {
     console.log(`FAILS  ${f.name}: failed all ${f.failed} runs`);
-  if (crashed.length)
+  }
+  if (crashed.length) {
     console.log(`CRASHED/TIMED OUT runs: ${crashed.join(', ')}`);
+  }
   if (!flaky.length && !alwaysFailing.length && !crashed.length) {
     console.log('stable: every test had the same passing result on every run');
     return 0;

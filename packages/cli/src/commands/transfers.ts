@@ -5,10 +5,10 @@ import { withConnection } from '#connection';
 import { api } from '#engine';
 import { executeScopedChange } from '#guarded-changes';
 import { printOutput } from '#output';
-import { errorMessage } from '#utils';
+import { errorMessage, plainInteger } from '#utils';
 
 function parseInteger(value: string, field: string) {
-  const parsed = Number(value);
+  const parsed = plainInteger(value);
   if (!Number.isInteger(parsed)) {
     throw new AgentError(
       'INVALID_INPUT',
