@@ -315,6 +315,24 @@ void test('a provider amount beyond the engine limit fails that account instead 
     const result = await cli(['bank-sync', 'refresh', '--accounts', linked.id]);
     assert.notEqual(result.result.outcomes[0].status, 'imported');
     assert.deepEqual(result.result.outcomes[0].addedIds, []);
+    // An empty amount (would store 0) and a date decades ahead are provider
+    // faults too: the account fails instead of importing them.
+    for (const bad of [
+      { id: 'empty-1', amount: '' },
+      { id: 'future-1', amount: '-2.00', posted: posted + 40 * 365 * 86400 },
+    ]) {
+      fake.state.transactions['sf-1'] = [
+        { posted, description: 'bad', payee: 'Cafe', ...bad },
+      ];
+      const refused = await cli([
+        'bank-sync',
+        'refresh',
+        '--accounts',
+        linked.id,
+      ]);
+      assert.notEqual(refused.result.outcomes[0].status, 'imported', bad.id);
+      assert.deepEqual(refused.result.outcomes[0].addedIds, [], bad.id);
+    }
     const after = await readRaw(f);
     assert.equal(after.transactions.length, before.transactions.length);
     assert.ok(

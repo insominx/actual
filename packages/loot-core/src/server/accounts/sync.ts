@@ -565,6 +565,17 @@ async function normalizeBankSyncTransactions(transactions, acctId) {
       throw new Error('`payeeName` is required when adding a transaction');
     }
 
+    if (
+      typeof date === 'string' &&
+      date > monthUtils.addDays(monthUtils.currentDay(), 366)
+    ) {
+      // Bank feeds do not post more than days ahead; a date years in the
+      // future is a provider fault that would distort every future report.
+      throw new TransactionError(
+        `Date from the bank is more than a year in the future: ${date}`,
+      );
+    }
+
     trans.imported_payee = trans.imported_payee || payeeName;
     if (trans.imported_payee) {
       trans.imported_payee = trans.imported_payee.trim();
@@ -581,6 +592,15 @@ async function normalizeBankSyncTransactions(transactions, acctId) {
     trans.account = acctId;
     trans.payee = await resolvePayee(trans, payeeName, payeesToCreate);
 
+    if (
+      (typeof trans.amount === 'string' && trans.amount.trim() === '') ||
+      !Number.isFinite(Number(trans.amount))
+    ) {
+      // An empty amount would be stored as 0 and hide a malformed record.
+      throw new TransactionError(
+        `Amount from the bank is missing or not a number: ${String(trans.amount)}`,
+      );
+    }
     const amount = amountToInteger(trans.amount);
     if (!isEngineAmount(amount)) {
       // A single out-of-range amount would otherwise be stored and break every
