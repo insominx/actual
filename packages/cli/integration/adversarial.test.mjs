@@ -514,7 +514,8 @@ void test(
         ],
         { timeout: 20000 },
       );
-      assert.notEqual(inspected.code, 0, inspected.stdout + inspected.stderr);
+      assert.equal(inspected.code, 2, inspected.stdout + inspected.stderr);
+      assert.match(inspected.stdout + inspected.stderr, /within 50 years/);
       const saved = await preview(
         f,
         'cash-planning.save',

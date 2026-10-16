@@ -6,7 +6,7 @@ import type { CliGlobalOpts } from '#config';
 import { withConnection } from '#connection';
 import { executeScopedChange } from '#guarded-changes';
 import { printOutput } from '#output';
-import { isEngineAmount } from '#utils';
+import { errorMessage, isEngineAmount } from '#utils';
 
 type CashPlanConfig = Awaited<ReturnType<typeof api.inspectCashPlan>>['config'];
 
@@ -106,8 +106,9 @@ export function registerCashPlanningCommand(program: Command) {
         await withConnection(
           opts,
           async () => {
-            printOutput(
-              await api.inspectCashPlan({
+            let result;
+            try {
+              result = await api.inspectCashPlan({
                 ...(cmdOpts.start ? { startDate: cmdOpts.start } : {}),
                 ...(cmdOpts.end ? { endDate: cmdOpts.end } : {}),
                 ...(scenario === undefined
@@ -117,9 +118,13 @@ export function registerCashPlanningCommand(program: Command) {
                         Parameters<typeof api.inspectCashPlan>[0]
                       >['scenario'],
                     }),
-              }),
-              opts.format,
-            );
+              });
+            } catch (error) {
+              // The planner explains why it refused the scenario; show that
+              // instead of a generic engine failure.
+              throw new AgentError('INVALID_INPUT', errorMessage(error));
+            }
+            printOutput(result, opts.format);
           },
           { mutates: false },
         );
