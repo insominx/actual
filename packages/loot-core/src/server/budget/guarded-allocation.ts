@@ -396,6 +396,19 @@ export async function prepareTemplateApplication(
       },
     });
   }
+  // The engine stores allocations as integers below 2^51; a larger template
+  // amount would fail after the write began and leave an uncertain receipt.
+  const oversized = rows.find(
+    row =>
+      !isEngineAmount(row.after.budgeted) ||
+      !isEngineAmount(row.after.goal ?? 0),
+  );
+  if (oversized) {
+    invalid(
+      noun,
+      `the template amount for ${oversized.name} is beyond the largest amount the engine accepts`,
+    );
+  }
   const check = await checkTemplateNotes();
   const templateErrors =
     check.message === 'template-errors' && check.pre

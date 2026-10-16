@@ -492,3 +492,68 @@ const move = {
 
 guardedRegularCases(move);
 guardedInterruptionCases(move);
+
+void test('template edge cases are refused at preview instead of hanging or leaving an uncertain receipt', async () => {
+  const f = await createFixture();
+  try {
+    const cli = strict(f);
+    await cli(['accounts', 'list']);
+    const month = currentMonth();
+    const category = await newCategory(f, 'Edge template');
+    let n = 0;
+    const setNote = async note =>
+      cli([
+        'notes',
+        'set',
+        '--category',
+        category,
+        '--note',
+        note,
+        '--operation-id',
+        `edge-note-${++n}`,
+      ]);
+
+    // A zero repeat interval used to loop forever while applying.
+    await setNote('#template 10 repeat every 0 weeks starting 2026-01-01');
+    const zero = await cli(['budgets', 'templates']);
+    assert.equal(zero.valid, false);
+    assert.ok(zero.errors.some(line => line.startsWith('Edge template')));
+    assert.equal(
+      await errorCode(f, [
+        'budgets',
+        'apply-templates',
+        '--month',
+        month,
+        '--force',
+        '--operation-id',
+        'edge-zero',
+      ]),
+      'INVALID_INPUT',
+    );
+
+    // An amount beyond the engine limit used to fail after the write began and
+    // leave an uncertain receipt that can never be replayed.
+    await setNote('#template 99999999999999');
+    assert.equal(
+      await errorCode(f, [
+        'budgets',
+        'apply-templates',
+        '--month',
+        month,
+        '--force',
+        '--operation-id',
+        'edge-huge',
+      ]),
+      'INVALID_INPUT',
+    );
+    const status = await f.cli(['changes', 'status', 'edge-huge']);
+    assert.notEqual(
+      status.code,
+      0,
+      'a refused preview must not leave a receipt in an uncertain state',
+    );
+    assert.doesNotMatch(status.stdout, /uncertain/);
+  } finally {
+    await f.dispose();
+  }
+});

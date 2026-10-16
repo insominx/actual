@@ -170,4 +170,29 @@ describe('parseTemplateNote', () => {
       expect.objectContaining({ type: 'error', description: 'Broken' }),
     ]);
   });
+  // A zero interval made applying the template loop forever.
+  it.each([
+    '#template 10 repeat every 0 days starting 2026-01-01',
+    '#template 10 repeat every 0 weeks starting 2026-01-01',
+    '#template 10 repeat every 0 months starting 2026-01-01',
+    '#template 10 repeat every 0 years starting 2026-01-01',
+    '#template 10 repeat every 00 weeks starting 2026-01-01',
+  ])('rejects a zero repeat interval: %s', note => {
+    expect(parseTemplateNote(note)).toEqual([
+      expect.objectContaining({ type: 'error', line: note }),
+    ]);
+  });
+
+  it('still parses positive repeat intervals', () => {
+    expect(
+      parseTemplateNote(
+        '#template 10 repeat every 2 weeks starting 2026-01-01',
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        type: 'periodic',
+        period: { period: 'week', amount: 2 },
+      }),
+    ]);
+  });
 });
