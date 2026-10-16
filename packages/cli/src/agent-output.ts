@@ -97,12 +97,13 @@ export function flushAgentOutput() {
   );
 }
 
-export function serializeAgentError(error: unknown) {
-  if (error instanceof BudgetLockedError) {
-    error = new AgentError('ENGINE_FAILURE', error.message, true, {
-      issue: 'budget-locked',
-    });
-  }
+export function serializeAgentError(failure: unknown) {
+  const error =
+    failure instanceof BudgetLockedError
+      ? new AgentError('ENGINE_FAILURE', failure.message, true, {
+          issue: 'budget-locked',
+        })
+      : failure;
   const known = error instanceof AgentError;
   const code = known ? error.code : 'ENGINE_FAILURE';
   return {
