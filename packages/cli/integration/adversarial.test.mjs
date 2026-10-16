@@ -903,3 +903,28 @@ void test(
     }
   },
 );
+
+void test(
+  'parallel invocations all sign in; the sync server refuses more than five simultaneous sign-ins',
+  { timeout: 180000 },
+  async () => {
+    const f = await createFixture({});
+    try {
+      const first = await f.cli(['accounts', 'list']);
+      assert.equal(first.code, 0, first.stderr);
+      const results = await Promise.all(
+        Array.from({ length: 14 }, () =>
+          f.cli(['accounts', 'list'], { timeout: 120000 }),
+        ),
+      );
+      const failures = results.filter(result => result.code !== 0);
+      assert.equal(
+        failures.length,
+        0,
+        failures.map(result => result.stdout).join('\n'),
+      );
+    } finally {
+      await f.dispose();
+    }
+  },
+);

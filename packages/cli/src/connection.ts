@@ -1,3 +1,10 @@
+import { createHash } from 'node:crypto';
+import { mkdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import lockfile from 'proper-lockfile';
+
 import { api } from '#engine';
 
 import { AgentError, updateAgentContext } from './agent-output';
@@ -38,6 +45,38 @@ async function resolveBudgetIdForSyncId(syncId: string): Promise<string> {
     );
   }
   return match.id;
+}
+
+// The sync server counts a sign-in as an attempt while it is in flight and
+// refuses more than five at once ("too-many-requests"); every refusal also
+// stays counted for fifteen minutes, so retrying only deepens the lockout.
+// Parallel CLI processes (agents running several tools at once) therefore take
+// turns: one machine-wide lock per server covers only the sign-in request.
+async function signInOneAtATime(options: Parameters<typeof api.init>[0]) {
+  const directory = join(
+    tmpdir(),
+    `actual-cli-signin-${createHash('sha256')
+      .update(String(options?.serverURL))
+      .digest('hex')
+      .slice(0, 16)}`,
+  );
+  mkdirSync(directory, { recursive: true, mode: 0o700 });
+  let release: (() => Promise<void>) | undefined;
+  try {
+    release = await lockfile.lock(directory, {
+      lockfilePath: join(directory, 'lock'),
+      retries: { retries: 150, minTimeout: 50, maxTimeout: 200 },
+      stale: 15_000,
+    });
+  } catch {
+    // Could not take the turn (read-only temp directory, stale lock race):
+    // sign in anyway, as before.
+  }
+  try {
+    await api.init(options);
+  } finally {
+    await release?.().catch(() => undefined);
+  }
 }
 
 export async function withConnection<T>(
@@ -139,7 +178,7 @@ export async function withConnection<T>(
       verbose: globalOpts.verbose,
     });
   } else if (config.password) {
-    await api.init({
+    await signInOneAtATime({
       serverURL: config.serverUrl,
       dataDir: config.dataDir,
       password: config.password,
