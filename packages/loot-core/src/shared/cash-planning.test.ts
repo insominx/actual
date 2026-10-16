@@ -5,6 +5,7 @@ import {
   cashPlanningChart,
   dateAfterMonths,
   defaultCashPlanningConfig,
+  isForecastEndDate,
   isPlanningDate,
   maxForecastEndDate,
   parseCashPlanningConfig,
@@ -186,5 +187,18 @@ describe('cash planning projections', () => {
     expect(parseCashPlanningConfig(ok, summary.asOf).forecastEndDate).toBe(
       maxForecastEndDate(summary.asOf),
     );
+  });
+});
+
+describe('isForecastEndDate', () => {
+  it('accepts only real dates after the as-of date and within the horizon', () => {
+    const asOf = '2026-10-16';
+    expect(isForecastEndDate('2026-10-17', asOf)).toBe(true);
+    expect(isForecastEndDate(maxForecastEndDate(asOf), asOf)).toBe(true);
+    expect(isForecastEndDate('2026-10-16', asOf)).toBe(false);
+    expect(isForecastEndDate('2076-10-17', asOf)).toBe(false);
+    expect(isForecastEndDate('9999-12-31', asOf)).toBe(false);
+    expect(isForecastEndDate('2027-02-30', asOf)).toBe(false);
+    expect(isForecastEndDate('', asOf)).toBe(false);
   });
 });

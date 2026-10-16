@@ -25,6 +25,15 @@ export function maxForecastEndDate(asOf: string): string {
   return `${Number(asOf.slice(0, 4)) + 50}${monthDay}`;
 }
 
+// The one rule for a usable forecast end date, shared by the saved-settings
+// reader, the writer and the editor so none of them can accept a horizon the
+// chart cannot draw.
+export function isForecastEndDate(value: string, asOf: string): boolean {
+  return (
+    isPlanningDate(value) && value > asOf && value <= maxForecastEndDate(asOf)
+  );
+}
+
 export function nextPlanningDay(date: string): string {
   return new Date(Date.parse(date) + DAY).toISOString().slice(0, 10);
 }
@@ -149,9 +158,7 @@ export function parseCashPlanningConfig(
       goal,
       forecastEndDate:
         config.forecastEndDate &&
-        isPlanningDate(config.forecastEndDate) &&
-        config.forecastEndDate > asOf &&
-        config.forecastEndDate <= maxForecastEndDate(asOf)
+        isForecastEndDate(config.forecastEndDate, asOf)
           ? config.forecastEndDate
           : undefined,
     };

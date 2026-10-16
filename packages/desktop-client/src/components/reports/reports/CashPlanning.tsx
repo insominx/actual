@@ -10,7 +10,9 @@ import {
   cashPlanningChart,
   completePlanningMonths,
   dateAfterMonths,
+  isForecastEndDate,
   isPlanningDate,
+  maxForecastEndDate,
   parseCashPlanningConfig,
   projectCashPlanning,
   UNCATEGORIZED_ID,
@@ -121,8 +123,7 @@ function CashPlanningInner() {
     isPlanningDate(draft.endDate) &&
     draft.startDate <= draft.endDate &&
     draft.endDate <= today;
-  const forecastValid =
-    isPlanningDate(draft.forecastEndDate) && draft.forecastEndDate > today;
+  const forecastValid = isForecastEndDate(draft.forecastEndDate, today);
   const deadlineValid = !draft.deadline || isPlanningDate(draft.deadline);
   const planValid = amountsValid && goalValid && forecastValid && deadlineValid;
   const config: CashPlanningConfig = {
@@ -522,6 +523,7 @@ function CashPlanningInner() {
                 aria-label={t('Forecast end date')}
                 type="date"
                 min={months.addDays(today, 1)}
+                max={maxForecastEndDate(today)}
                 value={draft.forecastEndDate}
                 onChange={event =>
                   update({ forecastEndDate: event.target.value })
@@ -533,7 +535,7 @@ function CashPlanningInner() {
             <p role="alert">
               <Trans>
                 Enter valid amounts, nonnegative category targets, and a
-                forecast end date after today.
+                forecast end date after today and within 50 years.
               </Trans>
             </p>
           )}

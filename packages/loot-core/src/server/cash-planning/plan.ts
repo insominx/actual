@@ -12,8 +12,8 @@ import { saveSyncedPrefs } from '#server/preferences/app';
 import { storedPreference } from '#server/preferences/catalog';
 import {
   cashPlanningChart,
+  isForecastEndDate,
   isPlanningDate,
-  maxForecastEndDate,
   parseCashPlanningConfig,
   projectCashPlanning,
 } from '#shared/cash-planning';
@@ -84,9 +84,7 @@ export function strictCashPlanningConfig(
     (value.goal !== undefined && !validGoal(value.goal)) ||
     (value.forecastEndDate !== undefined &&
       (typeof value.forecastEndDate !== 'string' ||
-        !isPlanningDate(value.forecastEndDate) ||
-        value.forecastEndDate <= asOf ||
-        value.forecastEndDate > maxForecastEndDate(asOf)))
+        !isForecastEndDate(value.forecastEndDate, asOf)))
   ) {
     throw APIError(
       `Invalid cash plan: history must end by ${asOf}, targets must be non-negative integer amounts in cents, the goal an integer balance with an optional deadline, and the forecast end after ${asOf} and within 50 years`,
