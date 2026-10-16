@@ -322,6 +322,8 @@ The CLI takes a shared lock for reads and an exclusive lock for writes on the pe
 
 ## Running Locally (Development)
 
+For the layers, guarded-write model, decisions and test layout, see [ARCHITECTURE.md](./ARCHITECTURE.md).
+
 ### Create a local budget through the CLI
 
 ```bash
