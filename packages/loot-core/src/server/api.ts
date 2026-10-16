@@ -229,7 +229,12 @@ import {
 import { inspectSchedules } from './schedules/inspect';
 import { getServer } from './server-config';
 import * as sheet from './sheet';
-import { batchMessages, getSyncStatus, setSyncingMode } from './sync';
+import {
+  batchMessages,
+  checkSyncingMode,
+  getSyncStatus,
+  setSyncingMode,
+} from './sync';
 import {
   performTagCreation,
   performTagDeletion,
@@ -1695,12 +1700,22 @@ handlers['api/query'] = async function ({ query }) {
   return aqlQuery(query);
 };
 
-// Read-only fingerprint of the persistent budget tables (the same source
-// fingerprint guarded previews bind). Any committed change, local-only or
-// synchronized, changes it.
+// Read-only change marker for paged reads. While syncing is enabled (every
+// budget with a server, online or offline) each committed change appends to
+// the CRDT message log, so its last row id and timestamp change with it.
+// Hashing every table cost about ten seconds on a 100,000-transaction budget
+// for each page of ten rows; guarded previews keep the full source
+// fingerprint because they bind the exact state. Budgets that do not log
+// messages fall back to the full fingerprint.
 handlers['api/query-snapshot'] = async function () {
   checkFileOpen();
-  return { marker: await guardedSourceHash() };
+  if (!checkSyncingMode('enabled')) {
+    return { marker: await guardedSourceHash() };
+  }
+  const last = await db.first<{ id: number | null; timestamp: string | null }>(
+    'SELECT id, timestamp FROM messages_crdt ORDER BY id DESC LIMIT 1',
+  );
+  return { marker: `${last?.id ?? 0}:${last?.timestamp ?? ''}` };
 };
 
 handlers['api/budget-months'] = async function () {
