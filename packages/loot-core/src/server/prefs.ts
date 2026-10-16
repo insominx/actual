@@ -74,7 +74,7 @@ export async function savePrefs(
 
   if (process.env.NODE_ENV !== 'test') {
     const prefsPath = fs.join(fs.getBudgetDir(prefs.id), 'metadata.json');
-    await fs.writeFile(prefsPath, JSON.stringify(prefs));
+    await fs.writeFileAtomic(prefsPath, JSON.stringify(prefs));
   }
 }
 

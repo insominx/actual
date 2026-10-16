@@ -424,6 +424,9 @@ export const writeFile = async function (filepath: string, contents) {
   return _writeFile(filepath, contents);
 };
 
+// The in-memory browser filesystem has no concurrent readers to protect.
+export const writeFileAtomic = writeFile;
+
 export const removeFile = async function (filepath: string) {
   return _removeFile(filepath);
 };

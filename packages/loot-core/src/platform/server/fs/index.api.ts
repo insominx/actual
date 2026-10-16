@@ -149,6 +149,30 @@ export const writeFile: typeof T.writeFile = async (filepath, contents) => {
   }
 };
 
+// Replaces a file so concurrent readers see either the old or the new content,
+// never a truncated one. Falls back to an in-place write when the rename is
+// refused (for example a reader holding the file open on Windows).
+export const writeFileAtomic: typeof T.writeFileAtomic = async (
+  filepath,
+  contents,
+) => {
+  const temp = `${filepath}.${process.pid}.${Date.now()}.tmp`;
+  try {
+    await new Promise<void>((resolve, reject) => {
+      fs.writeFile(temp, contents, 'utf8', err =>
+        err ? reject(err) : resolve(),
+      );
+    });
+    await new Promise<void>((resolve, reject) => {
+      fs.rename(temp, filepath, err => (err ? reject(err) : resolve()));
+    });
+  } catch {
+    await new Promise<void>(resolve => fs.unlink(temp, () => resolve()));
+    await writeFile(filepath, contents);
+  }
+  return undefined;
+};
+
 export const removeFile: typeof T.removeFile = filepath => {
   return new Promise(function (resolve, reject) {
     fs.unlink(filepath, err => {
