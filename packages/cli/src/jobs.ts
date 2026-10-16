@@ -5,6 +5,7 @@
 // account and settings, and moves files only between its own directories.
 // Results are local artifacts; nothing is delivered externally.
 import { createHash, randomUUID } from 'node:crypto';
+import { realpathSync } from 'node:fs';
 import {
   mkdir,
   readdir,
@@ -13,7 +14,15 @@ import {
   stat,
   writeFile,
 } from 'node:fs/promises';
-import { basename, isAbsolute, join, relative, resolve } from 'node:path';
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+  sep,
+} from 'node:path';
 
 import * as api from '@actual-app/api';
 
@@ -29,6 +38,13 @@ import { advanceRun, budgetOpts, cancelRun, createRun } from './workflows';
 export const JOB_MUTATIONS = ['imports.file'] as const;
 const TEMPORARY = /\.(part|partial|tmp|crdownload|download)$/i;
 const NAME = /^[a-z0-9][a-z0-9-]{0,39}$/;
+// Windows treats these as devices in any directory ("nul" swallows writes),
+// so a job with one of these names could never keep its files.
+const WINDOWS_DEVICE = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/;
+
+export function isJobName(name: string) {
+  return NAME.test(name) && !WINDOWS_DEVICE.test(name);
+}
 
 export type JobRoute = {
   match: string;
@@ -88,8 +104,11 @@ function invalid(message: string, field?: string): never {
 }
 
 function jobDir(dataDir: string, name: string) {
-  if (!NAME.test(name)) {
-    invalid('Job names use 1-40 lowercase letters, digits or hyphens.', 'name');
+  if (!isJobName(name)) {
+    invalid(
+      'Job names use 1-40 lowercase letters, digits or hyphens and cannot be a Windows device name (con, nul, aux, prn, com1-9, lpt1-9).',
+      'name',
+    );
   }
   return join(dataDir, 'jobs', name);
 }
@@ -114,9 +133,35 @@ function stableJson(value: unknown): string {
   return JSON.stringify(value);
 }
 
+// A path as the file system sees it: symlinks in the existing part resolved
+// and, where the file system ignores case, lowercased. Used only to compare
+// directories, never to store them.
+export function comparablePath(path: string) {
+  let existing = resolve(path);
+  const rest: string[] = [];
+  for (;;) {
+    try {
+      existing = join(realpathSync(existing), ...rest.reverse());
+      break;
+    } catch {
+      const parent = dirname(existing);
+      if (parent === existing) break;
+      rest.push(basename(existing));
+      existing = parent;
+    }
+  }
+  return process.platform === 'win32' || process.platform === 'darwin'
+    ? existing.toLowerCase()
+    : existing;
+}
+
 function inside(parent: string, child: string) {
-  const rel = relative(parent, child);
-  return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel));
+  const rel = relative(comparablePath(parent), comparablePath(child));
+  // "..done" is a folder name, not the parent directory.
+  return (
+    rel === '' ||
+    (rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel))
+  );
 }
 
 export function validateJob(input: {
@@ -130,8 +175,11 @@ export function validateJob(input: {
   allowCrossAccount: boolean;
   stableSeconds: number;
 }): Job {
-  if (!NAME.test(input.name)) {
-    invalid('Job names use 1-40 lowercase letters, digits or hyphens.', 'name');
+  if (!isJobName(input.name)) {
+    invalid(
+      'Job names use 1-40 lowercase letters, digits or hyphens and cannot be a Windows device name (con, nul, aux, prn, com1-9, lpt1-9).',
+      'name',
+    );
   }
   if (!input.budget.syncId && !input.budget.budgetId) {
     throw new AgentError(
@@ -155,7 +203,7 @@ export function validateJob(input: {
       }
     }
   }
-  if (new Set(all).size !== 3) {
+  if (new Set(all.map(comparablePath)).size !== 3) {
     invalid(
       'Inbox, processed and error directories must differ.',
       'directories',
@@ -287,7 +335,7 @@ export async function listJobs(dataDir: string) {
     return { jobs: [] };
   }
   const jobs = [];
-  for (const name of names.filter(n => NAME.test(n)).sort()) {
+  for (const name of names.filter(n => isJobName(n)).sort()) {
     try {
       const job = await readJob(dataDir, name);
       jobs.push({

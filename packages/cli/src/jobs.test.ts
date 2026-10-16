@@ -1,3 +1,7 @@
+import { mkdirSync, mkdtempSync, symlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { schedulerRecipes, validateJob } from './jobs';
 
 // vitest hoists this mock; it keeps the engine out of these pure tests.
@@ -34,6 +38,42 @@ describe('jobs', () => {
     expect(() => validateJob({ ...base, name: 'Bad Name' })).toThrow(
       /lowercase/,
     );
+  });
+
+  it('detects nested directories named like parents and through symlinks', () => {
+    const root = mkdtempSync(join(tmpdir(), 'job-dirs-'));
+    const inbox = join(root, 'inbox');
+    mkdirSync(inbox);
+    mkdirSync(join(root, 'elsewhere'));
+    // "..done" starts with two dots but is an ordinary child folder.
+    expect(() =>
+      validateJob({ ...base, inbox, processed: join(inbox, '..done') }),
+    ).toThrow(/nested/);
+    // A link into the inbox is the inbox for every purpose.
+    symlinkSync(inbox, join(root, 'link'));
+    expect(() =>
+      validateJob({ ...base, inbox, processed: join(root, 'link', 'done') }),
+    ).toThrow(/nested/);
+    expect(() =>
+      validateJob({ ...base, inbox, processed: join(root, 'link') }),
+    ).toThrow(/nested|differ/);
+    expect(
+      validateJob({
+        ...base,
+        inbox,
+        processed: join(root, 'elsewhere', 'a'),
+        error: join(root, 'elsewhere', 'b'),
+      }).name,
+    ).toBe('nightly');
+  });
+
+  it('refuses names Windows reserves for devices', () => {
+    for (const name of ['con', 'nul', 'aux', 'prn', 'com1', 'lpt9']) {
+      expect(() => validateJob({ ...base, name })).toThrow(/device name/);
+    }
+    // Longer names that merely start with a device name stay valid.
+    expect(validateJob({ ...base, name: 'nulls' }).name).toBe('nulls');
+    expect(validateJob({ ...base, name: 'com10' }).name).toBe('com10');
   });
 
   it('prints scheduler recipes without credentials', () => {
