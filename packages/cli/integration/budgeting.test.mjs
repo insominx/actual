@@ -518,18 +518,22 @@ void test('template edge cases are refused at preview instead of hanging or leav
     const zero = await cli(['budgets', 'templates']);
     assert.equal(zero.valid, false);
     assert.ok(zero.errors.some(line => line.startsWith('Edge template')));
-    assert.equal(
-      await errorCode(f, [
-        'budgets',
-        'apply-templates',
-        '--month',
-        month,
-        '--force',
-        '--operation-id',
-        'edge-zero',
-      ]),
-      'INVALID_INPUT',
+    // Like any unparseable line it is skipped and contributes nothing, and the
+    // apply finishes instead of hanging.
+    const applied = await cli([
+      'budgets',
+      'apply-templates',
+      '--month',
+      month,
+      '--force',
+      '--operation-id',
+      'edge-zero',
+    ]);
+    assert.equal(applied.receipt.state, 'synced');
+    const row = applied.receipt.proposal.after.rows.find(
+      entry => entry.categoryId === category,
     );
+    assert.ok(!row || row.after.budgeted === 0);
 
     // An amount beyond the engine limit used to fail after the write began and
     // leave an uncertain receipt that can never be replayed.
