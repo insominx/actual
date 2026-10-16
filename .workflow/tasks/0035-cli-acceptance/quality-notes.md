@@ -4,7 +4,8 @@
 
 ## RESUME (replace, do not append)
 
-All nine areas are complete (see table). Hazards: `yarn typecheck`, api tests and `yarn lint --fix` runs can clear `packages/api/dist` and `packages/sync-server/build`; run `yarn build:cli` and `yarn build:server` before integration tests. loot-core tests need `ENV=node` (or `ENV=web ... -c vitest.web.config.ts`). Push with `bash /workspace/adv/publish.sh` (needs the approval card). Open recommendations for Michael: lazy-load the engine for faster startup; `capabilities.preview` truthfulness; enable Actions on the fork (runs-on); dev-tool dependency advisories.
+Round 2 (R1-R7) is complete except two items that need Michael or liftoff: (a) Windows-path checks on liftoff, which was offline (retry when connected: existing checkout, fetch/checkout master, disposable budgets only); (b) GitHub Actions on insominx/actual has 0 runs, so R1 CI is unverified until Actions is enabled in repo settings. Hazards: `yarn typecheck`, api tests and `yarn lint --fix` can clear `packages/api/dist` and `packages/sync-server/build`; run `yarn build:cli` and `yarn build:server` before integration tests, and never while a suite runs. loot-core tests need `ENV=node`. Push with `bash /workspace/adv/publish.sh` (needs the approval card). Next decision number is D30.
+
 <!-- QRESUME-END -->
 
 | #   | Area                                           | Status      | Notes                                                                                |
@@ -21,12 +22,12 @@ All nine areas are complete (see table). Hazards: `yarn typecheck`, api tests an
 
 ## Round 2 checklist (Michael approved all seven)
 
-| #   | Item                                                                                                               | Status                                        |
-| --- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
-| R1  | Fork CI: depot runners to ubuntu-latest                                                                            | done (D22; run results unreadable, see notes) |
-| R2  | Lazy-load the engine for faster startup                                                                            | done (D23; 533 to 125 ms)                     |
-| R3  | capabilities.preview honest (D24)                                                                                  | done (D24)                                    |
-| R4  | Quiet dev-tooling audit advisories                                                                                 | todo                                          |
-| R5  | Adversarial round: templates, cash-planning rounding, restore across versions, schedules, Windows paths on liftoff | todo                                          |
-| R6  | One-page architecture and decisions overview                                                                       | todo                                          |
-| R7  | Test speed, flake detector, metadata.json race retry                                                               | todo                                          |
+| #   | Item                                                                                                               | Status                                                  |
+| --- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| R1  | Fork CI: depot runners to ubuntu-latest                                                                            | done (D22; fork has 0 runs, unverifiable: D29)          |
+| R2  | Lazy-load the engine for faster startup                                                                            | done (D23; 533 to 125 ms)                               |
+| R3  | capabilities.preview honest (D24)                                                                                  | done (D24)                                              |
+| R4  | Quiet dev-tooling audit advisories                                                                                 | done (D26; leftovers listed)                            |
+| R5  | Adversarial round: templates, cash-planning rounding, restore across versions, schedules, Windows paths on liftoff | done except Windows paths on liftoff (offline; D27-D29) |
+| R6  | One-page architecture and decisions overview                                                                       | done (packages/cli/ARCHITECTURE.md)                     |
+| R7  | Test speed, flake detector, metadata.json race retry                                                               | done (D25; flake-detect.mjs, fixture cache)             |
