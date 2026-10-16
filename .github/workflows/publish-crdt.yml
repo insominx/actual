@@ -19,7 +19,8 @@ concurrency:
 
 jobs:
   check-version:
-    runs-on: depot-ubuntu-latest
+    runs-on: ubuntu-latest
+    if: github.event.repository.fork == false
     name: Check if publish is needed
     outputs:
       should-publish: ${{ steps.check.outputs.should-publish }}

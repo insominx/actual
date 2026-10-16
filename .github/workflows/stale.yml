@@ -9,7 +9,8 @@ jobs:
   stale:
     permissions:
       pull-requests: write
-    runs-on: depot-ubuntu-latest
+    runs-on: ubuntu-latest
+    if: github.event.repository.fork == false
     steps:
       - uses: actions/stale@b5d41d4e1d5dceea10e7104786b73624c18a190f # v10.2.0
         with:
@@ -22,7 +23,8 @@ jobs:
   stale-wip:
     permissions:
       pull-requests: write
-    runs-on: depot-ubuntu-latest
+    runs-on: ubuntu-latest
+    if: github.event.repository.fork == false
     steps:
       - uses: actions/stale@b5d41d4e1d5dceea10e7104786b73624c18a190f # v10.2.0
         with:
@@ -35,7 +37,8 @@ jobs:
   stale-needs-info:
     permissions:
       issues: write
-    runs-on: depot-ubuntu-latest
+    runs-on: ubuntu-latest
+    if: github.event.repository.fork == false
     steps:
       - uses: actions/stale@b5d41d4e1d5dceea10e7104786b73624c18a190f # v10.2.0
         with:

@@ -27,7 +27,7 @@ concurrency:
 jobs:
   build-web:
     name: Build web bundle
-    runs-on: depot-ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -58,7 +58,7 @@ jobs:
 
   functional:
     name: Functional (shard ${{ matrix.shard }}/${{ vars.E2E_SHARD_TOTAL || '3' }})
-    runs-on: depot-ubuntu-latest-4
+    runs-on: ubuntu-latest
     needs: build-web
     strategy:
       fail-fast: false
@@ -110,7 +110,7 @@ jobs:
   report-e2e:
     name: Report E2E results to Depot
     needs: functional
-    runs-on: depot-ubuntu-latest
+    runs-on: ubuntu-latest
     if: ${{ !cancelled() && github.event_name == 'merge_group' }}
     permissions:
       contents: read
@@ -123,13 +123,14 @@ jobs:
           pattern: e2e-junit-*
       - name: Report test results to Depot
         uses: depot/test-report-action@2ad5779840a9c63e884fa26f11d019768a27a941 # v1.0.1
+        continue-on-error: true # Depot-only reporting; never fail the run
         if: ${{ !cancelled() }}
         with:
           path: e2e-junit
 
   functional-desktop-app:
     name: Functional Desktop App
-    runs-on: depot-ubuntu-latest-4
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write # Authenticate to Depot via GitHub OIDC for test reporting
@@ -165,13 +166,14 @@ jobs:
           overwrite: true
       - name: Report test results to Depot
         uses: depot/test-report-action@2ad5779840a9c63e884fa26f11d019768a27a941 # v1.0.1
+        continue-on-error: true # Depot-only reporting; never fail the run
         if: ${{ !cancelled() && github.event_name == 'merge_group' }}
         with:
           path: packages/desktop-electron/e2e/test-results/junit.xml
 
   vrt:
     name: Visual regression (shard ${{ matrix.shard }}/${{ vars.E2E_SHARD_TOTAL || '3' }})
-    runs-on: depot-ubuntu-latest
+    runs-on: ubuntu-latest
     needs: build-web
     strategy:
       fail-fast: false
@@ -223,7 +225,7 @@ jobs:
   merge-vrt:
     name: Merge VRT Reports
     needs: vrt
-    runs-on: depot-ubuntu-latest
+    runs-on: ubuntu-latest
     if: ${{ !cancelled() }}
     permissions:
       contents: read
@@ -247,6 +249,7 @@ jobs:
           pattern: vrt-junit-*
       - name: Report test results to Depot
         uses: depot/test-report-action@2ad5779840a9c63e884fa26f11d019768a27a941 # v1.0.1
+        continue-on-error: true # Depot-only reporting; never fail the run
         if: ${{ !cancelled() && github.event_name == 'merge_group' }}
         with:
           path: vrt-junit
