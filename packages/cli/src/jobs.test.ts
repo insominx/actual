@@ -56,4 +56,16 @@ describe('jobs', () => {
     expect(recipe.windowsTaskScheduler).toContain('\\"/data dir\\"');
     expect(JSON.stringify(recipe)).not.toMatch(/password/i);
   });
+
+  it('escapes cron and systemd specials and refuses line breaks', () => {
+    const recipe = schedulerRecipes(validateJob(base), {
+      dataDir: '/data/100%/$HOME',
+    });
+    expect(recipe.cron).toContain("'/data/100\\%/$HOME'");
+    expect(recipe.cron).not.toMatch(/[^\\]%/);
+    expect(recipe.systemdTimer.ExecStart).toContain("'/data/100%%/$$HOME'");
+    expect(() =>
+      schedulerRecipes(validateJob(base), { dataDir: '/data\n* * * * * evil' }),
+    ).toThrow(/line breaks/);
+  });
 });

@@ -754,14 +754,25 @@ export function schedulerRecipes(
     ? ['--sync-id', job.budget.syncId]
     : ['--offline', '--budget-id', job.budget.budgetId ?? ''];
   const args = ['--data-dir', dataDir, ...selector, 'jobs', 'run', job.name];
+  if ([executable, ...args].some(value => /[\r\n\0]/.test(value))) {
+    invalid('Scheduler recipe values cannot contain line breaks.', 'dataDir');
+  }
   const sh = [executable, ...args].map(quoteSh).join(' ');
+  // In a crontab line an unescaped % starts stdin text (and ends the command);
+  // in a systemd unit % and $ are expanded as specifiers and variables.
+  const cronSh = sh.replace(/%/g, '\\%');
+  const cronLog = quoteSh(join(dataDir, 'jobs', job.name, 'cron.log')).replace(
+    /%/g,
+    '\\%',
+  );
+  const unitSh = sh.replace(/[%$]/g, ch => ch + ch);
   const win = [executable, ...args]
     .map(a => (/[\s"]/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a))
     .join(' ');
   return {
     command: { executable, args },
-    cron: `*/${minutes} * * * * ${sh} >> ${quoteSh(join(dataDir, 'jobs', job.name, 'cron.log'))} 2>&1`,
-    systemdTimer: { OnCalendar: `*:0/${minutes}`, ExecStart: sh },
+    cron: `*/${minutes} * * * * ${cronSh} >> ${cronLog} 2>&1`,
+    systemdTimer: { OnCalendar: `*:0/${minutes}`, ExecStart: unitSh },
     windowsTaskScheduler: `schtasks /Create /SC MINUTE /MO ${minutes} /TN "Actual ${job.name}" /TR "${win.replace(/"/g, '\\"')}"`,
     notes: [
       'Credentials come from the environment or a profile, never from the recipe.',
