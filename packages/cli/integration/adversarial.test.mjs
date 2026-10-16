@@ -740,3 +740,41 @@ void test(
     }
   },
 );
+
+void test(
+  'workflow as-of dates must be real calendar days and refuse before a run starts',
+  { timeout: 120000 },
+  async () => {
+    const f = await createFixture({});
+    try {
+      for (const asOf of [
+        '2026-02-31',
+        '2025-02-29',
+        '2026-13-01',
+        '0000-01-01',
+      ]) {
+        const result = await f.cli([
+          'workflow',
+          'weekly-checkup',
+          '--as-of',
+          asOf,
+        ]);
+        assert.equal(
+          result.code,
+          2,
+          `${asOf}: ${result.stdout}${result.stderr}`,
+        );
+        assert.equal(parse(result).error.code, 'INVALID_INPUT');
+      }
+      const ok = await f.cli([
+        'workflow',
+        'weekly-checkup',
+        '--as-of',
+        '2024-02-29',
+      ]);
+      assert.equal(ok.code, 0, ok.stdout + ok.stderr);
+    } finally {
+      await f.dispose();
+    }
+  },
+);

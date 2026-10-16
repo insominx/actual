@@ -41,7 +41,7 @@ const NONNEGATIVE = new Set([
   'cacheTtl',
   'lockTimeout',
 ]);
-const DATES = new Set(['start', 'end', 'cutoff']);
+const DATES = new Set(['start', 'end', 'cutoff', 'asOf']);
 const MONTHS = new Set(['month', 'fromMonth', 'toMonth']);
 const BOOLEANS = new Set(['offbudget', 'hidden', 'carryover']);
 const WATCH_RANGES: Record<string, { minimum: number; maximum: number }> = {

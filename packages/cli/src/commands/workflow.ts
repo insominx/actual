@@ -200,8 +200,15 @@ export function registerWorkflowCommand(program: Command) {
       const asOf =
         cmdOpts.asOf ??
         `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(asOf)) {
-        throw new AgentError('INVALID_INPUT', '--as-of must be YYYY-MM-DD.');
+      if (
+        !/^\d{4}-\d{2}-\d{2}$/.test(asOf) ||
+        !(Date.parse(asOf) >= 0) ||
+        new Date(asOf).toISOString().slice(0, 10) !== asOf
+      ) {
+        throw new AgentError(
+          'INVALID_INPUT',
+          '--as-of must be a real calendar date YYYY-MM-DD from 1970 on.',
+        );
       }
       const accounts = cmdOpts.accounts
         ?.split(',')
