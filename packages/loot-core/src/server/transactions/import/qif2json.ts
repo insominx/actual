@@ -21,7 +21,10 @@ type QIFTransaction = {
 
 export function qif2json(qif, options: { dateFormat?: string } = {}) {
   const lines = qif.split('\n').filter(Boolean);
-  let line = lines.shift();
+  // Walk by index: Array.shift() on a large array copies it every time, which
+  // made a 40,000-record file take 20+ seconds.
+  let next = 0;
+  let line = lines[next++];
   const type = /!Type:([^$]*)$/.exec(line.trim());
   const data: {
     dateFormat: string | undefined;
@@ -41,7 +44,7 @@ export function qif2json(qif, options: { dateFormat?: string } = {}) {
 
   let division: Division = {};
 
-  while ((line = lines.shift())) {
+  while (next < lines.length && (line = lines[next++])) {
     line = line.trim();
     if (line === '^') {
       transactions.push(transaction);
