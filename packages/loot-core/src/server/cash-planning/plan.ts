@@ -1,6 +1,7 @@
 // Read-only cash plan inspection with transient scenarios, and the guarded
 // writer for the synced cashPlanning preference. Calculations stay in the
 // shared projection functions the report uses; scenarios are never stored.
+import * as db from '#server/db';
 import { APIError } from '#server/errors';
 import {
   guardedBudgetIdentity,
@@ -17,6 +18,7 @@ import {
   projectCashPlanning,
 } from '#shared/cash-planning';
 import * as months from '#shared/months';
+import { isEngineAmount } from '#shared/util';
 import type {
   CashPlanSaveProposal,
   CashPlanSaveRequest,
@@ -39,11 +41,7 @@ function validTargets(value: unknown): value is Record<string, number> {
   return (
     isRecord(value) &&
     Object.entries(value).every(
-      ([id, amount]) =>
-        id.length > 0 &&
-        typeof amount === 'number' &&
-        Number.isFinite(amount) &&
-        amount >= 0,
+      ([id, amount]) => id.length > 0 && isEngineAmount(amount) && amount >= 0,
     )
   );
 }
@@ -52,7 +50,7 @@ function validGoal(value: unknown) {
   return (
     isRecord(value) &&
     Object.keys(value).every(key => ['balance', 'deadline'].includes(key)) &&
-    Number.isSafeInteger(value.balance) &&
+    isEngineAmount(value.balance) &&
     (value.deadline === undefined ||
       (typeof value.deadline === 'string' && isPlanningDate(value.deadline)))
   );
@@ -91,7 +89,7 @@ export function strictCashPlanningConfig(
         value.forecastEndDate > maxForecastEndDate(asOf)))
   ) {
     throw APIError(
-      `Invalid cash plan: history must end by ${asOf}, targets must be non-negative amounts, the goal an integer balance with an optional deadline, and the forecast end after ${asOf} and within 50 years`,
+      `Invalid cash plan: history must end by ${asOf}, targets must be non-negative integer amounts in cents, the goal an integer balance with an optional deadline, and the forecast end after ${asOf} and within 50 years`,
     );
   }
   const config: CashPlanningConfig = {
@@ -196,10 +194,28 @@ export async function prepareCashPlanSave(
     throw APIError('Invalid cash plan save: provide config, or null to reset');
   }
   const asOf = months.currentDay();
-  const value =
+  const config =
     request.config === null
       ? null
-      : JSON.stringify(strictCashPlanningConfig(request.config, asOf));
+      : strictCashPlanningConfig(request.config, asOf);
+  if (config) {
+    const live = new Set(
+      (
+        await db.all<{ id: string }>(
+          'SELECT id FROM categories WHERE tombstone = 0',
+        )
+      ).map(row => row.id),
+    );
+    const unknown = Object.keys(config.categoryTargets).filter(
+      id => !live.has(id),
+    );
+    if (unknown.length > 0) {
+      throw APIError(
+        `Invalid cash plan: targets name categories that do not exist: ${unknown.join(', ')}`,
+      );
+    }
+  }
+  const value = config === null ? null : JSON.stringify(config);
   const stored = await storedPreference(KEY);
   return {
     schemaVersion: 1,
