@@ -16,6 +16,10 @@ import { pathToFileURL } from 'node:url';
 
 import { createFixture, isolatedEnv, repoRoot } from './harness.mjs';
 
+// Largest integer the engine accepts as an amount (see isEngineAmount); a hold
+// above available funds is clamped, so the largest accepted request proves it.
+const ENGINE_MAX_AMOUNT = 2 ** 51 - 1;
+
 async function fundHoldFixture(f) {
   const provision = async args => {
     const result = await f.cli(args, { version: '1' });
@@ -2695,7 +2699,7 @@ for (const offline of [false, true]) {
           '--operation-id',
           'hold-preview',
           '--data',
-          JSON.stringify({ month: '2026-08', amount: Number.MAX_SAFE_INTEGER }),
+          JSON.stringify({ month: '2026-08', amount: ENGINE_MAX_AMOUNT }),
         ]);
         assert.equal(
           preview.proposal.after.buffered,
@@ -2722,9 +2726,7 @@ for (const offline of [false, true]) {
           '--operation-id',
           id,
         ];
-        const first = await cli(
-          holdArgs('hold-first', Number.MAX_SAFE_INTEGER),
-        );
+        const first = await cli(holdArgs('hold-first', ENGINE_MAX_AMOUNT));
         assert.equal(
           first.receipt.state,
           offline ? 'committed-local' : 'synced',
@@ -2740,7 +2742,7 @@ for (const offline of [false, true]) {
         const reset = await cli(resetArgs('reset-first'));
         assert.equal(reset.receipt.proposal.after.buffered, 0);
         assert.deepEqual(
-          (await cli(holdArgs('hold-first', Number.MAX_SAFE_INTEGER))).receipt
+          (await cli(holdArgs('hold-first', ENGINE_MAX_AMOUNT))).receipt
             .outcome,
           first.receipt.outcome,
         );
