@@ -13,7 +13,8 @@
     "actual-cli": "./dist/cli.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/stats.json"
   ],
   "type": "module",
   "imports": {
