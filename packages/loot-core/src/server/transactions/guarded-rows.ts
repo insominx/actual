@@ -6,6 +6,7 @@
 // fail the acknowledgement after writing, so every such case is rejected here,
 // before any plan or token exists.
 import * as db from '#server/db';
+import { assertEngineHeadroom } from '#server/engine-limits';
 import { APIError } from '#server/errors';
 import { isEngineAmount } from '#shared/util';
 
@@ -90,6 +91,7 @@ export async function assertPlannableTransactionRows(
     }
   }
 
+  const amounts: number[] = [];
   for (const [index, row] of rows.entries()) {
     const label = `Row ${index + 1}`;
     if (row.date !== undefined && !validDate(row.date)) {
@@ -108,6 +110,7 @@ export async function assertPlannableTransactionRows(
       );
     }
     await check(row, label);
+    if (typeof row.amount === 'number') amounts.push(row.amount);
     if (row.subtransactions !== undefined) {
       if (!Array.isArray(row.subtransactions)) {
         throw APIError(`${label}: subtransactions must be an array`);
@@ -125,6 +128,7 @@ export async function assertPlannableTransactionRows(
           }
           await check(child, `${label} subtransaction`);
           sum += typeof child.amount === 'number' ? child.amount : NaN;
+          amounts.push(child.amount);
         }
         if (sum !== row.amount) {
           throw APIError(
@@ -134,6 +138,7 @@ export async function assertPlannableTransactionRows(
       }
     }
   }
+  await assertEngineHeadroom(amounts);
 }
 
 // Rules run while a plan is built and can set a category that no longer

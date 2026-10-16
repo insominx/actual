@@ -168,6 +168,11 @@ import { dataQualityCheckup } from './checkup/data-quality';
 import * as cloudStorage from './cloud-storage';
 import type { RemoteFile } from './cloud-storage';
 import * as db from './db';
+import {
+  assertEngineHeadroom,
+  budgetedAmount,
+  rowAmounts,
+} from './engine-limits';
 import { APIError, withErrorCode } from './errors';
 import { guardedApply, guardedSourceHash } from './guarded-proposal';
 import { importActual } from './importers/actual';
@@ -1807,6 +1812,12 @@ handlers['api/budget-set-amount'] = withMutation(async function ({
   amount,
 }) {
   checkFileOpen();
+  if (typeof amount === 'number' && Number.isFinite(amount)) {
+    await assertEngineHeadroom(
+      [amount],
+      await budgetedAmount(month, categoryId),
+    );
+  }
   return handlers['budget/budget-amount']({
     month,
     category: categoryId,
@@ -1838,6 +1849,10 @@ async function prepareBudgetAmount(
   if (!category || (category.is_income && !isTrackingBudget())) {
     throw APIError('Allocation category is unavailable for this budget mode');
   }
+  await assertEngineHeadroom(
+    [request.amount],
+    await budgetedAmount(request.month, request.categoryId),
+  );
   const group = await db.first('SELECT * FROM category_groups WHERE id = ?', [
     category.cat_group,
   ]);
@@ -2227,6 +2242,9 @@ handlers['api/transactions-import'] = withMutation(async function ({
   opts,
 }) {
   checkFileOpen();
+  if (!isPreview) {
+    await assertEngineHeadroom(rowAmounts(transactions));
+  }
   return handlers['transactions-import']({
     accountId,
     transactions,
@@ -2242,6 +2260,7 @@ handlers['api/transactions-add'] = withMutation(async function ({
   learnCategories = false,
 }) {
   checkFileOpen();
+  await assertEngineHeadroom(rowAmounts(transactions));
   await addTransactions(accountId, transactions, {
     runTransfers,
     learnCategories,
@@ -2601,6 +2620,12 @@ async function performTransactionUpdate({
 
   const transaction = transactions.find(row => row.id === id);
   if (!transaction) return [];
+  if (typeof fields?.amount === 'number' && Number.isFinite(fields.amount)) {
+    await assertEngineHeadroom(
+      [fields.amount],
+      typeof transaction.amount === 'number' ? transaction.amount : 0,
+    );
+  }
   const { diff } = updateTransaction(transactions, {
     ...transaction,
     ...fields,

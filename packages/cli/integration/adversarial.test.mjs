@@ -1001,3 +1001,86 @@ void test(
     }
   },
 );
+
+void test(
+  'amounts that individually fit but add up past the engine limit are refused instead of stalling the budget',
+  { timeout: 180000 },
+  async () => {
+    const f = await createFixture({});
+    try {
+      const accounts = JSON.parse(
+        (await f.cli(['accounts', 'list'], { version: '1' })).stdout,
+      );
+      const account = accounts.find(a => !a.offbudget).id;
+      const big = amount =>
+        JSON.stringify([{ date: '2026-05-01', amount, notes: 'big' }]);
+      const add = async (amount, id) => {
+        await writeFile(join(f.root, `${id}.json`), big(amount));
+        return f.cli(
+          [
+            'transactions',
+            'add',
+            '--account',
+            account,
+            '--file',
+            join(f.root, `${id}.json`),
+            '--operation-id',
+            id,
+          ],
+          { timeout: 60000 },
+        );
+      };
+      assert.equal((await add(1100000000000000, 'big-1')).code, 0);
+      assert.equal((await add(1100000000000000, 'big-2')).code, 0);
+      const refused = await add(1100000000000000, 'big-3');
+      assert.equal(refused.code, 2, refused.stdout);
+      assert.match(
+        JSON.parse(refused.stdout).error.message,
+        /more than the budget engine can calculate/,
+      );
+      // Budgeted amounts count too, and re-allocating a cell replaces its value.
+      const month = '2026-05';
+      const set = amount =>
+        f.cli(
+          [
+            'budgets',
+            'set-amount',
+            '--month',
+            month,
+            '--category',
+            f.fixture.dining,
+            '--amount',
+            String(amount),
+            '--operation-id',
+            `set-${amount}`,
+          ],
+          { timeout: 60000 },
+        );
+      assert.equal((await set(60000000000000)).code, 2);
+      assert.equal((await set(1000)).code, 0);
+      assert.equal(
+        (await set(500)).code,
+        0,
+        'a smaller value replaces the old one',
+      );
+      await writeFile(join(f.root, 'legacy.json'), big(1100000000000000));
+      const legacy = await f.cli(
+        [
+          'transactions',
+          'add',
+          '--account',
+          account,
+          '--file',
+          join(f.root, 'legacy.json'),
+        ],
+        { version: '1', timeout: 60000 },
+      );
+      assert.notEqual(legacy.code, 0, 'the unguarded form refuses it too');
+      // The budget still opens and answers.
+      const list = await f.cli(['accounts', 'list'], { timeout: 60000 });
+      assert.equal(list.code, 0, list.stdout + list.stderr);
+    } finally {
+      await f.dispose();
+    }
+  },
+);
