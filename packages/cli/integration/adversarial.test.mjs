@@ -568,3 +568,48 @@ void test(
     }
   },
 );
+
+void test(
+  'import inspection explains why settings or files are refused',
+  { timeout: 240000 },
+  async () => {
+    const f = await createFixture({ richBackup: true });
+    try {
+      await f.cli(['accounts', 'list']);
+      const file = join(f.root, 'explain.csv');
+      await writeFile(file, 'Date,Amount\n2026-09-01,-1.00\n');
+      const settings = {
+        fields: { date: 'Date', amount: 'Amount' },
+        dateFormat: 'yyyy mm dd',
+      };
+      for (const bad of [
+        { ...settings, skipStartLines: -1 },
+        { ...settings, delimiter: 'ab' },
+        { ...settings, multiplier: 0 },
+      ]) {
+        const result = await f.cli([
+          'imports',
+          'inspect',
+          file,
+          '--settings',
+          JSON.stringify(bad),
+        ]);
+        assert.equal(result.code, 2, result.stdout + result.stderr);
+        assert.doesNotMatch(
+          result.stdout + result.stderr,
+          /The engine operation failed/,
+        );
+      }
+      const ok = await f.cli([
+        'imports',
+        'inspect',
+        file,
+        '--settings',
+        JSON.stringify(settings),
+      ]);
+      assert.equal(ok.code, 0, ok.stdout + ok.stderr);
+    } finally {
+      await f.dispose();
+    }
+  },
+);

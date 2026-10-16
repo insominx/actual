@@ -330,16 +330,20 @@ export function registerImportsCommand(program: Command) {
           await withConnection(
             opts,
             async () => {
-              printOutput(
-                await api.inspectImportFile({
+              let result;
+              try {
+                result = await api.inspectImportFile({
                   path: resolve(file),
                   ...(cmdOpts.account ? { account: cmdOpts.account } : {}),
                   useSaved: cmdOpts.saved,
                   ...(settings ? { settings } : {}),
                   limit,
-                }),
-                opts.format,
-              );
+                });
+              } catch (error) {
+                // Unreadable files and invalid settings come with a reason.
+                throw new AgentError('INVALID_INPUT', errorMessage(error));
+              }
+              printOutput(result, opts.format);
             },
             { mutates: false },
           );
