@@ -539,3 +539,32 @@ void test(
     }
   },
 );
+
+void test(
+  'closing an account refuses to move its balance into a closed account',
+  { timeout: 240000 },
+  async () => {
+    const f = await createFixture({ richBackup: true });
+    try {
+      await f.cli(['accounts', 'list']);
+      const refused = await assertRefused(
+        f,
+        'accounts.close',
+        f.fixture.checking,
+        { transferAccount: f.fixture.closed },
+        'close-into-closed',
+      );
+      assert.match(refused.stdout + refused.stderr, /closed/i);
+      const ok = await preview(
+        f,
+        'accounts.close',
+        f.fixture.checking,
+        { transferAccount: f.fixture.savings },
+        'close-into-open',
+      );
+      assert.equal(ok.code, 0, ok.stdout + ok.stderr);
+    } finally {
+      await f.dispose();
+    }
+  },
+);

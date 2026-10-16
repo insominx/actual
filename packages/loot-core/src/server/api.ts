@@ -4586,6 +4586,11 @@ async function prepareAccountClosure(
     inspected.balance !== 0 &&
     request.transferAccountId
   ) {
+    if (inspected.destinationAccount?.closed === 1) {
+      // The app only offers open accounts; funds moved into a closed account
+      // disappear from every account list and from the budget's view.
+      throw APIError('transfer account is closed; choose an open account');
+    }
     const closingTransaction = makeAccountClosingTransaction(
       inspected,
       request.categoryId,
