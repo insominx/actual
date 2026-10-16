@@ -393,7 +393,7 @@ yarn workspace @actual-app/sync-server build
 yarn workspace @actual-app/cli test:integration
 ```
 
-The harness creates a temporary server, budgets, credentials, and two client caches. It removes them after each test. Type checking emits files into some build directories, so rebuild before running packaged integration tests. The `changes` file alone takes about 40 minutes (each test starts a server and a budget), so run integration files individually. Type checking and API tests also clear `packages/api/dist` and `packages/sync-server/build`; rebuild (`yarn build:cli`, `yarn build:server`) afterwards.
+The harness creates a temporary server, budgets, credentials, and two client caches. It removes them after each test. Type checking emits files into some build directories, so rebuild before running packaged integration tests. The `changes` tests take about 40 minutes in one process (each starts a server and a budget), so `test:integration` runs them as three shards, `changes-1.test.mjs` to `changes-3.test.mjs` (about 16 minutes); `changes.test.mjs` still runs all of them on its own. Type checking and API tests also clear `packages/api/dist` and `packages/sync-server/build`; rebuild (`yarn build:cli`, `yarn build:server`) afterwards.
 
 If you're working on the CLI within the monorepo:
 
