@@ -117,3 +117,6 @@ storybook-static
 .actualrc.yml
 actual.config.js
 .windows-verification-evidence/
+
+# vitest json reporter output
+.vitest/
