@@ -1,3 +1,6 @@
+// main must load first: it installs the API at module scope, and loading api.ts
+// ahead of it hits the main <-> api import cycle before `handlers` exists.
+import '#server/main';
 import * as db from '#server/db';
 import * as sheet from '#server/sheet';
 import { getBankSyncError } from '#shared/errors';

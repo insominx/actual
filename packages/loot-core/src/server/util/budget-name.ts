@@ -1,11 +1,14 @@
 import { v4 as uuidv4 } from 'uuid';
 
 import * as fs from '#platform/server/fs';
-import { handlers } from '#server/main';
 
 export async function uniqueBudgetName(
   initialName: string = 'My Finances',
 ): Promise<string> {
+  // Loaded lazily: cloud-storage imports this file for idFromBudgetName, and a
+  // static import of main here pulled the whole server (and every test mock
+  // order assumption) in whenever cloud-storage was loaded.
+  const { handlers } = await import('#server/main');
   const budgets = await handlers['get-budgets']();
   let idx = 1;
 
