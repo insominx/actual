@@ -4,8 +4,6 @@ import { join } from 'node:path';
 
 import lockfile from 'proper-lockfile';
 
-import { AgentError } from './agent-output';
-
 export type Release = () => Promise<void>;
 
 export type AcquireOptions = {
@@ -50,11 +48,13 @@ function isLockedError(err: unknown): boolean {
 }
 
 // A held budget is a normal, retryable condition (for example right after a
-// killed process); report it as such instead of a masked engine failure.
-function lockedError(timeoutMs: number): AgentError {
-  return new AgentError('ENGINE_FAILURE', lockedMessage(timeoutMs), true, {
-    issue: 'budget-locked',
-  });
+// killed process). The class is recognised when errors are serialised so the
+// user sees the reason instead of a masked engine failure. It must stay free
+// of TypeScript-only syntax: integration fixtures load this file directly.
+export class BudgetLockedError extends Error {}
+
+function lockedError(timeoutMs: number): BudgetLockedError {
+  return new BudgetLockedError(lockedMessage(timeoutMs));
 }
 
 function lockedMessage(timeoutMs: number): string {

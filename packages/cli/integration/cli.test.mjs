@@ -4,7 +4,7 @@ import { test } from 'node:test';
 
 import { createFixture, repoRoot, runNode } from './harness.mjs';
 
-test('packaged discovery and validation work without personal configuration', async () => {
+void test('packaged discovery and validation work without personal configuration', async () => {
   const discovered = await runNode([
     join(repoRoot, 'packages/cli/dist/cli.js'),
     'capabilities',
@@ -30,7 +30,7 @@ test('packaged discovery and validation work without personal configuration', as
   assert.equal(JSON.parse(invalid.stdout).error.code, 'INVALID_INPUT');
 });
 
-test(
+void test(
   'encrypted remote sessions register keys across process restarts',
   { timeout: 90000 },
   async () => {
@@ -76,7 +76,7 @@ test(
   },
 );
 
-test(
+void test(
   'real server, import deduplication, two clients, and restart',
   { timeout: 90000 },
   async () => {
@@ -128,6 +128,10 @@ test(
           'Must not be created',
         ]);
         assert.equal(contention.code, 5);
+        // The reason is shown, not a masked engine failure.
+        const refused = JSON.parse(contention.stdout).error;
+        assert.match(refused.message, /holding the budget/);
+        assert.equal(refused.retryable, true);
       } finally {
         const exited = new Promise(resolveExit =>
           holder.once('exit', resolveExit),

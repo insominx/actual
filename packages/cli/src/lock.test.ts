@@ -9,8 +9,8 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { AgentError } from './agent-output';
-import { acquireExclusive, acquireShared } from './lock';
+import { serializeAgentError } from '#agent-output';
+import { acquireExclusive, acquireShared, BudgetLockedError } from '#lock';
 
 // In-memory stand-in for proper-lockfile. The real library spins up a
 // setTimeout loop to refresh lockfile mtimes; on some CI filesystems that
@@ -83,10 +83,14 @@ describe('acquireExclusive', () => {
     const error = await acquireExclusive(dir, { timeoutMs: 100 }).catch(
       (e: unknown) => e,
     );
-    expect(error).toBeInstanceOf(AgentError);
-    expect(error).toMatchObject({
-      retryable: true,
-      details: { issue: 'budget-locked' },
+    expect(error).toBeInstanceOf(BudgetLockedError);
+    expect(serializeAgentError(error)).toMatchObject({
+      exitCode: 5,
+      error: {
+        retryable: true,
+        details: { issue: 'budget-locked' },
+        message: expect.stringContaining('holding the budget'),
+      },
     });
     await release();
   });
@@ -176,10 +180,14 @@ describe('writer-reader interaction', () => {
     const error = await acquireExclusive(dir, { timeoutMs: 100 }).catch(
       (e: unknown) => e,
     );
-    expect(error).toBeInstanceOf(AgentError);
-    expect(error).toMatchObject({
-      retryable: true,
-      details: { issue: 'budget-locked' },
+    expect(error).toBeInstanceOf(BudgetLockedError);
+    expect(serializeAgentError(error)).toMatchObject({
+      exitCode: 5,
+      error: {
+        retryable: true,
+        details: { issue: 'budget-locked' },
+        message: expect.stringContaining('holding the budget'),
+      },
     });
     await release();
   });

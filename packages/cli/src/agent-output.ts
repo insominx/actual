@@ -1,3 +1,5 @@
+import { BudgetLockedError } from '#lock';
+
 export const ERROR_EXIT_CODES = {
   INVALID_INPUT: 2,
   MISSING_CONTEXT: 3,
@@ -96,6 +98,11 @@ export function flushAgentOutput() {
 }
 
 export function serializeAgentError(error: unknown) {
+  if (error instanceof BudgetLockedError) {
+    error = new AgentError('ENGINE_FAILURE', error.message, true, {
+      issue: 'budget-locked',
+    });
+  }
   const known = error instanceof AgentError;
   const code = known ? error.code : 'ENGINE_FAILURE';
   return {
