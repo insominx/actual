@@ -778,3 +778,50 @@ void test(
     }
   },
 );
+
+void test(
+  'JSON input with a lone surrogate or invalid UTF-8 is refused instead of leaving an uncertain receipt',
+  { timeout: 120000 },
+  async () => {
+    const f = await createFixture({});
+    try {
+      const accounts = await f.cli(['accounts', 'list'], { version: '1' });
+      const account = JSON.parse(accounts.stdout).find(a => !a.offbudget).id;
+      const lone = await f.cli([
+        'transactions',
+        'add',
+        '--account',
+        account,
+        '--data',
+        '[{"date":"2026-10-03","amount":-1,"notes":"\\ud800"}]',
+        '--operation-id',
+        'lone-surrogate',
+      ]);
+      assert.equal(lone.code, 2, lone.stdout + lone.stderr);
+      assert.match(parse(lone).error.message, /lone surrogate/);
+      const file = join(f.root, 'latin1.json');
+      await writeFile(
+        file,
+        Buffer.concat([
+          Buffer.from('[{"date":"2026-10-03","amount":-1,"notes":"caf'),
+          Buffer.from([0xe9]),
+          Buffer.from('"}]'),
+        ]),
+      );
+      const bad = await f.cli([
+        'transactions',
+        'add',
+        '--account',
+        account,
+        '--file',
+        file,
+        '--operation-id',
+        'latin1-json',
+      ]);
+      assert.equal(bad.code, 2, bad.stdout + bad.stderr);
+      assert.match(parse(bad).error.message, /not valid UTF-8/);
+    } finally {
+      await f.dispose();
+    }
+  },
+);
