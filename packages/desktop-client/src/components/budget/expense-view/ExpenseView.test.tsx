@@ -136,9 +136,13 @@ it('uses the existing privacy overlay and removes it when privacy is disabled', 
   act(() => {
     store.dispatch(mergeSyncedPrefs({ isPrivacyEnabled: 'false' }));
   });
-  expect(
-    amountCell.querySelector('[aria-hidden="true"]'),
-  ).not.toBeInTheDocument();
+  // The overlay is removed after the preference change propagates, which can
+  // take more than one tick on a loaded machine; do not assert synchronously.
+  await waitFor(() =>
+    expect(
+      amountCell.querySelector('[aria-hidden="true"]'),
+    ).not.toBeInTheDocument(),
+  );
   expect(within(amountCell).getByText('100.00')).toBeVisible();
 });
 
