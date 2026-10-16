@@ -94,7 +94,7 @@ Errors contain a stable code, a message, retryability, and optional field detail
 | 5         | `ENGINE_FAILURE`     | The engine, authentication, lock, or connection failed.           |
 | 6         | `PARTIAL_COMPLETION` | Local changes committed but synchronization failed.               |
 
-When a push fails, synchronize again instead of repeating the mutation. Guarded writes use `changes preview` and `changes apply` with durable receipts. `capabilities.preview` stays `false` for every operation, because previewing is a separate command (`changes preview <operation>`); `capabilities.reversal` is `true` for the operations `changes reverse` can compensate. Lists retain their existing payloads; paging and truncation metadata are planned separately.
+When a push fails, synchronize again instead of repeating the mutation. Guarded writes use `changes preview` and `changes apply` with durable receipts. `capabilities.preview` is `true` for every operation that has a guarded preview, and `capabilities.previewOperation` names the operation to give `changes preview` (usually the operation itself; for example `imports mappings set` previews as `imports.mapping-save`); it is `false` and `previewOperation` is `null` for reads and for operations without a guarded preview. `capabilities.reversal` is `true` for the operations `changes reverse` can compensate. Lists retain their existing payloads; paging and truncation metadata are planned separately.
 
 ### Device-local profiles and offline mode
 

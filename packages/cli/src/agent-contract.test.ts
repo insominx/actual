@@ -24,7 +24,7 @@ describe('agent command contract', () => {
     });
     expect(operation.capabilities).toMatchObject({
       mutates: true,
-      preview: false,
+      preview: true,
       reversal: false,
     });
   });

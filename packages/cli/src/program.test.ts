@@ -1,4 +1,8 @@
 import { writeAgentError } from './agent-output';
+import {
+  DIRECT_GUARDED_COMMANDS,
+  previewOperationFor,
+} from './guarded-operations';
 import { createProgram, wantsAgentOutput } from './program';
 
 // Boundary only: these discovery/validation commands must never call the API.
@@ -644,12 +648,30 @@ describe('registered agent commands', () => {
     ]);
     expect(result.error.code).toBe('INVALID_INPUT');
   });
-  it('provides schema detail and never fabricates preview support', async () => {
+  it('reports preview support only for operations that changes preview accepts', async () => {
     const result = await run(['schema', 'transactions.import']);
     expect(result.data.payloadSchema.type).toBe('array');
-    expect(result.data.capabilities.preview).toBe(false);
+    expect(result.data.capabilities.preview).toBe(true);
+    expect(result.data.capabilities.previewOperation).toBe(
+      'transactions.import',
+    );
     expect(result.data.capabilities.reversal).toBe(false);
     const reversible = await run(['schema', 'transactions.categorize']);
     expect(reversible.data.capabilities.reversal).toBe(true);
+    const alias = await run(['schema', 'imports.mappings.set']);
+    expect(alias.data.capabilities.previewOperation).toBe(
+      'imports.mapping-save',
+    );
+    const read = await run(['schema', 'accounts.list']);
+    expect(read.data.capabilities.preview).toBe(false);
+    const all = await run(['capabilities']);
+    for (const operation of all.data.operations ?? all.data) {
+      const target = previewOperationFor(operation.name);
+      expect(operation.capabilities.preview).toBe(target !== undefined);
+      expect(operation.capabilities.previewOperation).toBe(target ?? null);
+    }
+    for (const name of DIRECT_GUARDED_COMMANDS) {
+      expect(previewOperationFor(name)).toBeDefined();
+    }
   });
 });

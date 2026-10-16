@@ -1,7 +1,10 @@
 import type { Command, Option } from 'commander';
 
 import { AgentError } from './agent-output';
-import { DIRECT_GUARDED_COMMANDS } from './guarded-operations';
+import {
+  DIRECT_GUARDED_COMMANDS,
+  previewOperationFor,
+} from './guarded-operations';
 import { operationPayloadSchema } from './json-schema';
 import type { JsonSchema } from './json-schema';
 import { REVERSIBLE_COMMANDS } from './reversal';
@@ -180,7 +183,8 @@ export function discoverOperations(root: Command) {
     }>;
     capabilities: {
       mutates: boolean;
-      preview: false;
+      preview: boolean;
+      previewOperation: string | null;
       reversal: boolean;
       destructive: boolean;
     };
@@ -222,7 +226,8 @@ export function discoverOperations(root: Command) {
       })),
       capabilities: {
         mutates,
-        preview: false,
+        preview: previewOperationFor(name) !== undefined,
+        previewOperation: previewOperationFor(name) ?? null,
         reversal: REVERSIBLE_COMMANDS.includes(name),
         destructive: ['delete', 'merge', 'close', 'prune'].includes(verb),
       },

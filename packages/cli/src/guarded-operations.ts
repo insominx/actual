@@ -180,6 +180,28 @@ export const DIRECT_GUARDED_COMMANDS: readonly string[] = [
   'cash-planning.set-goal',
 ];
 
+// Direct commands whose guarded operation has a different name. `changes
+// preview` takes the guarded name on the right.
+const PREVIEW_ALIASES: Readonly<Record<string, string>> = {
+  'preferences.reset': 'preferences.set',
+  'imports.mappings.set': 'imports.mapping-save',
+  'imports.mappings.reset': 'imports.mapping-save',
+  'imports.apply': 'imports.file',
+  'cash-planning.reset': 'cash-planning.save',
+  'cash-planning.set-target': 'cash-planning.save',
+  'cash-planning.reset-target': 'cash-planning.save',
+  'cash-planning.set-goal': 'cash-planning.save',
+};
+
+// The operation name to give `changes preview` for a command, or undefined when
+// the command has no guarded preview.
+export function previewOperationFor(command: string): string | undefined {
+  const alias = Object.prototype.hasOwnProperty.call(PREVIEW_ALIASES, command)
+    ? PREVIEW_ALIASES[command]
+    : command;
+  return isGuardedOperation(alias) ? alias : undefined;
+}
+
 export function isGuardedOperation(operation: string) {
   return GUARDED_OPERATIONS.includes(operation);
 }
