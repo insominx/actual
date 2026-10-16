@@ -1,5 +1,7 @@
 import { readFileSync } from 'fs';
 
+import { AgentError } from '#agent-output';
+
 const inputs = new WeakMap<object, unknown>();
 
 export function readJsonInput(cmdOpts: {
@@ -8,7 +10,7 @@ export function readJsonInput(cmdOpts: {
 }): unknown {
   if (inputs.has(cmdOpts)) return inputs.get(cmdOpts);
   if (cmdOpts.data && cmdOpts.file) {
-    throw new Error('Cannot use both --data and --file');
+    throw new AgentError('INVALID_INPUT', 'Cannot use both --data and --file');
   }
   if (cmdOpts.data) {
     const value: unknown = JSON.parse(cmdOpts.data);
@@ -24,5 +26,5 @@ export function readJsonInput(cmdOpts: {
     inputs.set(cmdOpts, value);
     return value;
   }
-  throw new Error('Either --data or --file is required');
+  throw new AgentError('INVALID_INPUT', 'Either --data or --file is required');
 }

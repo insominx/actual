@@ -5,6 +5,7 @@ import { AgentError } from '#agent-output';
 import { withConnection } from '#connection';
 import { executeScopedChange } from '#guarded-changes';
 import { printOutput } from '#output';
+import { errorMessage } from '#utils';
 
 function parseInteger(value: string, field: string) {
   const parsed = Number(value);
@@ -76,7 +77,13 @@ export function registerTransfersCommand(program: Command) {
       await withConnection(
         opts,
         async () => {
-          printOutput(await api.inspectTransfer(id), opts.format);
+          let result;
+          try {
+            result = await api.inspectTransfer(id);
+          } catch (error) {
+            throw new AgentError('INVALID_INPUT', errorMessage(error));
+          }
+          printOutput(result, opts.format);
         },
         { mutates: false },
       );
@@ -126,7 +133,8 @@ export function registerTransfersCommand(program: Command) {
           .map(id => id.trim())
           .filter(Boolean);
         if (ids.length !== 2) {
-          throw new Error(
+          throw new AgentError(
+            'INVALID_INPUT',
             'Invalid --ids: provide exactly two transaction IDs.',
           );
         }

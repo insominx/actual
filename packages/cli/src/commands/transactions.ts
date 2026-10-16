@@ -213,13 +213,17 @@ export function registerTransactionsCommand(program: Command) {
           .map(id => id.trim())
           .filter(Boolean);
         if (!ids.length) {
-          throw new Error(
+          throw new AgentError(
+            'INVALID_INPUT',
             'Invalid --ids: provide at least one transaction ID.',
           );
         }
         const category = cmdOpts.category.trim();
         if (!category) {
-          throw new Error('Invalid --category: use a category ID or "none".');
+          throw new AgentError(
+            'INVALID_INPUT',
+            'Invalid --category: use a category ID or "none".',
+          );
         }
         printOutput(
           await executeScopedChange(
@@ -263,7 +267,8 @@ export function registerTransactionsCommand(program: Command) {
           .map(id => id.trim())
           .filter(Boolean);
         if (!ids.length) {
-          throw new Error(
+          throw new AgentError(
+            'INVALID_INPUT',
             'Invalid --ids: provide at least one transaction ID.',
           );
         }
@@ -310,7 +315,8 @@ export function registerTransactionsCommand(program: Command) {
           .map(id => id.trim())
           .filter(Boolean);
         if (ids.length !== 2) {
-          throw new Error(
+          throw new AgentError(
+            'INVALID_INPUT',
             'Invalid --ids: provide exactly two transaction IDs.',
           );
         }

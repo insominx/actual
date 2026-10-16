@@ -1,3 +1,5 @@
+import { AgentError } from '#agent-output';
+
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -20,7 +22,8 @@ export function stableJson(value: unknown): string {
 
 export function parseBoolFlag(value: string, flagName: string): boolean {
   if (value !== 'true' && value !== 'false') {
-    throw new Error(
+    throw new AgentError(
+      'INVALID_INPUT',
       `Invalid ${flagName}: "${value}". Expected "true" or "false".`,
     );
   }
@@ -43,7 +46,10 @@ export function isEngineAmount(value: unknown): value is number {
 export function parseIntFlag(value: string, flagName: string): number {
   const parsed = value.trim() === '' ? NaN : Number(value);
   if (!isEngineAmount(parsed)) {
-    throw new Error(`Invalid ${flagName}: "${value}". Expected an integer.`);
+    throw new AgentError(
+      'INVALID_INPUT',
+      `Invalid ${flagName}: "${value}". Expected an integer.`,
+    );
   }
   return parsed;
 }
@@ -54,7 +60,8 @@ export function parseNonNegativeIntFlag(
 ): number {
   const parsed = parseIntFlag(value, flagName);
   if (parsed < 0) {
-    throw new Error(
+    throw new AgentError(
+      'INVALID_INPUT',
       `Invalid ${flagName}: "${value}". Expected a non-negative integer.`,
     );
   }
@@ -69,7 +76,8 @@ export function parseBoolEnv(
   const lower = raw.toLowerCase();
   if (raw === '1' || lower === 'true') return true;
   if (raw === '0' || lower === 'false') return false;
-  throw new Error(
+  throw new AgentError(
+    'INVALID_INPUT',
     `Invalid ${source}: "${raw}". Expected "true", "false", "1", or "0".`,
   );
 }

@@ -613,3 +613,51 @@ void test(
     }
   },
 );
+
+void test(
+  'malformed flags and unknown ids are explained, not reported as engine failures',
+  { timeout: 240000 },
+  async () => {
+    const f = await createFixture({ richBackup: true });
+    try {
+      await f.cli(['accounts', 'list']);
+      for (const [args, pattern] of [
+        [['transactions', 'merge', '--ids', 'zzz'], /exactly two/],
+        [['transfers', 'match', '--ids', 'zzz'], /exactly two/],
+        [['transfers', 'inspect', 'zzz'], /./],
+        [
+          [
+            'jobs',
+            'create',
+            'bad-flag',
+            '--inbox',
+            'a',
+            '--processed',
+            'b',
+            '--error',
+            'c',
+            '--routes',
+            '[]',
+            '--allow',
+            'imports.file',
+            '--stable-seconds',
+            'zzz',
+          ],
+          /stable-seconds/,
+        ],
+        [['jobs', 'schedule', 'nope', '--every', 'zzz'], /--every/],
+        [
+          ['rules', 'test', '--data', '{}', '--file', 'zzz'],
+          /--data and --file/,
+        ],
+      ]) {
+        const result = await f.cli(args, { version: '2' });
+        assert.equal(result.code, 2, `${args.join(' ')}: ${result.stdout}`);
+        assert.match(result.stdout, pattern, args.join(' '));
+        assert.doesNotMatch(result.stdout, /The engine operation failed/);
+      }
+    } finally {
+      await f.dispose();
+    }
+  },
+);
