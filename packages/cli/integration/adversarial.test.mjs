@@ -687,3 +687,56 @@ void test(
     }
   },
 );
+
+void test(
+  'category and group duplicate names are refused with a reason on create, rename and move',
+  { timeout: 120000 },
+  async () => {
+    const f = await createFixture({});
+    try {
+      let n = 0;
+      const run = async args => {
+        const result = await f.cli([...args, '--operation-id', `dup-${++n}`]);
+        return { code: result.code, body: parse(result) };
+      };
+      const g1 = (await run(['category-groups', 'create', '--name', 'G1'])).body
+        .data.id;
+      const g2 = (await run(['category-groups', 'create', '--name', 'G2'])).body
+        .data.id;
+      const alpha = (
+        await run(['categories', 'create', '--name', 'Alpha', '--group-id', g1])
+      ).body.data.id;
+      const beta = (
+        await run(['categories', 'create', '--name', 'Beta', '--group-id', g1])
+      ).body.data.id;
+      const other = (
+        await run(['categories', 'create', '--name', 'alpha', '--group-id', g2])
+      ).body.data.id;
+      assert.ok(alpha && beta && other);
+
+      for (const [args, pattern] of [
+        [
+          ['categories', 'create', '--name', 'ALPHA', '--group-id', g1],
+          /already exists/,
+        ],
+        [['category-groups', 'create', '--name', 'g1'], /already exists/],
+        [['category-groups', 'update', g2, '--name', 'G1'], /already exists/],
+        [['categories', 'update', beta, '--name', 'ALPHA'], /already exists/],
+        [['categories', 'update', beta, '--name', 'Alpha'], /already exists/],
+        [['categories', 'update', other, '--group-id', g1], /already exists/],
+      ]) {
+        const result = await run(args);
+        assert.equal(result.code, 2, args.join(' '));
+        assert.match(result.body.error.message, pattern, args.join(' '));
+        assert.doesNotMatch(result.body.error.message, /Check the identity/);
+      }
+      // Same name in another group, or a rename to itself in a new case, is fine.
+      assert.equal(
+        (await run(['categories', 'update', alpha, '--name', 'ALPHA'])).code,
+        0,
+      );
+    } finally {
+      await f.dispose();
+    }
+  },
+);

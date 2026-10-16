@@ -371,6 +371,20 @@ async function validateExpenseCategory(debug, id) {
   }
 }
 
+// Duplicate-name refusals from the database layer are plain Errors whose
+// message is written for the caller; surface them as planner refusals so
+// the guarded preview shows the reason instead of a generic failure.
+async function asRefusal<T>(run: () => Promise<T>): Promise<T> {
+  try {
+    return await run();
+  } catch (error) {
+    if (error instanceof Error && /already exists/.test(error.message)) {
+      throw APIError(error.message);
+    }
+    throw error;
+  }
+}
+
 function checkFileOpen() {
   if (!(prefs.getPrefs() || {}).id) {
     throw APIError('No budget file is open');
@@ -3067,8 +3081,8 @@ async function prepareGuardedCategoryGroupUpdate(
     ...request.fields,
     id: request.id,
   });
-  const patch = await db.inspectCategoryGroupUpdate(
-    prepareCategoryGroupUpdate(fields),
+  const patch = await asRefusal(() =>
+    db.inspectCategoryGroupUpdate(prepareCategoryGroupUpdate(fields)),
   );
   const metadata = prefs.getPrefs();
   return {
@@ -3769,11 +3783,13 @@ async function prepareGuardedCategoryGroupCreation(
   ) {
     throw APIError('Invalid category group creation request');
   }
-  const group = await inspectCategoryGroupCreation({
-    name: request.name,
-    isIncome: request.is_income,
-    hidden: request.hidden,
-  });
+  const group = await asRefusal(() =>
+    inspectCategoryGroupCreation({
+      name: request.name,
+      isIncome: request.is_income,
+      hidden: request.hidden,
+    }),
+  );
   const metadata = prefs.getPrefs();
   return {
     schemaVersion: 1,
@@ -3897,12 +3913,14 @@ async function prepareGuardedCategoryCreation(
   if (!group || group.tombstone) {
     throw APIError('Category group is no longer available');
   }
-  const plan = await inspectCategoryCreation({
-    name: request.name,
-    groupId: request.group_id,
-    isIncome: request.is_income,
-    hidden: request.hidden,
-  });
+  const plan = await asRefusal(() =>
+    inspectCategoryCreation({
+      name: request.name,
+      groupId: request.group_id,
+      isIncome: request.is_income,
+      hidden: request.hidden,
+    }),
+  );
   const metadata = prefs.getPrefs();
   return {
     schemaVersion: 1,
@@ -4438,6 +4456,21 @@ async function prepareGuardedCategoryUpdate(
     id: request.id,
     ...(group_id === undefined ? {} : { group: group_id }),
   });
+  // Creation refuses a name that matches (ignoring case) another live
+  // category in the group; renames and moves must hold to the same rule,
+  // otherwise the same name can enter through update.
+  if (patch.name !== undefined || group_id !== undefined) {
+    const name = String(patch.name ?? category.name);
+    const clash = await db.first<{ id: string }>(
+      'SELECT id FROM categories WHERE cat_group = ? AND UPPER(name) = ? AND id != ? AND tombstone = 0 LIMIT 1',
+      [destinationGroupId, name.toUpperCase(), request.id],
+    );
+    if (clash) {
+      throw APIError(
+        `A category named '${name}' already exists in category group '${group.name}'.`,
+      );
+    }
+  }
   const metadata = prefs.getPrefs();
   return {
     schemaVersion: 1,
