@@ -381,6 +381,9 @@ export async function withChangeJournal<T>(
 }
 
 // The caller holds the journal lock for the full preview/apply operation.
+// Prepared receipts keep room for the outcome added when the change commits.
+const PREPARED_RECEIPT_BYTES = 640 * 1024;
+
 export class ChangeJournal {
   constructor(readonly directory: string) {}
 
@@ -666,6 +669,19 @@ export class ChangeJournal {
       proposal,
       ...(artifact ? { artifact } : {}),
     };
+    // The committed receipt also carries the engine outcome (about a fifth of
+    // the proposal for 1600 added rows). A change whose prepared receipt is
+    // already near the limit would commit and then fail to record, leaving an
+    // uncertain receipt; refuse it before anything is written.
+    if (
+      Buffer.byteLength(JSON.stringify(receipt, null, 2) + '\n') >
+      PREPARED_RECEIPT_BYTES
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'This change is too large to record safely with its outcome; split it into smaller batches.',
+      );
+    }
     await this.write(receipt);
     return receipt;
   }

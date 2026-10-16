@@ -825,3 +825,81 @@ void test(
     }
   },
 );
+
+void test(
+  'a batch whose receipt would not fit with its outcome is refused at preview, not committed and left uncertain',
+  { timeout: 180000 },
+  async () => {
+    const f = await createFixture({});
+    try {
+      const accounts = await f.cli(['accounts', 'list'], { version: '1' });
+      const account = JSON.parse(accounts.stdout).find(a => !a.offbudget).id;
+      const count = async () => {
+        const list = await f.cli(
+          [
+            'transactions',
+            'list',
+            '--account',
+            account,
+            '--start',
+            '2026-10-01',
+            '--end',
+            '2026-10-01',
+          ],
+          { version: '1' },
+        );
+        return JSON.parse(list.stdout).length;
+      };
+      const rows = file =>
+        writeFile(
+          file,
+          JSON.stringify(
+            Array.from(
+              { length: file.endsWith('big.json') ? 2000 : 300 },
+              (_, i) => ({
+                date: '2026-10-01',
+                amount: -((i % 1000) + 1),
+              }),
+            ),
+          ),
+        );
+      const big = join(f.root, 'big.json');
+      await rows(big);
+      const refused = await f.cli(
+        [
+          'transactions',
+          'add',
+          '--account',
+          account,
+          '--file',
+          big,
+          '--operation-id',
+          'too-big',
+        ],
+        { timeout: 120000 },
+      );
+      assert.equal(refused.code, 2, refused.stdout + refused.stderr);
+      assert.match(parse(refused).error.message, /too large|one MiB/);
+      assert.equal(await count(), 0);
+      const small = join(f.root, 'small.json');
+      await rows(small);
+      const ok = await f.cli(
+        [
+          'transactions',
+          'add',
+          '--account',
+          account,
+          '--file',
+          small,
+          '--operation-id',
+          'fits',
+        ],
+        { timeout: 120000 },
+      );
+      assert.equal(ok.code, 0, ok.stdout + ok.stderr);
+      assert.equal(await count(), 300);
+    } finally {
+      await f.dispose();
+    }
+  },
+);
