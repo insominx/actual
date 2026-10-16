@@ -1084,3 +1084,67 @@ void test(
     }
   },
 );
+
+void test(
+  'a rule pattern that backtracks exponentially is refused when written and never stalls a test run',
+  { timeout: 120000 },
+  async () => {
+    const f = await createFixture({});
+    try {
+      const accounts = JSON.parse(
+        (await f.cli(['accounts', 'list'], { version: '1' })).stdout,
+      );
+      const account = accounts.find(a => !a.offbudget).id;
+      const rule = pattern => ({
+        stage: null,
+        conditionsOp: 'and',
+        conditions: [{ field: 'notes', op: 'matches', value: pattern }],
+        actions: [{ op: 'set', field: 'notes', value: 'changed' }],
+      });
+      const create = (pattern, id) =>
+        f.cli([
+          'rules',
+          'create',
+          '--data',
+          JSON.stringify(rule(pattern)),
+          '--operation-id',
+          id,
+        ]);
+      const refused = await create('(a+)+$', 'redos-1');
+      assert.equal(refused.code, 2, refused.stdout);
+      assert.match(
+        JSON.parse(refused.stdout).error.message,
+        /repeats a group that already repeats/,
+      );
+      // A rule that predates the refusal (or comes from the unguarded form)
+      // must not stall evaluation either.
+      await f.cli(
+        ['rules', 'create', '--data', JSON.stringify(rule('(a+)+$'))],
+        {
+          version: '1',
+        },
+      );
+      const ok = await create('^(amazon|amzn)\\b', 'redos-2');
+      assert.equal(ok.code, 0, ok.stdout + ok.stderr);
+      const started = Date.now();
+      const tested = await f.cli(
+        [
+          'rules',
+          'test',
+          '--data',
+          JSON.stringify({
+            account,
+            date: '2026-05-01',
+            amount: -100,
+            notes: `${'a'.repeat(60)}!`,
+          }),
+        ],
+        { timeout: 60000 },
+      );
+      assert.equal(tested.code, 0, tested.stdout + tested.stderr);
+      assert.ok(Date.now() - started < 20000);
+    } finally {
+      await f.dispose();
+    }
+  },
+);

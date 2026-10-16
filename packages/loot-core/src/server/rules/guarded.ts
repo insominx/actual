@@ -9,6 +9,7 @@ import {
   rowMatches,
 } from '#server/guarded-proposal';
 import { ruleModel } from '#server/transactions/transaction-rules';
+import { hasNestedRepeat } from '#shared/regex-safety';
 import type {
   RuleCreationProposal,
   RuleCreationRequest,
@@ -82,6 +83,24 @@ async function assertActionReferences(actions: unknown[]) {
   }
 }
 
+// A pattern that backtracks exponentially stalls every import and addition
+// that evaluates the rule, so refuse it when the rule is written.
+function assertSafePatterns(conditions: unknown[]) {
+  if (!Array.isArray(conditions)) return;
+  for (const condition of conditions) {
+    if (
+      isRecord(condition) &&
+      (condition.op === 'matches' || condition.op === 'doesNotMatch') &&
+      typeof condition.value === 'string' &&
+      hasNestedRepeat(condition.value)
+    ) {
+      throw APIError(
+        'A matches pattern repeats a group that already repeats (for example (a+)+), which can stall the budget on long text; rewrite it without the nested repeat',
+      );
+    }
+  }
+}
+
 function serializedRow(rule: NewRuleEntity) {
   return ruleModel.fromJS(rule) as Record<string, unknown>;
 }
@@ -128,6 +147,7 @@ export async function prepareRuleCreation(
     );
   }
   const rule = normalizeRule(request);
+  assertSafePatterns(rule.conditions);
   await assertActionReferences(rule.actions);
   return {
     schemaVersion: 1,
@@ -186,6 +206,9 @@ export async function prepareRuleUpdate(
     actions: current.actions,
     ...request.fields,
   });
+  if (request.fields.conditions !== undefined) {
+    assertSafePatterns(rule.conditions);
+  }
   if (request.fields.actions !== undefined) {
     await assertActionReferences(rule.actions);
   }

@@ -11,6 +11,7 @@ import {
   subDays,
   yearFromDate,
 } from '#shared/months';
+import { hasNestedRepeat } from '#shared/regex-safety';
 import {
   FIELD_TYPES,
   getApproxNumberThreshold,
@@ -417,6 +418,11 @@ export class Condition {
         return fieldValue <= extractValue(this.value);
       case 'matches':
         if (fieldValue === null) {
+          return false;
+        }
+        if (hasNestedRepeat(this.value)) {
+          // Backtracks exponentially on long text; never evaluate it.
+          logger.log('skipped nested-repeat regexp in matches condition');
           return false;
         }
         try {
