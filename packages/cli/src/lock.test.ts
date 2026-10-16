@@ -9,6 +9,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { AgentError } from './agent-output';
 import { acquireExclusive, acquireShared } from './lock';
 
 // In-memory stand-in for proper-lockfile. The real library spins up a
@@ -74,6 +75,19 @@ describe('acquireExclusive', () => {
     await expect(acquireExclusive(dir, { timeoutMs: 100 })).rejects.toThrow(
       /holding the budget/,
     );
+    await release();
+  });
+
+  it('reports a held budget as a retryable, explained error', async () => {
+    const release = await acquireExclusive(dir, { timeoutMs: 1000 });
+    const error = await acquireExclusive(dir, { timeoutMs: 100 }).catch(
+      (e: unknown) => e,
+    );
+    expect(error).toBeInstanceOf(AgentError);
+    expect(error).toMatchObject({
+      retryable: true,
+      details: { issue: 'budget-locked' },
+    });
     await release();
   });
 });
@@ -155,5 +169,18 @@ describe('writer-reader interaction', () => {
     const writerRelease = await writerPromise;
     expect(writerAcquired).toBe(true);
     await writerRelease();
+  });
+
+  it('reports a held budget as a retryable, explained error', async () => {
+    const release = await acquireExclusive(dir, { timeoutMs: 1000 });
+    const error = await acquireExclusive(dir, { timeoutMs: 100 }).catch(
+      (e: unknown) => e,
+    );
+    expect(error).toBeInstanceOf(AgentError);
+    expect(error).toMatchObject({
+      retryable: true,
+      details: { issue: 'budget-locked' },
+    });
+    await release();
   });
 });

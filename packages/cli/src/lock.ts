@@ -4,6 +4,8 @@ import { join } from 'node:path';
 
 import lockfile from 'proper-lockfile';
 
+import { AgentError } from './agent-output';
+
 export type Release = () => Promise<void>;
 
 export type AcquireOptions = {
@@ -45,6 +47,14 @@ function errorCode(err: unknown): string | undefined {
 
 function isLockedError(err: unknown): boolean {
   return errorCode(err) === 'ELOCKED';
+}
+
+// A held budget is a normal, retryable condition (for example right after a
+// killed process); report it as such instead of a masked engine failure.
+function lockedError(timeoutMs: number): AgentError {
+  return new AgentError('ENGINE_FAILURE', lockedMessage(timeoutMs), true, {
+    issue: 'budget-locked',
+  });
 }
 
 function lockedMessage(timeoutMs: number): string {
@@ -90,7 +100,7 @@ async function waitForReadersEmpty(dir: string, timeoutMs: number) {
     if (readReaderNames(readers).length === 0) return;
     await new Promise(resolve => setTimeout(resolve, READER_POLL_INTERVAL_MS));
   }
-  throw new Error(lockedMessage(timeoutMs));
+  throw lockedError(timeoutMs);
 }
 
 async function acquireGate(
@@ -105,7 +115,7 @@ async function acquireGate(
       stale: 30_000,
     });
   } catch (err) {
-    if (isLockedError(err)) throw new Error(lockedMessage(timeoutMs));
+    if (isLockedError(err)) throw lockedError(timeoutMs);
     throw err;
   }
 }
