@@ -38,6 +38,7 @@ Written Fri Oct 16 2026 (box, /workspace/actual, fork insominx/actual). Findings
 
 ## Still open
 
-- GitHub Actions on insominx/actual shows 0 runs (checked 14:55 and 15:22); Michael must enable Actions in the fork's settings.
+- GitHub Actions is not used (D42); local box gates are the source of truth.
+
 - Windows PowerShell checks never ran: liftoff and blacktop were offline at every check.
 - Known limits left as designed: overlapping-alternation regexes under a repeat can still stall (D40); other writers (bank sync, schedule posting, rule apply) do not use the total-amount guard (D39); a SIGKILLed writer can leave the budget locked up to 30 s (D37).
