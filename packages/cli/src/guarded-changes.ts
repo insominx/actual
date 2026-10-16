@@ -1,6 +1,8 @@
 import { resolve } from 'node:path';
 
-import * as api from '@actual-app/api';
+import type * as Api from '@actual-app/api';
+
+import { api } from '#engine';
 
 import { AgentError, updateAgentContext } from './agent-output';
 import { readBackupArtifact } from './backup-artifacts';
@@ -27,7 +29,7 @@ import { isEngineAmount, isRecord, stableJson } from './utils';
 function publicationAcknowledged(
   outcome: ChangeReceipt['outcome'],
 ): outcome is Extract<
-  api.BudgetPublicationOutcome,
+  Api.BudgetPublicationOutcome,
   { status: 'committed-local' }
 > {
   return outcome?.status === 'committed-local' && 'publication' in outcome;
@@ -113,7 +115,7 @@ function matchesReceiptIdentity(
 export async function executeBudgetCreation(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  request: api.BudgetCreationRequest,
+  request: Api.BudgetCreationRequest,
 ) {
   if (!operationId) {
     throw new AgentError(
@@ -290,7 +292,7 @@ function restoreInput(payload: unknown) {
 
 async function loadRestoreArchive(
   locator: NonNullable<ChangeReceipt['artifact']>,
-  proposal?: api.BudgetRestoreProposal,
+  proposal?: Api.BudgetRestoreProposal,
 ) {
   return withBackupCancellation(async signal => {
     const artifact = await readBackupArtifact(locator.path);
@@ -444,7 +446,7 @@ async function withGuardedConnection<T>(
 export async function executeBudgetAmount(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  request: api.BudgetAmountRequest,
+  request: Api.BudgetAmountRequest,
 ) {
   if (!operationId) {
     throw new AgentError(
@@ -470,7 +472,7 @@ export async function executeBudgetAmount(
 export async function executeCategoryGroupCreation(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  request: api.CategoryGroupCreationRequest,
+  request: Api.CategoryGroupCreationRequest,
 ) {
   if (!operationId) {
     throw new AgentError(
@@ -506,7 +508,7 @@ export async function executeCategoryGroupCreation(
 export async function executeCategoryCreation(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  request: api.CategoryCreationRequest,
+  request: Api.CategoryCreationRequest,
 ) {
   if (!operationId) {
     throw new AgentError(
@@ -542,7 +544,7 @@ export async function executeCategoryCreation(
 export async function executePayeeCreation(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  request: api.PayeeCreationRequest,
+  request: Api.PayeeCreationRequest,
 ) {
   if (!operationId) {
     throw new AgentError(
@@ -662,7 +664,7 @@ export async function executeScopedChange(
 export async function executeTagCreation(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  request: api.TagCreationRequest,
+  request: Api.TagCreationRequest,
 ) {
   if (!operationId) {
     throw new AgentError(
@@ -696,7 +698,7 @@ export async function executeTagCreation(
 export async function executeAccountGroupCreation(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  request: api.AccountGroupCreationRequest,
+  request: Api.AccountGroupCreationRequest,
 ) {
   if (!operationId) {
     throw new AgentError(
@@ -732,7 +734,7 @@ export async function executeAccountGroupCreation(
 export async function executeTransactionAddition(
   opts: CliGlobalOpts,
   operationId: string,
-  request: api.TransactionAdditionRequest,
+  request: Api.TransactionAdditionRequest,
 ) {
   const prepared = await previewGuardedChange(
     opts,
@@ -760,7 +762,7 @@ export async function executeTransactionAddition(
 export async function executeTransactionImport(
   opts: CliGlobalOpts,
   operationId: string,
-  request: api.TransactionImportRequest,
+  request: Api.TransactionImportRequest,
 ) {
   const prepared = await previewGuardedChange(
     opts,
@@ -788,7 +790,7 @@ export async function executeTransactionImport(
 export async function executeScheduleCreation(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  request: api.ScheduleCreationRequest,
+  request: Api.ScheduleCreationRequest,
 ) {
   if (!operationId) {
     throw new AgentError(
@@ -824,7 +826,7 @@ export async function executeScheduleCreation(
 export async function executeRuleCreation(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  request: api.RuleCreationRequest,
+  request: Api.RuleCreationRequest,
 ) {
   if (!operationId) {
     throw new AgentError(
@@ -858,7 +860,7 @@ export async function executeRuleCreation(
 export async function executeCategoryDeletion(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  request: api.CategoryDeletionRequest,
+  request: Api.CategoryDeletionRequest,
 ) {
   if (!operationId) {
     throw new AgentError(
@@ -886,7 +888,7 @@ export async function executeCategoryDeletion(
 export async function executeCategoryGroupDeletion(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  request: api.CategoryGroupDeletionRequest,
+  request: Api.CategoryGroupDeletionRequest,
 ) {
   if (!operationId) {
     throw new AgentError(
@@ -914,7 +916,7 @@ export async function executeCategoryGroupDeletion(
 export async function executeCategoryUpdate(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  request: api.CategoryUpdateRequest,
+  request: Api.CategoryUpdateRequest,
 ) {
   if (!operationId) {
     throw new AgentError(
@@ -939,7 +941,7 @@ export async function executeCategoryUpdate(
 export async function executeCategoryGroupUpdate(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  request: api.CategoryGroupUpdateRequest,
+  request: Api.CategoryGroupUpdateRequest,
 ) {
   if (!operationId) {
     throw new AgentError(
@@ -964,7 +966,7 @@ export async function executeCategoryGroupUpdate(
 export async function executeAccountClosure(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  request: api.AccountCloseRequest,
+  request: Api.AccountCloseRequest,
 ) {
   if (!operationId) {
     throw new AgentError(
@@ -1073,7 +1075,7 @@ export async function executeAccountReopen(
 export async function executeAccountUpdate(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  request: api.AccountUpdateRequest,
+  request: Api.AccountUpdateRequest,
 ) {
   if (!operationId) {
     throw new AgentError(
@@ -1101,7 +1103,7 @@ export async function executeAccountUpdate(
 export async function executeAccountCreation(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  request: api.AccountCreationRequest,
+  request: Api.AccountCreationRequest,
 ) {
   if (!operationId) {
     throw new AgentError(
@@ -1139,7 +1141,7 @@ export async function executeAccountCreation(
 export async function executeBudgetCarryover(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  request: api.BudgetCarryoverRequest,
+  request: Api.BudgetCarryoverRequest,
 ) {
   if (!operationId) {
     throw new AgentError(
@@ -1165,7 +1167,7 @@ export async function executeBudgetCarryover(
 export async function executeBudgetHold(
   opts: CliGlobalOpts,
   operationId: string | undefined,
-  request: api.BudgetHoldRequest,
+  request: Api.BudgetHoldRequest,
 ) {
   if (!operationId) {
     throw new AgentError(
@@ -1230,9 +1232,9 @@ export async function resolveGuardConfig(
 }
 
 type DomainAdapter = {
-  preview: (request: unknown) => Promise<api.ChangeProposal>;
+  preview: (request: unknown) => Promise<Api.ChangeProposal>;
   apply: (
-    proposal: api.ChangeProposal,
+    proposal: Api.ChangeProposal,
   ) => Promise<NonNullable<ChangeReceipt['outcome']>>;
 };
 
@@ -1241,259 +1243,259 @@ type DomainAdapter = {
 const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
   'transactions.update': {
     preview: r =>
-      api.previewTransactionUpdate(r as api.TransactionUpdateRequest),
-    apply: p => api.applyTransactionUpdate(p as api.TransactionUpdateProposal),
+      api.previewTransactionUpdate(r as Api.TransactionUpdateRequest),
+    apply: p => api.applyTransactionUpdate(p as Api.TransactionUpdateProposal),
   },
   'category-groups.delete': {
     preview: r =>
-      api.previewCategoryGroupDeletion(r as api.CategoryGroupDeletionRequest),
+      api.previewCategoryGroupDeletion(r as Api.CategoryGroupDeletionRequest),
     apply: p =>
-      api.applyCategoryGroupDeletion(p as api.CategoryGroupDeletionProposal),
+      api.applyCategoryGroupDeletion(p as Api.CategoryGroupDeletionProposal),
   },
   'category-groups.update': {
     preview: r =>
-      api.previewCategoryGroupUpdate(r as api.CategoryGroupUpdateRequest),
+      api.previewCategoryGroupUpdate(r as Api.CategoryGroupUpdateRequest),
     apply: p =>
-      api.applyCategoryGroupUpdate(p as api.CategoryGroupUpdateProposal),
+      api.applyCategoryGroupUpdate(p as Api.CategoryGroupUpdateProposal),
   },
   'category-groups.create': {
     preview: r =>
-      api.previewCategoryGroupCreation(r as api.CategoryGroupCreationRequest),
+      api.previewCategoryGroupCreation(r as Api.CategoryGroupCreationRequest),
     apply: p =>
-      api.applyCategoryGroupCreation(p as api.CategoryGroupCreationProposal),
+      api.applyCategoryGroupCreation(p as Api.CategoryGroupCreationProposal),
   },
   'categories.create': {
-    preview: r => api.previewCategoryCreation(r as api.CategoryCreationRequest),
-    apply: p => api.applyCategoryCreation(p as api.CategoryCreationProposal),
+    preview: r => api.previewCategoryCreation(r as Api.CategoryCreationRequest),
+    apply: p => api.applyCategoryCreation(p as Api.CategoryCreationProposal),
   },
   'categories.delete': {
-    preview: r => api.previewCategoryDeletion(r as api.CategoryDeletionRequest),
-    apply: p => api.applyCategoryDeletion(p as api.CategoryDeletionProposal),
+    preview: r => api.previewCategoryDeletion(r as Api.CategoryDeletionRequest),
+    apply: p => api.applyCategoryDeletion(p as Api.CategoryDeletionProposal),
   },
   'categories.update': {
-    preview: r => api.previewCategoryUpdate(r as api.CategoryUpdateRequest),
-    apply: p => api.applyCategoryUpdate(p as api.CategoryUpdateProposal),
+    preview: r => api.previewCategoryUpdate(r as Api.CategoryUpdateRequest),
+    apply: p => api.applyCategoryUpdate(p as Api.CategoryUpdateProposal),
   },
   'payees.create': {
-    preview: r => api.previewPayeeCreation(r as api.PayeeCreationRequest),
-    apply: p => api.applyPayeeCreation(p as api.PayeeCreationProposal),
+    preview: r => api.previewPayeeCreation(r as Api.PayeeCreationRequest),
+    apply: p => api.applyPayeeCreation(p as Api.PayeeCreationProposal),
   },
   'payees.update': {
-    preview: r => api.previewPayeeUpdate(r as api.PayeeUpdateRequest),
-    apply: p => api.applyPayeeUpdate(p as api.PayeeUpdateProposal),
+    preview: r => api.previewPayeeUpdate(r as Api.PayeeUpdateRequest),
+    apply: p => api.applyPayeeUpdate(p as Api.PayeeUpdateProposal),
   },
   'payees.delete': {
-    preview: r => api.previewPayeeDeletion(r as api.PayeeDeletionRequest),
-    apply: p => api.applyPayeeDeletion(p as api.PayeeDeletionProposal),
+    preview: r => api.previewPayeeDeletion(r as Api.PayeeDeletionRequest),
+    apply: p => api.applyPayeeDeletion(p as Api.PayeeDeletionProposal),
   },
   'payees.merge': {
-    preview: r => api.previewPayeeMerge(r as api.PayeeMergeRequest),
-    apply: p => api.applyPayeeMerge(p as api.PayeeMergeProposal),
+    preview: r => api.previewPayeeMerge(r as Api.PayeeMergeRequest),
+    apply: p => api.applyPayeeMerge(p as Api.PayeeMergeProposal),
   },
   'tags.create': {
-    preview: r => api.previewTagCreation(r as api.TagCreationRequest),
-    apply: p => api.applyTagCreation(p as api.TagCreationProposal),
+    preview: r => api.previewTagCreation(r as Api.TagCreationRequest),
+    apply: p => api.applyTagCreation(p as Api.TagCreationProposal),
   },
   'tags.update': {
-    preview: r => api.previewTagUpdate(r as api.TagUpdateRequest),
-    apply: p => api.applyTagUpdate(p as api.TagUpdateProposal),
+    preview: r => api.previewTagUpdate(r as Api.TagUpdateRequest),
+    apply: p => api.applyTagUpdate(p as Api.TagUpdateProposal),
   },
   'tags.delete': {
-    preview: r => api.previewTagDeletion(r as api.TagDeletionRequest),
-    apply: p => api.applyTagDeletion(p as api.TagDeletionProposal),
+    preview: r => api.previewTagDeletion(r as Api.TagDeletionRequest),
+    apply: p => api.applyTagDeletion(p as Api.TagDeletionProposal),
   },
   'notes.set': {
-    preview: r => api.previewNoteSet(r as api.NoteSetRequest),
-    apply: p => api.applyNoteSet(p as api.NoteSetProposal),
+    preview: r => api.previewNoteSet(r as Api.NoteSetRequest),
+    apply: p => api.applyNoteSet(p as Api.NoteSetProposal),
   },
   'preferences.set': {
-    preview: r => api.previewPreferenceSet(r as api.PreferenceSetRequest),
-    apply: p => api.applyPreferenceSet(p as api.PreferenceSetProposal),
+    preview: r => api.previewPreferenceSet(r as Api.PreferenceSetRequest),
+    apply: p => api.applyPreferenceSet(p as Api.PreferenceSetProposal),
   },
   'account-groups.create': {
     preview: r =>
-      api.previewAccountGroupCreation(r as api.AccountGroupCreationRequest),
+      api.previewAccountGroupCreation(r as Api.AccountGroupCreationRequest),
     apply: p =>
-      api.applyAccountGroupCreation(p as api.AccountGroupCreationProposal),
+      api.applyAccountGroupCreation(p as Api.AccountGroupCreationProposal),
   },
   'account-groups.update': {
     preview: r =>
-      api.previewAccountGroupUpdate(r as api.AccountGroupUpdateRequest),
+      api.previewAccountGroupUpdate(r as Api.AccountGroupUpdateRequest),
     apply: p =>
-      api.applyAccountGroupUpdate(p as api.AccountGroupUpdateProposal),
+      api.applyAccountGroupUpdate(p as Api.AccountGroupUpdateProposal),
   },
   'account-groups.delete': {
     preview: r =>
-      api.previewAccountGroupDeletion(r as api.AccountGroupDeletionRequest),
+      api.previewAccountGroupDeletion(r as Api.AccountGroupDeletionRequest),
     apply: p =>
-      api.applyAccountGroupDeletion(p as api.AccountGroupDeletionProposal),
+      api.applyAccountGroupDeletion(p as Api.AccountGroupDeletionProposal),
   },
   'rules.create': {
-    preview: r => api.previewRuleCreation(r as api.RuleCreationRequest),
-    apply: p => api.applyRuleCreation(p as api.RuleCreationProposal),
+    preview: r => api.previewRuleCreation(r as Api.RuleCreationRequest),
+    apply: p => api.applyRuleCreation(p as Api.RuleCreationProposal),
   },
   'rules.update': {
-    preview: r => api.previewRuleUpdate(r as api.RuleUpdateRequest),
-    apply: p => api.applyRuleUpdate(p as api.RuleUpdateProposal),
+    preview: r => api.previewRuleUpdate(r as Api.RuleUpdateRequest),
+    apply: p => api.applyRuleUpdate(p as Api.RuleUpdateProposal),
   },
   'rules.delete': {
-    preview: r => api.previewRuleDeletion(r as api.RuleDeletionRequest),
-    apply: p => api.applyRuleDeletion(p as api.RuleDeletionProposal),
+    preview: r => api.previewRuleDeletion(r as Api.RuleDeletionRequest),
+    apply: p => api.applyRuleDeletion(p as Api.RuleDeletionProposal),
   },
   'schedules.create': {
-    preview: r => api.previewScheduleCreation(r as api.ScheduleCreationRequest),
-    apply: p => api.applyScheduleCreation(p as api.ScheduleCreationProposal),
+    preview: r => api.previewScheduleCreation(r as Api.ScheduleCreationRequest),
+    apply: p => api.applyScheduleCreation(p as Api.ScheduleCreationProposal),
   },
   'schedules.update': {
-    preview: r => api.previewScheduleUpdate(r as api.ScheduleUpdateRequest),
-    apply: p => api.applyScheduleUpdate(p as api.ScheduleUpdateProposal),
+    preview: r => api.previewScheduleUpdate(r as Api.ScheduleUpdateRequest),
+    apply: p => api.applyScheduleUpdate(p as Api.ScheduleUpdateProposal),
   },
   'schedules.delete': {
-    preview: r => api.previewScheduleDeletion(r as api.ScheduleDeletionRequest),
-    apply: p => api.applyScheduleDeletion(p as api.ScheduleDeletionProposal),
+    preview: r => api.previewScheduleDeletion(r as Api.ScheduleDeletionRequest),
+    apply: p => api.applyScheduleDeletion(p as Api.ScheduleDeletionProposal),
   },
   'transactions.delete': {
     preview: r =>
-      api.previewTransactionDeletion(r as api.TransactionDeletionRequest),
+      api.previewTransactionDeletion(r as Api.TransactionDeletionRequest),
     apply: p =>
-      api.applyTransactionDeletion(p as api.TransactionDeletionProposal),
+      api.applyTransactionDeletion(p as Api.TransactionDeletionProposal),
   },
   'transactions.categorize': {
     preview: r =>
       api.previewTransactionCategorization(
-        r as api.TransactionCategorizationRequest,
+        r as Api.TransactionCategorizationRequest,
       ),
     apply: p =>
       api.applyTransactionCategorization(
-        p as api.TransactionCategorizationProposal,
+        p as Api.TransactionCategorizationProposal,
       ),
   },
   'transactions.clear': {
     preview: r =>
-      api.previewTransactionClearing(r as api.TransactionClearingRequest),
+      api.previewTransactionClearing(r as Api.TransactionClearingRequest),
     apply: p =>
-      api.applyTransactionClearing(p as api.TransactionClearingProposal),
+      api.applyTransactionClearing(p as Api.TransactionClearingProposal),
   },
   'imports.mapping-save': {
     preview: r =>
-      api.previewImportMappingSave(r as api.ImportMappingSaveRequest),
-    apply: p => api.applyImportMappingSave(p as api.ImportMappingSaveProposal),
+      api.previewImportMappingSave(r as Api.ImportMappingSaveRequest),
+    apply: p => api.applyImportMappingSave(p as Api.ImportMappingSaveProposal),
   },
   'rules.apply': {
-    preview: r => api.previewRuleApply(r as api.RuleApplyRequest),
-    apply: p => api.applyRuleApply(p as api.RuleApplyProposal),
+    preview: r => api.previewRuleApply(r as Api.RuleApplyRequest),
+    apply: p => api.applyRuleApply(p as Api.RuleApplyProposal),
   },
   'schedules.post': {
-    preview: r => api.previewSchedulePost(r as api.ScheduleOccurrenceRequest),
-    apply: p => api.applySchedulePost(p as api.SchedulePostProposal),
+    preview: r => api.previewSchedulePost(r as Api.ScheduleOccurrenceRequest),
+    apply: p => api.applySchedulePost(p as Api.SchedulePostProposal),
   },
   'schedules.skip': {
-    preview: r => api.previewScheduleSkip(r as api.ScheduleOccurrenceRequest),
-    apply: p => api.applyScheduleSkip(p as api.ScheduleSkipProposal),
+    preview: r => api.previewScheduleSkip(r as Api.ScheduleOccurrenceRequest),
+    apply: p => api.applyScheduleSkip(p as Api.ScheduleSkipProposal),
   },
   'budgets.move': {
-    preview: r => api.previewBudgetMove(r as api.BudgetMoveRequest),
-    apply: p => api.applyBudgetMove(p as api.BudgetMoveProposal),
+    preview: r => api.previewBudgetMove(r as Api.BudgetMoveRequest),
+    apply: p => api.applyBudgetMove(p as Api.BudgetMoveProposal),
   },
   'budgets.apply-templates': {
     preview: r =>
-      api.previewTemplateApplication(r as api.BudgetTemplatesRequest),
-    apply: p => api.applyTemplateApplication(p as api.BudgetTemplatesProposal),
+      api.previewTemplateApplication(r as Api.BudgetTemplatesRequest),
+    apply: p => api.applyTemplateApplication(p as Api.BudgetTemplatesProposal),
   },
   'reconcile.finish': {
-    preview: r => api.previewReconcileFinish(r as api.ReconcileFinishRequest),
-    apply: p => api.applyReconcileFinish(p as api.ReconcileFinishProposal),
+    preview: r => api.previewReconcileFinish(r as Api.ReconcileFinishRequest),
+    apply: p => api.applyReconcileFinish(p as Api.ReconcileFinishProposal),
   },
   'reconcile.adjust': {
-    preview: r => api.previewReconcileAdjust(r as api.ReconcileAdjustRequest),
-    apply: p => api.applyReconcileAdjust(p as api.ReconcileAdjustProposal),
+    preview: r => api.previewReconcileAdjust(r as Api.ReconcileAdjustRequest),
+    apply: p => api.applyReconcileAdjust(p as Api.ReconcileAdjustProposal),
   },
   'imports.file': {
-    preview: r => api.previewFileImport(r as api.ImportFileRequest),
-    apply: p => api.applyFileImport(p as api.ImportFileProposal),
+    preview: r => api.previewFileImport(r as Api.ImportFileRequest),
+    apply: p => api.applyFileImport(p as Api.ImportFileProposal),
   },
   'transfers.match': {
-    preview: r => api.previewTransferMatch(r as api.TransferMatchRequest),
-    apply: p => api.applyTransferMatch(p as api.TransferMatchProposal),
+    preview: r => api.previewTransferMatch(r as Api.TransferMatchRequest),
+    apply: p => api.applyTransferMatch(p as Api.TransferMatchProposal),
   },
   'transfers.unmatch': {
-    preview: r => api.previewTransferUnmatch(r as api.TransferUnmatchRequest),
-    apply: p => api.applyTransferUnmatch(p as api.TransferUnmatchProposal),
+    preview: r => api.previewTransferUnmatch(r as Api.TransferUnmatchRequest),
+    apply: p => api.applyTransferUnmatch(p as Api.TransferUnmatchProposal),
   },
   'transfers.repair': {
-    preview: r => api.previewTransferRepair(r as api.TransferRepairRequest),
-    apply: p => api.applyTransferRepair(p as api.TransferRepairProposal),
+    preview: r => api.previewTransferRepair(r as Api.TransferRepairRequest),
+    apply: p => api.applyTransferRepair(p as Api.TransferRepairProposal),
   },
   'transactions.merge': {
-    preview: r => api.previewTransactionMerge(r as api.TransactionMergeRequest),
-    apply: p => api.applyTransactionMerge(p as api.TransactionMergeProposal),
+    preview: r => api.previewTransactionMerge(r as Api.TransactionMergeRequest),
+    apply: p => api.applyTransactionMerge(p as Api.TransactionMergeProposal),
   },
   'transactions.split': {
-    preview: r => api.previewTransactionSplit(r as api.TransactionSplitRequest),
-    apply: p => api.applyTransactionSplit(p as api.TransactionSplitProposal),
+    preview: r => api.previewTransactionSplit(r as Api.TransactionSplitRequest),
+    apply: p => api.applyTransactionSplit(p as Api.TransactionSplitProposal),
   },
   'cash-planning.save': {
-    preview: r => api.previewCashPlanSave(r as api.CashPlanSaveRequest),
-    apply: p => api.applyCashPlanSave(p as api.CashPlanSaveProposal),
+    preview: r => api.previewCashPlanSave(r as Api.CashPlanSaveRequest),
+    apply: p => api.applyCashPlanSave(p as Api.CashPlanSaveProposal),
   },
   'transactions.add': {
     preview: r =>
-      api.previewTransactionAddition(r as api.TransactionAdditionRequest),
+      api.previewTransactionAddition(r as Api.TransactionAdditionRequest),
     apply: p =>
-      api.applyTransactionAddition(p as api.TransactionAdditionProposal),
+      api.applyTransactionAddition(p as Api.TransactionAdditionProposal),
   },
   'transactions.import': {
     preview: r =>
-      api.previewTransactionImport(r as api.TransactionImportRequest),
-    apply: p => api.applyTransactionImport(p as api.TransactionImportProposal),
+      api.previewTransactionImport(r as Api.TransactionImportRequest),
+    apply: p => api.applyTransactionImport(p as Api.TransactionImportProposal),
   },
   'accounts.close': {
-    preview: r => api.previewAccountClosure(r as api.AccountCloseRequest),
-    apply: p => api.applyAccountClosure(p as api.AccountCloseProposal),
+    preview: r => api.previewAccountClosure(r as Api.AccountCloseRequest),
+    apply: p => api.applyAccountClosure(p as Api.AccountCloseProposal),
   },
   'accounts.delete': {
-    preview: r => api.previewAccountDeletion(r as api.AccountDeletionRequest),
-    apply: p => api.applyAccountDeletion(p as api.AccountDeletionProposal),
+    preview: r => api.previewAccountDeletion(r as Api.AccountDeletionRequest),
+    apply: p => api.applyAccountDeletion(p as Api.AccountDeletionProposal),
   },
   'accounts.reopen': {
-    preview: r => api.previewAccountReopen(r as api.AccountReopenRequest),
-    apply: p => api.applyAccountReopen(p as api.AccountReopenProposal),
+    preview: r => api.previewAccountReopen(r as Api.AccountReopenRequest),
+    apply: p => api.applyAccountReopen(p as Api.AccountReopenProposal),
   },
   'accounts.update': {
-    preview: r => api.previewAccountUpdate(r as api.AccountUpdateRequest),
-    apply: p => api.applyAccountUpdate(p as api.AccountUpdateProposal),
+    preview: r => api.previewAccountUpdate(r as Api.AccountUpdateRequest),
+    apply: p => api.applyAccountUpdate(p as Api.AccountUpdateProposal),
   },
   'accounts.create': {
-    preview: r => api.previewAccountCreation(r as api.AccountCreationRequest),
-    apply: p => api.applyAccountCreation(p as api.AccountCreationProposal),
+    preview: r => api.previewAccountCreation(r as Api.AccountCreationRequest),
+    apply: p => api.applyAccountCreation(p as Api.AccountCreationProposal),
   },
   'budgets.set-amount': {
-    preview: r => api.previewBudgetAmount(r as api.BudgetAmountRequest),
-    apply: p => api.applyBudgetAmount(p as api.BudgetAmountProposal),
+    preview: r => api.previewBudgetAmount(r as Api.BudgetAmountRequest),
+    apply: p => api.applyBudgetAmount(p as Api.BudgetAmountProposal),
   },
   'budgets.set-carryover': {
-    preview: r => api.previewBudgetCarryover(r as api.BudgetCarryoverRequest),
-    apply: p => api.applyBudgetCarryover(p as api.BudgetCarryoverProposal),
+    preview: r => api.previewBudgetCarryover(r as Api.BudgetCarryoverRequest),
+    apply: p => api.applyBudgetCarryover(p as Api.BudgetCarryoverProposal),
   },
   'budgets.hold-next-month': {
-    preview: r => api.previewBudgetHold(r as api.BudgetHoldRequest),
-    apply: p => api.applyBudgetHold(p as api.BudgetHoldProposal),
+    preview: r => api.previewBudgetHold(r as Api.BudgetHoldRequest),
+    apply: p => api.applyBudgetHold(p as Api.BudgetHoldProposal),
   },
   'budgets.reset-hold': {
-    preview: r => api.previewBudgetHold(r as api.BudgetHoldRequest),
-    apply: p => api.applyBudgetHold(p as api.BudgetHoldProposal),
+    preview: r => api.previewBudgetHold(r as Api.BudgetHoldRequest),
+    apply: p => api.applyBudgetHold(p as Api.BudgetHoldProposal),
   },
   'budgets.rename': {
-    preview: r => api.previewBudgetMetadata(r as api.BudgetMetadataRequest),
-    apply: p => api.applyBudgetMetadata(p as api.BudgetMetadataProposal),
+    preview: r => api.previewBudgetMetadata(r as Api.BudgetMetadataRequest),
+    apply: p => api.applyBudgetMetadata(p as Api.BudgetMetadataProposal),
   },
   'budgets.archive': {
-    preview: r => api.previewBudgetMetadata(r as api.BudgetMetadataRequest),
-    apply: p => api.applyBudgetMetadata(p as api.BudgetMetadataProposal),
+    preview: r => api.previewBudgetMetadata(r as Api.BudgetMetadataRequest),
+    apply: p => api.applyBudgetMetadata(p as Api.BudgetMetadataProposal),
   },
   'budgets.clone': {
-    preview: r => api.previewBudgetClone(r as api.BudgetCloneRequest),
-    apply: p => api.applyBudgetClone(p as api.BudgetCloneProposal),
+    preview: r => api.previewBudgetClone(r as Api.BudgetCloneRequest),
+    apply: p => api.applyBudgetClone(p as Api.BudgetCloneProposal),
   },
 };
 
@@ -1515,61 +1517,61 @@ function changeRequest(
   id: string,
   payload: unknown,
 ):
-  | api.CategoryGroupUpdateRequest
-  | api.CategoryGroupCreationRequest
-  | api.CategoryCreationRequest
-  | api.PayeeCreationRequest
-  | api.PayeeUpdateRequest
-  | api.PayeeDeletionRequest
-  | api.PayeeMergeRequest
-  | api.TagCreationRequest
-  | api.TagUpdateRequest
-  | api.TagDeletionRequest
-  | api.NoteSetRequest
-  | api.PreferenceSetRequest
-  | api.AccountGroupCreationRequest
-  | api.AccountGroupUpdateRequest
-  | api.AccountGroupDeletionRequest
-  | api.RuleCreationRequest
-  | api.RuleUpdateRequest
-  | api.RuleDeletionRequest
-  | api.ScheduleCreationRequest
-  | api.ScheduleUpdateRequest
-  | api.ScheduleDeletionRequest
-  | api.TransactionDeletionRequest
-  | api.TransactionCategorizationRequest
-  | api.TransactionClearingRequest
-  | api.TransferMatchRequest
-  | api.ImportMappingSaveRequest
-  | api.ImportFileRequest
-  | api.RuleApplyRequest
-  | api.ScheduleOccurrenceRequest
-  | api.BudgetMoveRequest
-  | api.BudgetTemplatesRequest
-  | api.ReconcileFinishRequest
-  | api.ReconcileAdjustRequest
-  | api.TransferUnmatchRequest
-  | api.TransferRepairRequest
-  | api.TransactionMergeRequest
-  | api.TransactionSplitRequest
-  | api.CashPlanSaveRequest
-  | api.TransactionAdditionRequest
-  | api.TransactionImportRequest
-  | api.CategoryGroupDeletionRequest
-  | api.CategoryDeletionRequest
-  | api.CategoryUpdateRequest
-  | api.TransactionUpdateRequest
-  | api.AccountCreationRequest
-  | api.AccountUpdateRequest
-  | api.AccountCloseRequest
-  | api.AccountDeletionRequest
-  | api.AccountReopenRequest
-  | api.BudgetAmountRequest
-  | api.BudgetCarryoverRequest
-  | api.BudgetHoldRequest
-  | api.BudgetMetadataRequest
-  | api.BudgetCloneRequest
-  | api.BudgetPublicationRequest {
+  | Api.CategoryGroupUpdateRequest
+  | Api.CategoryGroupCreationRequest
+  | Api.CategoryCreationRequest
+  | Api.PayeeCreationRequest
+  | Api.PayeeUpdateRequest
+  | Api.PayeeDeletionRequest
+  | Api.PayeeMergeRequest
+  | Api.TagCreationRequest
+  | Api.TagUpdateRequest
+  | Api.TagDeletionRequest
+  | Api.NoteSetRequest
+  | Api.PreferenceSetRequest
+  | Api.AccountGroupCreationRequest
+  | Api.AccountGroupUpdateRequest
+  | Api.AccountGroupDeletionRequest
+  | Api.RuleCreationRequest
+  | Api.RuleUpdateRequest
+  | Api.RuleDeletionRequest
+  | Api.ScheduleCreationRequest
+  | Api.ScheduleUpdateRequest
+  | Api.ScheduleDeletionRequest
+  | Api.TransactionDeletionRequest
+  | Api.TransactionCategorizationRequest
+  | Api.TransactionClearingRequest
+  | Api.TransferMatchRequest
+  | Api.ImportMappingSaveRequest
+  | Api.ImportFileRequest
+  | Api.RuleApplyRequest
+  | Api.ScheduleOccurrenceRequest
+  | Api.BudgetMoveRequest
+  | Api.BudgetTemplatesRequest
+  | Api.ReconcileFinishRequest
+  | Api.ReconcileAdjustRequest
+  | Api.TransferUnmatchRequest
+  | Api.TransferRepairRequest
+  | Api.TransactionMergeRequest
+  | Api.TransactionSplitRequest
+  | Api.CashPlanSaveRequest
+  | Api.TransactionAdditionRequest
+  | Api.TransactionImportRequest
+  | Api.CategoryGroupDeletionRequest
+  | Api.CategoryDeletionRequest
+  | Api.CategoryUpdateRequest
+  | Api.TransactionUpdateRequest
+  | Api.AccountCreationRequest
+  | Api.AccountUpdateRequest
+  | Api.AccountCloseRequest
+  | Api.AccountDeletionRequest
+  | Api.AccountReopenRequest
+  | Api.BudgetAmountRequest
+  | Api.BudgetCarryoverRequest
+  | Api.BudgetHoldRequest
+  | Api.BudgetMetadataRequest
+  | Api.BudgetCloneRequest
+  | Api.BudgetPublicationRequest {
   if (operation === 'budgets.publish') {
     if (
       !isRecord(payload) ||
@@ -1584,13 +1586,13 @@ function changeRequest(
     return { id, encrypted: payload.encrypted };
   }
   if (operation === 'category-groups.create') {
-    return payload as api.CategoryGroupCreationRequest;
+    return payload as Api.CategoryGroupCreationRequest;
   }
   if (operation === 'categories.create') {
-    return payload as api.CategoryCreationRequest;
+    return payload as Api.CategoryCreationRequest;
   }
   if (operation === 'payees.create') {
-    return payload as api.PayeeCreationRequest;
+    return payload as Api.PayeeCreationRequest;
   }
   if (operation === 'payees.update') {
     if (
@@ -1631,7 +1633,7 @@ function changeRequest(
         'Cash plan save takes only a config object, or null to reset.',
       );
     }
-    return payload as api.CashPlanSaveRequest;
+    return payload as Api.CashPlanSaveRequest;
   }
   if (operation === 'transactions.split') {
     if (
@@ -1653,7 +1655,7 @@ function changeRequest(
     return {
       id,
       subtransactions:
-        payload.subtransactions as api.TransactionSplitRequest['subtransactions'],
+        payload.subtransactions as Api.TransactionSplitRequest['subtransactions'],
       ...(payload.allowReconciled === undefined
         ? {}
         : { allowReconciled: payload.allowReconciled }),
@@ -1908,7 +1910,7 @@ function changeRequest(
         'File import takes path, accountId and optional settings, useSaved, sha256, invalidRows (reject or skip) and opts.',
       );
     }
-    return payload as api.ImportFileRequest;
+    return payload as Api.ImportFileRequest;
   }
   if (operation === 'transfers.match') {
     if (
@@ -2022,7 +2024,7 @@ function changeRequest(
     };
   }
   if (operation === 'schedules.create') {
-    return payload as api.ScheduleCreationRequest;
+    return payload as Api.ScheduleCreationRequest;
   }
   if (operation === 'schedules.update') {
     if (
@@ -2046,7 +2048,7 @@ function changeRequest(
     };
   }
   if (operation === 'rules.create') {
-    return payload as api.RuleCreationRequest;
+    return payload as Api.RuleCreationRequest;
   }
   if (operation === 'rules.update') {
     if (!isRecord(payload) || 'id' in payload) {
@@ -2055,7 +2057,7 @@ function changeRequest(
         'Rule update takes rule fields; the rule is the change ID.',
       );
     }
-    return { id, fields: payload as api.RuleUpdateRequest['fields'] };
+    return { id, fields: payload as Api.RuleUpdateRequest['fields'] };
   }
   if (
     operation === 'payees.delete' ||
@@ -2073,7 +2075,7 @@ function changeRequest(
     return { id };
   }
   if (operation === 'tags.create') {
-    return payload as api.TagCreationRequest;
+    return payload as Api.TagCreationRequest;
   }
   if (operation === 'tags.update') {
     if (
@@ -2088,7 +2090,7 @@ function changeRequest(
         'Tag update requires tag, color or description.',
       );
     }
-    return { id, fields: payload as api.TagUpdateRequest['fields'] };
+    return { id, fields: payload as Api.TagUpdateRequest['fields'] };
   }
   if (operation === 'account-groups.create') {
     if (
@@ -2169,7 +2171,7 @@ function changeRequest(
     }
     return {
       id,
-      ...(payload as Pick<api.CategoryDeletionRequest, 'transferCategoryId'>),
+      ...(payload as Pick<Api.CategoryDeletionRequest, 'transferCategoryId'>),
     };
   }
   if (operation === 'category-groups.update') {
@@ -2186,7 +2188,7 @@ function changeRequest(
         'Category group update requires supported group fields.',
       );
     }
-    return { id, fields: payload as api.CategoryGroupUpdateRequest['fields'] };
+    return { id, fields: payload as Api.CategoryGroupUpdateRequest['fields'] };
   }
   if (operation === 'categories.update') {
     if (
@@ -2201,10 +2203,10 @@ function changeRequest(
         'Category update requires supported category fields.',
       );
     }
-    return { id, fields: payload as api.CategoryUpdateRequest['fields'] };
+    return { id, fields: payload as Api.CategoryUpdateRequest['fields'] };
   }
   if (operation === 'transactions.update') {
-    return { id, fields: payload as api.TransactionUpdateRequest['fields'] };
+    return { id, fields: payload as Api.TransactionUpdateRequest['fields'] };
   }
   if (operation === 'accounts.close') {
     if (
@@ -2242,10 +2244,10 @@ function changeRequest(
     return { id };
   }
   if (operation === 'accounts.update') {
-    return { id, fields: payload as api.AccountUpdateRequest['fields'] };
+    return { id, fields: payload as Api.AccountUpdateRequest['fields'] };
   }
   if (operation === 'accounts.create') {
-    return payload as api.AccountCreationRequest;
+    return payload as Api.AccountCreationRequest;
   }
   if (operation === 'budgets.set-amount') {
     return {
@@ -2350,7 +2352,7 @@ export async function previewGuardedChange(
             }
             return existing;
           }
-          let proposal: api.ChangeProposal;
+          let proposal: Api.ChangeProposal;
           try {
             proposal =
               restores && restore
@@ -2360,11 +2362,11 @@ export async function previewGuardedChange(
                   )
                 : creates
                   ? await api.previewBudgetCreation(
-                      request as api.BudgetCreationRequest,
+                      request as Api.BudgetCreationRequest,
                     )
                   : operation === 'budgets.publish'
                     ? await api.previewBudgetPublication(
-                        request as api.BudgetPublicationRequest,
+                        request as Api.BudgetPublicationRequest,
                       )
                     : await domainAdapter(operation).preview(request);
           } catch (error) {
@@ -2496,7 +2498,7 @@ export async function applyGuardedChange(
           }
           if (receipt.state === 'uncertain') {
             if (receipt.proposal.operation === 'budgets.publish') {
-              let recovered: api.BudgetPublicationOutcome;
+              let recovered: Api.BudgetPublicationOutcome;
               try {
                 recovered = await api.recoverBudgetPublication(
                   receipt.proposal,

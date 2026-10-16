@@ -1,8 +1,8 @@
-import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { resolveConfig } from '#config';
 import { withConnection } from '#connection';
+import { api } from '#engine';
 import { printOutput } from '#output';
 import { upgradeCheck } from '#upgrade-check';
 

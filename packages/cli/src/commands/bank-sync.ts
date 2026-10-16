@@ -1,4 +1,3 @@
-import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { AgentError } from '#agent-output';
@@ -6,6 +5,7 @@ import { listRuns, newRunId, readRun, writeRun } from '#bank-sync-runs';
 import type { BankSyncRun } from '#bank-sync-runs';
 import { resolveConfig } from '#config';
 import { withConnection } from '#connection';
+import { api } from '#engine';
 import { printOutput } from '#output';
 import { errorMessage } from '#utils';
 

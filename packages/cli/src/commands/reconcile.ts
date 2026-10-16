@@ -1,8 +1,9 @@
-import * as api from '@actual-app/api';
+import type * as Api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { AgentError } from '#agent-output';
 import { withConnection } from '#connection';
+import { api } from '#engine';
 import { executeScopedChange } from '#guarded-changes';
 import { printOutput } from '#output';
 import { errorMessage, parseIntFlag } from '#utils';
@@ -34,7 +35,7 @@ export function registerReconcileCommand(program: Command) {
         cmdOpts: { balance?: string; date?: string },
       ) => {
         const opts = program.opts();
-        const request: api.ReconciliationStatusRequest = {
+        const request: Api.ReconciliationStatusRequest = {
           accountId,
           ...(cmdOpts.balance === undefined
             ? {}

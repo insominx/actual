@@ -1,8 +1,9 @@
-import * as api from '@actual-app/api';
+import type * as Api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { AgentError } from '#agent-output';
 import { withConnection } from '#connection';
+import { api } from '#engine';
 import {
   executeCategoryCreation,
   executeCategoryDeletion,
@@ -111,7 +112,7 @@ export function registerCategoriesCommand(program: Command) {
     .option('--hidden <bool>', 'Set hidden status')
     .option('--group-id <id>', 'Move the category to this category group')
     .action(async (id: string, cmdOpts) => {
-      const fields: api.CategoryUpdateRequest['fields'] = {};
+      const fields: Api.CategoryUpdateRequest['fields'] = {};
       if (cmdOpts.name !== undefined) fields.name = cmdOpts.name;
       if (cmdOpts.groupId !== undefined) fields.group_id = cmdOpts.groupId;
       if (cmdOpts.hidden !== undefined) {

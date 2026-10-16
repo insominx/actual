@@ -1,11 +1,12 @@
 import { open } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-import * as api from '@actual-app/api';
+import type * as Api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { AgentError } from '#agent-output';
 import { withConnection } from '#connection';
+import { api } from '#engine';
 import { printOutput } from '#output';
 import { centsToDecimal, toCsv, toHtml } from '#report-export';
 import type { ExportDocument, ExportFormat, ExportTable } from '#report-export';
@@ -35,7 +36,7 @@ function amount(cents: number) {
 }
 
 function detailsTable(
-  details: api.ReportDetailRow[] | undefined,
+  details: Api.ReportDetailRow[] | undefined,
 ): ExportTable[] {
   if (!details) return [];
   return [
@@ -200,7 +201,7 @@ function addReport(
   reports: Command,
   name: string,
   description: string,
-  run: (request: api.ReportRequest) => Promise<AnyReport>,
+  run: (request: Api.ReportRequest) => Promise<AnyReport>,
 ) {
   reports
     .command(name)
@@ -232,7 +233,7 @@ function addReport(
       } else if (cmdOpts.out !== undefined) {
         throw new AgentError('INVALID_INPUT', '--out requires --export');
       }
-      const request: api.ReportRequest = {
+      const request: Api.ReportRequest = {
         start: cmdOpts.fromMonth,
         end: cmdOpts.toMonth,
         ...(cmdOpts.accounts === undefined

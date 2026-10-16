@@ -6,7 +6,9 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import * as api from '@actual-app/api';
+import type * as Api from '@actual-app/api';
+
+import { api } from '#engine';
 
 import { AgentError } from './agent-output';
 import { createBudgetBackup } from './commands/backups';
@@ -476,7 +478,7 @@ async function runSetupStep(step: WorkflowStep, ctx: StepContext) {
         executeBudgetCreation(
           { ...ctx.opts, syncId: undefined, budgetId: undefined },
           id,
-          payload as unknown as api.BudgetCreationRequest,
+          payload as unknown as Api.BudgetCreationRequest,
         ),
     );
     ctx.run.budget = { syncId: null, budgetId: created.id };
@@ -498,7 +500,7 @@ async function runSetupStep(step: WorkflowStep, ctx: StepContext) {
         executeAccountCreation(
           opts(),
           id,
-          payload as unknown as api.AccountCreationRequest,
+          payload as unknown as Api.AccountCreationRequest,
         ),
     );
     return {
@@ -517,7 +519,7 @@ async function runSetupStep(step: WorkflowStep, ctx: StepContext) {
         executeCategoryGroupCreation(
           opts(),
           id,
-          payload as unknown as api.CategoryGroupCreationRequest,
+          payload as unknown as Api.CategoryGroupCreationRequest,
         ),
     );
     return {
@@ -549,7 +551,7 @@ async function runSetupStep(step: WorkflowStep, ctx: StepContext) {
         executeCategoryCreation(
           opts(),
           id,
-          payload as unknown as api.CategoryCreationRequest,
+          payload as unknown as Api.CategoryCreationRequest,
         ),
     );
     return {
@@ -601,7 +603,7 @@ async function runIntakeStep(step: WorkflowStep, ctx: StepContext) {
       }),
       (id, payload) => executeScopedChange(opts, id, 'imports.file', payload),
     );
-    const proposal = receipt.proposal as unknown as api.ImportFileProposal;
+    const proposal = receipt.proposal as unknown as Api.ImportFileProposal;
     const dates = proposal.after.added
       .map(row => String(row.date))
       .filter(d => DATE.test(d))

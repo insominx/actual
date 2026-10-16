@@ -1,8 +1,9 @@
-import * as api from '@actual-app/api';
+import type * as Api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { AgentError } from '#agent-output';
 import { withConnection } from '#connection';
+import { api } from '#engine';
 import {
   executeCategoryGroupCreation,
   executeCategoryGroupDeletion,
@@ -74,7 +75,7 @@ export function registerCategoryGroupsCommand(program: Command) {
     .option('--name <name>', 'New group name')
     .option('--hidden <bool>', 'Set hidden status')
     .action(async (id: string, cmdOpts) => {
-      const fields: api.CategoryGroupUpdateRequest['fields'] = {};
+      const fields: Api.CategoryGroupUpdateRequest['fields'] = {};
       if (cmdOpts.name !== undefined) fields.name = cmdOpts.name;
       if (cmdOpts.hidden !== undefined) {
         fields.hidden = parseBoolFlag(cmdOpts.hidden, '--hidden');

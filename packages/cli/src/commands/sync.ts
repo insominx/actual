@@ -1,7 +1,6 @@
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 
-import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { AgentError, updateAgentContext } from '#agent-output';
@@ -9,6 +8,7 @@ import { CACHE_FILE_NAME, getMetaDir, readCacheState } from '#cache';
 import type { CliConfig } from '#config';
 import { resolveConfig } from '#config';
 import { withConnection } from '#connection';
+import { api } from '#engine';
 import { acquireExclusive } from '#lock';
 import { printOutput } from '#output';
 import { watchSync } from '#sync-watch';

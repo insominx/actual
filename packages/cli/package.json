@@ -43,6 +43,7 @@
     "#cache": "./src/cache.ts",
     "#commands/*": "./src/commands/*.ts",
     "#config": "./src/config.ts",
+    "#engine": "./src/engine.ts",
     "#connection": "./src/connection.ts",
     "#input": "./src/input.ts",
     "#lock": "./src/lock.ts",

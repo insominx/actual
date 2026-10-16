@@ -1,8 +1,9 @@
-import * as api from '@actual-app/api';
+import type * as Api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { AgentError } from '#agent-output';
 import { withConnection } from '#connection';
+import { api } from '#engine';
 import {
   executeCatalogChange,
   executeScheduleCreation,
@@ -53,7 +54,7 @@ export function registerSchedulesCommand(program: Command) {
           await executeScheduleCreation(
             opts,
             cmdOpts.operationId,
-            readJsonInput(cmdOpts) as api.ScheduleCreationRequest,
+            readJsonInput(cmdOpts) as Api.ScheduleCreationRequest,
           ),
           opts.format,
         );
@@ -146,7 +147,7 @@ export function registerSchedulesCommand(program: Command) {
         { mutates: true },
       );
     });
-  const inspect = async (request: api.ScheduleInspectionRequest) => {
+  const inspect = async (request: Api.ScheduleInspectionRequest) => {
     const opts = program.opts();
     await withConnection(
       opts,

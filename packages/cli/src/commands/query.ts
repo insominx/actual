@@ -1,10 +1,10 @@
 import { createHash } from 'node:crypto';
 
-import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { addAgentWarning, AgentError } from '#agent-output';
 import { withConnection } from '#connection';
+import { api } from '#engine';
 import { readJsonInput } from '#input';
 import { printOutput } from '#output';
 import { isRecord, parseIntFlag } from '#utils';

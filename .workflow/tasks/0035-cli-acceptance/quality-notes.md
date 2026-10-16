@@ -18,3 +18,15 @@ All nine areas are complete (see table). Hazards: `yarn typecheck`, api tests an
 | 7   | Dependencies / packaging                       | in progress | stats.json excluded from tarball; prod audit clean, 95 dev-tool advisories inherited |
 | 8   | D13 relax-or-keep                              | todo        |                                                                                      |
 | 9   | CI sanity                                      | todo        |                                                                                      |
+
+## Round 2 checklist (Michael approved all seven)
+
+| #   | Item                                                                                                               | Status                                        |
+| --- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
+| R1  | Fork CI: depot runners to ubuntu-latest                                                                            | done (D22; run results unreadable, see notes) |
+| R2  | Lazy-load the engine for faster startup                                                                            | done (D23; 533 to 125 ms)                     |
+| R3  | capabilities.preview honest (D24)                                                                                  | done (D24)                                    |
+| R4  | Quiet dev-tooling audit advisories                                                                                 | todo                                          |
+| R5  | Adversarial round: templates, cash-planning rounding, restore across versions, schedules, Windows paths on liftoff | todo                                          |
+| R6  | One-page architecture and decisions overview                                                                       | todo                                          |
+| R7  | Test speed, flake detector, metadata.json race retry                                                               | todo                                          |

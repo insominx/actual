@@ -36,7 +36,19 @@ export default defineConfig({
       },
     },
   },
-  plugins: [visualizer({ template: 'raw-data', filename: 'dist/stats.json' })],
+  plugins: [
+    {
+      // Keep the 8 MB TypeScript compiler (only used by cosmiconfig's unused
+      // .ts config loader) out of the bundle; see build-stubs/typescript.mjs.
+      name: 'stub-typescript',
+      enforce: 'pre',
+      resolveId: source =>
+        source === 'typescript'
+          ? path.resolve(__dirname, 'build-stubs/typescript.mjs')
+          : null,
+    },
+    visualizer({ template: 'raw-data', filename: 'dist/stats.json' }),
+  ],
   test: {
     globals: true,
     include: ['src/**/*.test.ts'],

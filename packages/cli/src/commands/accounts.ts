@@ -1,8 +1,9 @@
-import * as api from '@actual-app/api';
+import type * as Api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { AgentError } from '#agent-output';
 import { withConnection } from '#connection';
+import { api } from '#engine';
 import {
   executeAccountClosure,
   executeAccountCreation,
@@ -124,7 +125,7 @@ export function registerAccountsCommand(program: Command) {
     )
     .action(async (id: string, cmdOpts) => {
       const opts = program.opts();
-      const fields: api.AccountUpdateRequest['fields'] = {};
+      const fields: Api.AccountUpdateRequest['fields'] = {};
       if (cmdOpts.name !== undefined) {
         const trimmed = cmdOpts.name.trim();
         if (trimmed === '') {

@@ -1,9 +1,10 @@
-import * as api from '@actual-app/api';
+import type * as Api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { AgentError } from '#agent-output';
 import { resolveConfig } from '#config';
 import { withConnection } from '#connection';
+import { api } from '#engine';
 import { printOutput } from '#output';
 import {
   addStatement,
@@ -68,7 +69,7 @@ export function registerCheckupCommand(program: Command) {
           noActivity: s.noActivity,
           source: s.source,
         }));
-        const request: api.DataQualityRequest = {
+        const request: Api.DataQualityRequest = {
           start: cmdOpts.fromMonth,
           end: cmdOpts.toMonth,
           ...(cmdOpts.accounts === undefined

@@ -24,7 +24,7 @@ import {
   sep,
 } from 'node:path';
 
-import * as api from '@actual-app/api';
+import { api } from '#engine';
 
 import { AgentError } from './agent-output';
 import type { CliGlobalOpts } from './config';

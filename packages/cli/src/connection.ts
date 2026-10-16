@@ -1,4 +1,4 @@
-import * as api from '@actual-app/api';
+import { api } from '#engine';
 
 import { AgentError, updateAgentContext } from './agent-output';
 import type { CacheState } from './cache';

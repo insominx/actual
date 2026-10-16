@@ -1,12 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
-import * as api from '@actual-app/api';
+import type * as Api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { AgentError } from '#agent-output';
 import { validateOperationId, withChangeJournal } from '#change-journal';
 import { withConnection } from '#connection';
+import { api } from '#engine';
 import { executeScopedChange, resolveGuardConfig } from '#guarded-changes';
 import { printOutput } from '#output';
 import { errorMessage } from '#utils';
@@ -57,7 +58,7 @@ type FileImportOptions = {
 function fileImportRequest(
   file: string,
   cmdOpts: FileImportOptions,
-): api.ImportFileRequest {
+): Api.ImportFileRequest {
   const settings = parseSettings(cmdOpts.settings);
   if (
     cmdOpts.payeeNames !== undefined &&
@@ -71,7 +72,7 @@ function fileImportRequest(
       { field: 'payeeNames' },
     );
   }
-  const opts: NonNullable<api.ImportFileRequest['opts']> = {};
+  const opts: NonNullable<Api.ImportFileRequest['opts']> = {};
   if (cmdOpts.uncleared) opts.defaultCleared = false;
   if (cmdOpts.reimportDeleted !== undefined) {
     opts.reimportDeleted = cmdOpts.reimportDeleted;
@@ -187,7 +188,7 @@ function readManifest(path: string): Array<BatchEntry & { path: string }> {
 function batchRequest(
   entry: BatchEntry & { path: string },
   cmdOpts: FileImportOptions,
-): api.ImportFileRequest {
+): Api.ImportFileRequest {
   const shared = fileImportRequest(entry.path, {
     ...cmdOpts,
     account: entry.account,
@@ -202,7 +203,7 @@ function batchRequest(
 // for the same account. After the earlier file commits they are matched as
 // duplicates; a dry run cannot show that because each preview reads the
 // current ledger only.
-function batchOverlaps(proposals: Array<api.ImportFileProposal | null>) {
+function batchOverlaps(proposals: Array<Api.ImportFileProposal | null>) {
   const seen = new Map<string, { file: number; index: number }>();
   const overlaps: Array<{
     file: number;
@@ -251,7 +252,7 @@ function batchOverlaps(proposals: Array<api.ImportFileProposal | null>) {
   return overlaps;
 }
 
-async function transferReview(proposals: Array<api.ImportFileProposal | null>) {
+async function transferReview(proposals: Array<Api.ImportFileProposal | null>) {
   const accounts = new Map<string, { start: string; end: string }>();
   for (const proposal of proposals) {
     if (!proposal) continue;
@@ -443,7 +444,7 @@ export function registerImportsCommand(program: Command) {
             opts,
             async () => {
               const files = [];
-              const proposals: Array<api.ImportFileProposal | null> = [];
+              const proposals: Array<Api.ImportFileProposal | null> = [];
               for (const [index, request] of requests.entries()) {
                 try {
                   const proposal = await api.previewFileImport(request);
@@ -503,7 +504,7 @@ export function registerImportsCommand(program: Command) {
         }
         validateOperationId(cmdOpts.operationId);
         const files: Array<Record<string, unknown>> = [];
-        const proposals: Array<api.ImportFileProposal | null> = [];
+        const proposals: Array<Api.ImportFileProposal | null> = [];
         let failed: AgentError | null = null;
         for (const [index, request] of requests.entries()) {
           const operationId = `${cmdOpts.operationId}-${index + 1}`;
@@ -524,8 +525,8 @@ export function registerImportsCommand(program: Command) {
               'imports.file',
               request,
             );
-            const proposal = receipt.proposal as api.ImportFileProposal;
-            const outcome = receipt.outcome as api.ImportFileOutcome;
+            const proposal = receipt.proposal as Api.ImportFileProposal;
+            const outcome = receipt.outcome as Api.ImportFileOutcome;
             proposals.push(proposal);
             files.push({
               index,
@@ -609,9 +610,9 @@ export function registerImportsCommand(program: Command) {
                   receipt.operationId === cmdOpts.operationId),
             )
             .map(receipt => {
-              const proposal = receipt.proposal as api.ImportFileProposal;
+              const proposal = receipt.proposal as Api.ImportFileProposal;
               const outcome = receipt.outcome as
-                | api.ImportFileOutcome
+                | Api.ImportFileOutcome
                 | undefined;
               return {
                 operationId: receipt.operationId,

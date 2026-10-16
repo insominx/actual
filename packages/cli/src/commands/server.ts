@@ -1,10 +1,10 @@
-import * as api from '@actual-app/api';
 import { Option } from 'commander';
 import type { Command } from 'commander';
 
 import { AgentError, updateAgentContext } from '#agent-output';
 import { resolveConfig } from '#config';
 import { withConnection } from '#connection';
+import { api } from '#engine';
 import { printOutput } from '#output';
 import { bootstrapServer, serverUrl } from '#server-http';
 import {

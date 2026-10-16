@@ -1,6 +1,5 @@
 import { mkdir } from 'node:fs/promises';
 
-import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { AgentError, updateAgentContext } from '#agent-output';
@@ -10,6 +9,7 @@ import { getMetaDir } from '#cache';
 import type { CliGlobalOpts } from '#config';
 import { resolveConfig } from '#config';
 import { withConnection } from '#connection';
+import { api } from '#engine';
 import {
   executeBudgetAmount,
   executeBudgetCarryover,

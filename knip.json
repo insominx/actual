@@ -29,7 +29,7 @@
       "ignoreDependencies": ["extensionless"]
     },
     "packages/cli": {
-      "entry": ["src/index.ts", "integration/*.{mjs,ts}"],
+      "entry": ["src/index.ts", "integration/*.{mjs,ts}", "build-stubs/*.mjs"],
       "ignoreDependencies": ["better-sqlite3"]
     },
     "packages/component-library": {

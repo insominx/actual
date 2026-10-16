@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import * as api from '@actual-app/api';
+import { api } from '#engine';
 
 import { isRecord, stableJson } from './utils';
 

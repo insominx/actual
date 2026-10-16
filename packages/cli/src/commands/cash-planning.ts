@@ -1,9 +1,9 @@
-import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { AgentError } from '#agent-output';
 import type { CliGlobalOpts } from '#config';
 import { withConnection } from '#connection';
+import { api } from '#engine';
 import { executeScopedChange } from '#guarded-changes';
 import { printOutput } from '#output';
 import { errorMessage, isEngineAmount } from '#utils';

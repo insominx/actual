@@ -1,8 +1,9 @@
-import * as api from '@actual-app/api';
+import type * as Api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { AgentError } from '#agent-output';
 import { withConnection } from '#connection';
+import { api } from '#engine';
 import {
   executeCatalogChange,
   executeRuleCreation,
@@ -68,7 +69,7 @@ export function registerRulesCommand(program: Command) {
           await executeRuleCreation(
             opts,
             cmdOpts.operationId,
-            readJsonInput(cmdOpts) as api.RuleCreationRequest,
+            readJsonInput(cmdOpts) as Api.RuleCreationRequest,
           ),
           opts.format,
         );
@@ -192,7 +193,7 @@ export function registerRulesCommand(program: Command) {
         const opts = program.opts();
         const transaction = readJsonInput(
           cmdOpts,
-        ) as api.RuleTestRequest['transaction'];
+        ) as Api.RuleTestRequest['transaction'];
         if (
           cmdOpts.payeeNames !== undefined &&
           cmdOpts.payeeNames !== 'original' &&

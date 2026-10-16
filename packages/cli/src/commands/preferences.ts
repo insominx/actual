@@ -1,7 +1,7 @@
-import * as api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { withConnection } from '#connection';
+import { api } from '#engine';
 import { executeCatalogChange } from '#guarded-changes';
 import { printOutput } from '#output';
 
