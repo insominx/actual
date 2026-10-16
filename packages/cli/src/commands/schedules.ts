@@ -10,7 +10,7 @@ import {
 } from '#guarded-changes';
 import { readJsonInput } from '#input';
 import { printOutput } from '#output';
-import { errorMessage } from '../utils';
+import { errorMessage } from '#utils';
 
 export function registerSchedulesCommand(program: Command) {
   const schedules = program

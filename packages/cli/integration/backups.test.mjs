@@ -6,7 +6,7 @@ import { test } from 'node:test';
 
 import { createFixture } from './harness.mjs';
 
-test(
+void test(
   'retention previews and applies per-source policy while preserving invalid and external artifacts',
   { timeout: 90000 },
   async () => {
@@ -154,7 +154,7 @@ test(
   },
 );
 
-test(
+void test(
   'restore creates independent local identities and preserves the encrypted source',
   { timeout: 90000 },
   async () => {
@@ -359,7 +359,7 @@ test(
   },
 );
 
-test(
+void test(
   'isolated validation rejects corrupt archives and listing preserves complete artifacts',
   { timeout: 90000 },
   async () => {
@@ -465,7 +465,7 @@ test(
   },
 );
 
-test(
+void test(
   'an encrypted sync budget creates complete plaintext backups without replacing earlier artifacts',
   { timeout: 90000 },
   async () => {

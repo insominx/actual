@@ -32,8 +32,5 @@
       "outputBytes": 6101
     }
   ],
-  "contention": [
-    0,
-    4
-  ]
+  "contention": [0, 4]
 }

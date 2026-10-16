@@ -7,7 +7,7 @@ import type { BankSyncRun } from '#bank-sync-runs';
 import { resolveConfig } from '#config';
 import { withConnection } from '#connection';
 import { printOutput } from '#output';
-import { errorMessage } from '../utils';
+import { errorMessage } from '#utils';
 
 async function scope(program: Command) {
   const resolved = await resolveConfig(program.opts());

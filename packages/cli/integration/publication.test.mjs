@@ -6,7 +6,7 @@ import { test } from 'node:test';
 
 import { createFixture, repoRoot, runNode } from './harness.mjs';
 
-test(
+void test(
   'publication rejects credential-bearing server URLs before authentication or receipt preparation',
   { timeout: 90000 },
   async () => {
@@ -73,7 +73,7 @@ test(
 );
 
 for (const encrypted of [false, true]) {
-  test(
+  void test(
     `CLI keeps publication uncertain when the upload was not accepted (encrypted=${encrypted})`,
     { timeout: 90000 },
     async () => {
@@ -206,7 +206,7 @@ for (const encrypted of [false, true]) {
       }
     },
   );
-  test(
+  void test(
     `CLI publication receipts acknowledge and reuse one identity (encrypted=${encrypted})`,
     { timeout: 90000 },
     async () => {
@@ -309,7 +309,7 @@ for (const encrypted of [false, true]) {
     },
   );
   for (const uploadFault of [null, 'before', 'after', 'source-race']) {
-    test(
+    void test(
       `guarded publication API preserves preview and recovers only proven remote identity (encrypted=${encrypted}, uploadFault=${uploadFault})`,
       { timeout: 90000 },
       async () => {

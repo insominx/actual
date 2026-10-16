@@ -990,11 +990,9 @@ Sets a single synced preference. The `id` must be a valid SyncedPrefs key.
 
 `previewAccountDeletion({ id })` returns a read-only proposal for the canonical forced closure, including complete source rows, counterpart references and consumed bank/provider consequences. Requests contain only `id`. `applyAccountDeletion(proposal)` rechecks the exact operation, budget identity and complete source/references at the engine mutation boundary. Its committed outcome includes actual account action, affected IDs, checkpoint and `accountClosure`, with actual deleted/updated transaction and deleted payee IDs. Provider unlink status distinguishes local changes, successful remote acknowledgement, skipped removal and uncertain responses. Credentials are excluded from proposals and outcomes. API callers manage retries; the CLI preserves acknowledged outcomes in receipts. Already-closed accounts preserve the existing unlink-only behavior.
 
-
 #### `previewCategoryGroupUpdate` and `applyCategoryGroupUpdate`
 
 `previewCategoryGroupUpdate({ id, fields })` returns a read-only proposal. Fields support exact `name`, boolean `is_income` and `hidden`, optional matching `id`, and nested `categories` metadata. The shared owner preserves omitted columns and children. Preview binds the full raw group, group/child references and source fingerprint. `applyCategoryGroupUpdate(proposal)` rejects stale, tampered or wrong-budget proposals inside the engine mutator. It invokes the canonical owner and verifies the actual group row before returning changed status, checkpoint and affected ID. Supplied categories do not update children.
-
 
 #### `previewCategoryGroupDeletion` and `applyCategoryGroupDeletion`
 

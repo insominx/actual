@@ -141,8 +141,10 @@ void test('findings cover duplicates, uncategorized rows, an orphan transfer and
     const dups = byCode('duplicate-candidate');
     assert.equal(dups.length, 1, JSON.stringify(dups));
     assert.deepEqual(
-      [...dups[0].ids].sort(),
-      [byNotes['dup a'].id, byNotes['dup b'].id].sort(),
+      [...dups[0].ids].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
+      [byNotes['dup a'].id, byNotes['dup b'].id].sort((a, b) =>
+        a < b ? -1 : a > b ? 1 : 0,
+      ),
     );
     assert.equal(dups[0].evidence.dateGapDays, 1);
     assert.match(dups[0].uncertainty, /^heuristic/);

@@ -27,11 +27,11 @@ Deferred: representative personal exports, statement facts, and an explicit real
 
 ## Acceptance trace
 
-| ID  | Required outcome                                                                                                                                        | Evidence                                                                                 | Status                         |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------ |
+| ID  | Required outcome                                                                                                                                        | Evidence                                                                                           | Status                         |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------ |
 | A1  | Representative Chase/Capital One/Robinhood files match statement totals and dates or produce a documented format gap.                                   | `personal-setup.test.mjs` inspect/preview + close totals (`verification-personal-setup-linux.txt`) | Met on Linux (fixture-only D6) |
-| A2  | Transfer/card payments reconcile once; included account totals match verified signed balances and historical coverage is stated.                        | transfers match/check + statement balances 767000/-11500/120000                          | Met on Linux (fixture-only D6) |
-| A3  | A backup exists before personal mutations; final plan/reload/sync results and any limitations are recorded privately without committing financial data. | `backups create` before imports; evidence in-repo is fixture-only                        | Met on Linux (fixture-only D6) |
+| A2  | Transfer/card payments reconcile once; included account totals match verified signed balances and historical coverage is stated.                        | transfers match/check + statement balances 767000/-11500/120000                                    | Met on Linux (fixture-only D6) |
+| A3  | A backup exists before personal mutations; final plan/reload/sync results and any limitations are recorded privately without committing financial data. | `backups create` before imports; evidence in-repo is fixture-only                                  | Met on Linux (fixture-only D6) |
 
 ## Execution decision ledger
 

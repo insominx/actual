@@ -15,7 +15,7 @@ for (const encrypted of [false, true]) {
     'after-engine',
     'before-sync',
   ]) {
-    test(
+    void test(
       `publication exact interruption retains one identity (${phase}, encrypted=${encrypted})`,
       { timeout: 120000 },
       async () => {

@@ -25,11 +25,11 @@ None to review this planned contract. This request creates tasks only; implement
 
 ## Acceptance trace
 
-| ID  | Required outcome                                                                                                                    | Evidence                                                                                                                               | Status       |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| A1  | Install local packed artifacts in isolated clean directories and run schema/context/setup/import/backup workflows.                  | Linux packed 3/3; Windows yarn pack + npm install + capabilities(172) + first-run (`verification-distribution-windows.txt`) | Met on Linux + Windows |
+| ID  | Required outcome                                                                                                                    | Evidence                                                                                                                                          | Status                 |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| A1  | Install local packed artifacts in isolated clean directories and run schema/context/setup/import/backup workflows.                  | Linux packed 3/3; Windows yarn pack + npm install + capabilities(172) + first-run (`verification-distribution-windows.txt`)                       | Met on Linux + Windows |
 | A2  | PowerShell and bash examples execute with paths containing spaces and JSON/stdin safely.                                            | Linux bash + packed (`verification-distribution-linux.txt`); Windows `first-run.ps1` + packed first-run (`verification-distribution-windows.txt`) | Met on Linux + Windows |
-| A3  | Supported previous configuration/receipt versions migrate deterministically or return actionable incompatibility without data loss. | `distribution.test.mjs` (packed case with `ACTUAL_TEST_PACKED=1`), `src/upgrade-check.test.ts` (`verification-distribution-linux.txt`) | Met on Linux |
+| A3  | Supported previous configuration/receipt versions migrate deterministically or return actionable incompatibility without data loss. | `distribution.test.mjs` (packed case with `ACTUAL_TEST_PACKED=1`), `src/upgrade-check.test.ts` (`verification-distribution-linux.txt`)            | Met on Linux           |
 
 ## Execution decision ledger
 

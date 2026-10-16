@@ -104,7 +104,7 @@ const writeB = budget('2026-14', 'food', 10000, T1);
 const writeA = [pref('payPeriodFrequency', 'monthly', T2)];
 const intendedRange = ['2026-01-09', '2026-01-15'];
 
-test('P09 A→B, B→A and replay converge to identical cells', () => {
+void test('P09 A→B, B→A and replay converge to identical cells', () => {
   const aThenB = applyAll([...base, ...writeA, ...writeB]);
   const bThenA = applyAll([...base, ...writeB, ...writeA]);
   const replay = applyAll([
@@ -124,7 +124,7 @@ test('P09 A→B, B→A and replay converge to identical cells', () => {
   );
 });
 
-test('P09 converged state loses the range K denoted when B wrote; no conflict surfaced', () => {
+void test('P09 converged state loses the range K denoted when B wrote; no conflict surfaced', () => {
   for (const order of [
     [...base, ...writeA, ...writeB],
     [...base, ...writeB, ...writeA],
@@ -140,7 +140,7 @@ test('P09 converged state loses the range K denoted when B wrote; no conflict su
   }
 });
 
-test('P09 B writes after A (timestamp order reversed): same loss', () => {
+void test('P09 B writes after A (timestamp order reversed): same loss', () => {
   const lateB = budget(
     '2026-14',
     'food',
@@ -151,7 +151,7 @@ test('P09 B writes after A (timestamp order reversed): same loss', () => {
   assert.deepEqual(rangeOf(cells, '2026-14'), ['2026-02-02', '2026-03-01']);
 });
 
-test('P09 variant: concurrent frequency and start-date edits merge into a config neither client chose', () => {
+void test('P09 variant: concurrent frequency and start-date edits merge into a config neither client chose', () => {
   const editA = [pref('payPeriodFrequency', 'monthly', T2)];
   const editB = [pref('payPeriodStartDate', '2026-01-09', T1)];
   const cells = applyAll([...base, ...editA, ...editB]);

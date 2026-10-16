@@ -17,5 +17,5 @@ export async function readJsonWithRetry<T>(
       failure = error;
     }
   }
-  throw failure;
+  throw failure instanceof Error ? failure : new Error(String(failure));
 }

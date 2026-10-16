@@ -6,7 +6,7 @@ import { test } from 'node:test';
 
 import { createFixture } from './harness.mjs';
 
-test(
+void test(
   'encrypted first publication survives a lost response, retries one identity, and preserves rename/archive semantics',
   { timeout: 90000 },
   async () => {
@@ -255,7 +255,7 @@ test(
   },
 );
 
-test(
+void test(
   'CLI clones an encrypted cached budget without modifying or publishing its source',
   { timeout: 90000 },
   async () => {
@@ -387,7 +387,7 @@ test(
   },
 );
 
-test(
+void test(
   'CLI creates a usable local budget without publishing to its configured server',
   { timeout: 90000 },
   async () => {

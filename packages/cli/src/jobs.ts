@@ -802,7 +802,11 @@ export function schedulerRecipes(
     ? ['--sync-id', job.budget.syncId]
     : ['--offline', '--budget-id', job.budget.budgetId ?? ''];
   const args = ['--data-dir', dataDir, ...selector, 'jobs', 'run', job.name];
-  if ([executable, ...args].some(value => /[\r\n\0]/.test(value))) {
+  if (
+    [executable, ...args].some(
+      value => value.includes('\0') || /[\r\n]/.test(value),
+    )
+  ) {
     invalid('Scheduler recipe values cannot contain line breaks.', 'dataDir');
   }
   const sh = [executable, ...args].map(quoteSh).join(' ');

@@ -11,7 +11,7 @@ const { fromBinary, SyncRequestSchema } = await import(
   pathToFileURL(join(repoRoot, 'packages/crdt/dist/index.js')).href
 );
 
-test(
+void test(
   'watch freezes its selected budget while profiles switch and cache identities stay separate',
   { timeout: 90000 },
   async () => {
@@ -129,7 +129,7 @@ test(
   },
 );
 
-test(
+void test(
   'watch bounds a stalled worker and a subsequent writer can reopen its cache',
   { timeout: 90000 },
   async () => {
@@ -241,7 +241,7 @@ test(
   },
 );
 
-test(
+void test(
   'encrypted watch reconnects, cancels, and releases its cache for a writer',
   { timeout: 90000 },
   async () => {
@@ -331,7 +331,7 @@ test(
 );
 
 for (const encrypted of [false, true]) {
-  test(
+  void test(
     `a failed push preserves the local write and refresh does not replay it (encrypted=${encrypted})`,
     { timeout: 90000 },
     async () => {
@@ -422,7 +422,7 @@ for (const encrypted of [false, true]) {
   );
 }
 for (const encrypted of [false, true]) {
-  test(
+  void test(
     `pending status is offline and refresh sends existing writes (encrypted=${encrypted})`,
     { timeout: 90000 },
     async () => {

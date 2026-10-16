@@ -46,7 +46,7 @@ function periodOf(day, config) {
   return { id, ...pp.getPayPeriodBounds(id, config) };
 }
 
-test('P01 weekly anchor 2026-01-02 over 2025-12-20..2026-02-10', () => {
+void test('P01 weekly anchor 2026-01-02 over 2025-12-20..2026-02-10', () => {
   assert.deepEqual(periodOf('2026-01-02', weekly), {
     id: '2026-13',
     startDate: '2026-01-02',
@@ -87,7 +87,7 @@ test('P01 weekly anchor 2026-01-02 over 2025-12-20..2026-02-10', () => {
   assert.equal(pp.generatePayPeriods(2026, weekly).length, 52);
 });
 
-test('P02 biweekly anchor 2026-01-02 through 2026-12-31', () => {
+void test('P02 biweekly anchor 2026-01-02 through 2026-12-31', () => {
   const periods = pp.generatePayPeriods(2026, biweekly);
   const expectedStarts = [
     '2026-01-02',
@@ -141,7 +141,7 @@ test('P02 biweekly anchor 2026-01-02 through 2026-12-31', () => {
   assert.deepEqual(threePaycheckMonths, ['2026-01', '2026-07']);
 });
 
-test('P03 monthly anchor Jan 31 clamps February in 2027 and 2028', () => {
+void test('P03 monthly anchor Jan 31 clamps February in 2027 and 2028', () => {
   const monthly2027 = { payFrequency: 'monthly', startDate: '2027-01-31' };
   const monthly2028 = { payFrequency: 'monthly', startDate: '2028-01-31' };
   const starts2027 = [
@@ -239,7 +239,7 @@ function runChild(tz) {
   return JSON.parse(result.stdout);
 }
 
-test('P04 DST windows: identical period starts under TZ=UTC and America/Los_Angeles', () => {
+void test('P04 DST windows: identical period starts under TZ=UTC and America/Los_Angeles', () => {
   const parentTzBefore = process.env.TZ;
   const utc = runChild('UTC');
   const la = runChild('America/Los_Angeles');
@@ -276,7 +276,7 @@ test('P04 DST windows: identical period starts under TZ=UTC and America/Los_Ange
 
 // Not a completion gate: pins the date ranges quoted by the P05, P06 and P09
 // ledgers so those source-backed records do not rely on hand arithmetic.
-test('fixture ranges for P05/P06/P09 ledgers', () => {
+void test('fixture ranges for P05/P06/P09 ledgers', () => {
   const monthly = { payFrequency: 'monthly', startDate: '2026-01-02' };
   assert.deepEqual(pp.getPayPeriodBounds('2026-13', weekly), {
     startDate: '2026-01-02',

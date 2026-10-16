@@ -5,7 +5,7 @@ import { chromium, expect } from '@playwright/test';
 
 import { createFixture } from './harness.mjs';
 
-test(
+void test(
   'browser and two CLI caches converge after import, edit, preference change, and undo',
   { timeout: 120000 },
   async () => {

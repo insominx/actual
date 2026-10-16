@@ -5,8 +5,7 @@ import { AgentError } from '#agent-output';
 import { withConnection } from '#connection';
 import { executeScopedChange } from '#guarded-changes';
 import { printOutput } from '#output';
-import { parseIntFlag } from '#utils';
-import { errorMessage } from '../utils';
+import { errorMessage, parseIntFlag } from '#utils';
 
 function ids(value: string) {
   return value

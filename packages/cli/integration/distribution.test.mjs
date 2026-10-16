@@ -108,7 +108,7 @@ async function checkTutorialBudget(f, budget, work) {
   assert.equal((await readdir(join(work, 'backups'))).length, 1);
 }
 
-test(
+void test(
   'bash first-run tutorial with spaces and JSON via arguments, files and stdin (A2)',
   { timeout: 240000 },
   async () => {
@@ -125,7 +125,7 @@ test(
   },
 );
 
-test(
+void test(
   'upgrade check reports versions and incompatibilities without writing (A3)',
   { timeout: 240000 },
   async () => {
@@ -176,7 +176,7 @@ test(
   },
 );
 
-test(
+void test(
   'packed CLI and API install into a clean directory and run first-run workflows (A1)',
   { timeout: 900000, skip: process.env.ACTUAL_TEST_PACKED !== '1' },
   async () => {

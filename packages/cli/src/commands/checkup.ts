@@ -10,8 +10,7 @@ import {
   listStatements,
   removeStatement,
 } from '#statement-evidence';
-import { parseIntFlag } from '#utils';
-import { errorMessage } from '../utils';
+import { errorMessage, parseIntFlag } from '#utils';
 
 async function budgetKey(program: Command) {
   const resolved = await resolveConfig(program.opts());

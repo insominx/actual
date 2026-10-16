@@ -37,6 +37,7 @@ import {
 } from '#server/util/budget-name';
 import * as Platform from '#shared/platform';
 import type { Budget } from '#types/budget';
+import type { MetadataPrefs } from '#types/prefs';
 
 import {
   loadBackup as _loadBackup,
@@ -112,10 +113,10 @@ async function getBudgets() {
     paths.map(async name => {
       const prefsPath = fs.join(fs.getDocumentDir(), name, 'metadata.json');
       if (await fs.exists(prefsPath)) {
-        let prefs;
+        let prefs: MetadataPrefs & { owner?: string };
         try {
-          prefs = await readJsonWithRetry<Record<string, any>>(() =>
-            fs.readFile(prefsPath),
+          prefs = await readJsonWithRetry<MetadataPrefs & { owner?: string }>(
+            () => fs.readFile(prefsPath),
           );
         } catch (e) {
           logger.log('Error parsing metadata:', e.stack);

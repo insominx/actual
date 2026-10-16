@@ -9,7 +9,7 @@ import { validateOperationId, withChangeJournal } from '#change-journal';
 import { withConnection } from '#connection';
 import { executeScopedChange, resolveGuardConfig } from '#guarded-changes';
 import { printOutput } from '#output';
-import { errorMessage } from '../utils';
+import { errorMessage } from '#utils';
 
 function parseSettings(value: string | undefined) {
   if (value === undefined) return undefined;

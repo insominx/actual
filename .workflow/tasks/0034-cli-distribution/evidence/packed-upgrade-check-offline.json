@@ -16,24 +16,12 @@
     "cli": {
       "version": "26.9.0",
       "supportedSchemaVersions": {
-        "profiles": [
-          1
-        ],
-        "receipts": [
-          1
-        ],
-        "workflowRuns": [
-          1
-        ],
-        "jobs": [
-          1
-        ],
-        "bankSyncRuns": [
-          1
-        ],
-        "statementEvidence": [
-          1
-        ]
+        "profiles": [1],
+        "receipts": [1],
+        "workflowRuns": [1],
+        "jobs": [1],
+        "bankSyncRuns": [1],
+        "statementEvidence": [1]
       }
     },
     "dataDir": "D:\\Projects\\personal\\Budget\\actual-windows-evidence\\actual packed clean install\\packed data",

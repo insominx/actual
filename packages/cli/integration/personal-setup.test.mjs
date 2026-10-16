@@ -103,12 +103,7 @@ void test(
 
       // Checklist step 3: backup before mutations (A3).
       const backupDir = join(f.root, 'personal-setup backups');
-      const backup = await run([
-        'backups',
-        'create',
-        '--directory',
-        backupDir,
-      ]);
+      const backup = await run(['backups', 'create', '--directory', backupDir]);
       assert.ok(backup.path, JSON.stringify(backup));
 
       // Synthetic representative exports (same shapes as 0035 A1).

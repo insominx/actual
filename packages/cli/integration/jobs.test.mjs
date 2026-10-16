@@ -43,7 +43,7 @@ async function aged(path, content) {
   await utimes(path, old, old);
 }
 
-test(
+void test(
   'saved intake job: stable files once, overlap, resume, dry run, disable, scheduler recipe',
   { timeout: 300000 },
   async () => {

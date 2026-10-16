@@ -104,7 +104,7 @@ void test('categorization, allocation and cash-target reversals restore before-v
     const inspected = await cli(['changes', 'inspect', 'cat-1']);
     assert.equal(inspected.reversal.supported, true);
     assert.deepEqual(inspected.reversal.request, {
-      ids: [...targets].sort(),
+      ids: [...targets].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
       category: null,
     });
 

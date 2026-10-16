@@ -60,7 +60,7 @@ async function intakeFiles(f, prefix, checking, other) {
   return manifest;
 }
 
-test(
+void test(
   'fresh headless setup, multi-file intake and monthly close (A1, A3)',
   { timeout: 240000 },
   async () => {
@@ -191,7 +191,7 @@ test(
   },
 );
 
-test(
+void test(
   'intake resumes after a crash without reimporting, cancellation keeps partial outcomes, goal review saves nothing (A2, A3)',
   { timeout: 240000 },
   async () => {

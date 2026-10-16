@@ -9,7 +9,7 @@ import { withConnection } from '#connection';
 import { printOutput } from '#output';
 import { centsToDecimal, toCsv, toHtml } from '#report-export';
 import type { ExportDocument, ExportFormat, ExportTable } from '#report-export';
-import { errorMessage } from '../utils';
+import { errorMessage } from '#utils';
 
 type CashFlow = Awaited<ReturnType<typeof api.getCashFlowReport>>;
 type Categories = Awaited<ReturnType<typeof api.getCategoryReport>>;

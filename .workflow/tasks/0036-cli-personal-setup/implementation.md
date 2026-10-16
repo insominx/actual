@@ -19,9 +19,9 @@
 
 ## Verification
 
-| Check | Command | Result |
-| --- | --- | --- |
+| Check                          | Command                                                                               | Result                                         |
+| ------------------------------ | ------------------------------------------------------------------------------------- | ---------------------------------------------- |
 | Fixture personal-setup (A1-A3) | `yarn workspace @actual-app/cli exec node --test integration/personal-setup.test.mjs` | Pass (`verification-personal-setup-linux.txt`) |
-| Real exports / personal budget | — | Out of scope (D6; Michael declined) |
+| Real exports / personal budget | —                                                                                     | Out of scope (D6; Michael declined)            |
 
 Windows personal adoption remains for Michael if he later supplies files and a budget id.

@@ -8,7 +8,7 @@ import { pathToFileURL } from 'node:url';
 
 import { createFixture, repoRoot, runNode, unusedPort } from './harness.mjs';
 
-test(
+void test(
   'fresh server bootstraps through CLI and authenticates without a browser',
   { timeout: 60000 },
   async () => {
@@ -45,7 +45,7 @@ test(
   },
 );
 
-test(
+void test(
   'managed lifecycle checks ownership, port, executable, restart, and shutdown',
   { timeout: 90000 },
   async () => {

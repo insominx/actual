@@ -411,8 +411,12 @@ void test('batch file import previews overlap, commits per file, reviews transfe
     const pair = applied.transferReview.candidates;
     assert.equal(pair.length, 1);
     assert.deepEqual(
-      [pair[0].from.id, pair[0].to.id].sort(),
-      [applied.files[0].addedIds[0], applied.files[1].addedIds[0]].sort(),
+      [pair[0].from.id, pair[0].to.id].sort((a, b) =>
+        a < b ? -1 : a > b ? 1 : 0,
+      ),
+      [applied.files[0].addedIds[0], applied.files[1].addedIds[0]].sort(
+        (a, b) => (a < b ? -1 : a > b ? 1 : 0),
+      ),
     );
     const afterApply = await readRaw(f);
     // Retrying the batch returns the stored receipts without writing.
@@ -477,7 +481,9 @@ function verifyCsv(before, after, { outcome }) {
   assert.deepEqual(rows.map(row => row.amount).sort(), [-1200, -450]);
   if (outcome) {
     assert.deepEqual(
-      [...outcome.fileImport.addedIds].sort(),
+      [...outcome.fileImport.addedIds].sort((a, b) =>
+        a < b ? -1 : a > b ? 1 : 0,
+      ),
       rows.map(row => row.id).sort(),
     );
   }

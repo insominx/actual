@@ -23,8 +23,7 @@ import {
 import { acquireExclusive } from '#lock';
 import { printOutput } from '#output';
 import { readProfiles, saveProfiles, validateProfile } from '#profiles';
-import { parseBoolFlag, parseIntFlag } from '#utils';
-import { errorMessage } from '../utils';
+import { errorMessage, parseBoolFlag, parseIntFlag } from '#utils';
 
 export function registerBudgetsCommand(program: Command) {
   const budgets = program.command('budgets').description('Manage budgets');
