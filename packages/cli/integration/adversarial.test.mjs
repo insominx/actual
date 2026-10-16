@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { cp, mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
+import {
+  cp,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -923,6 +930,38 @@ void test(
         0,
         failures.map(result => result.stdout).join('\n'),
       );
+    } finally {
+      await f.dispose();
+    }
+  },
+);
+
+void test(
+  'a damaged saved copy is reported as such and recovers once it is removed',
+  { timeout: 120000 },
+  async () => {
+    const f = await createFixture({});
+    try {
+      const first = await f.cli(['accounts', 'list']);
+      assert.equal(first.code, 0, first.stderr);
+      const dataDir = join(f.root, 'a');
+      const budget = (await readdir(dataDir)).find(name =>
+        name.startsWith('Agent-CLI'),
+      );
+      await writeFile(
+        join(dataDir, budget, 'db.sqlite'),
+        Buffer.alloc(40000, 7),
+      );
+      const broken = await f.cli(['accounts', 'list']);
+      assert.equal(broken.code, 5, broken.stdout);
+      const { error } = JSON.parse(broken.stdout);
+      assert.equal(error.details.issue, 'local-budget-unreadable');
+      assert.equal(error.retryable, false);
+      assert.ok(error.message.includes(join(dataDir, budget)), error.message);
+      await rm(join(dataDir, budget), { recursive: true, force: true });
+      await rm(join(dataDir, '.actual-cli'), { recursive: true, force: true });
+      const healed = await f.cli(['accounts', 'list']);
+      assert.equal(healed.code, 0, healed.stdout + healed.stderr);
     } finally {
       await f.dispose();
     }

@@ -79,6 +79,36 @@ async function signInOneAtATime(options: Parameters<typeof api.init>[0]) {
   }
 }
 
+// A damaged or unreadable local copy fails in the engine with a generic
+// "unknown problem opening" error that the output layer would mask as a
+// connection failure. Say what is wrong and what to remove instead. The copy
+// is never deleted here: it may hold changes that were never pushed.
+async function openCachedBudget(
+  config: { dataDir: string; syncId?: string },
+  budgetId: string,
+  open: () => Promise<unknown>,
+) {
+  try {
+    await open();
+  } catch (error) {
+    const code = (error as { code?: unknown } | null)?.code;
+    if (code !== 'loading-budget' && code !== 'opening-budget') throw error;
+    throw new AgentError(
+      'ENGINE_FAILURE',
+      `The saved copy of this budget could not be opened and may be damaged. Move or delete the folder ${join(
+        config.dataDir,
+        budgetId,
+      )} and the folder ${join(
+        config.dataDir,
+        '.actual-cli',
+        String(config.syncId),
+      )}, then run the command again to download a fresh copy. Changes that were never pushed exist only in the first folder.`,
+      false,
+      { issue: 'local-budget-unreadable' },
+    );
+  }
+}
+
 export async function withConnection<T>(
   globalOpts: CliGlobalOpts,
   fn: (config: CliConfig) => Promise<T>,
@@ -248,7 +278,9 @@ export async function withConnection<T>(
     } else if (decision.action === 'skip') {
       const age = Math.round((Date.now() - decision.state.lastSyncedAt) / 1000);
       info(`Using cached budget (synced ${age}s ago)...`, globalOpts.verbose);
-      await api.loadBudget(decision.state.budgetId);
+      await openCachedBudget(config, decision.state.budgetId, () =>
+        api.loadBudget(decision.state.budgetId),
+      );
       state = decision.state;
     } else if (config.encryptionPassword) {
       info(`Syncing budget ${config.syncId}...`, globalOpts.verbose);
@@ -258,14 +290,19 @@ export async function withConnection<T>(
       // than a missing key. `downloadBudget` registers the key via `key-test`
       // and, when the budget already exists locally, just loads and syncs it
       // instead of re-downloading, so this costs nothing extra.
-      await api.downloadBudget(config.syncId, {
-        password: config.encryptionPassword,
-      });
+      const { syncId } = config;
+      await openCachedBudget(config, decision.state.budgetId, () =>
+        api.downloadBudget(syncId, {
+          password: config.encryptionPassword,
+        }),
+      );
       state = { ...decision.state, lastSyncedAt: Date.now() };
       writeCacheState(meta, state);
     } else {
       info(`Syncing budget ${config.syncId}...`, globalOpts.verbose);
-      await api.loadBudget(decision.state.budgetId);
+      await openCachedBudget(config, decision.state.budgetId, () =>
+        api.loadBudget(decision.state.budgetId),
+      );
       await api.sync();
       state = { ...decision.state, lastSyncedAt: Date.now() };
       writeCacheState(meta, state);
