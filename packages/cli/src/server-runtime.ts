@@ -197,21 +197,29 @@ export async function startRuntime(dir: string) {
       if (launchError || child.exitCode !== null) break;
       const state = await readRuntimeState(dir);
       if (state?.owner === owner && state.token === token) {
-        const status = await runtimeStatus(dir);
-        if (status.running && status.healthy) return status;
+        // A supervisor that is exiting can drop its control server between
+        // the state read and this request; the exit check above handles it.
+        const status = await runtimeStatus(dir).catch(() => undefined);
+        if (status?.running && status.healthy) return status;
       }
       await new Promise(resolveDelay => setTimeout(resolveDelay, 100));
     }
     const failedState = await readRuntimeState(dir);
+    // The supervisor may already be exiting, which makes the stop request
+    // fail. That must not replace the startup failure with a vaguer error.
+    let stopConfirmed = child.exitCode !== null;
     if (failedState?.owner === owner && failedState.token === token) {
-      await controlRequest(failedState, 'stop');
+      stopConfirmed = await controlRequest(failedState, 'stop').then(
+        () => true,
+        () => child.exitCode !== null,
+      );
     }
     // Without control ownership, do not kill the supervisor and orphan its child.
     throw new AgentError(
       'ENGINE_FAILURE',
       'The managed server failed to become healthy within 15 seconds. Inspect server logs.',
       true,
-      { issue: 'startup-failed' },
+      { issue: 'startup-failed', stopConfirmed },
     );
   } finally {
     await release();
