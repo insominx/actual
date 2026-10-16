@@ -4,7 +4,7 @@
 
 ## RESUME (replace, do not append)
 
-Segment started Fri Oct 16 14:00 PDT; stop new work at 14:30 PDT. Round 3 sweep (ledger 32-36, D30-D32; pushed through de4f102b4). Background jobs (check logs, do not wait): /workspace/adv/scale1.mjs 100000 -> scale1.log (PID 3811810); /workspace/adv/mcp2.mjs -> mcp2.log (PID 3813909). Remaining: read those logs, DST/TZ and pay-period/expense-only, reservations and cash-planning vs hand-computed, sync-server concurrency/version mismatch/corrupt cache, Playwright UI inputs; Windows only if liftoff connects (offline at 14:00). Hazards: yarn typecheck clears api dist and sync-server build; run yarn build:cli and yarn build:server after, never during suites. Push with `bash /workspace/adv/publish.sh` (approval card). Next decision D33.
+Segment ended Fri Oct 16 14:25 PDT (started 14:00). Round 3 ledger rows 32-39 and D30-D35 done; all pushed through the commit that follows 97bee0084. No background jobs running. Remaining angles: DST/pay-period/expense-only calculations in desktop-client, reservations and cash planning vs hand-computed, sync-server concurrency/version mismatch/corrupt cache, Playwright UI adversarial inputs; Windows only if liftoff connects (offline at 14:17). Final gate pass (lint, typecheck, knip, build:cli, build:server, CLI integration, api vitest) and a list_workflow_runs re-check still to do before reporting done. Hazards: yarn typecheck clears api dist and sync-server build; run yarn build:cli and yarn build:server after, never during suites. Push with `bash /workspace/adv/publish.sh`. Next ledger row 40, next decision D36.
 
 <!-- QRESUME-END -->
 
