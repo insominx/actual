@@ -4,7 +4,7 @@
 
 ## RESUME (replace, do not append)
 
-Round 3 adversarial sweep in progress (ledger 32-36, D30-D32). Done: differential CLI-vs-SQL, random-sequence money invariants, hostile shells, unusual names, JSON input encoding, receipt size. Remaining: 100k-transaction scale run (/workspace/adv/scale1.mjs), DST/TZ and pay-period/expense-only, reservations and cash-planning vs hand-computed, MCP protocol abuse, sync-server concurrency/version mismatch/corrupt cache, Playwright UI inputs; Windows checks only if liftoff is connected (offline at last check). Hazards: yarn typecheck clears api dist and sync-server build; run yarn build:cli and yarn build:server after, never during suites. Push with `bash /workspace/adv/publish.sh` (approval card). Next decision D33.
+Segment started Fri Oct 16 14:00 PDT; stop new work at 14:30 PDT. Round 3 sweep (ledger 32-36, D30-D32; pushed through de4f102b4). Background jobs (check logs, do not wait): /workspace/adv/scale1.mjs 100000 -> scale1.log (PID 3811810); /workspace/adv/mcp2.mjs -> mcp2.log (PID 3813909). Remaining: read those logs, DST/TZ and pay-period/expense-only, reservations and cash-planning vs hand-computed, sync-server concurrency/version mismatch/corrupt cache, Playwright UI inputs; Windows only if liftoff connects (offline at 14:00). Hazards: yarn typecheck clears api dist and sync-server build; run yarn build:cli and yarn build:server after, never during suites. Push with `bash /workspace/adv/publish.sh` (approval card). Next decision D33.
 
 <!-- QRESUME-END -->
 
