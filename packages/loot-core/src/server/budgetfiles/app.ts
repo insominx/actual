@@ -46,6 +46,7 @@ import {
   stopBackupService,
 } from './backups';
 import { newBudgetMetadata } from './new-budget-metadata';
+import { readJsonWithRetry } from './read-metadata';
 
 const DEMO_BUDGET_ID = '_demo-budget';
 const TEST_BUDGET_ID = '_test-budget';
@@ -113,7 +114,9 @@ async function getBudgets() {
       if (await fs.exists(prefsPath)) {
         let prefs;
         try {
-          prefs = JSON.parse(await fs.readFile(prefsPath));
+          prefs = await readJsonWithRetry<Record<string, any>>(() =>
+            fs.readFile(prefsPath),
+          );
         } catch (e) {
           logger.log('Error parsing metadata:', e.stack);
           return null;
