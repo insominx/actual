@@ -1,3 +1,16 @@
+<!-- RESUME-BEGIN -->
+
+## RESUME (replace, do not append)
+
+State: findings 1-17 fixed and merged (finding 17 = plain Errors reported as ENGINE_FAILURE, now INVALID_INPUT). Tree clean after the docs commit that follows e01c4cb45. vitest 348 pass, tsgo clean; integration transfers 6/6, guarded-transaction-merge 6/6, jobs, cli, rules-apply, imports, cash-planning, adversarial pass.
+Verified clean (no further bugs): schedules post/skip, jobs inbox abuse, preferences.set, payees merge/delete, account close/delete, imports settings, reports vs raw sums, randomised tx op sequences (fuzz42, 3 seeds), 149-command junk-argument sweep (fuzz56).
+Full integration suite (copy /workspace/actual-suite, older build): pass except browser-* (Playwright chromium not installed: environmental), changes (2 hold tests were my own regression, fixed in d7f1daccc; file also hit its 25-minute timeout), reversal 1 fail ("Could not resolve on-disk budget id after download", probably load flake: re-run alone).
+Next 3 steps: (1) `cd packages/cli && node --test integration/reversal.test.mjs` alone (record flake or fix); (2) run the rest of changes.test.mjs in background (nohup script, log to /workspace/adv) and the remaining suite files after `sync` in fullsuite.log; (3) new rounds: MCP tools/call with junk args, Windows path handling (schtasks trailing backslash/quotes), budgets.create/clone/archive fuzz, bank-sync/sync conflict edge cases.
+Running processes: fullsuite.sh PIDs 2930432 and 3062397 (log /workspace/adv/fullsuite.log, ends FULLDONE). Kill by exact PID only. Push with plain `git push origin HEAD:refs/heads/<branch|master>` (publish.sh gets blocked by auto-review).
+Heads: branch = master = e01c4cb45b8b9bd1b054cb7643d0a2f3445e8f1a after this push (see git log for the docs commit on top).
+Ledger: findings-ledger.md in this folder.
+<!-- RESUME-END -->
+
 # Adversarial bug hunt notes (resume log)
 
 Branch `workflow/complete-remaining-tasks`. Regression tests: `packages/cli/integration/adversarial.test.mjs`,
