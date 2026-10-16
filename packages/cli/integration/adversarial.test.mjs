@@ -395,3 +395,42 @@ void test(
     }
   },
 );
+
+void test(
+  'file import refuses scientific-notation amounts and future two-digit years',
+  { timeout: 240000 },
+  async () => {
+    const f = await createFixture({ richBackup: true });
+    try {
+      const { checking } = f.fixture;
+      await f.cli(['accounts', 'list']);
+      const cases = [
+        ['2026 09 07', '1e3', 'yyyy mm dd', /not a number/],
+        ['01 01 94', '-3.00', 'mm dd yy', /two-digit year/],
+      ];
+      let n = 0;
+      for (const [date, amount, dateFormat, expected] of cases) {
+        const file = join(f.root, `quirk-${++n}.csv`);
+        await writeFile(file, `Date,Amount,Payee\n${date},${amount},Shop\n`);
+        const result = await f.cli([
+          'imports',
+          'preview',
+          file,
+          '--account',
+          checking,
+          '--no-saved',
+          '--settings',
+          JSON.stringify({
+            fields: { date: 'Date', amount: 'Amount', payee: 'Payee' },
+            dateFormat,
+            hasHeaderRow: true,
+          }),
+        ]);
+        assert.equal(result.code, 2, result.stdout + result.stderr);
+        assert.match(parse(result)?.error?.message ?? '', expected);
+      }
+    } finally {
+      await f.dispose();
+    }
+  },
+);

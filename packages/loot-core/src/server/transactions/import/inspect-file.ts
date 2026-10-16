@@ -482,6 +482,19 @@ export async function inspectImportFile(
           `date ${String(mapped.date ?? '(empty)')} does not parse as ${dateFormat}`,
         );
       }
+      if (
+        dateFormat &&
+        date != null &&
+        /yy$|yy /.test(dateFormat) &&
+        !dateFormat.includes('yyyy') &&
+        Number(date.slice(0, 4)) > new Date().getFullYear() + 1
+      ) {
+        // Two-digit years pivot forward (94 -> 2094), which is almost never
+        // what a statement means; refuse rather than import a future date.
+        errors.push(
+          `date ${String(mapped.date)} has a two-digit year that parses to ${date}, more than a year ahead; use a four-digit year`,
+        );
+      }
       if (!dateFormat) errors.push('date format is ambiguous');
     } else {
       date = typeof mapped.date === 'string' ? mapped.date : null;
@@ -500,7 +513,11 @@ export async function inspectImportFile(
         value.trim() !== '' &&
         // An amount beyond the engine limit parses to null, which the shared
         // mapping turns into 0; that would import the row as a zero amount.
-        (!/\d/.test(value) || looselyParseAmount(value) === null),
+        (!/\d/.test(value) ||
+          // Scientific notation ("1e3") is stripped to digits (13.00) by the
+          // loose parser, silently changing the amount.
+          /\d[eE][+-]?\d/.test(value) ||
+          looselyParseAmount(value) === null),
     );
     const { amount } = parseAmountFields(
       mapped,
