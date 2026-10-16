@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { rmSync } from 'node:fs';
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -62,6 +63,15 @@ export async function unusedPort() {
   await new Promise(resolveClosed => listener.close(resolveClosed));
   return port;
 }
+
+// Seeded fixture snapshots, one per kind and test process. Set
+// ACTUAL_TEST_NO_FIXTURE_CACHE=1 to seed every fixture from scratch.
+const noFixtureCache = process.env.ACTUAL_TEST_NO_FIXTURE_CACHE === '1';
+const fixtureCache = new Map();
+const cacheDirs = [];
+process.on('exit', () => {
+  for (const dir of cacheDirs) rmSync(dir, { recursive: true, force: true });
+});
 
 export async function createFixture({
   encrypted = false,
@@ -146,8 +156,21 @@ export async function createFixture({
   }
   try {
     await mkdir(serverEnv.ACTUAL_DATA_DIR, { recursive: true });
-    await start();
-    if (!fresh) {
+    const cacheKey = `${encrypted}:${richBackup}`;
+    const cached = noFixtureCache ? undefined : fixtureCache.get(cacheKey);
+    if (!fresh && cached) {
+      // A seeded server directory and seed client are identical for every
+      // fixture of the same kind; copy them instead of seeding again.
+      await rm(serverEnv.ACTUAL_DATA_DIR, { recursive: true, force: true });
+      await cp(join(cached, 'server'), serverEnv.ACTUAL_DATA_DIR, {
+        recursive: true,
+      });
+      await cp(join(cached, 'seed'), join(root, 'seed'), { recursive: true });
+      await start();
+    } else {
+      await start();
+    }
+    if (!fresh && !cached) {
       const response = await fetch(`${serverUrl}/account/bootstrap`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -174,6 +197,19 @@ export async function createFixture({
           `Disposable seed failed: ${seeded.stderr}\n${seeded.stdout}`,
         );
       }
+    }
+    if (!fresh && !cached && !noFixtureCache) {
+      // Snapshot the seeded state once per kind; the server is stopped while
+      // its files are copied and started again for this fixture.
+      const snapshot = await mkdtemp(join(tmpdir(), 'actual-agent-cli-cache-'));
+      await stop();
+      await cp(serverEnv.ACTUAL_DATA_DIR, join(snapshot, 'server'), {
+        recursive: true,
+      });
+      await cp(join(root, 'seed'), join(snapshot, 'seed'), { recursive: true });
+      fixtureCache.set(cacheKey, snapshot);
+      cacheDirs.push(snapshot);
+      await start();
     }
     const fixture = fresh
       ? {}
