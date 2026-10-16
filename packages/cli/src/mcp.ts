@@ -6,8 +6,9 @@
 // the same operation path, locks, journals and run records. Protocol frames
 // are the only thing written to stdout; diagnostics go to stderr.
 import { spawn } from 'node:child_process';
-import type { ChildProcess } from 'node:child_process';
+import type { ChildProcess, ChildProcessByStdio } from 'node:child_process';
 import { createInterface } from 'node:readline';
+import type { Readable } from 'node:stream';
 
 import type { Command, Option } from 'commander';
 
@@ -285,17 +286,33 @@ export function serveMcp(options: ServeOptions): Promise<void> {
       );
       return;
     }
-    const child = spawn(
-      process.execPath,
-      [
-        options.cliEntry,
-        ...options.globalArgs,
-        '--output-version',
-        '2',
-        ...argv,
-      ],
-      { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
-    );
+    let child: ChildProcessByStdio<null, Readable, Readable>;
+    try {
+      child = spawn(
+        process.execPath,
+        [
+          options.cliEntry,
+          ...options.globalArgs,
+          '--output-version',
+          '2',
+          ...argv,
+        ],
+        { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
+      );
+    } catch (error) {
+      // For example an argument with a NUL byte, which no process can receive.
+      fail(
+        id,
+        -32602,
+        error instanceof Error ? error.message : 'Invalid arguments.',
+      );
+      return;
+    }
+    child.on('error', error => {
+      if (!running.has(id)) return;
+      running.delete(id);
+      fail(id, -32603, `Could not run the operation: ${error.message}`);
+    });
     running.set(id, child);
     let stdout = '';
     child.stdout.setEncoding('utf8');
@@ -323,7 +340,13 @@ export function serveMcp(options: ServeOptions): Promise<void> {
   }
 
   function handle(message: Request) {
-    const { id, method, params = {} } = message;
+    const { id, method } = message;
+    const params =
+      typeof message.params === 'object' &&
+      message.params !== null &&
+      !Array.isArray(message.params)
+        ? message.params
+        : {};
     if (id === undefined) {
       if (method === 'notifications/cancelled') {
         const target = params.requestId as JsonRpcId | undefined;
@@ -452,7 +475,18 @@ export function serveMcp(options: ServeOptions): Promise<void> {
         fail(null, -32600, 'Invalid request');
         return;
       }
-      handle(message as Request);
+      try {
+        handle(message as Request);
+      } catch (error) {
+        // One bad request must never take the whole server down.
+        const id = (message as Request).id;
+        if (id !== undefined) {
+          fail(id, -32603, 'Internal error');
+        }
+        process.stderr.write(
+          `mcp: request failed: ${error instanceof Error ? error.message : String(error)}\n`,
+        );
+      }
     });
     lines.on('close', () => {
       // Stdin closed: stop in-flight children so no orphan keeps running.

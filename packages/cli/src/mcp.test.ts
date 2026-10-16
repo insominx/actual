@@ -120,4 +120,40 @@ describe('mcp adapter', () => {
     expect(messages[2].error.code).toBe(-32700);
     expect(messages[3].error.code).toBe(-32602);
   });
+
+  it('survives arguments a process cannot receive and malformed params', async () => {
+    const input = new PassThrough();
+    const output = new PassThrough();
+    const lines: string[] = [];
+    output.on('data', (chunk: Buffer) =>
+      lines.push(...chunk.toString().trim().split('\n')),
+    );
+    const served = serveMcp({
+      root: program,
+      globalArgs: [],
+      cliEntry: 'does-not-exist.js',
+      version: 'test',
+      input,
+      output,
+    });
+    input.write(
+      '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":null}\n',
+    );
+    input.write('{"jsonrpc":"2.0","id":2,"method":"tools/list","params":[]}\n');
+    input.write(
+      '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"accounts_close","arguments":{"id":"a\\u0000b"}}}\n',
+    );
+    input.write('{"jsonrpc":"2.0","id":4,"method":"tools/list"}\n');
+    // Give the NUL-byte call time to fail before stdin closes.
+    await new Promise(resolve => setTimeout(resolve, 200));
+    input.end();
+    await served;
+    const byId = new Map(
+      lines.map(line => JSON.parse(line)).map(message => [message.id, message]),
+    );
+    expect(byId.get(1).error.code).toBe(-32602);
+    expect(byId.get(2).result.tools.length).toBeGreaterThan(0);
+    expect(byId.get(3).error.code).toBe(-32602);
+    expect(byId.get(4).result.tools.length).toBeGreaterThan(0);
+  });
 });
