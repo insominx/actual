@@ -85,14 +85,27 @@ async function signInOneAtATime(options: Parameters<typeof api.init>[0]) {
 // is never deleted here: it may hold changes that were never pushed.
 async function openCachedBudget(
   config: { dataDir: string; syncId?: string },
-  budgetId: string,
+  budgetId: string | undefined,
   open: () => Promise<unknown>,
 ) {
   try {
     await open();
   } catch (error) {
     const code = (error as { code?: unknown } | null)?.code;
-    if (code !== 'loading-budget' && code !== 'opening-budget') throw error;
+    if (code === 'out-of-sync-migrations' || code === 'out-of-sync-data') {
+      throw new AgentError(
+        'ENGINE_FAILURE',
+        'This budget was last saved by a different version of Actual and cannot be loaded by this CLI. Update the CLI to the version that matches the server, then run the command again.',
+        false,
+        { issue: 'budget-version-mismatch' },
+      );
+    }
+    if (
+      budgetId === undefined ||
+      (code !== 'loading-budget' && code !== 'opening-budget')
+    ) {
+      throw error;
+    }
     throw new AgentError(
       'ENGINE_FAILURE',
       `The saved copy of this budget could not be opened and may be damaged. Move or delete the folder ${join(
@@ -261,9 +274,12 @@ export async function withConnection<T>(
           : `Re-downloading budget ${config.syncId} (cache invalidated)...`,
         globalOpts.verbose,
       );
-      await api.downloadBudget(config.syncId, {
-        password: config.encryptionPassword,
-      });
+      const { syncId: downloadSyncId } = config;
+      await openCachedBudget(config, undefined, () =>
+        api.downloadBudget(downloadSyncId, {
+          password: config.encryptionPassword,
+        }),
+      );
       const budgetId = await resolveBudgetIdForSyncId(config.syncId);
       const now = Date.now();
       state = {

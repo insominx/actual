@@ -967,3 +967,37 @@ void test(
     }
   },
 );
+
+void test(
+  'a budget saved by a different version is reported as a version mismatch',
+  { timeout: 120000 },
+  async () => {
+    const f = await createFixture({});
+    try {
+      const first = await f.cli(['accounts', 'list']);
+      assert.equal(first.code, 0, first.stderr);
+      const dataDir = join(f.root, 'a');
+      const budget = (await readdir(dataDir)).find(name =>
+        name.startsWith('Agent-CLI'),
+      );
+      const db = new DatabaseSync(join(dataDir, budget, 'db.sqlite'));
+      // A newer migration next to a missing known one is what a database
+      // written by another version looks like to this engine.
+      db.prepare('INSERT INTO __migrations__ (id) VALUES (?)').run(
+        99999999999999,
+      );
+      db.prepare(
+        'DELETE FROM __migrations__ WHERE id = (SELECT MIN(id) FROM __migrations__)',
+      ).run();
+      db.close();
+      const result = await f.cli(['accounts', 'list']);
+      assert.equal(result.code, 5, result.stdout);
+      const { error } = JSON.parse(result.stdout);
+      assert.equal(error.details.issue, 'budget-version-mismatch');
+      assert.equal(error.retryable, false);
+      assert.match(error.message, /different version/);
+    } finally {
+      await f.dispose();
+    }
+  },
+);
