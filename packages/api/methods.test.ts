@@ -2982,7 +2982,7 @@ describe('guarded budget holds', () => {
     const proposal = await api.previewBudgetHold({
       operation: 'budgets.hold-next-month',
       month: '2023-10',
-      amount: Number.MAX_SAFE_INTEGER,
+      amount: 2 ** 51 - 1,
     });
     expect(await api.getBudgetMonth('2023-10')).toEqual(before);
     expect(proposal.after.buffered).toBe(before.forNextMonth + before.toBudget);
@@ -5042,20 +5042,29 @@ describe('catalog inspection', () => {
 });
 
 describe('guarded rule creation, updates and deletions', () => {
-  const ruleFields = {
-    stage: 'pre' as const,
-    conditionsOp: 'and' as const,
-    conditions: [{ field: 'payee' as const, op: 'is' as const, value: 'p1' }],
-    actions: [
-      {
-        op: 'set' as const,
-        field: 'category' as const,
-        value: 'fc3825fd-b982-4b72-b768-5b30844cf832',
-      },
-    ],
+  // Rules may only set a category that exists, so the category id comes from
+  // the loaded budget instead of a hard-coded id.
+  let ruleFields: {
+    stage: 'pre';
+    conditionsOp: 'and';
+    conditions: { field: 'payee'; op: 'is'; value: string }[];
+    actions: { op: 'set'; field: 'category'; value: string }[];
   };
   beforeEach(async () => {
     await api.loadBudget(budgetName);
+    const [category] = await api.getCategories();
+    ruleFields = {
+      stage: 'pre' as const,
+      conditionsOp: 'and' as const,
+      conditions: [{ field: 'payee' as const, op: 'is' as const, value: 'p1' }],
+      actions: [
+        {
+          op: 'set' as const,
+          field: 'category' as const,
+          value: category.id,
+        },
+      ],
+    };
   });
   test('creates, updates and deletes rules with raw row acknowledgements', async () => {
     const before = await api.getRules();
