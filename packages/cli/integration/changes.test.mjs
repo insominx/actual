@@ -11,10 +11,10 @@ import {
 } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { join } from 'node:path';
-import { test } from 'node:test';
 import { pathToFileURL } from 'node:url';
 
 import { createFixture, isolatedEnv, repoRoot } from './harness.mjs';
+import { test } from './shard.mjs';
 
 // Largest integer the engine accepts as an amount (see isEngineAmount); a hold
 // above available funds is clamped, so the largest accepted request proves it.
