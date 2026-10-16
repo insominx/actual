@@ -376,16 +376,52 @@ export async function netWorthReport(request: ReportRequest) {
   const scoped = accountIds
     ? accounts.filter(a => accountIds.includes(a.id))
     : accounts;
-  const byMonth = [];
-  for (const month of months) {
+  // One grouped pass over the ledger for the whole range, then cumulative
+  // sums per month end; a month cut short by the cutoff date reads its own
+  // exact balances once. (A query per month rescanned the table 60 times.)
+  const ends = months.map(month => {
     const monthEnd = monthUtils.lastDayOfMonth(month);
-    const at = monthEnd < cutoff ? monthEnd : cutoff;
-    const balances = await db.all<{ account: string; balance: number }>(
-      `SELECT account, SUM(amount) AS balance FROM v_transactions_internal_alive
-       WHERE is_child = 0 AND date <= ? GROUP BY account`,
-      [db.toDateRepr(at)],
-    );
-    const balance = new Map(balances.map(b => [b.account, b.balance]));
+    return { month, monthEnd, at: monthEnd < cutoff ? monthEnd : cutoff };
+  });
+  const bucketUpTo = ends
+    .filter(e => e.at === e.monthEnd)
+    .reduce((last, e) => (e.at > last ? e.at : last), '');
+  const buckets = bucketUpTo
+    ? await db.all<{ account: string; ym: number; balance: number }>(
+        `SELECT account, date / 100 AS ym, SUM(amount) AS balance
+         FROM v_transactions_internal_alive
+         WHERE is_child = 0 AND date <= ? GROUP BY account, date / 100`,
+        [db.toDateRepr(bucketUpTo)],
+      )
+    : [];
+  const cutoffBalances = new Map<string, Map<string, number>>();
+  const balancesAt = async (end: (typeof ends)[number]) => {
+    const balance = new Map<string, number>();
+    if (end.at === end.monthEnd) {
+      const limit = Number(end.month.replace('-', ''));
+      for (const b of buckets) {
+        if (b.ym <= limit) {
+          balance.set(b.account, (balance.get(b.account) ?? 0) + b.balance);
+        }
+      }
+      return balance;
+    }
+    let cached = cutoffBalances.get(end.at);
+    if (!cached) {
+      const rows = await db.all<{ account: string; balance: number }>(
+        `SELECT account, SUM(amount) AS balance FROM v_transactions_internal_alive
+         WHERE is_child = 0 AND date <= ? GROUP BY account`,
+        [db.toDateRepr(end.at)],
+      );
+      cached = new Map(rows.map(b => [b.account, b.balance]));
+      cutoffBalances.set(end.at, cached);
+    }
+    return cached;
+  };
+  const byMonth = [];
+  for (const end of ends) {
+    const { month, at } = end;
+    const balance = await balancesAt(end);
     const rows = scoped.map(a => ({
       id: a.id,
       name: a.name,

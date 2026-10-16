@@ -327,3 +327,60 @@ void test('CSV and HTML exports neutralize hostile text, carry the incompletenes
     await f.dispose();
   }
 });
+
+void test('net worth balances accumulate across month ends and stop at the cutoff for the current and future months', async () => {
+  const f = await createFixture({});
+  try {
+    const cli = strict(f);
+    const account = await legacy(f, [
+      'accounts',
+      'create',
+      '--name',
+      'Net worth months',
+    ]);
+    const day = (offset, d) => {
+      const m = monthsFromNow(offset);
+      return `${m}-${pad(d)}`;
+    };
+    const rows = [
+      [-3, 15, -1000],
+      [-3, 28, 250],
+      [-2, 1, 4000],
+      [-1, 28, -300],
+      [0, 1, 70],
+      [1, 5, 9000],
+      [2, 20, 123],
+    ];
+    const add = await f.cli([
+      'transactions',
+      'add',
+      '--account',
+      account.id,
+      '--data',
+      JSON.stringify(
+        rows.map(([offset, d, amount]) => ({ date: day(offset, d), amount })),
+      ),
+      '--operation-id',
+      'networth-months',
+    ]);
+    assert.equal(add.code, 0, add.stdout + add.stderr);
+    const report = await cli([
+      'reports',
+      'net-worth',
+      '--from-month',
+      monthsFromNow(-3),
+      '--to-month',
+      monthsFromNow(2),
+    ]);
+    for (const entry of report.months) {
+      const at = entry.asOf;
+      const expected = rows
+        .filter(([offset, d]) => day(offset, d) <= at)
+        .reduce((sum, row) => sum + row[2], 0);
+      const mine = entry.accounts.find(a => a.id === account.id).balance;
+      assert.equal(mine, expected, `${entry.month} as of ${at}`);
+    }
+  } finally {
+    await f.dispose();
+  }
+});
