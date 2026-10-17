@@ -3,14 +3,12 @@ import type { ComponentPropsWithoutRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Menu } from '@actual-app/components/menu';
+import type { MenuItemObject } from '@actual-app/components/menu';
 
 import { useEnvelopeSheetValue } from '#components/budget/envelope/EnvelopeBudgetComponents';
 import { envelopeBudget } from '#spreadsheet/bindings';
 
-type ToBudgetMenuProps = Omit<
-  ComponentPropsWithoutRef<typeof Menu>,
-  'onMenuSelect' | 'items'
-> & {
+export type ToBudgetMenuActions = {
   onTransfer: () => void;
   onCover: () => void;
   onHoldBuffer: () => void;
@@ -20,7 +18,7 @@ type ToBudgetMenuProps = Omit<
   month: string;
 };
 
-export function ToBudgetMenu({
+export function useToBudgetMenu({
   onTransfer,
   onCover,
   onHoldBuffer,
@@ -28,8 +26,7 @@ export function ToBudgetMenu({
   onBudgetAction,
   onClose,
   month,
-  ...props
-}: ToBudgetMenuProps) {
+}: ToBudgetMenuActions) {
   const { t } = useTranslation();
 
   const toBudget = useEnvelopeSheetValue(envelopeBudget.toBudget) ?? 0;
@@ -37,7 +34,8 @@ export function ToBudgetMenu({
   const manualBuffered =
     useEnvelopeSheetValue(envelopeBudget.manualBuffered) ?? 0;
   const autoBuffered = useEnvelopeSheetValue(envelopeBudget.autoBuffered) ?? 0;
-  const items = [
+
+  const availableItems: MenuItemObject<string>[] = [
     ...(toBudget > 0
       ? [
           {
@@ -80,44 +78,70 @@ export function ToBudgetMenu({
       : []),
   ];
 
-  return (
-    <Menu
-      {...props}
-      onMenuSelect={name => {
-        switch (name) {
-          case 'transfer':
-            onTransfer?.();
-            break;
-          case 'cover':
-            onCover?.();
-            break;
-          case 'buffer':
-            // Auto hold is reset when the hold is submitted, not on open,
-            // so cancelling leaves it as it was
-            onHoldBuffer?.();
-            break;
-          case 'reset-buffer':
-            onResetHoldBuffer?.();
-            break;
-          case 'disable-auto-buffer':
-            onBudgetAction?.(month, 'reset-income-carryover', {});
-            onClose?.();
-            break;
-          default:
-            throw new Error(`Unrecognized menu option: ${name}`);
-        }
-      }}
-      items={
-        items.length > 0
-          ? items
-          : [
-              {
-                name: 'none',
-                text: t('No actions available'),
-                disabled: true,
-              },
-            ]
-      }
-    />
-  );
+  const items: MenuItemObject<string>[] =
+    availableItems.length > 0
+      ? availableItems
+      : [
+          {
+            name: 'none',
+            text: t('No actions available'),
+            disabled: true,
+          },
+        ];
+
+  const onMenuSelect = (name: string) => {
+    switch (name) {
+      case 'transfer':
+        onTransfer?.();
+        break;
+      case 'cover':
+        onCover?.();
+        break;
+      case 'buffer':
+        // Auto hold is reset when the hold is submitted, not on open,
+        // so cancelling leaves it as it was
+        onHoldBuffer?.();
+        break;
+      case 'reset-buffer':
+        onResetHoldBuffer?.();
+        break;
+      case 'disable-auto-buffer':
+        onBudgetAction?.(month, 'reset-income-carryover', {});
+        onClose?.();
+        break;
+      default:
+        throw new Error(`Unrecognized menu option: ${name}`);
+    }
+  };
+
+  return { items, onMenuSelect };
+}
+
+type ToBudgetMenuProps = Omit<
+  ComponentPropsWithoutRef<typeof Menu>,
+  'onMenuSelect' | 'items'
+> &
+  ToBudgetMenuActions;
+
+export function ToBudgetMenu({
+  onTransfer,
+  onCover,
+  onHoldBuffer,
+  onResetHoldBuffer,
+  onBudgetAction,
+  onClose,
+  month,
+  ...props
+}: ToBudgetMenuProps) {
+  const { items, onMenuSelect } = useToBudgetMenu({
+    onTransfer,
+    onCover,
+    onHoldBuffer,
+    onResetHoldBuffer,
+    onBudgetAction,
+    onClose,
+    month,
+  });
+
+  return <Menu {...props} onMenuSelect={onMenuSelect} items={items} />;
 }

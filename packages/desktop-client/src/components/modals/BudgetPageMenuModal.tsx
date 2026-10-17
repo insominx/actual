@@ -1,13 +1,8 @@
-import React from 'react';
-import type { ComponentPropsWithoutRef, CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Menu } from '@actual-app/components/menu';
-import { styles } from '@actual-app/components/styles';
-import { theme } from '@actual-app/components/theme';
-
 import { parseDisplayMode } from '#components/budget/expense-view/expenseData';
-import { Modal, ModalCloseButton, ModalHeader } from '#components/common/Modal';
+import { MobileSheet } from '#components/mobile/MobileSheet';
+import { MobileSheetRow } from '#components/mobile/MobileSheetRow';
 import { useLocalPref } from '#hooks/useLocalPref';
 import type { Modal as ModalType } from '#modals/modalsSlice';
 
@@ -21,102 +16,47 @@ export function BudgetPageMenuModal({
   onToggleHiddenCategories,
   onSwitchBudgetFile,
 }: BudgetPageMenuModalProps) {
-  const defaultMenuItemStyle: CSSProperties = {
-    ...styles.mobileMenuItem,
-    color: theme.menuItemText,
-    borderRadius: 0,
-    borderTop: `1px solid ${theme.pillBorder}`,
-  };
-
-  return (
-    <Modal name="budget-page-menu">
-      {({ state }) => (
-        <>
-          <ModalHeader
-            showLogo
-            rightContent={<ModalCloseButton onPress={() => state.close()} />}
-          />
-          <BudgetPageMenu
-            onClose={() => state.close()}
-            getItemStyle={() => defaultMenuItemStyle}
-            onAddCategoryGroup={onAddCategoryGroup}
-            onToggleHiddenCategories={onToggleHiddenCategories}
-            onSwitchBudgetFile={onSwitchBudgetFile}
-          />
-        </>
-      )}
-    </Modal>
-  );
-}
-
-type BudgetPageMenuProps = Omit<
-  ComponentPropsWithoutRef<typeof Menu>,
-  'onMenuSelect' | 'items'
-> & {
-  onAddCategoryGroup: () => void;
-  onToggleHiddenCategories: () => void;
-  onSwitchBudgetFile: () => void;
-  onClose: () => void;
-};
-
-function BudgetPageMenu({
-  onClose,
-  onAddCategoryGroup,
-  onToggleHiddenCategories,
-  onSwitchBudgetFile,
-  ...props
-}: BudgetPageMenuProps) {
+  const { t } = useTranslation();
   const [showHiddenCategories] = useLocalPref('budget.showHiddenCategories');
   const [displayModePref, setDisplayMode] = useLocalPref('budget.displayMode');
   const displayMode = parseDisplayMode(displayModePref);
 
-  const onMenuSelect = (name: string) => {
-    switch (name) {
-      case 'toggle-display-mode':
-        setDisplayMode(displayMode === 'expenses' ? 'budget' : 'expenses');
-        onClose();
-        break;
-      case 'add-category-group':
-        onAddCategoryGroup?.();
-        break;
-      // case 'edit-mode':
-      //   onEditMode?.(true);
-      //   break;
-      case 'toggle-hidden-categories':
-        onToggleHiddenCategories?.();
-        break;
-      case 'switch-budget-file':
-        onSwitchBudgetFile?.();
-        break;
-      default:
-        throw new Error(`Unrecognized menu item: ${name}`);
-    }
-  };
-  const { t } = useTranslation();
-
   return (
-    <Menu
-      {...props}
-      onMenuSelect={onMenuSelect}
-      items={[
-        {
-          name: 'toggle-display-mode',
-          text:
-            displayMode === 'expenses' ? t('Show budget') : t('Show expenses'),
-        },
-        {
-          name: 'add-category-group',
-          text: t('Add category group'),
-        },
-        {
-          name: 'toggle-hidden-categories',
-          text: `${!showHiddenCategories ? t('Show hidden categories') : t('Hide hidden categories')}`,
-        },
-        {
-          name: 'switch-budget-file',
-          text: t('Switch budget file'),
-        },
-      ]}
-    />
+    <MobileSheet name="budget-page-menu" title={t('Budget')}>
+      {({ close }) => (
+        <>
+          <MobileSheetRow
+            label={t('Add category group')}
+            onPress={onAddCategoryGroup}
+          />
+          <MobileSheetRow
+            label={
+              showHiddenCategories
+                ? t('Hide hidden categories')
+                : t('Show hidden categories')
+            }
+            onPress={onToggleHiddenCategories}
+          />
+          <MobileSheetRow
+            label={
+              displayMode === 'expenses' ? t('Show budget') : t('Show expenses')
+            }
+            onPress={() => {
+              setDisplayMode(
+                displayMode === 'expenses' ? 'budget' : 'expenses',
+              );
+              close();
+            }}
+          />
+          <MobileSheetRow
+            label={t('Switch budget file')}
+            onPress={() => {
+              close();
+              onSwitchBudgetFile();
+            }}
+          />
+        </>
+      )}
+    </MobileSheet>
   );
 }
