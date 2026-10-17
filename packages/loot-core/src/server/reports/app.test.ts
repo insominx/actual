@@ -1,5 +1,6 @@
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { mkdtempSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -17,7 +18,10 @@ import {
   updateReport,
 } from './app';
 
-const dashboardImportPath = join(tmpdir(), 'custom-report-dashboard.json');
+const dashboardImportPath = join(
+  mkdtempSync(join(tmpdir(), 'actual-report-import-')),
+  'custom-report-dashboard.json',
+);
 
 const report: CustomReportEntity = {
   id: 'report-id',
