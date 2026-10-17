@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { Ref } from 'react';
 import { Trans } from 'react-i18next';
 
@@ -13,7 +13,8 @@ import {
   format as formatDate,
   getDate,
   isSameMonth,
-  subDays,
+  startOfMonth,
+  startOfWeek,
 } from 'date-fns';
 
 import { FinancialText } from '#components/FinancialText';
@@ -43,24 +44,15 @@ export function CalendarGraph({
 }: CalendarGraphProps) {
   const format = useFormat();
 
-  const weekStartsOn =
-    firstDayOfWeekIdx !== undefined &&
-    !Number.isNaN(parseInt(firstDayOfWeekIdx)) &&
-    parseInt(firstDayOfWeekIdx) >= 0 &&
-    parseInt(firstDayOfWeekIdx) <= 6
-      ? parseInt(firstDayOfWeekIdx)
-      : 0;
-  const today = new Date();
-  const todayNoon = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate(),
-    12,
-  );
-  const startingDate = subDays(
-    todayNoon,
-    (todayNoon.getDay() - weekStartsOn + 7) % 7,
-  );
+  const startingDate = startOfWeek(start, {
+    weekStartsOn:
+      firstDayOfWeekIdx !== undefined &&
+      !Number.isNaN(parseInt(firstDayOfWeekIdx)) &&
+      parseInt(firstDayOfWeekIdx) >= 0 &&
+      parseInt(firstDayOfWeekIdx) <= 6
+        ? (parseInt(firstDayOfWeekIdx) as 0 | 1 | 2 | 3 | 4 | 5 | 6)
+        : 0,
+  });
   const [fontSize, setFontSize] = useState(14);
 
   const buttonRef = useResizeObserver(rect => {
@@ -114,7 +106,7 @@ export function CalendarGraph({
         }}
       >
         {data.map((day, index) =>
-          !isSameMonth(day.date, start) ? (
+          !isSameMonth(day.date, startOfMonth(start)) ? (
             <View
               key={`empty-${day.date.getTime()}`}
               onClick={() => onDayClick(null)}
@@ -250,12 +242,6 @@ type DayButtonProps = {
   onPress: () => void;
 };
 function DayButton({ day, onPress, fontSize, resizeRef }: DayButtonProps) {
-  const [currentFontSize, setCurrentFontSize] = useState(fontSize);
-
-  useEffect(() => {
-    setCurrentFontSize(fontSize);
-  }, [fontSize]);
-
   return (
     <Button
       ref={resizeRef}
@@ -323,7 +309,7 @@ function DayButton({ day, onPress, fontSize, resizeRef }: DayButtonProps) {
       />
       <span
         style={{
-          fontSize: `${currentFontSize}px`,
+          fontSize: `${fontSize}px`,
           fontWeight: 500,
           position: 'relative',
         }}

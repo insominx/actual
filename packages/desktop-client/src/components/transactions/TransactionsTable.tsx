@@ -3487,7 +3487,7 @@ export const TransactionTable = forwardRef(
 
       prevSplitsExpanded.current = splitsExpanded;
       return result;
-    }, [props.transactions, splitsExpanded]);
+    }, [prevSplitsExpanded, props.transactions, splitsExpanded]);
 
     const transactionMap = useMemo(() => {
       return new Map(
@@ -3903,14 +3903,14 @@ export const TransactionTable = forwardRef(
       }
     }
 
-    const onScheduleTemporary = useCallback(() => {
+    const onScheduleTemporary = () => {
       afterSave(() => {
         shouldSchedule.current = true;
         forceRerender({});
       });
-    }, []);
+    };
 
-    const onAddTemporary = useCallback(() => {
+    const onAddTemporary = () => {
       afterSave(() => {
         shouldAdd.current = true;
         // A little hacky - this forces a rerender which will cause the
@@ -3918,14 +3918,14 @@ export const TransactionTable = forwardRef(
         // committed (the input could still be saving a value).
         forceRerender({});
       });
-    }, []);
+    };
 
-    const onAddAndCloseTemporary = useCallback(() => {
+    const onAddAndCloseTemporary = () => {
       afterSave(() => {
         shouldAddAndClose.current = true;
         forceRerender({});
       });
-    }, []);
+    };
 
     const {
       onSave: onSaveProp,
@@ -3991,23 +3991,26 @@ export const TransactionTable = forwardRef(
           onSaveProp(groupedTransaction);
         }
       },
-      [onSaveProp, onApplyRulesProp],
+      [latestState, onSaveProp, onApplyRulesProp],
     );
 
-    const onDelete = useCallback((id: TransactionEntity['id']) => {
-      const temporary = isTemporaryId(id);
+    const onDelete = useCallback(
+      (id: TransactionEntity['id']) => {
+        const temporary = isTemporaryId(id);
 
-      if (temporary) {
-        const newTrans = latestState.current.newTransactions;
+        if (temporary) {
+          const newTrans = latestState.current.newTransactions;
 
-        if (id === newTrans[0].id) {
-          // You can never delete the parent new transaction
-          return;
+          if (id === newTrans[0].id) {
+            // You can never delete the parent new transaction
+            return;
+          }
+
+          setNewTransactions(deleteTransaction(newTrans, id).data);
         }
-
-        setNewTransactions(deleteTransaction(newTrans, id).data);
-      }
-    }, []);
+      },
+      [latestState],
+    );
 
     const onBatchDelete = useCallback(
       (ids: TransactionEntity['id'][]) => {
@@ -4100,7 +4103,7 @@ export const TransactionTable = forwardRef(
           }
         }
       };
-    }, [onSplitProp, splitsExpandedDispatch]);
+    }, [latestState, onSplitProp, splitsExpandedDispatch]);
 
     const { onAddSplit: onAddSplitProp } = props;
 
@@ -4127,7 +4130,7 @@ export const TransactionTable = forwardRef(
           );
         }
       },
-      [onAddSplitProp],
+      [latestState, onAddSplitProp],
     );
 
     const onDistributeRemainder = useCallback(
@@ -4228,7 +4231,7 @@ export const TransactionTable = forwardRef(
           }
         }
       },
-      [onSave],
+      [latestState, onSave],
     );
 
     function onCloseAddTransaction() {

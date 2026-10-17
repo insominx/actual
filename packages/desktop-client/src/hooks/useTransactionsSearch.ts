@@ -51,7 +51,7 @@ export function useTransactionsSearch({
           setIsSearching(true);
         }
       }, delayMs),
-    [dateFormat, decimalPlaces, delayMs],
+    [dateFormat, decimalPlaces, delayMs, resetQueryRef, updateQueryRef],
   );
 
   useEffect(() => {

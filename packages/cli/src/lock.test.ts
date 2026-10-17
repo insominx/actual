@@ -67,6 +67,7 @@ describe('acquireExclusive', () => {
     const release1 = await acquireExclusive(dir, { timeoutMs: 1000 });
     await release1();
     const release2 = await acquireExclusive(dir, { timeoutMs: 1000 });
+    expect(release2).toBeTypeOf('function');
     await release2();
   });
 

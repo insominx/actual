@@ -788,7 +788,7 @@ const TransactionEditInner = memo<TransactionEditInnerProps>(
           onConfirmSave();
         }
       }
-    }, [isAdding, dispatch, navigate, onSave, unserializedTransactions, t]);
+    }, [isAdding, dispatch, navigate, onSave, unserializedTransactions]);
 
     const onSchedule = useCallback(async () => {
       const [unserializedTransaction] = unserializedTransactions;
@@ -1182,7 +1182,12 @@ const TransactionEditInner = memo<TransactionEditInnerProps>(
       transferAccount: getTransferAccount(transaction),
     });
 
-    const transactionDate = parseDate(transaction.date, dateFormat, new Date());
+    const [referenceDate] = useState(() => new Date());
+    const transactionDate = parseDate(
+      transaction.date,
+      dateFormat,
+      referenceDate,
+    );
     const dateDefaultValue = monthUtils.dayFromDate(transactionDate);
 
     const remaining = transaction.error?.difference ?? 0;
@@ -2161,12 +2166,7 @@ function TransactionEditUnconnected({
   );
 }
 
-type TransactionEditProps = Omit<
-  TransactionEditUnconnectedProps,
-  'categories' | 'accounts' | 'payees' | 'lastTransaction' | 'dateFormat'
->;
-
-export const TransactionEdit = (props: TransactionEditProps) => {
+export const TransactionEdit = () => {
   const { data: { list: categories } = { list: [] } } = useCategories();
   const { data: payees = [] } = usePayees();
   const lastTransaction = useSelector(
@@ -2178,7 +2178,6 @@ export const TransactionEdit = (props: TransactionEditProps) => {
   return (
     <SingleActiveEditFormProvider formName="mobile-transaction">
       <TransactionEditUnconnected
-        {...props}
         categories={categories}
         payees={payees}
         lastTransaction={lastTransaction}
