@@ -25,7 +25,7 @@ export function ExpenseProgress({ current, target }: ExpenseProgressProps) {
   let over = false;
 
   if (totalSpent > totalBudgeted) {
-    frac = (totalSpent - totalBudgeted) / totalBudgeted;
+    frac = fraction(totalSpent - totalBudgeted, totalBudgeted);
     over = true;
   } else {
     frac = fraction(totalSpent, totalBudgeted);

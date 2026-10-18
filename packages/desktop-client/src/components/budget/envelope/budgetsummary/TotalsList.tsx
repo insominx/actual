@@ -72,7 +72,7 @@ export function TotalsList({ prevMonthName, style }: TotalsListProps) {
           content={
             <>
               <AlignedText
-                left="Income:"
+                left={<Trans>Income:</Trans>}
                 right={
                   <EnvelopeCellValue
                     binding={envelopeBudget.totalIncome}
@@ -81,7 +81,7 @@ export function TotalsList({ prevMonthName, style }: TotalsListProps) {
                 }
               />
               <AlignedText
-                left="From Last Month:"
+                left={<Trans>From Last Month:</Trans>}
                 right={
                   <EnvelopeCellValue
                     binding={envelopeBudget.fromLastMonth}

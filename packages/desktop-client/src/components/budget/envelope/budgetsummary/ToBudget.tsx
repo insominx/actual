@@ -107,6 +107,7 @@ export function ToBudget({
                 onBudgetAction(month, 'reset-hold');
                 setMenuOpen(false);
               }}
+              onClose={closeMenu}
               month={month}
               onBudgetAction={onBudgetAction}
             />

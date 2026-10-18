@@ -43,6 +43,7 @@ export function EnvelopeToBudgetMenuModal({
             onHoldBuffer={onHoldBuffer}
             onResetHoldBuffer={onResetHoldBuffer}
             onBudgetAction={onBudgetAction}
+            onClose={() => state.close()}
             month={month}
           />
         </>

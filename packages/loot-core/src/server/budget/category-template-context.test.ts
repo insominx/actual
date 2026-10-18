@@ -2021,6 +2021,27 @@ describe('CategoryTemplateContext', () => {
       );
     });
 
+    it('throws when a non-recurring `spend` target month is in the past even without a `by` or `schedule` sibling', async () => {
+      vi.mocked(statements.getActiveSchedules).mockResolvedValue(
+        [] as Awaited<ReturnType<typeof statements.getActiveSchedules>>,
+      );
+      const templates: Template[] = [
+        {
+          type: 'spend',
+          amount: 1200,
+          from: '2023-10',
+          month: '2023-12',
+          directive: 'template',
+          priority: 1,
+        },
+      ];
+      await expect(
+        CategoryTemplateContext.init(templates, category, '2024-06', 0),
+      ).rejects.toThrow(
+        /Target month has passed, remove or update the target month/,
+      );
+    });
+
     it('accepts a past `by` target when annual or repeat is set (engine rolls it forward)', async () => {
       vi.mocked(statements.getActiveSchedules).mockResolvedValue(
         [] as Awaited<ReturnType<typeof statements.getActiveSchedules>>,

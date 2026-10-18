@@ -473,8 +473,9 @@ export class CategoryTemplateContext {
     month: string,
   ) {
     if (
-      templates.filter(t => t.type === 'schedule' || t.type === 'by').length ===
-      0
+      templates.filter(
+        t => t.type === 'schedule' || t.type === 'by' || t.type === 'spend',
+      ).length === 0
     ) {
       return;
     }
@@ -526,7 +527,7 @@ export class CategoryTemplateContext {
           `${t.month}`,
           month,
         );
-        if (range < 0 && !(t.repeat || t.annual)) {
+        if (range < 0 && !((t.repeat && t.repeat > 0) || t.annual)) {
           throw new Error(
             `Target month has passed, remove or update the target month`,
           );
@@ -776,7 +777,7 @@ export class CategoryTemplateContext {
       toMonth,
       templateContext.month,
     );
-    if (repeat && m < 0) {
+    if (repeat && repeat > 0 && m < 0) {
       while (m < 0) {
         toMonth = monthUtils.addMonths(toMonth, repeat);
         fromMonth = monthUtils.addMonths(fromMonth, repeat);
@@ -934,7 +935,7 @@ export class CategoryTemplateContext {
         targetMonth,
         templateContext.month,
       );
-      while (numMonths < 0 && period) {
+      while (numMonths < 0 && period && period > 0) {
         targetMonth = monthUtils.addMonths(targetMonth, period);
         numMonths = monthUtils.differenceInCalendarMonths(
           targetMonth,

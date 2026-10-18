@@ -16,6 +16,7 @@ type ToBudgetMenuProps = Omit<
   onHoldBuffer: () => void;
   onResetHoldBuffer: () => void;
   onBudgetAction?: (month: string, action: string, arg?: unknown) => void;
+  onClose?: () => void;
   month: string;
 };
 
@@ -25,6 +26,7 @@ export function ToBudgetMenu({
   onHoldBuffer,
   onResetHoldBuffer,
   onBudgetAction,
+  onClose,
   month,
   ...props
 }: ToBudgetMenuProps) {
@@ -98,6 +100,7 @@ export function ToBudgetMenu({
             break;
           case 'disable-auto-buffer':
             onBudgetAction?.(month, 'reset-income-carryover', {});
+            onClose?.();
             break;
           default:
             throw new Error(`Unrecognized menu option: ${name}`);

@@ -166,12 +166,17 @@ export function BudgetTable(props: BudgetTableProps) {
   const moveVertically = (dir: 1 | -1) => {
     const flattened = categoryGroups.reduce(
       (all, group) => {
+        if (group.hidden && !showHiddenCategories) {
+          return all;
+        }
         if (collapsedGroupIds.includes(group.id)) {
           return all.concat({ id: group.id, isGroup: true });
         }
         return all.concat([
           { id: group.id, isGroup: true },
-          ...(group?.categories || []),
+          ...(group?.categories || []).filter(
+            cat => showHiddenCategories || !cat.hidden,
+          ),
         ]);
       },
       [] as Array<
