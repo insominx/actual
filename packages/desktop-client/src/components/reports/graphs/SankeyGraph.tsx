@@ -17,6 +17,9 @@ import { useFormat } from '#hooks/useFormat';
 import { usePrivacyMode } from '#hooks/usePrivacyMode';
 import { useReducedMotion } from '#hooks/useReducedMotion';
 
+// A CSS font family name, so it must not be translated
+const REDACTED_FONT = 'Redacted Script';
+
 const fadeIn = keyframes({
   from: { opacity: 0 },
   to: { opacity: 1 },
@@ -183,7 +186,7 @@ function SankeyNode({
         height / 2 + 13,
         11,
         0.5,
-        privacyMode ? 'Redacted Script' : undefined,
+        privacyMode ? REDACTED_FONT : undefined,
       )}
     </Layer>
   );
