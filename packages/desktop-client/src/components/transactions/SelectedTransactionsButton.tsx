@@ -394,8 +394,10 @@ export function SelectedTransactionsButton({
                 ? [
                     {
                       name: 'unsplit-transactions',
-                      text: t('Unsplit {{count}} transactions', {
+                      text: t('unsplit-transactions-count', {
                         count: selectedIds.length,
+                        defaultValue_one: 'Unsplit {{count}} transaction',
+                        defaultValue_other: 'Unsplit {{count}} transactions',
                       }),
                     } as const,
                   ]
