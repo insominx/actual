@@ -31,6 +31,19 @@ export const BySaveAutomationReadOnly = ({
     template.type === 'spend' ? formatMonthLabel(template.from, locale) : null;
 
   if (template.annual) {
+    if (repeat === 1) {
+      return from ? (
+        <Trans>
+          Save <FinancialText>{{ amount } as TransObjectLiteral}</FinancialText>{' '}
+          by {{ month }}, early spending from {{ from }}, repeating every year
+        </Trans>
+      ) : (
+        <Trans>
+          Save <FinancialText>{{ amount } as TransObjectLiteral}</FinancialText>{' '}
+          by {{ month }}, repeating every year
+        </Trans>
+      );
+    }
     if (from) {
       return (
         <Trans count={repeat}>
@@ -49,6 +62,19 @@ export const BySaveAutomationReadOnly = ({
   }
 
   if (template.repeat && template.repeat > 0) {
+    if (repeat === 1) {
+      return from ? (
+        <Trans>
+          Save <FinancialText>{{ amount } as TransObjectLiteral}</FinancialText>{' '}
+          by {{ month }}, early spending from {{ from }}, repeating every month
+        </Trans>
+      ) : (
+        <Trans>
+          Save <FinancialText>{{ amount } as TransObjectLiteral}</FinancialText>{' '}
+          by {{ month }}, repeating every month
+        </Trans>
+      );
+    }
     if (from) {
       return (
         <Trans count={repeat}>

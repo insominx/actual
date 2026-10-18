@@ -1,4 +1,4 @@
-import { Trans } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 
 import type {
   AverageTemplate,
@@ -14,19 +14,30 @@ type HistoricalAutomationReadOnlyProps = {
 export const HistoricalAutomationReadOnly = ({
   template,
 }: HistoricalAutomationReadOnlyProps) => {
+  const { t } = useTranslation();
+
   if (template.type === 'copy') {
     return (
-      <Trans count={template.lookBack}>
-        Budget the same amount as {{ count: template.lookBack }} months ago
-      </Trans>
+      <>
+        {t('budget-copy-months-ago', {
+          count: template.lookBack,
+          defaultValue_one: 'Budget the same amount as {{count}} month ago',
+          defaultValue_other: 'Budget the same amount as {{count}} months ago',
+        })}
+      </>
     );
   }
 
   const base = (
-    <Trans count={template.numMonths}>
-      Budget the average of the last {{ count: template.numMonths }} complete
-      months
-    </Trans>
+    <>
+      {t('budget-average-complete-months', {
+        count: template.numMonths,
+        defaultValue_one:
+          'Budget the average of the last {{count}} complete month',
+        defaultValue_other:
+          'Budget the average of the last {{count}} complete months',
+      })}
+    </>
   );
 
   if (template.adjustment === undefined) {

@@ -22,6 +22,45 @@ export function FixedAutomationReadOnly({
   const periodAmount = template.period?.amount ?? 1;
   const periodUnit = template.period?.period ?? 'month';
 
+  if (periodAmount === 1) {
+    switch (periodUnit) {
+      case 'day':
+        return (
+          <Trans>
+            Budget{' '}
+            <FinancialText>{{ amount } as TransObjectLiteral}</FinancialText>{' '}
+            every day
+          </Trans>
+        );
+      case 'week':
+        return (
+          <Trans>
+            Budget{' '}
+            <FinancialText>{{ amount } as TransObjectLiteral}</FinancialText>{' '}
+            every week
+          </Trans>
+        );
+      case 'month':
+        return (
+          <Trans>
+            Budget{' '}
+            <FinancialText>{{ amount } as TransObjectLiteral}</FinancialText>{' '}
+            every month
+          </Trans>
+        );
+      case 'year':
+        return (
+          <Trans>
+            Budget{' '}
+            <FinancialText>{{ amount } as TransObjectLiteral}</FinancialText>{' '}
+            every year
+          </Trans>
+        );
+      default:
+        return null;
+    }
+  }
+
   switch (periodUnit) {
     case 'day':
       return (
