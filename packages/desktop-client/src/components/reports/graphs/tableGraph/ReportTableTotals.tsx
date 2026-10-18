@@ -101,7 +101,7 @@ export function ReportTableTotals({
     '::-webkit-scrollbar': {
       backgroundColor: theme.tableBackground,
       height: 12,
-      dispaly: compact && 'none',
+      display: compact ? 'none' : undefined,
     },
     flexDirection: 'row',
     flex: 1,

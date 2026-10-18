@@ -96,13 +96,17 @@ function useSelectedCategories(
         );
 
       case 'oneOf':
-        return categories.filter(({ id }) =>
-          existingCategoryCondition.value.includes(id),
+        return categories.filter(
+          ({ id }) =>
+            Array.isArray(existingCategoryCondition.value) &&
+            existingCategoryCondition.value.includes(id),
         );
 
       case 'notOneOf':
         return categories.filter(
-          ({ id }) => !existingCategoryCondition.value.includes(id),
+          ({ id }) =>
+            !Array.isArray(existingCategoryCondition.value) ||
+            !existingCategoryCondition.value.includes(id),
         );
 
       default:
@@ -982,6 +986,7 @@ function CustomReportInner({
                   }}
                   conditionsOp={conditionsOp}
                   onConditionsOpChange={co => {
+                    setSessionReport('conditionsOp', co);
                     onConditionsOpChange(co);
                     onReportChange({ type: 'modify' });
                   }}

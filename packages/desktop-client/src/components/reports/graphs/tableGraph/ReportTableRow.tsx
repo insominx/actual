@@ -67,7 +67,8 @@ export const ReportTableRow = memo(
     interval,
     colorized,
   }: ReportTableRowProps) => {
-    const average = Math.round(item[balanceTypeOp] / intervalsCount);
+    const average =
+      intervalsCount > 0 ? Math.round(item[balanceTypeOp] / intervalsCount) : 0;
     const groupByItem = groupBy === 'Interval' ? 'date' : 'name';
     const format = useFormat();
 

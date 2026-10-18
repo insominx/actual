@@ -195,8 +195,14 @@ export function AreaGraph({
   const animationProps = useRechartsAnimation({ animationDuration: 1000 });
 
   const privacyMode = usePrivacyMode();
-  const dataMax = Math.max(...data.intervalData.map(i => i[balanceTypeOp]));
-  const dataMin = Math.min(...data.intervalData.map(i => i[balanceTypeOp]));
+  const dataMax =
+    data.intervalData.length > 0
+      ? Math.max(...data.intervalData.map(i => i[balanceTypeOp]))
+      : 0;
+  const dataMin =
+    data.intervalData.length > 0
+      ? Math.min(...data.intervalData.map(i => i[balanceTypeOp]))
+      : 0;
 
   const labelsMargin = viewLabels ? 30 : 0;
   const dataDiff = dataMax - dataMin;

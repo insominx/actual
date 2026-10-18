@@ -140,9 +140,7 @@ export function CalendarCard({
 
   useEffect(() => {
     if (data) {
-      setMonthNameFormats(
-        Array(data.calendarData.length).map(() => 'MMMM yyyy'),
-      );
+      setMonthNameFormats(Array(data.calendarData.length).fill('MMMM yyyy'));
     } else {
       setMonthNameFormats([]);
     }

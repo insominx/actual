@@ -152,9 +152,9 @@ export function CashFlowGraph({
   const data = graphData.expenses.map((row, idx) => ({
     date: row.x,
     expenses: row.y,
-    income: graphData.income[idx].y,
-    balance: graphData.balances[idx].y,
-    transfers: graphData.transfers[idx].y,
+    income: graphData.income[idx]?.y ?? 0,
+    balance: graphData.balances[idx]?.y ?? 0,
+    transfers: graphData.transfers[idx]?.y ?? 0,
   }));
 
   return (

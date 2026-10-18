@@ -36,7 +36,7 @@ export function CategorySelector({
   const { t } = useTranslation();
   const [uncheckedHidden, setUncheckedHidden] = useState(false);
   const filteredGroup = (categoryGroup: CategoryGroupEntity) => {
-    return categoryGroup.categories.filter(f => {
+    return (categoryGroup.categories ?? []).filter(f => {
       return showHiddenCategories || !f.hidden ? true : false;
     });
   };
@@ -47,7 +47,7 @@ export function CategorySelector({
   );
 
   if (selectedCategories === undefined) {
-    selectedCategories = categoryGroups.flatMap(cg => cg.categories);
+    selectedCategories = categoryGroups.flatMap(cg => cg.categories ?? []);
   }
 
   const selectedCategoryMap = useMemo(

@@ -50,7 +50,8 @@ export function ReportSummary({
         : Math.abs(data.totalDebts) > Math.abs(data.totalAssets)
           ? t('PAYMENT')
           : t('DEPOSIT');
-  const average = Math.round(data[balanceTypeOp] / intervalsCount);
+  const average =
+    intervalsCount > 0 ? Math.round(data[balanceTypeOp] / intervalsCount) : 0;
   return (
     <View
       style={{

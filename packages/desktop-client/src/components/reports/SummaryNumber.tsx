@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { Ref } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -50,15 +50,18 @@ export function SummaryNumber({
 
   displayAmount += suffix;
 
-  const handleResize = debounce(() => {
+  const calculateFontSize = useCallback(() => {
     if (!refDiv.current) return;
 
     const { clientWidth, clientHeight } = refDiv.current;
     const width = clientWidth; // no margin required on left and right
     const height = clientHeight - CONTAINER_MARGIN * 2; // account for margin top and bottom
 
+    if (width <= 0 || height <= 0) return;
+
     const calculatedFontSize = Math.min(
-      (width * FONT_SIZE_SCALE_FACTOR) / displayAmount.toString().length,
+      (width * FONT_SIZE_SCALE_FACTOR) /
+        Math.max(displayAmount.toString().length, 1),
       height, // Ensure the text fits vertically by using the height as the limiting factor
     );
 
@@ -70,9 +73,32 @@ export function SummaryNumber({
     if (calculatedFontSize !== initialFontSize && fontSizeChanged) {
       fontSizeChanged(calculatedFontSize);
     }
-  }, 100);
+  }, [displayAmount, fontSizeChanged, initialFontSize]);
 
-  const ref = useResizeObserver(handleResize);
+  const debouncedCalculateFontSize = useRef(
+    debounce(() => {
+      calculateFontSize();
+    }, 100),
+  );
+
+  useEffect(() => {
+    debouncedCalculateFontSize.current.cancel?.();
+    debouncedCalculateFontSize.current = debounce(() => {
+      calculateFontSize();
+    }, 100);
+
+    return () => {
+      debouncedCalculateFontSize.current.cancel?.();
+    };
+  }, [calculateFontSize]);
+
+  useEffect(() => {
+    calculateFontSize();
+  }, [displayAmount, calculateFontSize]);
+
+  const ref = useResizeObserver(() => {
+    debouncedCalculateFontSize.current();
+  });
   const mergedRef = useMergedRefs(ref, refDiv);
 
   return (

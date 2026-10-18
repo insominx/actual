@@ -331,7 +331,10 @@ async function calculatePercentage(
 
   const dividend = data.reduce((prev, ac) => prev + (ac?.amount ?? 0), 0);
   return {
-    total: Math.round(((dividend ?? 0) / (divisorValue ?? 1)) * 10000) / 100,
+    total:
+      divisorValue !== 0
+        ? Math.round(((dividend ?? 0) / divisorValue) * 10000) / 100
+        : 0,
     divisor: divisorValue ?? 0,
     dividend: dividend ?? 0,
   };

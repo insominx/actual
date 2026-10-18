@@ -19,7 +19,8 @@ export function makeQuery(
   const intervalFilter =
     interval === 'Weekly'
       ? '$day'
-      : '$' + ReportOptions.intervalMap.get(interval)?.toLowerCase() || 'month';
+      : '$' +
+        (ReportOptions.intervalMap.get(interval)?.toLowerCase() || 'month');
 
   const query = q('transactions')
     //Apply filters and split by "Group By"

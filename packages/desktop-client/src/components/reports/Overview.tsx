@@ -308,30 +308,34 @@ export function Overview({ dashboard }: OverviewProps) {
   const onExport = () => {
     const data = {
       version: 1,
-      widgets: desktopLayout.map(item => {
-        const widget = widgetMap.get(item.i);
+      widgets: desktopLayout.flatMap<ExportImportDashboard['widgets'][number]>(
+        item => {
+          const widget = widgetMap.get(item.i);
 
-        if (!widget) {
-          throw new Error(`Unable to query widget: ${item.i}`);
-        }
-
-        if (isCustomReportWidget(widget)) {
-          const customReport = customReportMap.get(widget.meta.id);
-
-          if (!customReport) {
-            throw new Error(`Custom report not found for widget: ${item.i}`);
+          if (!widget) {
+            throw new Error(`Unable to query widget: ${item.i}`);
           }
 
-          return {
-            ...widget,
-            meta: customReport,
-            id: undefined,
-            tombstone: undefined,
-          };
-        }
+          if (isCustomReportWidget(widget)) {
+            const customReport = customReportMap.get(widget.meta.id);
 
-        return { ...widget, id: undefined, tombstone: undefined };
-      }),
+            if (!customReport) {
+              return [];
+            }
+
+            return [
+              {
+                ...widget,
+                meta: customReport,
+                id: undefined,
+                tombstone: undefined,
+              },
+            ];
+          }
+
+          return [{ ...widget, id: undefined, tombstone: undefined }];
+        },
+      ),
     } satisfies ExportImportDashboard;
 
     void window.Actual.saveFile(

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Form } from 'react-aria-components';
-import { Trans } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import { Button } from '@actual-app/components/button';
 import { Text } from '@actual-app/components/text';
@@ -14,6 +14,7 @@ type SaveReportChooseProps = {
 };
 
 export function SaveReportChoose({ onApply }: SaveReportChooseProps) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [err, setErr] = useState('');
   const [value, setValue] = useState('');
@@ -31,7 +32,7 @@ export function SaveReportChoose({ onApply }: SaveReportChooseProps) {
           e.preventDefault();
 
           if (!value) {
-            setErr('Invalid report entered');
+            setErr(t('Invalid report entered'));
             return;
           }
 

@@ -188,6 +188,7 @@ export function GetCardData({
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <ChooseGraph
         data={data}
+        filters={report.conditions}
         mode={report.mode}
         graphType={report.graphType}
         balanceType={report.balanceType}
@@ -196,6 +197,8 @@ export function GetCardData({
         compact
         style={{ height: 'auto', flex: 1 }}
         intervalsCount={intervals.length}
+        showHiddenCategories={report.showHiddenCategories}
+        showOffBudget={report.showOffBudget}
         showTrendLines={report.showTrendLines}
         showTooltip={!isNarrowWidth && showTooltip}
       />

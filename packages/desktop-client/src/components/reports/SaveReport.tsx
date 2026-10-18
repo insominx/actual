@@ -1,4 +1,4 @@
-import React, { createRef, useRef, useState } from 'react';
+import React, { createRef, useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
 import { Button } from '@actual-app/components/button';
@@ -90,6 +90,9 @@ export function SaveReport({
   const [menuItem, setMenuItem] = useState('');
   const [err, setErr] = useState('');
   const [newName, setNewName] = useState(report.name ?? '');
+  useEffect(() => {
+    setNewName(report.name ?? '');
+  }, [report.name]);
   const inputRef = createRef<HTMLInputElement>();
   const { t } = useTranslation();
   const [saveDashboardId, setSaveDashboardId] = useState<string | null>(
@@ -215,6 +218,7 @@ export function SaveReport({
     switch (item) {
       case 'rename-report':
         setErr('');
+        setNewName(report.name ?? '');
         setMenuOpen(false);
         setNameMenuOpen(true);
         break;
@@ -229,6 +233,7 @@ export function SaveReport({
         break;
       case 'save-report':
         setErr('');
+        setNewName(report.name ?? '');
         setMenuOpen(false);
         setNameMenuOpen(true);
         break;
