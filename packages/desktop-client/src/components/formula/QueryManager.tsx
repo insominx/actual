@@ -143,9 +143,11 @@ export function QueryManager({ queries, onQueriesChange }: QueryManagerProps) {
   const dispatch = useDispatch();
 
   function handleAddQuery() {
-    if (!newQueryName.trim()) return;
+    const queryName = newQueryName.trim();
+    if (!queryName) return;
 
-    if (queries[newQueryName]) {
+    // hasOwn: names like "constructor" must not collide with Object.prototype
+    if (Object.hasOwn(queries, queryName)) {
       dispatch(
         addNotification({
           notification: {
@@ -159,7 +161,7 @@ export function QueryManager({ queries, onQueriesChange }: QueryManagerProps) {
 
     onQueriesChange({
       ...queries,
-      [newQueryName]: {
+      [queryName]: {
         conditions: [],
         conditionsOp: 'and',
         timeFrame: {
@@ -488,23 +490,21 @@ function QueryItem({
         conditionsOpRef.current = config.conditionsOp;
         timeRangeRef.current = config.timeFrame.mode;
 
-        setStartDate(
-          config.timeFrame.start
-            ? normalizeQueryTimeFrameStart(config.timeFrame.start)
-            : monthUtils.dayFromDate(monthUtils.currentMonth()),
-        );
-        setEndDate(
-          config.timeFrame.end
-            ? normalizeQueryTimeFrameEnd(config.timeFrame.end)
-            : monthUtils.currentDay(),
-        );
+        const importedStart = config.timeFrame.start
+          ? normalizeQueryTimeFrameStart(config.timeFrame.start)
+          : monthUtils.dayFromDate(monthUtils.currentMonth());
+        const importedEnd = config.timeFrame.end
+          ? normalizeQueryTimeFrameEnd(config.timeFrame.end)
+          : monthUtils.currentDay();
+        setStartDate(importedStart);
+        setEndDate(importedEnd);
 
-        // Update the query
+        // Update the query, with the same fallbacks as the pickers above
         sendUpdate(
           config.conditions,
           config.conditionsOp,
-          normalizeQueryTimeFrameStart(config.timeFrame.start),
-          normalizeQueryTimeFrameEnd(config.timeFrame.end),
+          importedStart,
+          importedEnd,
           config.timeFrame.mode,
         );
         setImportJsonText('');

@@ -56,6 +56,11 @@ export function ScheduledTransactionMenuModal({
   }
 
   const schedule = schedules?.[0];
+  // The schedule may have been deleted since the menu was requested
+  if (!schedule) {
+    return null;
+  }
+
   const { date: dateCond } = extractScheduleConds(schedule._conditions);
 
   const canBeSkipped = scheduleIsRecurring(dateCond);

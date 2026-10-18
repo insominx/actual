@@ -308,9 +308,18 @@ export function SelectLinkedAccountsModal({
         }
 
         // Finally link the matched account
-        const { startingDate, startingBalance } = resolveStartingSettings(
-          customStartingDates[chosenExternalAccountId],
-        );
+        // Starting options only exist for accounts being created. A draft
+        // left over from before the row was switched to an existing account
+        // must not change that account's sync window.
+        const { startingDate, startingBalance } = isNewAccountOption(
+          chosenLocalAccountId,
+          addOnBudgetAccountOption.id,
+          addOffBudgetAccountOption.id,
+        )
+          ? resolveStartingSettings(
+              customStartingDates[chosenExternalAccountId],
+            )
+          : { startingDate: undefined, startingBalance: undefined };
 
         if (propsWithSortedExternalAccounts.syncSource === 'simpleFin') {
           linkAccountSimpleFin.mutate({

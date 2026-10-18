@@ -14,8 +14,12 @@ export function SyncRefresh({ onSync, children }: SyncRefreshProps) {
 
   async function onSync_() {
     setSyncing(true);
-    await onSync();
-    setSyncing(false);
+    try {
+      await onSync();
+    } finally {
+      // Also when the sync throws, or the refresh spinner never stops
+      setSyncing(false);
+    }
   }
 
   return <>{children({ refreshing: syncing, onRefresh: onSync_ })}</>;

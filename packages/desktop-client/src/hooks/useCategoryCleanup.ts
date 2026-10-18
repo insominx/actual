@@ -22,23 +22,31 @@ export function useCategoryCleanup({
     let mounted = true;
     async function load() {
       setLoading(true);
-      // notes based #cleanup lines may have been edited since they were last
-      // parsed into the DB. ui-managed categories own cleanup_def directly, so skip.
-      if (source !== 'ui') {
-        await send('budget/store-note-cleanups', [categoryId]);
-      }
+      try {
+        // notes based #cleanup lines may have been edited since they were last
+        // parsed into the DB. ui-managed categories own cleanup_def directly, so skip.
+        if (source !== 'ui') {
+          await send('budget/store-note-cleanups', [categoryId]);
+        }
 
-      const result = await aqlQuery(
-        q('categories').filter({ id: categoryId }).select(['cleanup_def']),
-      );
-      const row = Array.isArray(result.data) ? result.data[0] : null;
-      const raw =
-        row && typeof row.cleanup_def === 'string' ? row.cleanup_def : null;
-      const parsed: CleanupTemplate[] = raw ? JSON.parse(raw) : [];
-      if (mounted) {
-        setCleanup(parsed);
-        onLoaded?.(parsed);
-        setLoading(false);
+        const result = await aqlQuery(
+          q('categories').filter({ id: categoryId }).select(['cleanup_def']),
+        );
+        const row = Array.isArray(result.data) ? result.data[0] : null;
+        const raw =
+          row && typeof row.cleanup_def === 'string' ? row.cleanup_def : null;
+        const parsed: CleanupTemplate[] = raw ? JSON.parse(raw) : [];
+        if (mounted) {
+          setCleanup(parsed);
+          onLoaded?.(parsed);
+        }
+      } catch (e) {
+        console.error('Failed to load category cleanup:', e);
+      } finally {
+        // A failed load must not leave the editor stuck on its loading state
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
     void load();

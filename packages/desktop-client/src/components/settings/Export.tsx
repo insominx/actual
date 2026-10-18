@@ -25,24 +25,30 @@ export function ExportBudget() {
     setError(null);
     setWarnings([]);
 
-    const response = await send('export-budget');
+    try {
+      const response = await send('export-budget');
 
-    if ('error' in response && response.error) {
-      setError(response.error);
+      if ('error' in response && response.error) {
+        setError(response.error);
+        console.log('Export error code:', response.error);
+        return;
+      }
+
+      if (response.data) {
+        setWarnings(response.warnings ?? []);
+        void window.Actual.saveFile(
+          response.data,
+          `${format(new Date(), 'yyyy-MM-dd')}-${budgetName}.zip`,
+          t('Export budget'),
+        );
+      }
+    } catch (e) {
+      // A rejected request must neither leave the button spinning nor hide
+      // the failure
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
       setIsLoading(false);
-      console.log('Export error code:', response.error);
-      return;
     }
-
-    if (response.data) {
-      setWarnings(response.warnings ?? []);
-      void window.Actual.saveFile(
-        response.data,
-        `${format(new Date(), 'yyyy-MM-dd')}-${budgetName}.zip`,
-        t('Export budget'),
-      );
-    }
-    setIsLoading(false);
   }
 
   return (

@@ -123,6 +123,15 @@ export function SaveReport({
         return;
       }
 
+      // A second save before the first finishes would create the report (and
+      // its dashboard widget) twice
+      if (
+        createReportMutation.isPending ||
+        addDashboardWidgetMutation.isPending
+      ) {
+        return;
+      }
+
       createReportMutation.mutate(
         { report: newSavedReport },
         {

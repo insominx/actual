@@ -994,19 +994,21 @@ export const Table = forwardRef(
     const initialScrollTo = useRef(null);
     const listInitialized = useRef(false);
 
-    useImperativeHandle(ref, () => ({
-      scrollTo: (id, alignment = 'smart') => {
-        const index = items.findIndex(item => item.id === id);
-        if (index !== -1) {
-          if (!list.current) {
-            // If the table hasn't been laid out yet, we need to wait for
-            // that to happen before we can scroll to something
-            initialScrollTo.current = index;
-          } else {
-            list.current.scrollToItem(index, alignment);
-          }
+    const scrollToItem = (id, alignment = 'smart') => {
+      const index = items.findIndex(item => item.id === id);
+      if (index !== -1) {
+        if (!list.current) {
+          // If the table hasn't been laid out yet, we need to wait for
+          // that to happen before we can scroll to something
+          initialScrollTo.current = index;
+        } else {
+          list.current.scrollToItem(index, alignment);
         }
-      },
+      }
+    };
+
+    useImperativeHandle(ref, () => ({
+      scrollTo: scrollToItem,
 
       scrollToTop: () => {
         list.current?.scrollTo(0);
@@ -1029,8 +1031,7 @@ export const Table = forwardRef(
         onEdit(id, field);
 
         if (id && shouldScroll) {
-          // @ts-expect-error this should not be possible
-          ref.scrollTo(id);
+          scrollToItem(id);
         }
       },
 

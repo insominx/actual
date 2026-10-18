@@ -192,11 +192,16 @@ function CalendarInner({ widget, parameters }: CalendarInnerProps) {
 
   useEffect(() => {
     const conditionsOpKey = conditionsOp === 'or' ? '$or' : '$and';
+    let cancelled = false;
 
     send('make-filters-from-conditions', {
       conditions: conditions.filter(cond => !cond.customName),
     })
       .then((data: { filters: unknown[] }) => {
+        // A slower, older request must not replace the query for newer inputs
+        if (cancelled) {
+          return;
+        }
         let query = q('transactions')
           .filter({
             [conditionsOpKey]: data.filters,
@@ -220,6 +225,10 @@ function CalendarInner({ widget, parameters }: CalendarInnerProps) {
       .catch((error: unknown) => {
         console.error('Error generating filters:', error);
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, [start, end, conditions, conditionsOp, sortField, ascDesc]);
 
   const [flexAlignment, setFlexAlignment] = useState('center');

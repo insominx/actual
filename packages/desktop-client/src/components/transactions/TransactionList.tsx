@@ -25,6 +25,7 @@ import type {
   TransactionEntity,
   TransactionFilterEntity,
 } from '@actual-app/core/types/models';
+import { t } from 'i18next';
 
 import { FeatureErrorFallback } from '#components/FeatureErrorFallback';
 import type { TableHandleRef } from '#components/table';
@@ -280,7 +281,9 @@ export function TransactionList({
           addNotification({
             notification: {
               type: 'error',
-              message: `Formula errors in rules:\n${afterRules._ruleErrors.join('\n')}`,
+              message: t('Formula errors in rules:\n{{errors}}', {
+                errors: afterRules._ruleErrors.join('\n'),
+              }),
               sticky: true,
             },
           }),

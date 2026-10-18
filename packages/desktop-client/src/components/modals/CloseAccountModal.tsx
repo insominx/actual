@@ -110,11 +110,18 @@ export function CloseAccountModal({
 
     setLoading(true);
 
-    closeAccount.mutate({
-      id: account.id,
-      transferAccountId: transferAccountId || null,
-      categoryId: categoryId || null,
-    });
+    closeAccount.mutate(
+      {
+        id: account.id,
+        transferAccountId: transferAccountId || null,
+        categoryId: categoryId || null,
+      },
+      {
+        // The error itself is reported by the mutation; just let the user
+        // retry instead of leaving the modal stuck loading
+        onError: () => setLoading(false),
+      },
+    );
 
     return true;
   };

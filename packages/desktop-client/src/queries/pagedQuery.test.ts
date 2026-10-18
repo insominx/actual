@@ -619,6 +619,30 @@ describe('pagedQuery', () => {
     await wait(1000);
   });
 
+  it('does not report an error when refetching up to a row that left the set', async () => {
+    const errors = [];
+    mockServer({
+      send: async (name, args) => {
+        if (name !== 'query') {
+          throw new Error(`Command not implemented: ${name}`);
+        }
+        return {
+          data: isCountQuery(args) ? 0 : [],
+          dependencies: ['transactions'],
+        };
+      },
+    });
+
+    const paged = pagedQuery(q('transactions').select(['id', 'date']), {
+      onError: error => errors.push(error),
+      options: { pageCount: 20 },
+    });
+    await paged.run();
+    await paged.refetchUpToRow('gone', { field: 'date', order: 'desc' });
+
+    expect(errors).toEqual([]);
+  });
+
   it('does not spin forever when unsubscribed during a refetch', async () => {
     // Regression test: unsubscribing while a refetch was in flight (e.g.
     // switching accounts while a scroll-triggered `fetchNext` was pending)

@@ -853,7 +853,8 @@ function CustomReportInner({
         isNarrowWidth ? (
           <MobilePageHeader
             title={t('Custom Report: {{name}}', {
-              name: report.name ?? t('Unsaved report'),
+              // `||`: an unsaved report has an empty name, not a missing one
+              name: report.name || t('Unsaved report'),
             })}
             leftContent={<MobileBackButton onPress={onBackClick} />}
           />

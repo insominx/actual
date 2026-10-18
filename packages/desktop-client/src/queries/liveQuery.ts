@@ -182,7 +182,7 @@ export class LiveQuery<TResponse = unknown> {
     runQuery: () => Promise<{
       data: Data<TResponse> | TResponse;
       dependencies: string[];
-    }>,
+    } | void>,
   ) => {
     // TODO: precompile queries, or cache compilation results on the
     // backend. could give a query an id which makes it cacheable via
@@ -192,7 +192,13 @@ export class LiveQuery<TResponse = unknown> {
     this.inflightRequestId = reqId;
 
     try {
-      const { data, dependencies } = await runQuery();
+      const result = await runQuery();
+      if (!result) {
+        // The query chose to stop early (e.g. `refetchUpToRow` for a row that
+        // left the set); that is not a failure
+        return;
+      }
+      const { data, dependencies } = result;
 
       // Regardless if this request was cancelled or not, save the
       // dependencies. The query can't change so all requests will

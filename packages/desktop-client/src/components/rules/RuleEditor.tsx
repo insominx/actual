@@ -390,7 +390,9 @@ function ScheduleDescription({ id }) {
 
   const [schedule] = schedules;
 
-  if (schedule && schedules.length === 0) {
+  // The linked schedule may have been deleted; show the bare id instead of
+  // reading properties off `undefined`
+  if (!schedule) {
     return <View style={{ flex: 1 }}>{id}</View>;
   }
 
@@ -1082,10 +1084,14 @@ export function RuleEditor({
     }
 
     // Run it here
+    let cancelled = false;
     async function run() {
       const { filters } = await send('make-filters-from-conditions', {
         conditions: conditions.map(unparse),
       });
+      if (cancelled) {
+        return;
+      }
 
       if (filters.length > 0) {
         const conditionsOpKey = conditionsOp === 'or' ? '$or' : '$and';
@@ -1096,12 +1102,19 @@ export function RuleEditor({
             .filter({ [conditionsOpKey]: filters, ...parentOnlyCondition })
             .select('*'),
         );
-        setTransactions(transactions);
+        // An older request can resolve after a newer one; drop it
+        if (!cancelled) {
+          setTransactions(transactions);
+        }
       } else {
         setTransactions([]);
       }
     }
     void run();
+
+    return () => {
+      cancelled = true;
+    };
   }, [actionSplits, conditions, conditionsOp]);
 
   const selectedInst = useSelected('transactions', transactions, []);
@@ -1112,8 +1125,10 @@ export function RuleEditor({
 
   function addActionToSplitAfterIndex(splitIndex, actionIndex) {
     let newAction;
+    // Work on a copy: the state array must not be mutated in place
+    const copy = [...actionSplits];
     if (splitIndex && !actionSplits[splitIndex]?.actions?.length) {
-      actionSplits[splitIndex] = { id: uuidv4(), actions: [] };
+      copy[splitIndex] = { id: uuidv4(), actions: [] };
       newAction = {
         op: 'set-split-amount',
         options: { method: 'remainder', splitIndex },
@@ -1138,10 +1153,9 @@ export function RuleEditor({
       };
     }
 
-    const actionsCopy = [...actionSplits[splitIndex].actions];
+    const actionsCopy = [...copy[splitIndex].actions];
     actionsCopy.splice(actionIndex + 1, 0, newAction);
-    const copy = [...actionSplits];
-    copy[splitIndex] = { ...actionSplits[splitIndex], actions: actionsCopy };
+    copy[splitIndex] = { ...copy[splitIndex], actions: actionsCopy };
     setActionSplits(copy);
   }
 
@@ -1454,7 +1468,7 @@ export function RuleEditor({
                           ? t('Apply to all')
                           : `${t('Split')} ${splitIndex}`}
                       </Text>
-                      {splitIndex && (
+                      {splitIndex > 0 && (
                         <Button
                           variant="bare"
                           onPress={() => onRemoveSplit(splitIndex)}

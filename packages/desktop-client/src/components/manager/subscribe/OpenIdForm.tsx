@@ -115,14 +115,17 @@ export function OpenIdForm({
     }
 
     setLoading(true);
-    await onSetOpenId({
-      selectedProvider: providerName,
-      discoveryURL: issuer ?? '',
-      client_id: clientId ?? '',
-      client_secret: clientSecret ?? '',
-      server_hostname: serverUrl ?? '',
-    });
-    setLoading(false);
+    try {
+      await onSetOpenId({
+        selectedProvider: providerName,
+        discoveryURL: issuer ?? '',
+        client_id: clientId ?? '',
+        client_secret: clientSecret ?? '',
+        server_hostname: serverUrl ?? '',
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

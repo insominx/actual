@@ -33,8 +33,11 @@ export function ConfirmPasswordForm({
 
     if (password1 === password2) {
       setLoading(true);
-      await onSetPassword(password1);
-      setLoading(false);
+      try {
+        await onSetPassword(password1);
+      } finally {
+        setLoading(false);
+      }
     } else {
       onError('password-match');
     }
@@ -112,8 +115,11 @@ export function ConfirmOldPasswordForm({
     }
 
     setLoading(true);
-    await onSetPassword(password);
-    setLoading(false);
+    try {
+      await onSetPassword(password);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function onShowPassword(e) {

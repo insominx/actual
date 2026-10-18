@@ -86,8 +86,11 @@ export function CrossoverCard({
         previousMonth,
       );
 
-      const earliestMonth = allMonths[allMonths.length - 1].name;
-      const latestMonth = allMonths[0].name;
+      // Empty when the first transaction is in the current month: the range
+      // ends at the end of last month, before it starts
+      const earliestMonth =
+        allMonths[allMonths.length - 1]?.name ?? previousMonth;
+      const latestMonth = allMonths[0]?.name ?? previousMonth;
       let start = initialStart;
       let end = initialEnd;
 

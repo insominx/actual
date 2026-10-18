@@ -237,7 +237,9 @@ export function SidebarGroup({
             } else if (value !== '') {
               onSave({ id: group.id, name: value });
             }
-          } else {
+          } else if (value.trim() !== '') {
+            // An empty name would leave a blank group header: keep the
+            // current name instead
             onSave({ id: group.id, name: value });
           }
         }}

@@ -59,7 +59,12 @@ export function PasswordEnableModal({
 
   async function onSetPassword(password: string) {
     setError(null);
-    const { error } = (await send('enable-password', { password })) || {};
+    let error: string | undefined;
+    try {
+      ({ error } = (await send('enable-password', { password })) || {});
+    } catch {
+      error = 'network-failure';
+    }
     if (!error) {
       originalOnSave?.();
       await refreshLoginMethods();

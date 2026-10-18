@@ -279,12 +279,17 @@ function recalculate(
 
   const { balances } = graphData;
 
+  // The range is empty when the start is after today (the end is clamped to
+  // today), so there may be no data points at all
+  const first = balances[0];
+  const last = balances[balances.length - 1];
+
   return {
     graphData,
-    balance: balances[balances.length - 1].amount,
+    balance: last ? last.amount : startingBalance,
     totalExpenses,
     totalIncome,
     totalTransfers,
-    totalChange: balances[balances.length - 1].amount - balances[0].amount,
+    totalChange: last && first ? last.amount - first.amount : 0,
   };
 }

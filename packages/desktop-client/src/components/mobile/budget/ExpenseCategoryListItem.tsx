@@ -289,7 +289,11 @@ export function ExpenseCategoryListItem({
                   {
                     amount: format(amount, 'financial'),
                     fromCategoryName: category.name,
-                    toCategoryName: categoriesById[toCategoryId].name,
+                    // "To Budget" is a pseudo-category, not in categoriesById
+                    toCategoryName:
+                      toCategoryId === 'to-budget'
+                        ? t('To Budget')
+                        : categoriesById[toCategoryId].name,
                   },
                 ),
               });
@@ -339,7 +343,11 @@ export function ExpenseCategoryListItem({
                   {
                     amount: format(amount, 'financial'),
                     toCategoryName: category.name,
-                    fromCategoryName: categoriesById[fromCategoryId].name,
+                    // "To Budget" is a pseudo-category, not in categoriesById
+                    fromCategoryName:
+                      fromCategoryId === 'to-budget'
+                        ? t('To Budget')
+                        : categoriesById[fromCategoryId].name,
                   },
                 ),
               });

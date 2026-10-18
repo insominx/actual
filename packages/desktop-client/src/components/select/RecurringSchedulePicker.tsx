@@ -408,14 +408,22 @@ function RecurringScheduleTooltip({
   ) => dispatch({ type: 'change-field', field, value });
 
   useEffect(() => {
+    // Replies can arrive out of order while the user edits; only the latest
+    // config's preview may be shown
+    let cancelled = false;
     async function run() {
       const { data, error } = await sendCatch('schedule/get-upcoming-dates', {
         config: unparseConfig(config),
         count: 4,
       });
-      setPreviewDates(error ? t('Invalid rule') : data);
+      if (!cancelled) {
+        setPreviewDates(error ? t('Invalid rule') : data);
+      }
     }
     void run();
+    return () => {
+      cancelled = true;
+    };
   }, [config, t]);
 
   if (previewDates == null) {

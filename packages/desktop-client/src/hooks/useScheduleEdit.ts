@@ -168,10 +168,11 @@ function createScheduleEditReducer(useGetScheduledAmount: boolean = false) {
       }
 
       case 'set-transactions': {
-        const transactions = action.transactions;
-        // Sort transactions if we have a transactionId to prioritize
+        let transactions = action.transactions;
+        // Sort transactions if we have a transactionId to prioritize. Sort a
+        // copy: this array belongs to the live query that produced it.
         if (action.transactionId && transactions) {
-          transactions.sort(
+          transactions = [...transactions].sort(
             (a, b) =>
               (action.transactionId === b.id ? 1 : 0) -
               (action.transactionId === a.id ? 1 : 0),

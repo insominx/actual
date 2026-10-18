@@ -47,7 +47,9 @@ export function useCategoryScheduleGoalTemplates({
 
     let goalDefinitions: Record<string, unknown>[] = [];
     try {
-      goalDefinitions = JSON.parse(category.goal_def);
+      const parsed = JSON.parse(category.goal_def);
+      // Valid JSON that isn't a list has no goal definitions to filter
+      goalDefinitions = Array.isArray(parsed) ? parsed : [];
     } catch (e) {
       console.error('Failed to parse category goal_def:', e);
       return {

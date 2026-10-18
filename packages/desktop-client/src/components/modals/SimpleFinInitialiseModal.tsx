@@ -34,7 +34,7 @@ export const SimpleFinInitialiseModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(t('It is required to provide a token.'));
 
-  const onSubmit = async (close: () => void) => {
+  const submit = async (close: () => void) => {
     if (!token) {
       setIsValid(false);
       return;
@@ -49,17 +49,31 @@ export const SimpleFinInitialiseModal = ({
       })) || {};
 
     if (error) {
+      // Stay open so the error can be read and the token corrected
+      setIsLoading(false);
       setIsValid(false);
       setError(getSecretsError(error, reason));
-    } else {
-      await send('secret-set', {
-        name: 'simplefin_accessKey',
-        value: null,
-      });
-      onSuccess();
+      return;
     }
+
+    await send('secret-set', {
+      name: 'simplefin_accessKey',
+      value: null,
+    });
+    onSuccess();
     setIsLoading(false);
     close();
+  };
+
+  const onSubmit = async (close: () => void) => {
+    try {
+      await submit(close);
+    } catch (e) {
+      // A rejected request must not leave the form stuck in its loading state
+      setIsLoading(false);
+      setIsValid(false);
+      setError(String((e as { message?: unknown })?.message ?? e));
+    }
   };
 
   return (

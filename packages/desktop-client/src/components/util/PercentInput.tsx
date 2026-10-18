@@ -3,6 +3,7 @@ import type { CSSProperties, FocusEvent, FocusEventHandler, Ref } from 'react';
 
 import { Input } from '@actual-app/components/input';
 import { evalArithmetic } from '@actual-app/core/shared/arithmetic';
+import { getNumberFormat } from '@actual-app/core/shared/util';
 
 import { useFormat } from '#hooks/useFormat';
 import { useMergedRefs } from '#hooks/useMergedRefs';
@@ -63,16 +64,13 @@ export function PercentInput({
   }, [focused]);
 
   function onInputTextChange(val: string) {
-    const number = val.replace(/[^0-9.]/g, '');
+    const number = sanitizePercentText(val, getNumberFormat().decimalSeparator);
     setValue(number);
     onChangeValue?.(number);
   }
 
   function fireUpdate() {
-    const clamped = clampToPercent(
-      evalArithmetic(value.replace('%', ''), 0) ?? 0,
-      max,
-    );
+    const clamped = clampToPercent(parsePercentText(value), max);
     onUpdatePercent?.(clamped);
     return clamped;
   }
@@ -105,4 +103,25 @@ export function PercentInput({
       onFocus={onInputFocus}
     />
   );
+}
+
+// Keeps only what a percentage can contain. With a decimal-comma number format
+// the user types "12,5", so that comma has to become the decimal point
+// instead of being dropped (which would turn it into 125).
+export function sanitizePercentText(text: string, decimalSeparator: string) {
+  const withDecimalPoint =
+    decimalSeparator === ',' ? text.replace(/,/g, '.') : text;
+  return withDecimalPoint.replace(/[^0-9.]/g, '');
+}
+
+// The field holds either plain dot-decimal text (while editing) or text
+// formatted for the user's locale (at rest). Plain text is read directly:
+// running it through the locale-aware parser would take "0.125" in a
+// dot-thousands format for 125.
+export function parsePercentText(text: string): number {
+  const bare = text.replace('%', '').trim();
+  if (/^\d+(\.\d+)?$/.test(bare) || /^\.\d+$/.test(bare)) {
+    return Number(bare);
+  }
+  return evalArithmetic(bare, 0) ?? 0;
 }

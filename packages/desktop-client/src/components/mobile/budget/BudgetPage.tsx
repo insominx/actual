@@ -114,16 +114,31 @@ export function BudgetPage() {
   const sortCategories = useSortCategoriesMutation();
 
   useEffect(() => {
+    let cancelled = false;
+
     async function init() {
-      const { start, end } = await send('get-budget-bounds');
-      setMonthBounds({ start, end });
+      try {
+        const { start, end } = await send('get-budget-bounds');
+        if (!cancelled) {
+          setMonthBounds({ start, end });
+        }
 
-      await prewarmMonth(budgetType, spreadsheet, startMonth);
-
-      setInitialized(true);
+        // Prewarming only speeds up the first paint; a failure here must not
+        // keep the whole page from rendering
+        await prewarmMonth(budgetType, spreadsheet, startMonth);
+      } catch (e) {
+        console.error('Failed to initialize the budget page:', e);
+      } finally {
+        if (!cancelled) {
+          setInitialized(true);
+        }
+      }
     }
 
     void init();
+    return () => {
+      cancelled = true;
+    };
   }, [budgetType, startMonth, dispatch, spreadsheet]);
 
   const onBudgetAction = useCallback(

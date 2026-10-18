@@ -43,7 +43,7 @@ export function CustomUpcomingLength({
         style={{ width: 40 }}
         type="number"
         min={1}
-        onChangeValue={value => setNumValue(parseInt(value))}
+        onChangeValue={value => setNumValue(parseInt(value, 10) || 1)}
         defaultValue={numValue || 1}
       />
       <Select

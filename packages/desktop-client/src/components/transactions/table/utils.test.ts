@@ -1,7 +1,37 @@
 import type { TransactionEntity } from '@actual-app/core/types/models';
 
 import type { SerializedTransaction } from './utils';
-import { deserializeTransaction, shouldApplyRuleChange } from './utils';
+import {
+  deserializeTransaction,
+  distributeSplitAmounts,
+  shouldApplyRuleChange,
+} from './utils';
+
+describe('distributeSplitAmounts', () => {
+  const sum = (values: number[]) => values.reduce((a, b) => a + b, 0);
+
+  it('spreads the remainder in proportion to the existing amounts', () => {
+    const result = distributeSplitAmounts([-100, -300], -800);
+    expect(result).toEqual([-200, -600]);
+  });
+
+  it('always adds up to the total, handing out leftover cents', () => {
+    const result = distributeSplitAmounts([1, 1, 1], 100);
+    expect(sum(result)).toBe(100);
+  });
+
+  it('terminates when the children add up to zero', () => {
+    // A charge and a refund: dividing by their zero total used to give NaN
+    // and the remainder loop never finished
+    const result = distributeSplitAmounts([50, -50], 100);
+    expect(sum(result)).toBe(100);
+    expect(result.every(Number.isInteger)).toBe(true);
+  });
+
+  it('returns nothing for no children', () => {
+    expect(distributeSplitAmounts([], 100)).toEqual([]);
+  });
+});
 
 describe('shouldApplyRuleChange', () => {
   test('applies rule changes to empty fields', () => {

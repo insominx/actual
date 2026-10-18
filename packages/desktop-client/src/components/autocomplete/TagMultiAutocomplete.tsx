@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { ComponentProps } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@actual-app/components/button';
 import { SvgRemove } from '@actual-app/components/icons/v2';
@@ -22,6 +23,7 @@ export function TagMultiAutocomplete({
   value: string;
   setValue: (value: string) => void;
 }) {
+  const { t } = useTranslation();
   const tags = useMemo(() => {
     return extractTagsForFilter(value);
   }, [value]);
@@ -56,7 +58,7 @@ export function TagMultiAutocomplete({
         />
       )}
       renderMultiItem={TagMultiItem}
-      inputProps={{ placeholder: 'Choose tags' }}
+      inputProps={{ placeholder: t('Choose tags') }}
     />
   );
 }

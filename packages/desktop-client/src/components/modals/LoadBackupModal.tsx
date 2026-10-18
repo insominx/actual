@@ -60,9 +60,18 @@ export function LoadBackupModal({
   const budgetIdToLoad = budgetId ?? prefsBudgetId;
 
   useEffect(() => {
+    let cancelled = false;
     if (budgetIdToLoad) {
-      void send('backups-get', { id: budgetIdToLoad }).then(setBackups);
+      void send('backups-get', { id: budgetIdToLoad }).then(loaded => {
+        // Ignore a response for a budget that is no longer the one shown
+        if (!cancelled) {
+          setBackups(loaded);
+        }
+      });
     }
+    return () => {
+      cancelled = true;
+    };
   }, [budgetIdToLoad]);
 
   useEffect(() => {

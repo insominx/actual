@@ -48,7 +48,7 @@ import { UpdateNotification } from './UpdateNotification';
 
 function AppInner() {
   const [budgetId] = useMetadataPref('id');
-  const [cloudFileId] = useMetadataPref('cloudFileId');
+  const store = useStore();
   const { t } = useTranslation();
   const { showBoundary: showErrorBoundary } = useErrorBoundary();
   const dispatch = useDispatch();
@@ -110,7 +110,10 @@ function AppInner() {
 
         const files = await send('get-remote-files');
         if (files) {
-          const remoteFile = files.find(f => f.fileId === cloudFileId);
+          // Read the id from the store: the `cloudFileId` captured by this
+          // effect predates the budget that was just loaded
+          const loadedCloudFileId = store.getState().prefs.local?.cloudFileId;
+          const remoteFile = files.find(f => f.fileId === loadedCloudFileId);
           if (remoteFile && remoteFile.deleted) {
             void dispatch(closeBudget());
           }
@@ -126,9 +129,9 @@ function AppInner() {
     }
 
     initAll().catch(showErrorBoundary);
-    // Removed cloudFileId & t from dependencies to prevent hard crash when closing budget in Electron
+    // Removed t from dependencies to prevent hard crash when closing budget in Electron
     // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, showErrorBoundary]);
+  }, [dispatch, showErrorBoundary, store]);
 
   useEffect(() => {
     if (userData?.tokenExpired) {

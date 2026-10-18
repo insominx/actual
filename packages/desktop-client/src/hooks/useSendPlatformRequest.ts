@@ -13,13 +13,26 @@ export function useSendPlatformRequest<K extends keyof Handlers>(
   const [isLoading, setIsLoading] = useState<boolean | null>(null);
 
   useEffect(() => {
+    // Drop the response of a request that has since been superseded
+    let cancelled = false;
     async function run() {
       setIsLoading(true);
-      setData(await send(name, args, options));
-      setIsLoading(false);
+      try {
+        const result = await send(name, args, options);
+        if (!cancelled) {
+          setData(result);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
     }
 
     void run();
+    return () => {
+      cancelled = true;
+    };
   }, [name, args, options]);
 
   return {

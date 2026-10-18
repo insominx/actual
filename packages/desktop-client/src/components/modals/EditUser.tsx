@@ -47,6 +47,8 @@ function useGetUserDirectoryErrors() {
         return t(
           'Not all users were deleted. Check if one of the selected users is the server owner.',
         );
+      case 'owner-must-stay-enabled-admin':
+        return t('The server owner must remain an enabled admin.');
       case 'role-does-not-exists':
         return t(
           'Selected role does not exists, possibly a bug? Visit https://actualbudget.org/contact/ for support.',
@@ -187,8 +189,9 @@ function EditUser({ defaultUser, onSave: originalOnSave }: EditUserProps) {
       ...defaultUser,
       id: isExistingUser ? defaultUser.id : '',
       owner: isOwner,
-      userName,
-      displayName,
+      // Validation trims the username, so the saved one must match it
+      userName: userName.trim(),
+      displayName: displayName.trim(),
       enabled,
       role,
     };

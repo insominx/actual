@@ -565,13 +565,9 @@ export function KeyboardShortcutModal() {
                   }}
                 >
                   <Text style={{ fontSize: 15 }}>
-                    <Trans>
-                      {isSearching
-                        ? 'No matching shortcuts'
-                        : isInCategory
-                          ? 'No shortcuts in this category'
-                          : 'No matching shortcuts'}
-                    </Trans>
+                    {isInCategory && !isSearching
+                      ? t('No shortcuts in this category')
+                      : t('No matching shortcuts')}
                   </Text>
                 </View>
               ) : showingShortcuts ? (
@@ -606,10 +602,12 @@ export function KeyboardShortcutModal() {
                         {category.name}
                       </Text>
                       <Text style={{ color: theme.pageTextLight }}>
-                        {category.items.length}{' '}
-                        {category.items.length === 1
-                          ? t('shortcut')
-                          : t('shortcuts')}{' '}
+                        {/* t('keyboard-shortcut-count', { count: 1, defaultValue_one: '{{count}} shortcut', defaultValue_other: '{{count}} shortcuts' }) */}
+                        {t('keyboard-shortcut-count', {
+                          count: category.items.length,
+                          defaultValue_one: '{{count}} shortcut',
+                          defaultValue_other: '{{count}} shortcuts',
+                        })}{' '}
                         ›
                       </Text>
                     </View>

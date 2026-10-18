@@ -102,13 +102,17 @@ export function useTransactionBatchActions() {
         updated: [],
       };
 
+      const idSet = new Set(ids);
+
       // Cleared is a special case right now
       if (name === 'cleared') {
-        // Clear them if any are uncleared, otherwise unclear them
-        value = !!transactionsToChange.find(t => !t.cleared);
+        // Clear them if any are uncleared, otherwise unclear them. Only the
+        // rows that will actually change count: unselected parents/siblings
+        // and reconciled rows are skipped below.
+        value = !!transactionsToChange.find(
+          t => idSet.has(t.id) && !t.reconciled && !t.cleared,
+        );
       }
-
-      const idSet = new Set(ids);
 
       transactionsToChange.forEach(trans => {
         if (name === 'cleared' && trans.reconciled) {

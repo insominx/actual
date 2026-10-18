@@ -185,8 +185,11 @@ export function ManageRules({
 
   const init = useEffectEvent(() => {
     async function loadData() {
-      await loadRules();
-      setLoading(false);
+      try {
+        await loadRules();
+      } finally {
+        setLoading(false);
+      }
     }
 
     if (payeeId) {
@@ -210,26 +213,34 @@ export function ManageRules({
   const onDeleteSelected = async () => {
     setLoading(true);
 
-    const { someDeletionsFailed } = await send('rule-delete-all', [
-      ...selectedInst.items,
-    ]);
+    try {
+      const { someDeletionsFailed } = await send('rule-delete-all', [
+        ...selectedInst.items,
+      ]);
 
-    if (someDeletionsFailed) {
-      alert(
-        t('Some rules were not deleted because they are linked to schedules.'),
-      );
+      if (someDeletionsFailed) {
+        alert(
+          t(
+            'Some rules were not deleted because they are linked to schedules.',
+          ),
+        );
+      }
+
+      await loadRules();
+      selectedInst.dispatch({ type: 'select-none' });
+    } finally {
+      setLoading(false);
     }
-
-    await loadRules();
-    selectedInst.dispatch({ type: 'select-none' });
-    setLoading(false);
   };
 
   async function onDeleteRule(id: string) {
     setLoading(true);
-    await send('rule-delete', id);
-    await loadRules();
-    setLoading(false);
+    try {
+      await send('rule-delete', id);
+      await loadRules();
+    } finally {
+      setLoading(false);
+    }
   }
 
   const onEditRule = rule => {

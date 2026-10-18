@@ -154,7 +154,8 @@ function defaultRenderItems<T extends AutocompleteItem>(
         const name = getItemName(item);
         return (
           <div
-            key={name}
+            // Names alone can repeat (same-named payees or categories)
+            key={`${item.id ?? ''}:${name}`}
             {...getItemProps({ item })}
             // Downshift calls `setTimeout(..., 250)` in the `onMouseMove`
             // event handler they set on this element. When this code runs
@@ -751,7 +752,11 @@ function MultiAutocomplete<T extends AutocompleteItem>({
     e: KeyboardEvent<HTMLInputElement>,
     prevOnKeyDown?: ComponentProps<typeof Input>['onKeyDown'],
   ) {
-    if (e.key === 'Backspace' && e.currentTarget.value === '') {
+    if (
+      e.key === 'Backspace' &&
+      e.currentTarget.value === '' &&
+      selectedItemIds.length > 0
+    ) {
       onRemoveItem(selectedItemIds[selectedItems.length - 1]);
     }
 

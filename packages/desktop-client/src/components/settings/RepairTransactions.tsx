@@ -121,10 +121,12 @@ export function RepairTransactions() {
 
   async function onFix() {
     setLoading(true);
-    const res = await send('tools/fix-split-transactions');
-
-    setResults(res);
-    setLoading(false);
+    try {
+      const res = await send('tools/fix-split-transactions');
+      setResults(res);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

@@ -185,7 +185,16 @@ export function EnvelopeBudgetMonthMenuModal({
                   onBudgetAction(month, `set-${numberOfMonths}-avg`);
                   state.close();
                   showUndoNotification({
-                    message: `${displayMonth} budgets have all been set to ${numberOfMonths === 12 ? 'yearly' : `${numberOfMonths} month`} average.`,
+                    message:
+                      numberOfMonths === 12
+                        ? t(
+                            '{{displayMonth}} budgets have all been set to yearly average.',
+                            { displayMonth },
+                          )
+                        : t(
+                            '{{displayMonth}} budgets have all been set to {{numberOfMonths}} month average.',
+                            { displayMonth, numberOfMonths },
+                          ),
                   });
                 }}
                 onCheckTemplates={() => {

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { liveQuery } from '#queries/liveQuery';
 import type { LiveQuery } from '#queries/liveQuery';
 
+import { useQuery } from './useQuery';
 import { getSchedulesQuery, useSchedules } from './useSchedules';
 
 vi.mock('#queries/liveQuery', () => ({
@@ -102,6 +103,26 @@ describe('useSchedules', () => {
 
     expect(calls).toHaveLength(2);
     expect(calls[0].unsubscribe).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('useQuery', () => {
+  it('stops loading and reports the error when the query fails', () => {
+    let onError: ((error: Error) => void) | undefined;
+    vi.mocked(liveQuery).mockImplementation((_query, options) => {
+      onError = options.onError;
+      return { unsubscribe: vi.fn() } as unknown as LiveQuery<unknown>;
+    });
+
+    const query = q('transactions').select('*');
+    const { result } = renderHook(() => useQuery(() => query, []));
+    expect(result.current.isLoading).toBe(true);
+
+    const error = new Error('boom');
+    act(() => onError?.(error));
+
+    expect(result.current.error).toBe(error);
+    expect(result.current.isLoading).toBe(false);
   });
 });
 

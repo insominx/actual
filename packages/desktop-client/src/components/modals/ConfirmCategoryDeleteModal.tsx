@@ -59,6 +59,12 @@ export function ConfirmCategoryDeleteModal({
     );
   };
 
+  // Both are gone once the delete has gone through, while the modal is still
+  // animating out
+  if (!group && !category) {
+    return null;
+  }
+
   const isIncome = !!(category || group).is_income;
 
   return (

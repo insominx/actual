@@ -4,6 +4,7 @@ import * as undo from '@actual-app/core/platform/client/undo';
 import type { QueryClient } from '@tanstack/react-query';
 import { t } from 'i18next';
 
+import { accountGroupQueries } from './account-groups';
 import { accountQueries } from './accounts';
 import { setAppState } from './app/appSlice';
 import { categoryQueries } from './budget';
@@ -19,6 +20,7 @@ import { payeeQueries } from './payees';
 import { loadPrefs } from './prefs/prefsSlice';
 import type { AppStore } from './redux/store';
 import * as syncEvents from './sync-events';
+import { tagQueries } from './tags/queries';
 
 export function handleGlobalEvents(store: AppStore, queryClient: QueryClient) {
   const unlistenServerError = listen('server-error', () => {
@@ -76,15 +78,33 @@ export function handleGlobalEvents(store: AppStore, queryClient: QueryClient) {
       tables.includes('payees') ||
       tables.includes('payee_mapping')
     ) {
-      void queryClient.invalidateQueries({
-        queryKey: payeeQueries.lists(),
-      });
+      promises.push(
+        queryClient.invalidateQueries({
+          queryKey: payeeQueries.lists(),
+        }),
+      );
     }
 
     if (tables.includes('accounts')) {
       promises.push(
         queryClient.invalidateQueries({
           queryKey: accountQueries.lists(),
+        }),
+      );
+    }
+
+    if (tables.includes('account_groups')) {
+      promises.push(
+        queryClient.invalidateQueries({
+          queryKey: accountGroupQueries.lists(),
+        }),
+      );
+    }
+
+    if (tables.includes('tags')) {
+      promises.push(
+        queryClient.invalidateQueries({
+          queryKey: tagQueries.lists(),
         }),
       );
     }
@@ -134,12 +154,11 @@ export function handleGlobalEvents(store: AppStore, queryClient: QueryClient) {
       addNotification({
         notification: {
           type: 'error',
-          title: 'Unable to save changes',
+          title: t('Unable to save changes'),
           sticky: true,
-          message:
-            'This browser only supports using the app in one tab at a time, ' +
-            'and another tab has opened the app. No changes will be saved ' +
-            'from this tab; please close it and continue working in the other one.',
+          message: t(
+            'This browser only supports using the app in one tab at a time, and another tab has opened the app. No changes will be saved from this tab; please close it and continue working in the other one.',
+          ),
         },
       }),
     );

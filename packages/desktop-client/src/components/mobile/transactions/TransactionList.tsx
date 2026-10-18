@@ -521,7 +521,15 @@ function SelectedTransactionsFloatingActionBar({
                     }
 
                     showUndoNotification({
-                      message: `Successfully updated ${name} of ${ids.length} transaction${ids.length > 1 ? 's' : ''} to [${String(displayValue)}](#${String(displayValue)}).`,
+                      message: t('bulk-update-success', {
+                        count: ids.length,
+                        name,
+                        displayValue: String(displayValue),
+                        defaultValue_one:
+                          'Successfully updated {{name}} of {{count}} transaction to [{{displayValue}}](#{{displayValue}}).',
+                        defaultValue_other:
+                          'Successfully updated {{name}} of {{count}} transactions to [{{displayValue}}](#{{displayValue}}).',
+                      }),
                       messageActions: {
                         [String(displayValue)]: () => {
                           switch (name) {

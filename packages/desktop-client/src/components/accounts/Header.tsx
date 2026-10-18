@@ -613,7 +613,8 @@ type AccountNameFieldProps = {
   accountName: string;
   isNameEditable: boolean;
   saveNameError?: ReactNode;
-  onSaveName: (newName: string) => void;
+  /** Return false to reject the name and keep the editor open */
+  onSaveName: (newName: string) => boolean | void;
 };
 
 function AccountNameField({
@@ -627,8 +628,10 @@ function AccountNameField({
   const [editingName, setEditingName] = useState(false);
 
   const handleSave = (newName: string) => {
-    onSaveName(newName);
-    setEditingName(false);
+    // A rejected name leaves the editor open so its error is visible
+    if (onSaveName(newName) !== false) {
+      setEditingName(false);
+    }
   };
 
   return (

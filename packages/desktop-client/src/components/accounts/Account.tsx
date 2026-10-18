@@ -241,6 +241,9 @@ type AccountInternalProps = {
   onResetColumnWidths?: UseTransactionColumnWidthsResult['resetWidths'];
   modalShowing?: boolean;
   accounts: AccountEntity[];
+  // True until the first real accounts fetch finishes; the list is an empty
+  // placeholder until then
+  accountsArePlaceholder?: boolean;
   newTransactions: Array<TransactionEntity['id']>;
   matchedTransactions: Array<TransactionEntity['id']>;
   splitsExpandedDispatch: ReturnType<typeof useSplitsExpanded>['dispatch'];
@@ -495,7 +498,12 @@ class AccountInternal extends PureComponent<
       query = query.filter({ reconciled: { $eq: false } });
     }
 
-    this.paged = pagedQuery(query.select('*'), {
+    // Set below; lets a callback that was awaiting queries notice that a newer
+    // query (search, filter, account switch) replaced it and drop its result
+    // instead of overwriting the newer transactions
+    const isCurrent = () => this.paged === paged;
+
+    const paged: PagedQuery<TransactionEntity> = pagedQuery(query.select('*'), {
       onData: async (groupedData, prevData) => {
         const data = ungroupTransactions([...groupedData]);
         const firstLoad = prevData == null;
@@ -510,6 +518,9 @@ class AccountInternal extends PureComponent<
           const balances = this.state.showBalances
             ? await this.calculateBalances()
             : null;
+          if (!isCurrent()) {
+            return;
+          }
           // Wrap in startTransition so React treats this as a low-priority
           // update. Without this, setState blocks the main thread for the
           // full duration of the re-render (~40–220ms with large transaction
@@ -546,6 +557,9 @@ class AccountInternal extends PureComponent<
           ? await this.calculateBalances()
           : null;
         const filteredAmount = await this.getFilteredAmount();
+        if (!isCurrent()) {
+          return;
+        }
         this.setState(
           {
             transactions: data,
@@ -571,6 +585,7 @@ class AccountInternal extends PureComponent<
         onlySync: true,
       },
     });
+    this.paged = paged;
   }
 
   // oxlint-disable-next-line react/no-unsafe
@@ -758,7 +773,9 @@ class AccountInternal extends PureComponent<
           addNotification({
             notification: {
               type: 'error',
-              message: `Formula errors in rules:\n${allErrors.join('\n')}`,
+              message: t('Formula errors in rules:\n{{errors}}', {
+                errors: allErrors.join('\n'),
+              }),
               sticky: true,
             },
           }),
@@ -780,7 +797,7 @@ class AccountInternal extends PureComponent<
         addNotification({
           notification: {
             type: 'error',
-            message: 'Failed to apply rules to transactions',
+            message: t('Failed to apply rules to transactions'),
           },
         }),
       );
@@ -793,7 +810,9 @@ class AccountInternal extends PureComponent<
     this.setState({ isAdding: true });
   };
 
-  onSaveName = (name: string) => {
+  // Returns whether the name was accepted, so the editor can stay open (and
+  // show the error) when it wasn't
+  onSaveName = (name: string): boolean => {
     const accountNameError = validateAccountName(
       name,
       this.props.accountId ?? '',
@@ -801,6 +820,7 @@ class AccountInternal extends PureComponent<
     );
     if (accountNameError) {
       this.setState({ nameError: accountNameError });
+      return false;
     } else {
       const account = this.props.accounts.find(
         account => account.id === this.props.accountId,
@@ -810,6 +830,7 @@ class AccountInternal extends PureComponent<
       }
       this.props.onUpdateAccount({ ...account, name });
       this.setState({ nameError: '' });
+      return true;
     }
   };
 
@@ -1096,8 +1117,14 @@ class AccountInternal extends PureComponent<
 
     this.setState({ workingHard: true });
 
-    await reconciliation.lockTransactions(accountId);
-    await this.refetchTransactions();
+    try {
+      await reconciliation.lockTransactions(accountId);
+      await this.refetchTransactions();
+    } finally {
+      // The refetch clears this on success; a failure must not leave the
+      // page stuck in its busy state
+      this.setState({ workingHard: false });
+    }
   };
 
   onReconcile = async (amount: number | null) => {
@@ -1185,38 +1212,45 @@ class AccountInternal extends PureComponent<
   onMakeAsSplitTransaction = async (ids: string[]) => {
     this.setState({ workingHard: true });
 
-    const { data } = await aqlQuery(
-      q('transactions')
-        .filter({ id: { $oneof: ids } })
-        .select('*')
-        .options({ splits: 'none' }),
-    );
+    try {
+      const { data } = await aqlQuery(
+        q('transactions')
+          .filter({ id: { $oneof: ids } })
+          .select('*')
+          .options({ splits: 'none' }),
+      );
 
-    const transactions: TransactionEntity[] = data;
+      const transactions: TransactionEntity[] = data;
 
-    if (!transactions || transactions.length === 0) {
-      return;
+      if (!transactions || transactions.length === 0) {
+        // Nothing to refetch for, so nothing else will clear the busy state
+        this.setState({ workingHard: false });
+        return;
+      }
+
+      const [firstTransaction] = transactions;
+      const parentTransaction = {
+        id: uuidv4(),
+        is_parent: true,
+        cleared: transactions.every(t => !!t.cleared),
+        date: firstTransaction.date,
+        account: firstTransaction.account,
+        amount: transactions
+          .map(t => t.amount)
+          .reduce((total, amount) => total + amount, 0),
+      };
+      const childTransactions = transactions.map(t =>
+        makeChild(parentTransaction, t),
+      );
+
+      await send('transactions-batch-update', {
+        added: [parentTransaction],
+        updated: childTransactions,
+      });
+    } catch (error) {
+      this.setState({ workingHard: false });
+      throw error;
     }
-
-    const [firstTransaction] = transactions;
-    const parentTransaction = {
-      id: uuidv4(),
-      is_parent: true,
-      cleared: transactions.every(t => !!t.cleared),
-      date: firstTransaction.date,
-      account: firstTransaction.account,
-      amount: transactions
-        .map(t => t.amount)
-        .reduce((total, amount) => total + amount, 0),
-    };
-    const childTransactions = transactions.map(t =>
-      makeChild(parentTransaction, t),
-    );
-
-    await send('transactions-batch-update', {
-      added: [parentTransaction],
-      updated: childTransactions,
-    });
 
     void this.refetchTransactions();
   };
@@ -1286,7 +1320,12 @@ class AccountInternal extends PureComponent<
       };
     }
 
-    await send('transactions-batch-update', changes);
+    try {
+      await send('transactions-batch-update', changes);
+    } catch (error) {
+      this.setState({ workingHard: false });
+      throw error;
+    }
 
     void this.refetchTransactions();
 
@@ -1436,11 +1475,17 @@ class AccountInternal extends PureComponent<
 
   onSetTransfer = async (ids: string[]) => {
     this.setState({ workingHard: true });
-    await this.props.onSetTransfer(
-      ids,
-      this.props.payees,
-      this.refetchTransactions,
-    );
+    try {
+      await this.props.onSetTransfer(
+        ids,
+        this.props.payees,
+        this.refetchTransactions,
+      );
+    } finally {
+      // The handler may bail out (invalid selection) or fail without ever
+      // calling the refetch that clears this
+      this.setState({ workingHard: false });
+    }
   };
 
   onConditionsOpChange = (value: 'and' | 'or') => {
@@ -1815,7 +1860,7 @@ class AccountInternal extends PureComponent<
     const account = accounts.find(account => account.id === accountId);
     const accountName = this.getAccountTitle(account, accountId);
 
-    if (!accountName && !loading) {
+    if (!accountName && !loading && !this.props.accountsArePlaceholder) {
       // This is probably an account that was deleted, so redirect to
       // all accounts
       return <Navigate to="/accounts" replace />;
@@ -2068,7 +2113,8 @@ export function Account() {
   const matchedTransactions = useSelector(
     state => state.transactions.matchedTransactions,
   );
-  const { data: accounts = [] } = useAccounts();
+  const { data: accounts = [], isPlaceholderData: accountsArePlaceholder } =
+    useAccounts();
   const { data: payees = [] } = usePayees();
   const dateFormat = useDateFormat() || 'MM/dd/yyyy';
   const [hideFraction] = useSyncedPref('hideFraction');
@@ -2137,6 +2183,7 @@ export function Account() {
             newTransactions={newTransactions}
             matchedTransactions={matchedTransactions}
             accounts={accounts}
+            accountsArePlaceholder={accountsArePlaceholder}
             dateFormat={dateFormat}
             hideFraction={String(hideFraction) === 'true'}
             expandSplits={expandSplits}

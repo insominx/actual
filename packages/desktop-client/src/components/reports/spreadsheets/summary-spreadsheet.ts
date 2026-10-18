@@ -148,7 +148,8 @@ export function summarySpreadsheet(
               ? (data.data[0]?.amount ?? 0) / data.data[0].count
               : 0,
           dividend: data.data[0]?.amount ?? 0,
-          divisor: data.data[0].count,
+          // No matching transactions means no row at all
+          divisor: data.data[0]?.count ?? 0,
         });
         break;
 

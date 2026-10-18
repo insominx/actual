@@ -167,7 +167,9 @@ export function SidebarCategory({
               onSave({ ...category, name: value });
             }
           } else {
-            if (value !== category.name) {
+            // An empty name would leave a blank, unselectable row: keep the
+            // current name instead
+            if (value !== category.name && value.trim() !== '') {
               onSave({ ...category, name: value });
             }
           }

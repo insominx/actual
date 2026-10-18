@@ -218,14 +218,16 @@ export function ImportTransactionsModal({
           : trans => parseDate(trans.date, parseDateFormat);
 
       // Note that the sort will behave unpredictably if any date fails to parse.
-      transactions.sort((a, b) => {
+      // Sort a copy: when no start date filters them, `transactions` is the
+      // component's own parsed-transactions state.
+      const sortedTransactions = [...transactions].sort((a, b) => {
         const aDate = getTransDate(a);
         const bDate = getTransDate(b);
 
         return aDate < bDate ? 1 : aDate === bDate ? 0 : -1;
       });
 
-      for (let trans of transactions) {
+      for (let trans of sortedTransactions) {
         if (trans.isMatchedTransaction) {
           // skip transactions that are matched transaction (existing transaction added to show update changes)
           continue;
@@ -708,6 +710,9 @@ export function ImportTransactionsModal({
 
           close();
         },
+        // The mutation reports the error; clear the spinner so the user can
+        // fix the problem and import again
+        onError: () => setLoadingState(null),
       },
     );
   }

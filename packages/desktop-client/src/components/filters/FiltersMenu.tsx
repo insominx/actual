@@ -874,7 +874,7 @@ export function FilterEditor<T extends RuleConditionEntity>({
           if (
             cond.options.month &&
             typeof cond.value === 'string' &&
-            !/\d{4}-\d{2}/.test(cond.value)
+            !/^\d{4}-\d{2}$/.test(cond.value)
           ) {
             const date = parseDate(
               cond.value,

@@ -64,15 +64,26 @@ export function SankeyCard({
     useCategories();
 
   useEffect(() => {
-    void Promise.all([
-      send('get-earliest-transaction'),
-      send('get-latest-transaction'),
-    ]).then(([earliest, latest]) => {
+    async function loadDates() {
       const today = monthUtils.currentDay();
-      setEarliestTransaction(earliest?.date ?? today);
-      setLatestTransaction(latest?.date ?? today);
+      let earliestDate = today;
+      let latestDate = today;
+      // Fall back to today so a failed request doesn't leave the card waiting forever
+      try {
+        const [earliest, latest] = await Promise.all([
+          send('get-earliest-transaction'),
+          send('get-latest-transaction'),
+        ]);
+        earliestDate = earliest?.date ?? today;
+        latestDate = latest?.date ?? today;
+      } catch (error) {
+        console.error('Failed to load transaction date range:', error);
+      }
+      setEarliestTransaction(earliestDate);
+      setLatestTransaction(latestDate);
       setDatesInitialized(true);
-    });
+    }
+    void loadDates();
   }, []);
 
   const [start, end] = calculateTimeRange(

@@ -80,8 +80,11 @@ export function TransferOwnership({
     );
   }, [userData?.userId, currentFile?.owner, t, dispatch]);
 
-  async function onSave() {
+  // Resolves to whether the transfer went through; a refusal is shown in the
+  // modal and must not be followed by reloading the budget and closing it
+  async function onSave(): Promise<boolean> {
     if (cloudFileId) {
+      setError(null);
       const response = await send('transfer-ownership', {
         fileId: cloudFileId as string,
         newUserId: userId,
@@ -89,12 +92,13 @@ export function TransferOwnership({
       const { error } = response || {};
       if (!error) {
         originalOnSave?.();
-      } else {
-        setError(getUserAccessErrors(error));
+        return true;
       }
-    } else {
-      setError(t('Cloud file ID is missing.'));
+      setError(getUserAccessErrors(error));
+      return false;
     }
+    setError(t('Cloud file ID is missing.'));
+    return false;
   }
 
   return (
@@ -189,7 +193,10 @@ export function TransferOwnership({
               onPress={async () => {
                 setIsTransferring(true);
                 try {
-                  await onSave();
+                  if (!(await onSave())) {
+                    setIsTransferring(false);
+                    return;
+                  }
                   await dispatch(
                     closeAndLoadBudget({ fileId: (currentFile as Budget).id }),
                   );

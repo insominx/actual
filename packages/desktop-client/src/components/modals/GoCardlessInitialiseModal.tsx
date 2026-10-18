@@ -38,7 +38,7 @@ export const GoCardlessInitialiseModal = ({
     t('It is required to provide both the secret id and secret key.'),
   );
 
-  const onSubmit = async (close: () => void) => {
+  const submit = async (close: () => void) => {
     if (!secretId || !secretKey) {
       setIsValid(false);
       setError(
@@ -78,6 +78,17 @@ export const GoCardlessInitialiseModal = ({
     onSuccess();
     setIsLoading(false);
     close();
+  };
+
+  const onSubmit = async (close: () => void) => {
+    try {
+      await submit(close);
+    } catch (e) {
+      // A rejected request must not leave the form stuck in its loading state
+      setIsLoading(false);
+      setIsValid(false);
+      setError(String((e as { message?: unknown })?.message ?? e));
+    }
   };
 
   return (

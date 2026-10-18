@@ -41,7 +41,13 @@ export function useQuery<Response = unknown>(
           setIsLoading(false);
         }
       },
-      onError: setError,
+      onError: error => {
+        if (!isUnmounted) {
+          setError(error);
+          // A failed query must not leave callers on their loading state
+          setIsLoading(false);
+        }
+      },
     });
 
     return () => {

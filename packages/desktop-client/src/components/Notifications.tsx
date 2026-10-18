@@ -294,9 +294,13 @@ function Notification({
                 isLoading={loading}
                 onPress={async () => {
                   setLoading(true);
-                  await button.action();
-                  onRemove();
-                  setLoading(false);
+                  try {
+                    await button.action();
+                    onRemove();
+                  } finally {
+                    // A failed action must not leave the button spinning
+                    setLoading(false);
+                  }
                 }}
                 className={css({
                   backgroundColor: 'transparent',

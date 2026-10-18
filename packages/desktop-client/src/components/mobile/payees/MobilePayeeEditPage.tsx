@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
 
@@ -25,7 +25,8 @@ export function MobilePayeeEditPage() {
   const { id } = useParams<{ id: string }>();
   const dispatch = useDispatch();
   const { showUndoNotification } = useUndo();
-  const { data: payees = [] } = usePayees();
+  const { data: payees = [], isPlaceholderData } = usePayees();
+  const payeeSeeded = useRef<string | null>(null);
 
   const [payee, setPayee] = useState<PayeeEntity | null>(null);
   const [editedPayeeName, setEditedPayeeName] = useState('');
@@ -33,19 +34,25 @@ export function MobilePayeeEditPage() {
 
   // Load payee by ID
   useEffect(() => {
-    if (id) {
-      setIsLoading(true);
+    // The list is an empty placeholder until the first fetch finishes; deciding
+    // "not found" from it would bounce the user out of a valid payee
+    if (id && !isPlaceholderData) {
       const foundPayee = payees.find(p => p.id === id);
       if (foundPayee) {
         setPayee(foundPayee);
-        setEditedPayeeName(foundPayee.name);
+        // Seed the name once: later refreshes of the list (e.g. a sync) must
+        // not overwrite what the user is typing
+        if (payeeSeeded.current !== id) {
+          setEditedPayeeName(foundPayee.name);
+          payeeSeeded.current = id;
+        }
         setIsLoading(false);
       } else {
         // Payee not found, navigate back to payees list
         void navigate('/payees');
       }
     }
-  }, [id, payees, navigate]);
+  }, [id, payees, isPlaceholderData, navigate]);
 
   const handleCancel = useCallback(() => {
     void navigate(-1);

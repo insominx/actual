@@ -18,6 +18,7 @@ import type { Notification } from './notifications/notificationsSlice';
 import { payeeQueries } from './payees';
 import { loadPrefs } from './prefs/prefsSlice';
 import type { AppStore } from './redux/store';
+import { tagQueries } from './tags/queries';
 import { signOut } from './users/usersSlice';
 
 // Notifications for sync events that can fire during budget load
@@ -56,7 +57,7 @@ export function listenForSyncEvent(store: AppStore, queryClient: QueryClient) {
         addNotification({
           notification: {
             type: 'warning',
-            message: 'Unable to authenticate with server',
+            message: t('Unable to authenticate with server'),
             sticky: true,
             id: 'auth-issue',
           },
@@ -155,6 +156,14 @@ export function listenForSyncEvent(store: AppStore, queryClient: QueryClient) {
       if (tables.includes('account_groups')) {
         void queryClient.invalidateQueries({
           queryKey: accountGroupQueries.lists(),
+        });
+      }
+
+      // The tags list never goes stale on its own, so changes made on another
+      // device have to invalidate it
+      if (tables.includes('tags')) {
+        void queryClient.invalidateQueries({
+          queryKey: tagQueries.lists(),
         });
       }
     } else if (event.type === 'error') {

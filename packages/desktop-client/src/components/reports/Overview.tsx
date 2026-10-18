@@ -360,7 +360,7 @@ export function Overview({ dashboard }: OverviewProps) {
       return;
     }
 
-    const [filePath] = await openFileDialog({
+    const selectedFiles = await openFileDialog({
       properties: ['openFile'],
       filters: [
         {
@@ -369,6 +369,13 @@ export function Overview({ dashboard }: OverviewProps) {
         },
       ],
     });
+    const filePath = selectedFiles?.[0];
+
+    // The dialog was cancelled: nothing to import (and no spinner to leave
+    // running)
+    if (!filePath) {
+      return;
+    }
 
     closeNotifications();
     setIsImporting(true);
@@ -561,7 +568,9 @@ export function Overview({ dashboard }: OverviewProps) {
                               return name.startsWith('custom-report-');
                             }
                             if (isExistingCustomReport(item)) {
-                              const [, reportId] = item.split('custom-report-');
+                              const reportId = item.slice(
+                                'custom-report-'.length,
+                              );
                               onAddWidget<CustomReportWidget>('custom-report', {
                                 id: reportId,
                               });

@@ -48,7 +48,7 @@ export const PluggyAiInitialiseModal = ({
     ),
   );
 
-  const onSubmit = async (close: () => void) => {
+  const submit = async (close: () => void) => {
     if (!clientId || !clientSecret || !itemIds) {
       setIsValid(false);
       setError(
@@ -118,6 +118,17 @@ export const PluggyAiInitialiseModal = ({
     onSuccess(perBudgetFile);
     setIsLoading(false);
     close();
+  };
+
+  const onSubmit = async (close: () => void) => {
+    try {
+      await submit(close);
+    } catch (e) {
+      // A rejected request must not leave the form stuck in its loading state
+      setIsLoading(false);
+      setIsValid(false);
+      setError(String((e as { message?: unknown })?.message ?? e));
+    }
   };
 
   return (

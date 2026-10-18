@@ -49,10 +49,16 @@ export function CategoryMenuModal({
   const { t } = useTranslation();
   const { data: category } = useCategory(categoryId);
   const { data: categoryGroup } = useCategoryGroup(category?.group);
-  const originalNotes = useNotes(category.id);
+  const originalNotes = useNotes(categoryId);
+
+  // The category may be deleted while the menu is still open
+  if (!category) {
+    return null;
+  }
 
   const onRename = newName => {
-    if (newName && newName !== category.name) {
+    // Whitespace-only names are trimmed to empty by the server
+    if (newName?.trim() && newName !== category.name) {
       onSave?.({
         ...category,
         name: newName,

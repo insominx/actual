@@ -331,14 +331,18 @@ export function ConfigServer() {
       httpUrl = 'https://' + url;
     }
 
-    const { error } = await setServerUrl(httpUrl);
+    let error;
+    try {
+      ({ error } = await setServerUrl(httpUrl));
+    } finally {
+      // Also when the request throws, or the form stays disabled
+      setLoading(false);
+    }
     setUrl(httpUrl);
 
     if (error) {
-      setLoading(false);
       setError(error);
     } else {
-      setLoading(false);
       await dispatch(signOut());
       void navigate('/');
     }

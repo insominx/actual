@@ -136,12 +136,10 @@ export function BalanceHistoryGraph({
         startingBalanceValue: number,
         monthlyTotalsValue: Array<{ date: string; balance: number }>,
       ) {
-        let currentBalance = startingBalanceValue;
-        const totals = [...monthlyTotalsValue];
-        totals.reverse().forEach(month => {
-          currentBalance = currentBalance + month.balance;
-          month.balance = currentBalance;
-        });
+        const totals = accumulateMonthlyBalances(
+          startingBalanceValue,
+          monthlyTotalsValue,
+        );
 
         // if the account doesn't have recent transactions
         // then the empty months will be missing from our data
@@ -327,4 +325,18 @@ export function BalanceHistoryGraph({
       />
     </View>
   );
+}
+
+// Turns per-month net changes into running balances, starting from the balance
+// before the first month. Returns new objects: the input is React state, and
+// mutating it makes any re-run of the effect accumulate the totals twice.
+export function accumulateMonthlyBalances(
+  startingBalance: number,
+  monthlyTotals: Array<{ date: string; balance: number }>,
+): Array<{ date: string; balance: number }> {
+  let currentBalance = startingBalance;
+  return [...monthlyTotals].reverse().map(month => {
+    currentBalance += month.balance;
+    return { ...month, balance: currentBalance };
+  });
 }

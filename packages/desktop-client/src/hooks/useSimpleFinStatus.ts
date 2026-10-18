@@ -14,11 +14,15 @@ export function useSimpleFinStatus() {
   useEffect(() => {
     async function fetch() {
       setIsLoading(true);
-
-      const results = await send('simplefin-status');
-
-      setConfiguredSimpleFin(results.configured || false);
-      setIsLoading(false);
+      // A failed request must not leave the loading state on forever
+      try {
+        const results = await send('simplefin-status');
+        setConfiguredSimpleFin(results.configured || false);
+      } catch {
+        setConfiguredSimpleFin(false);
+      } finally {
+        setIsLoading(false);
+      }
     }
 
     if (status === 'online') {

@@ -36,7 +36,7 @@ export const AkahuInitialiseModal = ({
     t('It is required to provide a User Token and an App Token.'),
   );
 
-  const onSubmit = async (close: () => void) => {
+  const submit = async (close: () => void) => {
     if (!userToken || !appToken) {
       setIsValid(false);
       return;
@@ -74,6 +74,17 @@ export const AkahuInitialiseModal = ({
 
     if (!hasError) {
       close();
+    }
+  };
+
+  const onSubmit = async (close: () => void) => {
+    try {
+      await submit(close);
+    } catch (e) {
+      // A rejected request must not leave the form stuck in its loading state
+      setIsLoading(false);
+      setIsValid(false);
+      setError(String((e as { message?: unknown })?.message ?? e));
     }
   };
 

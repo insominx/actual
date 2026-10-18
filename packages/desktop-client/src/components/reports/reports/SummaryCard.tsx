@@ -39,10 +39,17 @@ export function SummaryCard({
 
   useEffect(() => {
     async function fetchLatestTransaction() {
-      const latestTrans = await send('get-latest-transaction');
-      setLatestTransaction(
-        latestTrans ? latestTrans.date : monthUtils.currentDay(),
-      );
+      // Fall back to today so a failed request doesn't leave the date range empty
+      let latestDate = monthUtils.currentDay();
+      try {
+        const latestTrans = await send('get-latest-transaction');
+        if (latestTrans) {
+          latestDate = latestTrans.date;
+        }
+      } catch (error) {
+        console.error('Failed to load latest transaction:', error);
+      }
+      setLatestTransaction(latestDate);
     }
     void fetchLatestTransaction();
   }, []);

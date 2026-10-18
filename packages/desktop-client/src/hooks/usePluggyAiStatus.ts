@@ -15,11 +15,15 @@ export function usePluggyAiStatus() {
   useEffect(() => {
     async function fetch() {
       setIsLoading(true);
-
-      const results = await send('pluggyai-status');
-
-      setPluggyAiStatus(results);
-      setIsLoading(false);
+      // A failed request must not leave the loading state on forever
+      try {
+        const results = await send('pluggyai-status');
+        setPluggyAiStatus(results);
+      } catch {
+        setPluggyAiStatus({});
+      } finally {
+        setIsLoading(false);
+      }
     }
 
     if (status !== 'online') {

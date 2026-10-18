@@ -195,10 +195,12 @@ export function BudgetSummary({ month }: BudgetSummaryProps) {
                       message:
                         numberOfMonths === 12
                           ? t(
-                              `${displayMonth} budgets have all been set to yearly average.`,
+                              '{{displayMonth}} budgets have all been set to yearly average.',
+                              { displayMonth },
                             )
                           : t(
-                              `${displayMonth} budgets have all been set to ${numberOfMonths} month average.`,
+                              '{{displayMonth}} budgets have all been set to {{numberOfMonths}} month average.',
+                              { displayMonth, numberOfMonths },
                             ),
                     });
                   }}

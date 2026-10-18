@@ -43,11 +43,17 @@ function PasswordLogin({ setError, dispatch }) {
 
     setError(null);
     setLoading(true);
-    const { error } = await send('subscribe-sign-in', {
-      password,
-      loginMethod: 'password',
-    });
-    setLoading(false);
+    let error;
+    try {
+      ({ error } = await send('subscribe-sign-in', {
+        password,
+        loginMethod: 'password',
+      }));
+    } catch (e) {
+      error = (e as { message?: string })?.message ?? 'internal-error';
+    } finally {
+      setLoading(false);
+    }
 
     if (error) {
       setError(error);

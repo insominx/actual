@@ -33,16 +33,19 @@ export function SingleInputModal({
   const [value, setValue] = useState('');
   const [errorMessage, setErrorMessage] = useState(null);
 
+  // Returns whether the value was accepted; the modal stays open otherwise so
+  // the validation error can be seen
   const _onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const error = onValidate?.(value);
     if (error) {
       setErrorMessage(error);
-      return;
+      return false;
     }
 
     onSubmit?.(value);
+    return true;
   };
 
   return (
@@ -54,8 +57,9 @@ export function SingleInputModal({
           />
           <Form
             onSubmit={e => {
-              _onSubmit(e);
-              state.close();
+              if (_onSubmit(e)) {
+                state.close();
+              }
             }}
           >
             <View>

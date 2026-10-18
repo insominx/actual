@@ -14,11 +14,15 @@ export function useGoCardlessStatus() {
   useEffect(() => {
     async function fetch() {
       setIsLoading(true);
-
-      const results = await send('gocardless-status');
-
-      setConfiguredGoCardless(results.configured || false);
-      setIsLoading(false);
+      // A failed request must not leave the loading state on forever
+      try {
+        const results = await send('gocardless-status');
+        setConfiguredGoCardless(results.configured || false);
+      } catch {
+        setConfiguredGoCardless(false);
+      } finally {
+        setIsLoading(false);
+      }
     }
 
     if (status === 'online') {

@@ -52,9 +52,16 @@ export function CreateEncryptionKeyModal({
       setLoading(true);
       setError(null);
 
-      const res = await send('key-make', { password });
+      let res;
+      try {
+        res = await send('key-make', { password });
+      } catch (e) {
+        setLoading(false);
+        setError(e instanceof Error ? e.message : String(e));
+        return;
+      }
       if (res.error) {
-        setLoading(null);
+        setLoading(false);
         setError(getCreateKeyError(res.error));
         return;
       }

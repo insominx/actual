@@ -61,6 +61,12 @@ export function CreateLocalAccountModal() {
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    // A second submit before the first finishes would pass the duplicate-name
+    // check against the not-yet-refreshed account list and create it twice
+    if (createAccount.isPending) {
+      return;
+    }
+
     const nameError = validateAccountName(name, '', accounts);
 
     const balanceError = !validateBalance(balance);
@@ -69,7 +75,8 @@ export function CreateLocalAccountModal() {
     if (!nameError && !balanceError) {
       createAccount.mutate(
         {
-          name,
+          // Validation trims the name, so the saved name must match it
+          name: name.trim(),
           balance: toRelaxedNumber(balance),
           offBudget: offbudget,
         },
@@ -232,6 +239,7 @@ export function CreateLocalAccountModal() {
                   type="submit"
                   variant="primary"
                   style={{ marginLeft: 10 }}
+                  isDisabled={createAccount.isPending}
                 >
                   <Trans>Create</Trans>
                 </Button>

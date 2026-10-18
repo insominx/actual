@@ -58,13 +58,19 @@ export function CategoryGroupMenuModal({
   const { data: { grouped: categoryGroups } = { grouped: [] } } =
     useCategories();
   const group = categoryGroups.find(g => g.id === groupId);
-  const notes = useNotes(group.id);
+  const notes = useNotes(groupId);
   const { showUndoNotification } = useUndo();
   const isGoalTemplatesEnabled = useFeatureFlag('goalTemplatesEnabled');
   const { t } = useTranslation();
 
+  // The group may be deleted while the menu is still open
+  if (!group) {
+    return null;
+  }
+
   const onRename = newName => {
-    if (newName && newName !== group.name) {
+    // Whitespace-only names are trimmed to empty by the server
+    if (newName?.trim() && newName !== group.name) {
       onSave?.({
         ...group,
         name: newName,

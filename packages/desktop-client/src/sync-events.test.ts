@@ -234,3 +234,46 @@ describe('listenForSyncEvent reservations', () => {
     expect(resetQueries).not.toHaveBeenCalled();
   });
 });
+
+describe('cache invalidation through sync events', () => {
+  function setup() {
+    const queryClient = createTestQueryClient();
+    const store = configureTestAppStore({ queryClient });
+    store.dispatch(mergeLocalPrefs({ id: 'budget-1' }));
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+    unlisten = listenForSyncEvent(store, queryClient);
+    return invalidate;
+  }
+
+  function invalidatedKeys(invalidate: ReturnType<typeof setup>) {
+    return invalidate.mock.calls.map(([filters]) => filters?.queryKey);
+  }
+
+  it.each([
+    ['tags', ['tags', 'lists']],
+    ['account_groups', ['account-groups', 'lists']],
+    ['accounts', ['accounts', 'lists']],
+  ])(
+    'invalidates the %s list when that table changes',
+    async (table, expectedKey) => {
+      const invalidate = setup();
+
+      serverPush('sync-event', { type: 'applied', tables: [table] });
+
+      await waitFor(() =>
+        expect(invalidatedKeys(invalidate)).toContainEqual(expectedKey),
+      );
+    },
+  );
+
+  it('does not invalidate the tags list for unrelated tables', async () => {
+    const invalidate = setup();
+    // An accounts event proves the handler ran without touching tags
+    serverPush('sync-event', { type: 'applied', tables: ['accounts'] });
+    await waitFor(() =>
+      expect(invalidatedKeys(invalidate)).toContainEqual(['accounts', 'lists']),
+    );
+
+    expect(invalidatedKeys(invalidate)).not.toContainEqual(['tags', 'lists']);
+  });
+});

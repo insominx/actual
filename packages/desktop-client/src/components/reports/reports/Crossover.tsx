@@ -16,6 +16,7 @@ import { Tooltip } from '@actual-app/components/tooltip';
 import { View } from '@actual-app/components/view';
 import { send } from '@actual-app/core/platform/client/connection';
 import * as monthUtils from '@actual-app/core/shared/months';
+import { amountToInteger, integerToAmount } from '@actual-app/core/shared/util';
 import type {
   CategoryEntity,
   CrossoverWidget,
@@ -75,7 +76,7 @@ function CrossoverInner({ widget }: CrossoverInnerProps) {
   const locale = useLocale();
   const { t } = useTranslation();
   const dispatch = useDispatch();
-  const { data: accounts = [] } = useAccounts();
+  const { data: accounts = [], isPending: isAccountsLoading } = useAccounts();
   const {
     data: categories = { grouped: [], list: [] },
     isPending: isCategoriesLoading,
@@ -125,7 +126,9 @@ function CrossoverInner({ widget }: CrossoverInnerProps) {
 
   // initialize once when data is available
   useEffect(() => {
-    if (selectionsInitialized || isCategoriesLoading) {
+    // Both lists seed the defaults below, which are only applied once; seeding
+    // from a still-empty accounts list would leave no income accounts selected
+    if (selectionsInitialized || isCategoriesLoading || isAccountsLoading) {
       return;
     }
 
@@ -164,6 +167,7 @@ function CrossoverInner({ widget }: CrossoverInnerProps) {
     accounts,
     categories.list,
     isCategoriesLoading,
+    isAccountsLoading,
     widget?.meta,
   ]);
 
@@ -991,13 +995,19 @@ function CrossoverInner({ widget }: CrossoverInnerProps) {
                         value={
                           expectedContribution === null
                             ? ''
-                            : expectedContribution / 100
+                            : integerToAmount(
+                                expectedContribution,
+                                format.currency.decimalPlaces,
+                              )
                         }
                         onChange={e =>
                           setExpectedContribution(
                             isNaN(e.target.valueAsNumber)
                               ? null
-                              : e.target.valueAsNumber * 100,
+                              : amountToInteger(
+                                  e.target.valueAsNumber,
+                                  format.currency.decimalPlaces,
+                                ),
                           )
                         }
                         onBlur={() => {

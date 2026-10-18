@@ -61,9 +61,14 @@ export function useSelected<T extends Item>(
           const selectedItems = new Set(state.selectedItems);
           const { id, isRangeSelect } = action;
 
-          if (isRangeSelect && selectedRange) {
-            const idx = items.findIndex(p => p.id === id);
-            const startIdx = items.findIndex(p => p.id === selectedRange.start);
+          const idx = items.findIndex(p => p.id === id);
+          const startIdx = selectedRange
+            ? items.findIndex(p => p.id === selectedRange.start)
+            : -1;
+
+          // A range needs both ends in the current list; if the anchor or the
+          // clicked row has left it, fall back to a plain toggle below
+          if (isRangeSelect && selectedRange && idx !== -1 && startIdx !== -1) {
             const endIdx = items.findIndex(p => p.id === selectedRange.end);
             let range: Range<number>;
             let deleteUntil: Range<number>;
@@ -124,7 +129,14 @@ export function useSelected<T extends Item>(
         }
 
         case 'select-none':
-          return { ...state, selectedItems: new Set<string>() };
+          // Drop the range anchor too, otherwise a later shift-click would
+          // extend from an item the user already cleared (or crash if that
+          // item has since left the list)
+          return {
+            ...state,
+            selectedItems: new Set<string>(),
+            selectedRange: null,
+          };
 
         case 'select-all':
           let selectedItems: string[] = [];

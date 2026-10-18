@@ -39,7 +39,7 @@ export function EditUserAccess({
     void send('access-get-available-users', defaultUserAccess.fileId).then(
       data => {
         if ('error' in data) {
-          setSetError(data.error);
+          setSetError(getUserAccessErrors(data.error));
         } else {
           setAvailableUsers(
             data.map(user => [

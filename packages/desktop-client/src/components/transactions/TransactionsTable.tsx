@@ -168,6 +168,7 @@ import type {
 } from './table/columnWidths';
 import {
   deserializeTransaction,
+  distributeSplitAmounts,
   isLastChild,
   makeTemporaryTransactions,
   selectAscDesc,
@@ -855,9 +856,18 @@ function PayeeCell({
 
         if (value && value.startsWith('new:') && !isCreatingPayee.current) {
           isCreatingPayee.current = true;
-          const id = await onCreatePayee(value.slice('new:'.length));
+          let id: PayeeEntity['id'] | null = null;
+          try {
+            id = await onCreatePayee(value.slice('new:'.length));
+          } catch (error) {
+            // Fall through with no payee so the placeholder `new:` value is
+            // cleared instead of being left on the transaction
+            console.error('Failed to create payee:', error);
+          } finally {
+            // A failure must not block creating payees from this cell again
+            isCreatingPayee.current = false;
+          }
           onUpdate('payee', id ?? undefined);
-          isCreatingPayee.current = false;
         }
       }}
       formatter={() => {
@@ -3872,10 +3882,16 @@ export const TransactionTable = forwardRef(
 
         if (isTemporaryId(transaction.id)) {
           if (onApplyRulesProp) {
-            groupedTransaction = await onApplyRulesProp(
-              groupedTransaction,
-              updatedFieldName,
-            );
+            try {
+              groupedTransaction = await onApplyRulesProp(
+                groupedTransaction,
+                updatedFieldName,
+              );
+            } catch (error) {
+              // Rules are a convenience while entering a transaction; if they
+              // fail, keep what the user typed instead of dropping the edit
+              console.error('Failed to apply rules to new transaction:', error);
+            }
           }
 
           const newTrans = latestState.current.newTransactions;
@@ -4110,39 +4126,10 @@ export const TransactionTable = forwardRef(
           emptyTransactions.length === 0 &&
           siblingTransactions.length > 0
         ) {
-          const siblingTotal = siblingTransactions.reduce(
-            (acc, t) => acc + t.amount,
-            0,
+          amounts = distributeSplitAmounts(
+            siblingTransactions.map(t => t.amount),
+            parentTransaction.amount,
           );
-          const siblingProportions = siblingTransactions.map(
-            t => t.amount / siblingTotal,
-          );
-
-          for (const [
-            transactionIndex,
-            transaction,
-          ] of siblingTransactions.entries()) {
-            amounts[transactionIndex] =
-              Math.floor(
-                siblingProportions[transactionIndex] * remainingAmount,
-              ) + transaction.amount;
-          }
-
-          let remainingCents =
-            parentTransaction.amount - amounts.reduce((acc, a) => acc + a, 0);
-
-          let amountIndex = 0;
-          while (remainingCents !== 0) {
-            amountIndex = amountIndex % amounts.length;
-            if (remainingCents > 0) {
-              amounts[amountIndex] += 1;
-              remainingCents--;
-            } else {
-              amounts[amountIndex] -= 1;
-              remainingCents++;
-            }
-            amountIndex++;
-          }
 
           if (isTemporaryId(id)) {
             newNavigator.onEdit(null);

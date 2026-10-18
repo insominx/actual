@@ -384,6 +384,8 @@ export function useDrop<T extends { id: string }>({
       // MIGRATION: With useDragAndDrop, the drop position is provided
       // in the event object (e.target.dropPosition) - no manual
       // calculation needed.
+      // The element can unmount while the payload was being read
+      if (!dropRef.current) return;
       const rect = dropRef.current.getBoundingClientRect();
       const hoverMiddleY = (rect.bottom - rect.top) / 2;
       const hoverClientY =

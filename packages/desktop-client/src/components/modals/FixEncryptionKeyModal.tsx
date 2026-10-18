@@ -46,10 +46,17 @@ export function FixEncryptionKeyModal({
       setLoading(true);
       setError(null);
 
-      const { error } = await send('key-test', {
-        password,
-        cloudFileId,
-      });
+      let error;
+      try {
+        ({ error } = await send('key-test', {
+          password,
+          cloudFileId,
+        }));
+      } catch (e) {
+        setLoading(false);
+        setError(e instanceof Error ? e.message : String(e));
+        return;
+      }
       if (error) {
         setError(getTestKeyError(error));
         setLoading(false);

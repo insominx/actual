@@ -345,7 +345,11 @@ export function useReorderCategoryMutation() {
       const { grouped: categoryGroups = [], list: categories = [] } =
         await queryClient.ensureQueryData(categoryQueries.list());
 
-      const moveCandidate = categories.filter(c => c.id === id)[0];
+      const moveCandidate = categories.find(c => c.id === id);
+      if (!moveCandidate) {
+        // Deleted (e.g. on another device) while being dragged
+        return;
+      }
       const group = categoryGroups.find(g => g.id === groupId);
       const categoriesInGroup = group?.categories ?? [];
       const exists = categoriesInGroup.some(

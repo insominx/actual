@@ -188,10 +188,17 @@ export async function prewarmMonth(
       ? 'tracking-budget-month'
       : 'envelope-budget-month';
 
-  const values = await send(method, { month });
+  // Warming the cache only avoids a flash of empty cells. If the request
+  // fails the cells load on their own, so a failure here must not stop the
+  // callers (page init, month navigation) from carrying on.
+  try {
+    const values = await send(method, { month });
 
-  for (const value of values) {
-    spreadsheet.prewarmCache(value.name, value);
+    for (const value of values) {
+      spreadsheet.prewarmCache(value.name, value);
+    }
+  } catch (error) {
+    console.error(`Failed to prewarm budget month ${month}:`, error);
   }
 }
 

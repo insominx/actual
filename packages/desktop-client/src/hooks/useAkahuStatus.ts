@@ -14,11 +14,15 @@ export function useAkahuStatus(enabled = true) {
 
     async function fetch() {
       setIsLoading(true);
-
-      const results = await send('akahu-status');
-
-      setConfiguredAkahu(results.configured || false);
-      setIsLoading(false);
+      // A failed request must not leave the loading state on forever
+      try {
+        const results = await send('akahu-status');
+        setConfiguredAkahu(results.configured || false);
+      } catch {
+        setConfiguredAkahu(false);
+      } finally {
+        setIsLoading(false);
+      }
     }
 
     if (status === 'online') {

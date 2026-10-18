@@ -419,7 +419,7 @@ function recalculate(
       targetMonthlyIncome = crossoverData.adjustedExpenses ?? null;
       // Calculate target nest egg: target monthly income / monthly safe withdrawal rate
       targetNestEgg =
-        targetMonthlyIncome != null
+        targetMonthlyIncome != null && monthlySWR > 0
           ? Math.round(targetMonthlyIncome / monthlySWR)
           : null;
     }

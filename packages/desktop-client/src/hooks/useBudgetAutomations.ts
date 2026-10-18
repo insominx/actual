@@ -21,18 +21,28 @@ export function useBudgetAutomations({
     let mounted = true;
     async function fetchAutomations() {
       setLoading(true);
+      try {
+        // notes based #template/#goal lines may have been edited since they were
+        // last parsed into the DB. ui-managed categories own goal_def directly, so skip.
+        if (source !== 'ui') {
+          await send('budget/store-note-templates', [categoryId]);
+        }
 
-      // notes based #template/#goal lines may have been edited since they were
-      // last parsed into the DB. ui-managed categories own goal_def directly, so skip.
-      if (source !== 'ui') {
-        await send('budget/store-note-templates', [categoryId]);
-      }
-
-      const result = await send('budget/get-category-automations', categoryId);
-      if (mounted) {
-        setAutomations(result);
-        onLoaded(result);
-        setLoading(false);
+        const result = await send(
+          'budget/get-category-automations',
+          categoryId,
+        );
+        if (mounted) {
+          setAutomations(result);
+          onLoaded(result);
+        }
+      } catch (e) {
+        console.error('Failed to load budget automations:', e);
+      } finally {
+        // A failed load must not leave the editor stuck on its loading state
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
     void fetchAutomations();

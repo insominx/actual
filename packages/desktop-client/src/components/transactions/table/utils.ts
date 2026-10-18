@@ -105,6 +105,46 @@ export function isLastChild(
   );
 }
 
+/**
+ * Spreads whatever is left of `total` across split children in proportion to
+ * the amounts they already have, so the children add up to `total` exactly.
+ *
+ * Children that add up to zero (a charge and a refund, say) have no
+ * proportions to share by, so the remainder is shared equally; dividing by
+ * that zero total would give NaN and never settle.
+ */
+export function distributeSplitAmounts(
+  amounts: readonly number[],
+  total: number,
+): number[] {
+  if (amounts.length === 0) {
+    return [];
+  }
+
+  const current = amounts.reduce((sum, amount) => sum + amount, 0);
+  const remaining = total - current;
+  const result = amounts.map(amount => {
+    const proportion = current === 0 ? 1 / amounts.length : amount / current;
+    return Math.floor(proportion * remaining) + amount;
+  });
+
+  // Flooring leaves a few cents over (or under); hand them out one at a time
+  let leftover = total - result.reduce((sum, amount) => sum + amount, 0);
+  let index = 0;
+  while (Number.isFinite(leftover) && leftover !== 0) {
+    index = index % result.length;
+    if (leftover > 0) {
+      result[index] += 1;
+      leftover--;
+    } else {
+      result[index] -= 1;
+      leftover++;
+    }
+    index++;
+  }
+  return result;
+}
+
 export function selectAscDesc(
   field: string,
   ascDesc: 'asc' | 'desc',

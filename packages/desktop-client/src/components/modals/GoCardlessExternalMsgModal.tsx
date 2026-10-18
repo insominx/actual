@@ -32,6 +32,9 @@ function useAvailableBanks(country: string) {
   const [isError, setIsError] = useState(false);
 
   useEffect(() => {
+    // Ignore a slow response for a country the user has already left
+    let cancelled = false;
+
     async function fetch() {
       setIsError(false);
 
@@ -45,6 +48,8 @@ function useAvailableBanks(country: string) {
 
       const { data, error } = await sendCatch('gocardless-get-banks', country);
 
+      if (cancelled) return;
+
       if (error || !Array.isArray(data)) {
         setIsError(true);
         setBanks([]);
@@ -56,6 +61,9 @@ function useAvailableBanks(country: string) {
     }
 
     void fetch();
+    return () => {
+      cancelled = true;
+    };
   }, [setBanks, setIsLoading, country]);
 
   return {
@@ -178,7 +186,11 @@ export function GoCardlessExternalMsgModal({
             strict
             highlightFirst
             suggestions={COUNTRY_OPTIONS}
-            onSelect={setCountry}
+            onSelect={value => {
+              setCountry(value);
+              // The chosen bank belongs to the previous country
+              setInstitutionId(undefined);
+            }}
             value={country}
             inputProps={{
               id: 'country-field',

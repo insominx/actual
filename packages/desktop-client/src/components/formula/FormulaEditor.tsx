@@ -4,6 +4,7 @@ import { Trans } from 'react-i18next';
 
 import { styles } from '@actual-app/components/styles';
 import { theme } from '@actual-app/components/theme';
+import * as monthUtils from '@actual-app/core/shared/months';
 import { EditorView } from '@codemirror/view';
 import CodeMirror, { EditorState } from '@uiw/react-codemirror';
 import type { ReactCodeMirrorProps } from '@uiw/react-codemirror';
@@ -57,7 +58,9 @@ type CategoryPickerState = BadgePickerState & {
 };
 
 function getCurrentMonth() {
-  return new Date().toISOString().slice(0, 7);
+  // Local time, like the rest of the app; toISOString() is UTC and reports the
+  // wrong month on the last/first evening of a month west/east of UTC
+  return monthUtils.currentMonth();
 }
 
 export function FormulaEditor({

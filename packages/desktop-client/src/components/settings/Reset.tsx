@@ -16,8 +16,11 @@ export function ResetCache() {
 
   async function onResetCache() {
     setResetting(true);
-    await send('reset-budget-cache');
-    setResetting(false);
+    try {
+      await send('reset-budget-cache');
+    } finally {
+      setResetting(false);
+    }
   }
 
   return (
@@ -50,8 +53,11 @@ export function ResetSync() {
 
   async function onResetSync() {
     setResetting(true);
-    await dispatch(resetSync());
-    setResetting(false);
+    try {
+      await dispatch(resetSync());
+    } finally {
+      setResetting(false);
+    }
   }
 
   return (

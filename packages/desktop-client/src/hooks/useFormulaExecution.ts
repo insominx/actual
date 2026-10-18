@@ -503,11 +503,11 @@ async function getCategoriesFromConditions(
       } else if (cond.op === 'contains') {
         return textValue
           .toLowerCase()
-          .includes((cond.value as string).toLowerCase());
+          .includes(String(cond.value ?? '').toLowerCase());
       } else if (cond.op === 'doesNotContain') {
         return !textValue
           .toLowerCase()
-          .includes((cond.value as string).toLowerCase());
+          .includes(String(cond.value ?? '').toLowerCase());
       } else if (cond.op === 'matches') {
         try {
           return new RegExp(cond.value as string, 'i').test(textValue);

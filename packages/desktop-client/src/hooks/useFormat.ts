@@ -47,7 +47,9 @@ function format(
 ): FormatResult {
   switch (type) {
     case 'string': {
-      const val = JSON.stringify(value);
+      // JSON.stringify returns undefined (not a string) for undefined,
+      // functions and symbols
+      const val = JSON.stringify(value) ?? '';
 
       if (val.charAt(0) === '"' && val.charAt(val.length - 1) === '"') {
         return { formattedString: val.slice(1, -1) };

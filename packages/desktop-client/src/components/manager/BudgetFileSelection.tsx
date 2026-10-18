@@ -445,8 +445,12 @@ function RefreshButton({ style, onRefresh }: RefreshButtonProps) {
 
   async function _onRefresh() {
     setLoading(true);
-    onRefresh();
-    setLoading(false);
+    try {
+      // onRefresh may return a promise; the spinner should last until it settles
+      await (onRefresh() as void | Promise<unknown>);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const Icon = loading ? AnimatedLoading : SvgRefreshArrow;

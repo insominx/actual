@@ -166,8 +166,8 @@ export function ScheduleEditModal({ id, transaction }: ScheduleEditModalProps) {
             rule,
             onSave: async () => {
               const schedule = await loadSchedule();
-              if (schedule) {
-                throw new Error('Schedule found');
+              if (schedule == null) {
+                throw new Error('Schedule not found');
               }
 
               dispatch({ type: 'set-schedule', schedule });

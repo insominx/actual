@@ -1459,13 +1459,19 @@ const TransactionEditInner = memo<TransactionEditInnerProps>(
                 onFocus={() =>
                   onRequestActiveEdit(getFieldName(transaction.id, 'date'))
                 }
-                onChange={event =>
-                  onUpdateInner(
+                onChange={event => {
+                  // A cleared date input reports an empty string, which
+                  // can't be formatted
+                  const parsed = parseISO(event.target.value);
+                  if (!isValidDate(parsed)) {
+                    return;
+                  }
+                  void onUpdateInner(
                     transaction,
                     'date',
-                    formatDate(parseISO(event.target.value), dateFormat),
-                  )
-                }
+                    formatDate(parsed, dateFormat),
+                  );
+                }}
               />
             </View>
             {transaction.reconciled ? (
@@ -1652,7 +1658,9 @@ function TransactionEditUnconnected({
           id: 'temp',
           date: (() => {
             const dateParam = searchParams.get('date') || '';
-            if (!isNaN(Date.parse(dateParam))) {
+            // Transaction dates are stored as yyyy-MM-dd, so reject anything
+            // else even if Date.parse understands it
+            if (monthUtils.isValidYearMonthDay(dateParam)) {
               return dateParam;
             }
             return lastTransaction?.date || monthUtils.currentDay();
@@ -1698,10 +1706,18 @@ function TransactionEditUnconnected({
       const newTransaction = { ...transaction };
       const changedFields = new Set<keyof TransactionEntity>([updatedField]);
       if (isTemporary(newTransaction)) {
-        const afterRules = await send('rules-run', {
-          transaction: newTransaction,
-        });
-        const diff = getChangedValues(newTransaction, afterRules);
+        let afterRules: TransactionEntity | null = null;
+        try {
+          afterRules = await send('rules-run', {
+            transaction: newTransaction,
+          });
+        } catch (error) {
+          // Keep the user's edit even when the rules can't be applied
+          console.error('Failed to run rules on new transaction:', error);
+        }
+        const diff = afterRules
+          ? getChangedValues(newTransaction, afterRules)
+          : null;
 
         if (diff) {
           Object.keys(diff).forEach(key => {

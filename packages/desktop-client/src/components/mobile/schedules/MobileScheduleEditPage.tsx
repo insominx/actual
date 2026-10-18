@@ -1,5 +1,5 @@
 // @ts-strict-ignore
-import React from 'react';
+import React, { useRef } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
 
@@ -65,8 +65,23 @@ export function MobileScheduleEditPage() {
   });
 
   const selectedInst = useSelected('transactions', state.transactions, []);
+  const isSaving = useRef(false);
 
   async function onSave() {
+    // Saving awaits several requests; a second tap before the first finishes
+    // would otherwise create the schedule twice
+    if (isSaving.current) {
+      return;
+    }
+    isSaving.current = true;
+    try {
+      await saveSchedule();
+    } finally {
+      isSaving.current = false;
+    }
+  }
+
+  async function saveSchedule() {
     dispatch({ type: 'form-error', error: null });
     if (!state.schedule) {
       return;
