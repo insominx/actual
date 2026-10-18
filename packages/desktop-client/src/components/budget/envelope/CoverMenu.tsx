@@ -6,11 +6,6 @@ import { Button } from '@actual-app/components/button';
 import { Input } from '@actual-app/components/input';
 import { styles } from '@actual-app/components/styles';
 import { View } from '@actual-app/components/view';
-import { evalArithmetic } from '@actual-app/core/shared/arithmetic';
-import {
-  amountToInteger,
-  integerToCurrency,
-} from '@actual-app/core/shared/util';
 import type { IntegerAmount } from '@actual-app/core/shared/util';
 import type { CategoryEntity } from '@actual-app/core/types/models';
 
@@ -20,6 +15,7 @@ import {
   removeCategoriesFromGroups,
 } from '#components/budget/util';
 import { useCategories } from '#hooks/useCategories';
+import { useFormat } from '#hooks/useFormat';
 
 type CoverMenuProps = {
   showToBeBudgeted?: boolean;
@@ -53,13 +49,16 @@ export function CoverMenu({
       : categoryGroups;
   }, [categoryId, showToBeBudgeted, originalCategoryGroups]);
 
-  const _initialAmount = integerToCurrency(Math.abs(initialAmount ?? 0));
+  // Use the currency-aware helpers: a bare integerToCurrency/amountToInteger
+  // assumes two decimal places and misreads other currencies by a factor of 10
+  const format = useFormat();
+  const _initialAmount = format.forEdit(Math.abs(initialAmount ?? 0));
   const [amount, setAmount] = useState<string>(_initialAmount);
 
   function _onSubmit() {
-    const parsedAmount = evalArithmetic(amount || '');
+    const parsedAmount = format.fromEdit(amount || '', null);
     if (parsedAmount && fromCategoryId) {
-      onSubmit(amountToInteger(parsedAmount), fromCategoryId);
+      onSubmit(parsedAmount, fromCategoryId);
     }
     onClose();
   }
