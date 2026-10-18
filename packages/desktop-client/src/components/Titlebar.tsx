@@ -46,6 +46,7 @@ import { useSidebar } from './sidebar/SidebarProvider';
 import { ThemeSelector } from './ThemeSelector';
 
 function UncategorizedButton() {
+  const { t } = useTranslation();
   const count: number | null = useSheetValue(bindings.uncategorizedCount());
   if (count === null || count <= 0) {
     return null;
@@ -60,7 +61,11 @@ function UncategorizedButton() {
         color: theme.errorText,
       }}
     >
-      <Trans count={count}>{{ count }} uncategorized transactions</Trans>
+      {t('uncategorized-transactions-count', {
+        count,
+        defaultValue_one: '{{count}} uncategorized transaction',
+        defaultValue_other: '{{count}} uncategorized transactions',
+      })}
     </Link>
   );
 }

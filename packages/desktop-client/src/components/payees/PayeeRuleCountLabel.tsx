@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { Trans } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import { AnimatedLoading } from '@actual-app/components/icons/AnimatedLoading';
 import { Text } from '@actual-app/components/text';
@@ -16,6 +16,7 @@ export function PayeeRuleCountLabel({
   isLoading,
   style,
 }: PayeeRuleCountLabelProps) {
+  const { t } = useTranslation();
   return (
     <Text style={style}>
       {isLoading ? (
@@ -23,7 +24,11 @@ export function PayeeRuleCountLabel({
           <AnimatedLoading style={{ width: 12, height: 12 }} />
         </View>
       ) : count > 0 ? (
-        <Trans count={count}>{{ count }} associated rules</Trans>
+        t('payee-associated-rules-count', {
+          count,
+          defaultValue_one: '{{count}} associated rule',
+          defaultValue_other: '{{count}} associated rules',
+        })
       ) : (
         <Trans>Create rule</Trans>
       )}

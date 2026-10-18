@@ -369,9 +369,11 @@ export function ManageRules({
           <SpaceBetween gap={10} style={{ justifyContent: 'flex-end' }}>
             {selectedInst.items.size > 0 && (
               <Button onPress={onDeleteSelected}>
-                <Trans count={selectedInst.items.size}>
-                  Delete {{ count: selectedInst.items.size }} rules
-                </Trans>
+                {t('delete-selected-rules', {
+                  count: selectedInst.items.size,
+                  defaultValue_one: 'Delete {{count}} rule',
+                  defaultValue_other: 'Delete {{count}} rules',
+                })}
               </Button>
             )}
             <Button variant="primary" onPress={onCreateRule}>

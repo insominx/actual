@@ -1298,7 +1298,11 @@ export function ImportTransactionsModal({
                       void onImport(() => state.close());
                     }}
                   >
-                    <Trans count={count}>Import {{ count }} transactions</Trans>
+                    {t('import-selected-transactions', {
+                      count,
+                      defaultValue_one: 'Import {{count}} transaction',
+                      defaultValue_other: 'Import {{count}} transactions',
+                    })}
                   </ButtonWithLoading>
                 );
               })()}

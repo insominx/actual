@@ -302,9 +302,11 @@ function UserDirectoryContent({ isModal }: ManageUserDirectoryContentProps) {
           >
             {selectedInst.items.size > 0 && (
               <Button onPress={onDeleteSelected}>
-                <Trans count={selectedCount}>
-                  Delete {{ selectedCount }} users
-                </Trans>
+                {t('delete-selected-users', {
+                  count: selectedCount,
+                  defaultValue_one: 'Delete {{count}} user',
+                  defaultValue_other: 'Delete {{count}} users',
+                })}
               </Button>
             )}
             <Button variant="primary" onPress={onAddUser}>
