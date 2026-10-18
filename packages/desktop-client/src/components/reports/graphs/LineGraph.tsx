@@ -125,7 +125,7 @@ const CustomTooltip = ({
                 )
               );
             })}
-            {payload.length > 5 && compact && '...'}
+            {items.length > 4 && compact && '...'}
             <AlignedText
               left={t('Total')}
               right={
