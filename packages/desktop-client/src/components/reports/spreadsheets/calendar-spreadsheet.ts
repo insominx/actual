@@ -116,7 +116,9 @@ export function calendarSpreadsheet(
       const months = [];
       let currentDate = d.startOfMonth(start);
 
-      while (!d.isSameMonth(currentDate, end)) {
+      // `isBefore` rather than `!isSameMonth`: a start after the end would
+      // otherwise step away from the end forever
+      while (d.isBefore(currentDate, d.startOfMonth(end))) {
         months.push(currentDate);
         currentDate = d.addMonths(currentDate, 1);
       }
