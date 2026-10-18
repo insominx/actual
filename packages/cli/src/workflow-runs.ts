@@ -123,7 +123,13 @@ export async function readRun(dataDir: string, runId: string) {
   } catch {
     throw new AgentError('MISSING_CONTEXT', 'Workflow run was not found.');
   }
-  const parsed: unknown = JSON.parse(text);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    // A truncated record should read as invalid, not as an engine failure
+    throw new AgentError('INVALID_INPUT', 'Workflow run record is invalid.');
+  }
   if (!isRun(parsed)) {
     throw new AgentError('INVALID_INPUT', 'Workflow run record is invalid.');
   }
