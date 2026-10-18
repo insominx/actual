@@ -32,6 +32,11 @@ export function useSyncStatus({
         setIsSyncing(true);
         setSyncState(null);
       } else if (syncingEndDelayMs > 0) {
+        // Back-to-back end events must not orphan the earlier timer, or a
+        // later 'start' could not cancel it and would be flipped back to idle
+        if (endTimeout) {
+          clearTimeout(endTimeout);
+        }
         endTimeout = setTimeout(() => {
           setIsSyncing(false);
           endTimeout = null;
