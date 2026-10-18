@@ -769,18 +769,32 @@ function UncategorizedTransactionsBanner(props) {
           }}
         >
           <Text>
-            <Trans count={transactions.length}>
-              You have {{ count: transactions.length }} uncategorized
-              transactions (
-              <FinancialText>
-                {
+            {transactions.length === 1 ? (
+              <Trans>
+                You have 1 uncategorized transaction (
+                <FinancialText>
                   {
-                    amount: format(totalUncategorizedAmount, 'financial'),
-                  } as TransObjectLiteral
-                }
-              </FinancialText>
-              )
-            </Trans>
+                    {
+                      amount: format(totalUncategorizedAmount, 'financial'),
+                    } as TransObjectLiteral
+                  }
+                </FinancialText>
+                )
+              </Trans>
+            ) : (
+              <Trans count={transactions.length}>
+                You have {{ count: transactions.length }} uncategorized
+                transactions (
+                <FinancialText>
+                  {
+                    {
+                      amount: format(totalUncategorizedAmount, 'financial'),
+                    } as TransObjectLiteral
+                  }
+                </FinancialText>
+                )
+              </Trans>
+            )}
           </Text>
           <Button
             onPress={() => navigate('/categories/uncategorized')}
@@ -1012,18 +1026,32 @@ function OverspendingBanner({ month, onBudgetAction, budgetType, ...props }) {
           }}
         >
           <Text>
-            <Trans count={numberOfOverspentCategories}>
-              You have {{ count: numberOfOverspentCategories }} overspent
-              categories (
-              <FinancialText>
-                {
+            {numberOfOverspentCategories === 1 ? (
+              <Trans>
+                You have 1 overspent category (
+                <FinancialText>
                   {
-                    amount: format(totalOverspending, 'financial'),
-                  } as TransObjectLiteral
-                }
-              </FinancialText>
-              )
-            </Trans>
+                    {
+                      amount: format(totalOverspending, 'financial'),
+                    } as TransObjectLiteral
+                  }
+                </FinancialText>
+                )
+              </Trans>
+            ) : (
+              <Trans count={numberOfOverspentCategories}>
+                You have {{ count: numberOfOverspentCategories }} overspent
+                categories (
+                <FinancialText>
+                  {
+                    {
+                      amount: format(totalOverspending, 'financial'),
+                    } as TransObjectLiteral
+                  }
+                </FinancialText>
+                )
+              </Trans>
+            )}
           </Text>
           <Button onPress={onOpenCategorySelectionModal} style={PILL_STYLE}>
             {budgetType === 'envelope' && <Trans>Cover</Trans>}

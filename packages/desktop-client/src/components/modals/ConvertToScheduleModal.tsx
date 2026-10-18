@@ -52,15 +52,29 @@ export function ConvertToScheduleModal({
                 borderRadius: 4,
               }}
             >
-              <Trans count={daysUntilTransaction}>
-                <strong>Warning:</strong> This transaction is{' '}
-                {{ count: daysUntilTransaction }} days away,
-              </Trans>{' '}
-              <Trans count={upcomingDays}>
-                which is beyond your configured upcoming length of{' '}
-                {{ count: upcomingDays }} days. The schedule preview will not be
-                visible in your account until it gets closer to the date.
-              </Trans>
+              {daysUntilTransaction === 1 ? (
+                <Trans>
+                  <strong>Warning:</strong> This transaction is 1 day away,
+                </Trans>
+              ) : (
+                <Trans count={daysUntilTransaction}>
+                  <strong>Warning:</strong> This transaction is{' '}
+                  {{ count: daysUntilTransaction }} days away,
+                </Trans>
+              )}{' '}
+              {upcomingDays === 1 ? (
+                <Trans>
+                  which is beyond your configured upcoming length of 1 day. The
+                  schedule preview will not be visible in your account until it
+                  gets closer to the date.
+                </Trans>
+              ) : (
+                <Trans count={upcomingDays}>
+                  which is beyond your configured upcoming length of{' '}
+                  {{ count: upcomingDays }} days. The schedule preview will not
+                  be visible in your account until it gets closer to the date.
+                </Trans>
+              )}
             </Block>
             <View
               style={{
