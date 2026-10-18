@@ -117,10 +117,10 @@ export async function createFilter(
     id: filterId,
     conditions: filter.state.conditions,
     conditionsOp: filter.state.conditionsOp,
-    name: filter.state.name,
+    name: filter.state.name?.trim(),
   };
 
-  if (item.name?.trim()) {
+  if (item.name) {
     if (await filterNameExists(item.name, item.id, true)) {
       throw new Error('There is already a filter named ' + item.name);
     }
@@ -151,9 +151,9 @@ export async function updateFilter(filter) {
     id: filter.state.id,
     conditions: filter.state.conditions,
     conditionsOp: filter.state.conditionsOp,
-    name: filter.state.name,
+    name: filter.state.name?.trim(),
   };
-  if (item.name?.trim()) {
+  if (item.name) {
     if (await filterNameExists(item.name, item.id, false)) {
       throw new Error('There is already a filter named ' + item.name);
     }

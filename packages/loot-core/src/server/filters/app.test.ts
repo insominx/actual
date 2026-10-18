@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import * as db from '#server/db';
+
 import { createFilter, updateFilter } from './app';
 
 beforeEach(global.emptyDatabase());
@@ -21,6 +23,20 @@ describe('filter names', () => {
     );
     await expect(createFilter(state('   '))).rejects.toThrow(
       'Filter name is required',
+    );
+  });
+
+  it('saves a trimmed name and checks duplicates against it', async () => {
+    const id = await createFilter(state('  Rent '));
+
+    const row = await db.first<{ name: string }>(
+      'SELECT name FROM transaction_filters WHERE id = ?',
+      [id],
+    );
+    expect(row?.name).toBe('Rent');
+
+    await expect(createFilter(state(' Rent'))).rejects.toThrow(
+      'There is already a filter named Rent',
     );
   });
 
