@@ -170,7 +170,7 @@ function TransactionListWithPreviews() {
       isLoading={
         isSearching || isFiltered
           ? isTransactionsLoading
-          : isPreviewTransactionsLoading
+          : isTransactionsLoading || isPreviewTransactionsLoading
       }
       transactions={transactionsToDisplay}
       balance={balanceBindings.balance}

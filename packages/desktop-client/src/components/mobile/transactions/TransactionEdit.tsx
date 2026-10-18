@@ -931,7 +931,7 @@ const TransactionEditInner = memo<TransactionEditInnerProps>(
         transactionId: TransactionEntity['id'],
         name: 'category' | 'payee' | 'account' | 'date' | 'amount' | 'notes',
       ) => {
-        onRequestActiveEdit?.(getFieldName(transaction.id, name), () => {
+        onRequestActiveEdit?.(getFieldName(transactionId, name), () => {
           const transactionToEdit = transactions.find(
             t => t.id === transactionId,
           );
@@ -1045,7 +1045,6 @@ const TransactionEditInner = memo<TransactionEditInnerProps>(
         onUpdateInner,
         onClearActiveEdit,
         onRequestActiveEdit,
-        transaction.id,
         transactions,
         unserializedTransactions,
         showHiddenCategories,
@@ -1635,6 +1634,7 @@ function TransactionEditUnconnected({
       }
     }
     if (transactionId !== 'new') {
+      isAdding.current = false;
       void fetchTransaction();
     } else {
       isAdding.current = true;

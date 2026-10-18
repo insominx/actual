@@ -1,4 +1,10 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { q } from '@actual-app/core/shared/query';
@@ -70,11 +76,28 @@ function TransactionListWithPreviews({
 
   const dateFormat = useDateFormat() || 'MM/dd/yyyy';
 
-  const { isSearching, search: onSearch } = useTransactionsSearch({
+  const { isSearching, search } = useTransactionsSearch({
     updateQuery: setTransactionsQuery,
     resetQuery: () => setTransactionsQuery(baseTransactionsQuery()),
     dateFormat,
   });
+
+  const searchTextRef = useRef('');
+
+  const onSearch = useCallback(
+    (searchText: string) => {
+      searchTextRef.current = searchText;
+      search(searchText);
+    },
+    [search],
+  );
+
+  useEffect(() => {
+    setTransactionsQuery(baseTransactionsQuery());
+    if (searchTextRef.current !== '') {
+      search(searchTextRef.current);
+    }
+  }, [baseTransactionsQuery, search]);
 
   const onOpenTransaction = useCallback(
     (transaction: TransactionEntity) => {

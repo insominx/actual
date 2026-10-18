@@ -155,7 +155,8 @@ export function MobileNavTabs() {
     <NavTab key={tab.path} onClick={() => openDefault()} {...tab} />
   ));
 
-  const bufferTabsCount = COLUMN_COUNT - (navTabs.length % COLUMN_COUNT);
+  const bufferTabsCount =
+    (COLUMN_COUNT - (navTabs.length % COLUMN_COUNT)) % COLUMN_COUNT;
   const bufferTabs = Array.from({ length: bufferTabsCount }).map((_, idx) => (
     <div key={idx} style={navTabStyle} />
   ));

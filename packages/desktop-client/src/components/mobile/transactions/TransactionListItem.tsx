@@ -102,7 +102,7 @@ export function TransactionListItem({
   );
 
   const { longPressProps } = useLongPress({
-    accessibilityDescription: 'Long press to select multiple transactions',
+    accessibilityDescription: t('Long press to select multiple transactions'),
     onLongPress: () => {
       if (isPreview) {
         return;

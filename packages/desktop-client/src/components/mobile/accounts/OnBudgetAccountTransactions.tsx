@@ -141,7 +141,9 @@ function TransactionListWithPreviews() {
   return (
     <TransactionListWithBalances
       isLoading={
-        isSearching ? isTransactionsLoading : isPreviewTransactionsLoading
+        isSearching
+          ? isTransactionsLoading
+          : isTransactionsLoading || isPreviewTransactionsLoading
       }
       transactions={transactionsToDisplay}
       balance={balanceBindings.balance}

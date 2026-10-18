@@ -328,8 +328,6 @@ function SelectedTransactionsFloatingActionBar({
       .every(t => t.schedule);
   }, [transactions, selectedTransactions]);
 
-  const isMoreThanOne = selectedTransactions.size > 1;
-
   const { showUndoNotification } = useUndo();
   const {
     onBatchEdit,
@@ -456,8 +454,11 @@ function SelectedTransactionsFloatingActionBar({
             <SvgDelete width={10} height={10} />
           </Button>
           <Text style={styles.mediumText}>
-            {selectedTransactions.size}{' '}
-            {isMoreThanOne ? 'transactions' : 'transaction'} selected
+            {t('selected-transactions-count', {
+              count: selectedTransactions.size,
+              defaultValue_one: '{{count}} transaction selected',
+              defaultValue_other: '{{count}} transactions selected',
+            })}
           </Text>
         </View>
         <View
