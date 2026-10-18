@@ -44,12 +44,21 @@ export default {
     const payee = escapeRegExp(
       transaction.creditorName || transaction.debtorName || '',
     );
-    editedTrans.remittanceInformationUnstructured =
-      editedTrans.remittanceInformationUnstructured
-        .replace(/\s*(,)?\s+/g, '$1 ')
-        .replace(RegExp(payee.split(' ').join('(/*| )'), 'gi'), ' ')
-        .replace(', End-to-End-Ref.: NOTPROVIDED', '')
-        .trim();
+    // An empty payee would build an empty regex, which matches between every
+    // character and spaces out the whole text.
+    let cleaned = editedTrans.remittanceInformationUnstructured.replace(
+      /\s*(,)?\s+/g,
+      '$1 ',
+    );
+    if (payee) {
+      cleaned = cleaned.replace(
+        RegExp(payee.split(' ').join('(/*| )'), 'gi'),
+        ' ',
+      );
+    }
+    editedTrans.remittanceInformationUnstructured = cleaned
+      .replace(', End-to-End-Ref.: NOTPROVIDED', '')
+      .trim();
 
     return Fallback.normalizeTransaction(transaction, booked, editedTrans);
   },

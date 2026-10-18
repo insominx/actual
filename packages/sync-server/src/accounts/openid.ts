@@ -8,10 +8,7 @@ import {
   listLoginMethods,
 } from '#account-db';
 import { config } from '#load-config';
-import {
-  getUserByUsername,
-  transferAllFilesFromUser,
-} from '#services/user-service';
+import { transferAllFilesFromUser } from '#services/user-service';
 import { TOKEN_EXPIRATION_NEVER } from '#util/validate-user';
 
 import { checkPassword } from './password';
@@ -204,8 +201,9 @@ export async function loginWithOpenIdFinalize(body) {
     return { error: 'openid-setup-failed' };
   }
 
+  // The state is single-use: consume it so a replayed callback is rejected
   const pendingRequest = accountDb.first(
-    'SELECT code_verifier, return_url FROM pending_openid_requests WHERE state = ? AND expiry_time > ?',
+    'DELETE FROM pending_openid_requests WHERE state = ? AND expiry_time > ? RETURNING code_verifier, return_url',
     [body.state, Date.now()],
   );
 
@@ -276,9 +274,14 @@ export async function loginWithOpenIdFinalize(body) {
           );
 
           if (countUsersWithUserName === 0) {
-            const userFromPasswordMethod = getUserByUsername('');
+            // Files created under password login belong to the user with an
+            // empty name; hand them to the first OpenID admin. (getUserByUsername
+            // can't be used here: it rejects empty names and returns an id.)
+            const userFromPasswordMethod = accountDb.first(
+              "SELECT id FROM users WHERE user_name = ''",
+            );
             if (userFromPasswordMethod) {
-              transferAllFilesFromUser(userId, userFromPasswordMethod.user_id);
+              transferAllFilesFromUser(userId, userFromPasswordMethod.id);
             }
           }
         } else {

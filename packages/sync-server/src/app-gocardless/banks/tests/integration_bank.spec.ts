@@ -1,3 +1,6 @@
+import AmericanExpress from '#app-gocardless/banks/american_express_aesudef1';
+import Belfius from '#app-gocardless/banks/belfius_gkccbebb';
+import HypeHyeeit22 from '#app-gocardless/banks/hype_hyeeit22';
 import IntegrationBank from '#app-gocardless/banks/integration-bank';
 import type {
   Balance,
@@ -119,5 +122,88 @@ describe('IntegrationBank', () => {
       );
       expect(startingBalance).toEqual(70000);
     });
+  });
+});
+
+// Banks without a spec file of their own
+describe('HypeHyeeit22', () => {
+  const p2p = (remittanceInformationUnstructured: string) =>
+    HypeHyeeit22.normalizeTransaction(
+      {
+        transactionAmount: { amount: '-1.00', currency: 'EUR' },
+        proprietaryBankTransactionCode: 'p2p',
+        remittanceInformationUnstructured,
+        bookingDate: '2024-09-21',
+      },
+      true,
+    );
+
+  it('keeps only the payment info of a p2p transfer', () => {
+    expect(p2p('DENARO INVIATO A Mario - pizza')?.notes).toEqual('pizza');
+  });
+
+  it('decodes escaped unicode code units, including surrogate pairs', () => {
+    expect(p2p('x - ciao \\U0041\\U0042 \\UD83D\\UDE00 fine')?.notes).toEqual(
+      'ciao AB \u{1F600} fine',
+    );
+  });
+
+  it('leaves malformed escapes untouched instead of throwing', () => {
+    expect(p2p('x - \\Uzzzz and \\U12 and \\U0041')?.notes).toEqual(
+      '\\Uzzzz and \\U12 and A',
+    );
+  });
+});
+
+describe('BelfiusGkccbebb #normalizeTransaction', () => {
+  const base = {
+    transactionAmount: { amount: '-1.00', currency: 'EUR' },
+    bookingDate: '2024-09-21',
+  };
+
+  it('uses the internal transaction id when present', () => {
+    const result = Belfius.normalizeTransaction(
+      { ...base, transactionId: 'dup', internalTransactionId: 'unique' },
+      true,
+    );
+
+    expect(result?.transactionId).toEqual('unique');
+  });
+
+  it('keeps the original transaction id when there is no internal one', () => {
+    const result = Belfius.normalizeTransaction(
+      { ...base, transactionId: 'original' },
+      true,
+    );
+
+    expect(result?.transactionId).toEqual('original');
+  });
+});
+
+describe('AmericanExpressAesudef1 #normalizeAccount', () => {
+  const base = {
+    id: 'account-id',
+    institution_id: 'AMERICAN_EXPRESS_AESUDEF1',
+    institution: { name: 'American Express' },
+    details: 'Gold Card',
+    currency: 'EUR',
+  };
+
+  it('uses the last five characters of the masked PAN', () => {
+    const account = AmericanExpress.normalizeAccount({
+      ...base,
+      iban: 'XXXXXXXXXX12345',
+    } as never);
+
+    expect(account.mask).toEqual('12345');
+    expect(account.iban).toBeNull();
+    expect(account.name).toEqual('Gold Card (12345)');
+  });
+
+  it('does not throw when the bank provides no masked PAN', () => {
+    const account = AmericanExpress.normalizeAccount(base as never);
+
+    expect(account.mask).toEqual('');
+    expect(account.name).toEqual('Gold Card');
   });
 });

@@ -138,7 +138,19 @@ describe('secretsService', () => {
     });
 
     afterEach(() => {
-      getAccountDb().mutate('DELETE FROM auth');
+      const db = getAccountDb();
+      db.mutate('DELETE FROM auth');
+      // Files created by these tests would otherwise keep their owners from
+      // being deleted by test files that run later (foreign key failure)
+      const fileIds = [
+        'shared-user-secret-file',
+        'owner-secret-file',
+        'owner-global-secret-file',
+      ];
+      for (const fileId of fileIds) {
+        db.mutate('DELETE FROM user_access WHERE file_id = ?', [fileId]);
+        db.mutate('DELETE FROM files WHERE id = ?', [fileId]);
+      }
     });
 
     it('returns 401 if the user is not authenticated', async () => {
@@ -151,6 +163,15 @@ describe('secretsService', () => {
         reason: 'unauthorized',
         status: 'error',
       });
+    });
+
+    it('returns 401 instead of a server error for a non-string body token', async () => {
+      const res = await request(app)
+        .post('/')
+        .send({ token: { $ne: null }, name: testSecretName, value: 'x' });
+
+      expect(res.statusCode).toEqual(401);
+      expect(res.body.reason).toEqual('unauthorized');
     });
 
     it('returns 404 if secret does not exist', async () => {
@@ -290,6 +311,45 @@ describe('secretsService', () => {
         details: 'Unknown secret name',
       });
     });
+
+    it.each(['constructor', 'toString', 'hasOwnProperty'])(
+      'POST returns 400 for the inherited object key %s',
+      async name => {
+        const res = await request(app)
+          .post('/')
+          .set('x-actual-token', 'valid-token')
+          .send({ name, value: 'whatever' });
+
+        expect(res.statusCode).toEqual(400);
+        expect(res.body.reason).toEqual('invalid-secret-name');
+        expect(secretsService.exists(name)).toBe(false);
+      },
+    );
+
+    it('POST returns 400 for a non-string secret name', async () => {
+      const res = await request(app)
+        .post('/')
+        .set('x-actual-token', 'valid-token')
+        .send({ name: [testSecretName], value: 'whatever' });
+
+      expect(res.statusCode).toEqual(400);
+      expect(res.body.reason).toEqual('invalid-secret-name');
+    });
+
+    it.each(['constructor', 'toString'])(
+      'GET and DELETE return 404 for the inherited object key %s',
+      async name => {
+        const getRes = await request(app)
+          .get(`/${name}`)
+          .set('x-actual-token', 'valid-token');
+        expect(getRes.statusCode).toEqual(404);
+
+        const deleteRes = await request(app)
+          .delete(`/${name}`)
+          .set('x-actual-token', 'valid-token');
+        expect(deleteRes.statusCode).toEqual(404);
+      },
+    );
 
     describe('when OpenID is the active auth method', () => {
       beforeEach(() => {

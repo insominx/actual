@@ -153,6 +153,20 @@ describe('Fortuneo', () => {
       ).toBeGreaterThan(0);
     });
 
+    it('only strips keywords that are whole words', () => {
+      const normalizedTransaction = Fortuneo.normalizeTransaction(
+        {
+          ...transactionsRaw[4],
+          remittanceInformationUnstructuredArray: [
+            'CARTE 03/07 VIRGIN MEGASTORE',
+          ],
+        },
+        true,
+      );
+
+      expect(normalizedTransaction?.payeeName).toBe('Virgin Megastore');
+    });
+
     it('extracts payee name from remittanceInformationUnstructured', () => {
       const transaction0 = transactionsRaw[0];
       const normalizedTransaction = Fortuneo.normalizeTransaction(

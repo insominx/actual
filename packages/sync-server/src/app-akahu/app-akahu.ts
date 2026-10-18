@@ -54,7 +54,8 @@ app.post(
     const userToken = secretsService.get(SecretName.akahu_userToken);
     const appToken = secretsService.get(SecretName.akahu_appToken);
 
-    const configured = userToken != null && appToken != null;
+    // Same test the other routes use: an empty stored secret is not usable
+    const configured = !!userToken && !!appToken;
 
     res.send({
       status: 'ok',

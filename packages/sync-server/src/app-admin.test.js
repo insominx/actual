@@ -220,6 +220,77 @@ describe('/admin', () => {
       });
     });
 
+    describe('role handling and input validation', () => {
+      let sessionUserId, sessionToken, createdUserId, fileId;
+
+      beforeEach(() => {
+        sessionUserId = uuidv4();
+        sessionToken = generateSessionToken();
+        createUser(sessionUserId, 'validationAdmin', ADMIN_ROLE);
+        createSession(sessionUserId, sessionToken);
+      });
+
+      afterEach(() => {
+        deleteUser(sessionUserId);
+        if (createdUserId) {
+          deleteUser(createdUserId);
+          createdUserId = null;
+        }
+        if (fileId) {
+          getAccountDb().mutate('DELETE FROM files WHERE id = ?', [fileId]);
+          fileId = null;
+        }
+      });
+
+      it('stores the role of a newly created user', async () => {
+        const res = await request(app)
+          .post('/users')
+          .send({ userName: 'roleUser', enabled: 1, role: ADMIN_ROLE })
+          .set('x-actual-token', sessionToken);
+
+        expect(res.statusCode).toEqual(200);
+        createdUserId = res.body.data.id;
+
+        const row = getAccountDb().first(
+          'SELECT role FROM users WHERE id = ?',
+          [createdUserId],
+        );
+        expect(row.role).toBe(ADMIN_ROLE);
+      });
+
+      it('rejects a delete request without an ids array', async () => {
+        const res = await request(app)
+          .delete('/users')
+          .send({})
+          .set('x-actual-token', sessionToken);
+
+        expect(res.statusCode).toEqual(400);
+        expect(res.body.reason).toBe('invalid-ids');
+      });
+
+      it('rejects transferring ownership to a user that does not exist', async () => {
+        fileId = uuidv4();
+        getAccountDb().mutate('INSERT INTO files (id, owner) VALUES (?, ?)', [
+          fileId,
+          sessionUserId,
+        ]);
+
+        const res = await request(app)
+          .post('/access/transfer-ownership')
+          .send({ fileId, newUserId: 'missing-user' })
+          .set('x-actual-token', sessionToken);
+
+        expect(res.statusCode).toEqual(400);
+        expect(res.body.reason).toBe('new-user-not-found');
+
+        const file = getAccountDb().first(
+          'SELECT owner FROM files WHERE id = ?',
+          [fileId],
+        );
+        expect(file.owner).toBe(sessionUserId);
+      });
+    });
+
     describe('PATCH /users', () => {
       let sessionUserId, testUserId, sessionToken;
 
@@ -255,6 +326,68 @@ describe('/admin', () => {
         expect(res.statusCode).toEqual(200);
         expect(res.body.status).toBe('ok');
         expect(res.body.data.id).toBe(testUserId);
+      });
+
+      describe('when the target is the server owner', () => {
+        let ownerId;
+
+        beforeEach(() => {
+          ownerId = uuidv4();
+          createUser(ownerId, 'serverOwner', ADMIN_ROLE, 1);
+        });
+
+        afterEach(() => {
+          deleteUser(ownerId);
+        });
+
+        const patchOwner = fields =>
+          request(app)
+            .patch('/users')
+            .send({
+              id: ownerId,
+              userName: 'serverOwner',
+              displayName: 'Owner',
+              enabled: true,
+              role: ADMIN_ROLE,
+              ...fields,
+            })
+            .set('x-actual-token', sessionToken);
+
+        it('should reject disabling the owner', async () => {
+          const res = await patchOwner({ enabled: false });
+
+          expect(res.statusCode).toEqual(400);
+          expect(res.body.reason).toBe('owner-must-stay-enabled-admin');
+          expect(
+            getAccountDb().first('SELECT enabled FROM users WHERE id = ?', [
+              ownerId,
+            ]).enabled,
+          ).toBe(1);
+        });
+
+        it('should reject demoting the owner', async () => {
+          const res = await patchOwner({ role: BASIC_ROLE });
+
+          expect(res.statusCode).toEqual(400);
+          expect(res.body.reason).toBe('owner-must-stay-enabled-admin');
+          expect(
+            getAccountDb().first('SELECT role FROM users WHERE id = ?', [
+              ownerId,
+            ]).role,
+          ).toBe(ADMIN_ROLE);
+        });
+
+        it('should still allow other edits to the owner', async () => {
+          const res = await patchOwner({ displayName: 'Renamed Owner' });
+
+          expect(res.statusCode).toEqual(200);
+          expect(
+            getAccountDb().first(
+              'SELECT display_name FROM users WHERE id = ?',
+              [ownerId],
+            ).display_name,
+          ).toBe('Renamed Owner');
+        });
       });
 
       it('should return 400 if the user does not exist', async () => {

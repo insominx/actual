@@ -1,7 +1,7 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 
-import { isAdmin } from './account-db';
+import { getUserInfo, isAdmin } from './account-db';
 import * as UserService from './services/user-service';
 import {
   errorMiddleware,
@@ -91,6 +91,7 @@ app.post('/users', validateSessionMiddleware, async (req, res) => {
     userName,
     displayName || null,
     enabled ? 1 : 0,
+    role,
   );
 
   res.status(200).send({ status: 'ok', data: { id: userId } });
@@ -137,6 +138,17 @@ app.patch('/users', validateSessionMiddleware, async (req, res) => {
     return;
   }
 
+  // The owner can't be deleted, so it must not be lockable out either
+  const userInDb = getUserInfo(userIdInDb);
+  if (userInDb?.owner === 1 && (!enabled || role !== 'ADMIN')) {
+    res.status(400).send({
+      status: 'error',
+      reason: 'owner-must-stay-enabled-admin',
+      details: 'The server owner must remain an enabled admin',
+    });
+    return;
+  }
+
   UserService.updateUserWithRole(
     userIdInDb,
     userName,
@@ -159,6 +171,15 @@ app.delete('/users', validateSessionMiddleware, async (req, res) => {
   }
 
   const { ids } = req.body || {};
+  if (!Array.isArray(ids)) {
+    res.status(400).send({
+      status: 'error',
+      reason: 'invalid-ids',
+      details: 'ids must be an array',
+    });
+    return;
+  }
+
   let totalDeleted = 0;
   ids.forEach(item => {
     const ownerId = UserService.getOwnerId();
@@ -309,6 +330,15 @@ app.delete('/access', (req, res) => {
   }
 
   const { ids } = req.body || {};
+  if (!Array.isArray(ids) || ids.length === 0) {
+    res.status(400).send({
+      status: 'error',
+      reason: 'invalid-ids',
+      details: 'ids must be a non-empty array',
+    });
+    return;
+  }
+
   const totalDeleted = UserService.deleteUserAccessByFileId(ids, fileId);
 
   if (ids.length === totalDeleted) {
@@ -399,7 +429,7 @@ app.post(
     }
 
     const newUserIdFromDb = UserService.getUserById(newUserOwner.newUserId);
-    if (newUserIdFromDb === 0) {
+    if (!newUserIdFromDb) {
       res.status(400).send({
         status: 'error',
         reason: 'new-user-not-found',

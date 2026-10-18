@@ -246,6 +246,17 @@ app.post('/user-create-key', (req, res) => {
     return;
   }
 
+  // Missing fields would be skipped by the update, leaving a key that only
+  // partly matches the previous one while still reporting success
+  if (
+    typeof keyId !== 'string' ||
+    typeof keySalt !== 'string' ||
+    typeof testContent !== 'string'
+  ) {
+    res.status(400).send('keyId, keySalt and testContent are required');
+    return;
+  }
+
   filesService.update(
     file.id,
     new FileUpdate({
@@ -303,7 +314,14 @@ app.post('/upload-user-file', async (req, res) => {
     return;
   }
 
-  const name = decodeURIComponent(req.headers['x-actual-name']);
+  let name: string;
+  try {
+    name = decodeURIComponent(req.headers['x-actual-name']);
+  } catch {
+    // A malformed escape sequence is a client error, not a server failure
+    res.status(400).send('invalid x-actual-name');
+    return;
+  }
   const fileId = req.headers['x-actual-file-id'];
 
   if (!fileId || typeof fileId !== 'string') {
@@ -533,6 +551,13 @@ app.post('/update-user-filename', (req, res) => {
   if (fileAccessError) {
     res.status(403);
     res.send(fileAccessError);
+    return;
+  }
+
+  // A missing name would otherwise be a silent no-op reported as success, and
+  // a non-string would fail inside the database layer with a 500
+  if (typeof name !== 'string' || !name.trim()) {
+    res.status(400).send('invalid name');
     return;
   }
 

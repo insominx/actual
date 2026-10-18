@@ -27,7 +27,8 @@ export default {
     ).join(' ');
     const amount = transaction.transactionAmount.amount;
 
-    const regex = new RegExp(keywordsToRemove.join('|'), 'g');
+    // Whole words only: "VIR" must not be stripped out of e.g. "VIRGIN"
+    const regex = new RegExp(`\\b(?:${keywordsToRemove.join('|')})\\b`, 'g');
     const payeeName = details.replace(regex, '').trim();
 
     // The amount is negative for outgoing transactions, positive for incoming transactions.

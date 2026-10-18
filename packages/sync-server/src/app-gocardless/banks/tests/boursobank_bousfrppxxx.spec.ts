@@ -153,6 +153,7 @@ describe('BoursoBank', () => {
         'Prêt bancaire',
         'ECH PRET:1823918329832913',
       ],
+      [[], '', ''],
       [['PAYEE NAME 411'], 'Payee Name', ''],
       [['PAYEE NAME\\PARIS\\ FR'], 'Payee Name', ''],
       [['PAYEE NAME 1\\PARIS\\ FR'], 'Payee Name', ''],

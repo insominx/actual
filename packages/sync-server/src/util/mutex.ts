@@ -8,7 +8,11 @@ export const createMutex = (): (<A>(
       mutex = mutex.finally(() => {
         try {
           return operation().then(resolve, reject);
-        } catch {}
+        } catch (error) {
+          // A synchronous throw would otherwise leave the caller waiting on
+          // a promise that never settles
+          reject(error);
+        }
       });
     });
 };

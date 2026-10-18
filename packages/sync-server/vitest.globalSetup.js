@@ -65,6 +65,13 @@ export async function setup() {
 
   await runMigrations();
 
+  // A previous run that was interrupted before teardown leaves these fixture
+  // users behind, which would make the inserts below fail on the primary key
+  getAccountDb().mutate('DELETE FROM users WHERE id IN (?, ?)', [
+    GENERIC_ADMIN_ID,
+    GENERIC_USER_ID,
+  ]);
+
   createUser(GENERIC_ADMIN_ID, 'admin', ADMIN_ROLE_ID, 1);
 
   // Insert a fake "valid-token" fixture that can be reused

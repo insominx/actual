@@ -34,5 +34,22 @@ describe('kbc_kredbebb', () => {
         'CARREFOUR ST GIL BE1060 BRUXELLES',
       );
     });
+
+    it.each([['-10.99'], ['10.99']])(
+      'falls back to the shared payee formatting instead of "undefined" when the amount is %s and no payee info exists',
+      amount => {
+        const transaction = {
+          transactionAmount: { amount, currency: 'EUR' },
+          creditorAccount: { iban: 'BE68539007547034' },
+          debtorAccount: { iban: 'BE68539007547034' },
+          date: new Date().toISOString(),
+        };
+        const normalizedTransaction = KBCkredbebb.normalizeTransaction(
+          transaction,
+          true,
+        );
+        expect(normalizedTransaction?.payeeName).toEqual('(BE68 XXX 7034)');
+      },
+    );
   });
 });

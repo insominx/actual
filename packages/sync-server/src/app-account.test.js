@@ -349,6 +349,25 @@ describe('/server-prefs', () => {
       });
     });
 
+    it('should return 400 for an array or non-string pref values', async () => {
+      for (const prefs of [
+        ['a', 'b'],
+        { 'flags.plugins': true },
+        { 'flags.plugins': { nested: 'x' } },
+      ]) {
+        const res = await request(app)
+          .post('/server-prefs')
+          .set('x-actual-token', adminSessionToken)
+          .send({ prefs });
+
+        expect(res.statusCode).toEqual(400);
+        expect(res.body).toEqual({
+          status: 'error',
+          reason: 'invalid-prefs',
+        });
+      }
+    });
+
     it('should return 200 and save server preferences for admin user', async () => {
       const prefs = { 'flags.plugins': 'true' };
 

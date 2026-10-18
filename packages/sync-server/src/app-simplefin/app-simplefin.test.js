@@ -265,5 +265,20 @@ describe('app-simplefin', () => {
       expect(res.body.data.error_code).toBe('INVALID_ACCESS_TOKEN');
       expect(global.fetch).not.toHaveBeenCalled();
     });
+
+    it('reports a missing account when the bridge response has no accounts list', async () => {
+      secretsService.set(SecretName.simplefin_accessKey, VALID_ACCESS_KEY);
+      mockFetch({
+        accounts: okResponse(JSON.stringify({ errors: ['Something broke'] })),
+      });
+
+      const res = await post('/transactions').send({
+        accountId: 'account-1',
+        startDate: '2026-07-01',
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data.error_code).toBe('ACCOUNT_MISSING');
+    });
   });
 });

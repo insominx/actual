@@ -15,7 +15,8 @@ const ARGON2_OPTIONS = {
 };
 
 export function isValidPassword(password) {
-  return password != null && password !== '';
+  // A non-string (e.g. from a JSON request body) would make argon2 throw
+  return typeof password === 'string' && password !== '';
 }
 
 export function hashPassword(password) {
@@ -114,10 +115,9 @@ export async function loginWithPassword(password) {
       [userId, '', '', 'ADMIN'],
     );
   } else {
-    const { id: userIdFromDb } = accountDb.first(
-      'SELECT id FROM users WHERE user_name = ?',
-      [''],
-    );
+    // `first` returns null when no password-login user exists
+    const { id: userIdFromDb } =
+      accountDb.first('SELECT id FROM users WHERE user_name = ?', ['']) || {};
 
     userId = userIdFromDb;
 

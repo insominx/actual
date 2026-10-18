@@ -169,8 +169,9 @@ function logAccountError(results, accountId, data) {
 }
 
 function getAccountResponse(results, accountId, startDate) {
-  const account =
-    !results?.accounts || results.accounts.find(a => a.id === accountId);
+  // A response without an accounts list (for example one that only carries
+  // `errors`) means the account is missing; treating it as found crashed below
+  const account = results?.accounts?.find(a => a.id === accountId);
   if (!account) {
     console.log(
       `The account "${accountId}" was not found. Here were the accounts returned:`,
@@ -186,7 +187,7 @@ function getAccountResponse(results, accountId, startDate) {
     return;
   }
 
-  const needsAttention = results.sferrors.find(e =>
+  const needsAttention = (results.sferrors || []).find(e =>
     e.startsWith(`Connection to ${account.org.name} may need attention`),
   );
   if (needsAttention) {
@@ -198,7 +199,9 @@ function getAccountResponse(results, accountId, startDate) {
     });
   }
 
-  const startingBalance = parseInt(account.balance.replace('.', ''));
+  // SimpleFIN balances are numeric strings with any number of decimals
+  // (e.g. "100", "12.5"), so don't assume exactly two
+  const startingBalance = Math.round(parseFloat(account.balance) * 100);
   const date = getDate(new Date(account['balance-date'] * 1000));
 
   const balances = [

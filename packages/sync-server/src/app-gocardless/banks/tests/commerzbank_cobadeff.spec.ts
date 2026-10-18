@@ -129,5 +129,24 @@ describe('CommerzbankCobadeff', () => {
       );
       expect(normalizedTransaction?.notes).toEqual('Example');
     });
+
+    it('leaves the text intact when there is no creditor or debtor name', () => {
+      const transaction = {
+        bookingDate: '2025-04-18',
+        valueDate: '2025-04-18',
+        transactionAmount: {
+          amount: '-1',
+          currency: 'EUR',
+        },
+        remittanceInformationUnstructured: 'Miete Januar',
+        remittanceInformationUnstructuredArray: ['Miete Januar'],
+        internalTransactionId: '3815213adb654baeadfb231c853',
+      };
+      const normalizedTransaction = CommerzbankCobadeff.normalizeTransaction(
+        transaction,
+        false,
+      );
+      expect(normalizedTransaction?.notes).toEqual('Miete Januar');
+    });
   });
 });

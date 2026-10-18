@@ -22,7 +22,7 @@ export default {
      */
     editedTrans.remittanceInformationUnstructured = (
       transaction.remittanceInformationUnstructured ?? ''
-    ).replace('\nEndToEndID: NOTPROVIDED', '');
+    ).replaceAll('\nEndToEndID: NOTPROVIDED', '');
 
     return Fallback.normalizeTransaction(transaction, booked, editedTrans);
   },

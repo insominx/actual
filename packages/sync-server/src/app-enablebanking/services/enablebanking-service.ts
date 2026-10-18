@@ -239,7 +239,9 @@ export function normalizeTransaction(
   // Normalize amount based on credit/debit indicator.
   // When indicator is present, strip existing sign and apply the correct one.
   // When absent, preserve the original sign from the bank.
-  const trimmedAmount = tx.transaction_amount.amount.trim();
+  // A malformed record (missing or numeric amount) must reach the importable
+  // check and be skipped, not throw and abort the whole sync
+  const trimmedAmount = String(tx.transaction_amount?.amount ?? '').trim();
   let signedAmount: string;
   if (tx.credit_debit_indicator === 'DBIT') {
     signedAmount = '-' + trimmedAmount.replace(/^[+-]/, '');
@@ -257,7 +259,7 @@ export function normalizeTransaction(
     valueDate,
     transactionAmount: {
       amount: signedAmount,
-      currency: tx.transaction_amount.currency,
+      currency: tx.transaction_amount?.currency,
     },
     payeeName,
     notes: remittanceInformationUnstructured,
@@ -278,7 +280,7 @@ const IMPORTABLE_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 export function isImportableTransaction(tx: BankSyncTransaction): boolean {
   // Trim and reject empty amounts explicitly: Number('') is 0 (finite), so an
   // empty/whitespace amount would otherwise slip through as a zero transaction.
-  const amount = tx.transactionAmount.amount.trim();
+  const amount = String(tx.transactionAmount.amount ?? '').trim();
   return (
     IMPORTABLE_DATE_REGEX.test(tx.date) &&
     amount !== '' &&

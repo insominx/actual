@@ -203,7 +203,8 @@ app.post(
 
         const transactionDate = trans.date;
 
-        if (transactionDate < startDate && !trans.sandbox) {
+        // Date < string coerces the string to NaN, so this must compare dates
+        if (transactionDate < new Date(startDate) && !trans.sandbox) {
           continue;
         }
 

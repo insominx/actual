@@ -21,7 +21,10 @@ export default {
       (transaction.remittanceInformationUnstructured ?? '').startsWith('ΑΓΟΡΑ ')
     ) {
       transaction.transactionAmount = {
-        amount: '-' + transaction.transactionAmount.amount,
+        // Don't double the sign if the bank starts sending it
+        amount: transaction.transactionAmount.amount.startsWith('-')
+          ? transaction.transactionAmount.amount
+          : '-' + transaction.transactionAmount.amount,
         currency: transaction.transactionAmount.currency,
       };
       editedTrans.remittanceInformationUnstructured = (

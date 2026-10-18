@@ -14,7 +14,9 @@ export function validateSession(req: Request, res: Response) {
     token = req.headers['x-actual-token'];
   }
 
-  const session = getSession(token);
+  // A non-string token (e.g. an object in a JSON body) can't be bound to the
+  // query and would surface as a server error instead of a 401
+  const session = typeof token === 'string' ? getSession(token) : null;
 
   if (!session) {
     res.status(401);

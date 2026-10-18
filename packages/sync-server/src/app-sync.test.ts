@@ -284,6 +284,30 @@ describe('/user-create-key', () => {
     expect(rows[0].encrypt_test).toEqual(encrypt_test);
   });
 
+  it('rejects a partial key and leaves the existing key untouched', async () => {
+    const fileId = crypto.randomBytes(16).toString('hex');
+    getAccountDb().mutate(
+      'INSERT INTO files (id, encrypt_salt, encrypt_keyid, encrypt_test, owner) VALUES (?, ?, ?, ?, ?)',
+      [fileId, 'old-salt', 'old-key', 'old-test', 'genericAdmin'],
+    );
+
+    const res = await request(app)
+      .post('/user-create-key')
+      .set('x-actual-token', 'valid-token-admin')
+      .send({ fileId, keyId: 'half-key' });
+
+    expect(res.statusCode).toEqual(400);
+    const row = getAccountDb().first(
+      'SELECT encrypt_salt, encrypt_keyid, encrypt_test FROM files WHERE id = ?',
+      [fileId],
+    );
+    expect(row).toEqual({
+      encrypt_salt: 'old-salt',
+      encrypt_keyid: 'old-key',
+      encrypt_test: 'old-test',
+    });
+  });
+
   it('returns 403 when a shared user (user_access only) tries to create a key on a file owned by someone else', async () => {
     const fileId = crypto.randomBytes(16).toString('hex');
     getAccountDb().mutate(
@@ -485,6 +509,18 @@ describe('/reset-user-file', () => {
 });
 
 describe('/upload-user-file', () => {
+  it('returns 400 for a malformed percent-encoded file name', async () => {
+    const res = await request(app)
+      .post('/upload-user-file')
+      .set('x-actual-token', 'valid-token')
+      .set('x-actual-file-id', 'bad-name-file')
+      .set('x-actual-name', '%E0%A4%A')
+      .send(Buffer.from('content'));
+
+    expect(res.statusCode).toBe(400);
+    expect(res.text).toBe('invalid x-actual-name');
+  });
+
   it('returns 401 if the user is not authenticated', async () => {
     const res = await request(app).post('/upload-user-file');
 
@@ -1029,6 +1065,29 @@ describe('/update-user-filename', () => {
     ]);
 
     expect(rows[0].name).toEqual(newName);
+  });
+
+  it('rejects a missing, blank or non-string name', async () => {
+    const fileId = crypto.randomBytes(16).toString('hex');
+    getAccountDb().mutate(
+      'INSERT INTO files (id, name, deleted) VALUES (?, ?, FALSE)',
+      [fileId, 'keep-me'],
+    );
+
+    for (const name of [undefined, '', '   ', 42, { a: 1 }]) {
+      const res = await request(app)
+        .post('/update-user-filename')
+        .set('x-actual-token', 'valid-token')
+        .send({ fileId, name });
+
+      expect(res.statusCode).toEqual(400);
+      expect(res.text).toBe('invalid name');
+    }
+
+    const rows = getAccountDb().all('SELECT name FROM files WHERE id = ?', [
+      fileId,
+    ]);
+    expect(rows[0].name).toEqual('keep-me');
   });
 
   it('returns 403 when non-owner renames another user file', async () => {

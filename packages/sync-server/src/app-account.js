@@ -175,7 +175,14 @@ app.post('/server-prefs', (req, res) => {
 
   const { prefs } = req.body || {};
 
-  if (!prefs || typeof prefs !== 'object') {
+  // Server prefs are a flat map of string values. Arrays would be stored under
+  // their indexes and nested values cannot be bound to the database at all.
+  if (
+    !prefs ||
+    typeof prefs !== 'object' ||
+    Array.isArray(prefs) ||
+    Object.values(prefs).some(value => typeof value !== 'string')
+  ) {
     res.status(400).send({ status: 'error', reason: 'invalid-prefs' });
     return;
   }

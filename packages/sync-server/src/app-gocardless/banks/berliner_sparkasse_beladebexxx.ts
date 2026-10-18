@@ -27,8 +27,11 @@ export default {
     }
 
     if (transaction.additionalInformation) {
-      remittanceInformationUnstructured +=
-        ' ' + transaction.additionalInformation;
+      remittanceInformationUnstructured = remittanceInformationUnstructured
+        ? remittanceInformationUnstructured +
+          ' ' +
+          transaction.additionalInformation
+        : transaction.additionalInformation;
     }
 
     const usefulCreditorName =

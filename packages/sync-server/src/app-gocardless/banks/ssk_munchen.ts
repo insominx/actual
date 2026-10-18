@@ -25,8 +25,11 @@ export default {
         transaction.remittanceInformationStructuredArray?.join(' ');
     }
     if (transaction.additionalInformation) {
-      remittanceInformationUnstructured +=
-        ' ' + transaction.additionalInformation;
+      remittanceInformationUnstructured = remittanceInformationUnstructured
+        ? remittanceInformationUnstructured +
+          ' ' +
+          transaction.additionalInformation
+        : transaction.additionalInformation;
     }
     const usefulCreditorName =
       transaction.ultimateCreditor ||

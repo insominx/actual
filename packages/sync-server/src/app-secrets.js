@@ -16,6 +16,11 @@ app.use(express.json());
 app.use(requestLoggerMiddleware);
 app.use(validateSessionMiddleware);
 
+// `in` would also accept inherited keys such as "constructor" or "toString"
+function isSecretName(name) {
+  return typeof name === 'string' && Object.hasOwn(SecretName, name);
+}
+
 // Global secrets are admin-managed.
 function canManageGlobalSecrets(userId) {
   return isAdmin(userId);
@@ -38,7 +43,7 @@ app.post('/', async (req, res) => {
   const fileId = req.get('X-Actual-File-Id');
   const perBudgetFile = fileId != null;
 
-  if (!(name in SecretName)) {
+  if (!isSecretName(name)) {
     res.status(400).send({
       status: 'error',
       reason: 'invalid-secret-name',
@@ -85,7 +90,7 @@ app.delete('/:name', async (req, res) => {
   const fileId = req.get('X-Actual-File-Id');
   const perBudgetFile = fileId != null;
 
-  if (!(name in SecretName)) {
+  if (!isSecretName(name)) {
     res.status(404).send('key not found');
     return;
   }
@@ -132,7 +137,7 @@ app.get('/:name', async (req, res) => {
   const fileId = req.get('X-Actual-File-Id');
   const perBudgetFile = fileId != null;
 
-  if (!(name in SecretName)) {
+  if (!isSecretName(name)) {
     res.status(404).send('key not found');
     return;
   }

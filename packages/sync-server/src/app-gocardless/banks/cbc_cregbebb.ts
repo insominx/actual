@@ -14,11 +14,14 @@ export default {
   normalizeTransaction(transaction, booked) {
     const editedTrans = { ...transaction };
 
+    // When nothing usable is found, leave payeeName unset so the shared
+    // formatPayeeName fallback applies instead of booking a payee literally
+    // called "undefined"
     if (Number(transaction.transactionAmount.amount) > 0) {
       editedTrans.payeeName =
         transaction.debtorName ||
         transaction.remittanceInformationUnstructured ||
-        'undefined';
+        undefined;
     } else {
       editedTrans.payeeName =
         transaction.creditorName ||
@@ -26,7 +29,7 @@ export default {
           transaction.remittanceInformationUnstructured ?? '',
           ['Paiement', 'Domiciliation', 'Transfert', 'Ordre permanent'],
         ) ||
-        'undefined';
+        undefined;
     }
 
     return Fallback.normalizeTransaction(transaction, booked, editedTrans);

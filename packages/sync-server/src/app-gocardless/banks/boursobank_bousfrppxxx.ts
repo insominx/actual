@@ -85,7 +85,7 @@ export default {
       editedTrans.notes = match.replace(regexTransfer, '');
     } else {
       // Unknown transaction type
-      editedTrans.payeeName = title(infoArray[0].replace(/ \d+$/, ''));
+      editedTrans.payeeName = title((infoArray[0] ?? '').replace(/ \d+$/, ''));
       editedTrans.notes = infoArray.slice(1).join(' ');
     }
 

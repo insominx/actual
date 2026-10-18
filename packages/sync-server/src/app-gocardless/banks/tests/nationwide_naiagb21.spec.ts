@@ -41,6 +41,29 @@ describe('Nationwide', () => {
       ).toBeLessThan(d.getTime());
     });
 
+    it('does not throw for a pending transaction without a booking date', () => {
+      const transaction = {
+        valueDate: '2024-01-02',
+        transactionAmount: mockTransactionAmount,
+      };
+
+      const normalizedTransaction = Nationwide.normalizeTransaction(
+        transaction,
+        false,
+      );
+
+      expect(normalizedTransaction?.date).toBe('2024-01-02');
+    });
+
+    it('drops a pending transaction that has no date at all', () => {
+      const normalizedTransaction = Nationwide.normalizeTransaction(
+        { transactionAmount: mockTransactionAmount },
+        false,
+      );
+
+      expect(normalizedTransaction).toBeNull();
+    });
+
     it('keeps transactionId if in the correct format', () => {
       const transactionId = 'a896729bb8b30b5ca862fe70bd5967185e2b5d3a';
       const transaction = {

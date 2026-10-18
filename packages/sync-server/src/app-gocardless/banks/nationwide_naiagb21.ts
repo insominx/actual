@@ -15,13 +15,14 @@ export default {
     // ahead/behind and the transactionID from Nationwide changes when a
     // transaction is booked
     if (!booked) {
-      const useDate = new Date(
-        Math.min(
-          new Date(transaction.bookingDate ?? '').getTime(),
-          new Date().getTime(),
-        ),
-      );
-      editedTrans.date = useDate.toISOString().slice(0, 10);
+      const bookingTime = new Date(transaction.bookingDate ?? '').getTime();
+      // Without a usable booking date there is nothing to clamp; leave the
+      // date to the fallback (value date, ...) instead of throwing on an
+      // invalid date, which would abort the whole account sync.
+      if (!Number.isNaN(bookingTime)) {
+        const useDate = new Date(Math.min(bookingTime, new Date().getTime()));
+        editedTrans.date = useDate.toISOString().slice(0, 10);
+      }
     }
 
     // Nationwide also occasionally returns erroneous transaction_ids

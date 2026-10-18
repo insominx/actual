@@ -68,6 +68,22 @@ describe('isValidPassword', () => {
   it('accepts a non-empty password', () => {
     expect(isValidPassword('hunter2')).toBe(true);
   });
+
+  it('rejects non-string passwords', () => {
+    expect(isValidPassword(123)).toBe(false);
+    expect(isValidPassword(true)).toBe(false);
+    expect(isValidPassword({ password: 'hunter2' })).toBe(false);
+    expect(isValidPassword(['hunter2'])).toBe(false);
+  });
+
+  it('reports non-string passwords as invalid instead of throwing', async () => {
+    expect(await bootstrapPassword(123)).toEqual({ error: 'invalid-password' });
+    expect(await changePassword({})).toEqual({ error: 'invalid-password' });
+    expect(await loginWithPassword(true)).toEqual({
+      error: 'invalid-password',
+    });
+    expect(await checkPassword(['x'])).toBe(false);
+  });
 });
 
 describe('hashPassword / verifyPassword', () => {
@@ -125,6 +141,23 @@ describe('loginWithPassword legacy hash upgrade', () => {
     expect(result.error).toBe('invalid-password');
     expect(result.token).toBeUndefined();
     expect(getStoredPasswordHash()).toBe(legacy);
+  });
+
+  it('reports user-not-found when no password-login user exists', async () => {
+    setPasswordHash(await hashPassword('correct horse'));
+    const db = getAccountDb();
+    // Users exist, but every one of them has a name (e.g. OpenID users)
+    db.mutate("UPDATE users SET user_name = 'named-user' WHERE user_name = ''");
+
+    try {
+      expect(await loginWithPassword('correct horse')).toEqual({
+        error: 'user-not-found',
+      });
+    } finally {
+      db.mutate(
+        "UPDATE users SET user_name = '' WHERE user_name = 'named-user'",
+      );
+    }
   });
 
   it('does not rehash an existing argon2id hash on login', async () => {

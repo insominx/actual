@@ -43,26 +43,19 @@ export default {
      * the code below assumes this is always the case
      */
     if (transaction.proprietaryBankTransactionCode === 'p2p') {
-      let str = transaction.remittanceInformationUnstructured ?? '';
-      let idx = str.indexOf('\\U');
-      let start_idx = idx;
-      let codepoints = [];
-      while (idx !== -1) {
-        codepoints.push(parseInt(str.slice(idx + 2, idx + 6), 16));
-        const next_idx = str.indexOf('\\U', idx + 6);
-        if (next_idx === idx + 6) {
-          idx = next_idx;
-          continue;
-        }
-        str =
-          str.slice(0, start_idx) +
-          String.fromCodePoint(...codepoints) +
-          str.slice(idx + 6);
-        codepoints = [];
-        idx = str.indexOf('\\U'); // slight inefficiency?
-        start_idx = idx;
-      }
-      editedTrans.remittanceInformationUnstructured = str;
+      // Only well-formed escapes are decoded: user-typed text such as a
+      // literal "\Uzzzz" has no code point and used to throw a RangeError
+      // Decode the already-trimmed text: reading the original here would
+      // discard the payment-info extraction above
+      editedTrans.remittanceInformationUnstructured = (
+        editedTrans.remittanceInformationUnstructured ?? ''
+      ).replace(/(?:\\U[0-9a-fA-F]{4})+/g, run =>
+        String.fromCharCode(
+          ...Array.from({ length: run.length / 6 }, (_, i) =>
+            parseInt(run.slice(i * 6 + 2, i * 6 + 6), 16),
+          ),
+        ),
+      );
     }
 
     editedTrans.date = transaction.valueDate || transaction.bookingDate;

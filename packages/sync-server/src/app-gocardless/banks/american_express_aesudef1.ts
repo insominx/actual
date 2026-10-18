@@ -9,13 +9,14 @@ export default {
   institutionIds: ['AMERICAN_EXPRESS_AESUDEF1'],
 
   normalizeAccount(account) {
+    // The `iban` field for these American Express cards is actually a masked
+    // version of the PAN.  No IBAN is provided.
+    const mask = (account.iban ?? '').slice(-5);
     return {
       ...Fallback.normalizeAccount(account),
-      // The `iban` field for these American Express cards is actually a masked
-      // version of the PAN.  No IBAN is provided.
-      mask: account.iban.slice(-5),
+      mask,
       iban: null,
-      name: [account.details, `(${account.iban.slice(-5)})`].join(' '),
+      name: [account.details, mask && `(${mask})`].filter(Boolean).join(' '),
       official_name: account.details ?? '',
     };
   },

@@ -10,7 +10,10 @@ export default {
   // This is not expected and the nordigen api has a work-around for some backs
   // They will set an internalTransactionId which is unique
   normalizeTransaction(transaction, booked) {
-    transaction.transactionId = transaction.internalTransactionId;
+    // Keep the original id when no internal one is provided; overwriting it
+    // with undefined would leave the transaction without an import id
+    transaction.transactionId =
+      transaction.internalTransactionId ?? transaction.transactionId;
 
     return Fallback.normalizeTransaction(transaction, booked);
   },
