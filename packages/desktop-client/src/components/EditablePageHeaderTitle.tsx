@@ -32,7 +32,7 @@ export function EditablePageHeaderTitle({
       setTitle(newValue || initialTitle);
       setIsEditing(false);
     },
-    [onSave],
+    [onSave, initialTitle],
   );
 
   if (isEditing) {
