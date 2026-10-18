@@ -59,8 +59,9 @@ export function SidebarBudgetName() {
           style={{ fontSize: 13, fontWeight: 600 }}
           defaultValue={budgetName}
           onEnter={newBudgetName => {
-            if (newBudgetName.trim() !== '') {
-              setBudgetNamePref(newBudgetName);
+            const trimmedName = newBudgetName.trim();
+            if (trimmedName !== '') {
+              setBudgetNamePref(trimmedName);
               setIsEditing(false);
             }
           }}

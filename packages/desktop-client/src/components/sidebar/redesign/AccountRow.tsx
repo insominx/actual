@@ -177,9 +177,10 @@ export function AccountRow({
                     defaultValue={account.name}
                     onKeyDown={e => e.stopPropagation()}
                     onEnter={newAccountName => {
-                      if (newAccountName.trim() !== '') {
+                      const trimmedName = newAccountName.trim();
+                      if (trimmedName !== '') {
                         updateAccount.mutate({
-                          account: { id: account.id, name: newAccountName },
+                          account: { id: account.id, name: trimmedName },
                         });
                       }
                       setIsEditing(false);

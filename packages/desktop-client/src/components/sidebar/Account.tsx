@@ -239,11 +239,12 @@ export function Account<FieldName extends SheetFields<'account'>>({
                       }}
                       onBlur={() => setIsEditing(false)}
                       onEnter={newAccountName => {
-                        if (newAccountName.trim() !== '') {
+                        const trimmedName = newAccountName.trim();
+                        if (trimmedName !== '') {
                           updateAccount.mutate({
                             account: {
                               ...account,
-                              name: newAccountName,
+                              name: trimmedName,
                             },
                           });
                         }

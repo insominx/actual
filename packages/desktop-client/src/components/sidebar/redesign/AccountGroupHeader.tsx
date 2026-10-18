@@ -154,8 +154,9 @@ export function AccountGroupHeader({
                   defaultValue={group.name}
                   onKeyDown={e => e.stopPropagation()}
                   onEnter={newGroupName => {
-                    if (newGroupName.trim() !== '') {
-                      updateGroup.mutate({ id: group.id, name: newGroupName });
+                    const trimmedName = newGroupName.trim();
+                    if (trimmedName !== '') {
+                      updateGroup.mutate({ id: group.id, name: trimmedName });
                     }
                     setIsEditing(false);
                   }}
