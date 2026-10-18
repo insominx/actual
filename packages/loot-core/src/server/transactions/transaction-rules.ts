@@ -493,6 +493,11 @@ function conditionSpecialCases(cond: Condition | null): Condition | null {
 }
 
 // This does the inverse: finds all the transactions matching a rule
+// `%`, `?` and `\` are wildcards/escapes in the LIKE implementation
+function escapeLikeValue(value: string) {
+  return value.replace(/[\\%?]/g, '\\$&');
+}
+
 export function conditionsToAQL(
   conditions,
   { recurDateBounds = 100, applySpecialCases = true } = {},
@@ -671,7 +676,7 @@ export function conditionsToAQL(
         return apply(
           type === 'id' ? field + '.name' : field,
           '$like',
-          '%' + value + '%',
+          '%' + escapeLikeValue(value) + '%',
         );
       case 'matches':
         // Running contains with id will automatically reach into
@@ -689,7 +694,7 @@ export function conditionsToAQL(
         return apply(
           type === 'id' ? field + '.name' : field,
           '$notlike',
-          '%' + value + '%',
+          '%' + escapeLikeValue(value) + '%',
         );
       case 'oneOf':
         const values = value;

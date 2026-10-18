@@ -526,6 +526,37 @@ describe('Transaction rules', () => {
     expect(transaction.notes).toBe('bills-matched');
   });
 
+  test('contains and doesNotContain match LIKE wildcards literally', async () => {
+    await loadRules();
+    const account = await db.insertAccount({ name: 'bank' });
+    const notes = ['100% sure', '1000 sure', 'what?', 'whale', 'a\\b', 'ab'];
+    for (const [i, note] of notes.entries()) {
+      await db.insertTransaction({
+        id: String(i + 1),
+        date: '2020-10-01',
+        account,
+        notes: note,
+        amount: 100,
+      });
+    }
+
+    const ids = async (op, value) =>
+      (await getMatchingTransactions([{ field: 'notes', op, value }]))
+        .map(t => t.id)
+        .sort();
+
+    expect(await ids('contains', '100%')).toEqual(['1']);
+    expect(await ids('contains', 'what?')).toEqual(['3']);
+    expect(await ids('contains', 'a\\b')).toEqual(['5']);
+    expect(await ids('doesNotContain', 'what?')).toEqual([
+      '1',
+      '2',
+      '4',
+      '5',
+      '6',
+    ]);
+  });
+
   test('transactions can be queried by rule', async () => {
     await loadRules();
     const account = await db.insertAccount({ name: 'bank' });
