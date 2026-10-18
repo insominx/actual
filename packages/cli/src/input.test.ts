@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
+import { AgentError } from './agent-output';
 import { readJsonInput } from './input';
 
 const dir = mkdtempSync(join(tmpdir(), 'actual-input-test-'));
@@ -36,6 +37,18 @@ describe('readJsonInput', () => {
         ]),
       ),
     ).toThrow(/not valid UTF-8/);
+  });
+
+  it('reports malformed JSON and unreadable files as invalid input', () => {
+    expect(() => readJsonInput({ data: '{"a":' })).toThrow(AgentError);
+    expect(() => readJsonInput({ data: '{"a":' })).toThrow(/not valid JSON/);
+    try {
+      readJsonInput({ file: join(dir, 'missing.json') });
+      throw new Error('expected readJsonInput to throw');
+    } catch (error) {
+      expect(error).toBeInstanceOf(AgentError);
+      expect((error as AgentError).code).toBe('INVALID_INPUT');
+    }
   });
 
   it('refuses lone surrogates in values and keys but keeps real pairs', () => {

@@ -43,7 +43,13 @@ function assertWellFormed(value: unknown) {
 }
 
 function parseInput(text: string) {
-  const value: unknown = JSON.parse(text);
+  let value: unknown;
+  try {
+    value = JSON.parse(text);
+  } catch {
+    // A SyntaxError would otherwise surface as a generic engine failure
+    throw new AgentError('INVALID_INPUT', 'The JSON input is not valid JSON.');
+  }
   assertWellFormed(value);
   return value;
 }
@@ -62,10 +68,17 @@ export function readJsonInput(cmdOpts: {
     return value;
   }
   if (cmdOpts.file) {
-    const content = decodeInput(
-      cmdOpts.file === '-' ? readFileSync(0) : readFileSync(cmdOpts.file),
-    );
-    const value = parseInput(content);
+    let bytes: Buffer;
+    try {
+      bytes =
+        cmdOpts.file === '-' ? readFileSync(0) : readFileSync(cmdOpts.file);
+    } catch {
+      throw new AgentError(
+        'INVALID_INPUT',
+        `Could not read the JSON input file "${cmdOpts.file}".`,
+      );
+    }
+    const value = parseInput(decodeInput(bytes));
     inputs.set(cmdOpts, value);
     return value;
   }
