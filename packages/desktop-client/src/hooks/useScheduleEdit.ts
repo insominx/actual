@@ -276,12 +276,14 @@ export function useScheduleEdit({
     }
 
     setIsLoading(true);
-    const { data } = await aqlQuery(
-      q('schedules').filter({ id: scheduleId }).select('*'),
-    );
-    setIsLoading(false);
-
-    return data[0];
+    try {
+      const { data } = await aqlQuery(
+        q('schedules').filter({ id: scheduleId }).select('*'),
+      );
+      return data[0];
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   const setSchedule = useEffectEvent(async () => {
@@ -305,6 +307,8 @@ export function useScheduleEdit({
 
   // Update upcoming dates when date changes
   useEffect(() => {
+    let current = true;
+
     async function run() {
       const date = state.fields.date;
 
@@ -327,9 +331,16 @@ export function useScheduleEdit({
         config: date,
         count: 3,
       });
-      dispatch({ type: 'set-upcoming-dates', dates: data });
+      // Ignore a slow response for a date the user has since changed
+      if (current) {
+        dispatch({ type: 'set-upcoming-dates', dates: data });
+      }
     }
     void run();
+
+    return () => {
+      current = false;
+    };
   }, [state.fields.date]);
 
   // Load linked transactions
