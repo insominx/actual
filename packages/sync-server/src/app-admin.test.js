@@ -390,6 +390,26 @@ describe('/admin', () => {
         });
       });
 
+      it('should reject renaming a user to the name of another user', async () => {
+        const res = await request(app)
+          .patch('/users')
+          .send({
+            id: testUserId,
+            userName: 'sessionUser',
+            enabled: true,
+            role: BASIC_ROLE,
+          })
+          .set('x-actual-token', sessionToken);
+
+        expect(res.statusCode).toEqual(400);
+        expect(res.body.reason).toBe('user-already-exists');
+        expect(
+          getAccountDb().first('SELECT user_name FROM users WHERE id = ?', [
+            testUserId,
+          ]).user_name,
+        ).toBe('testUser');
+      });
+
       it('should return 400 if the user does not exist', async () => {
         const userToUpdate = {
           id: 'non-existing-id',

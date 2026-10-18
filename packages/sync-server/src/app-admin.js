@@ -138,6 +138,17 @@ app.patch('/users', validateSessionMiddleware, async (req, res) => {
     return;
   }
 
+  // Renaming onto another user's name would create a duplicate
+  const userIdWithName = UserService.getUserByUsername(userName);
+  if (userIdWithName && userIdWithName !== userIdInDb) {
+    res.status(400).send({
+      status: 'error',
+      reason: 'user-already-exists',
+      details: `User ${userName} already exists`,
+    });
+    return;
+  }
+
   // The owner can't be deleted, so it must not be lockable out either
   const userInDb = getUserInfo(userIdInDb);
   if (userInDb?.owner === 1 && (!enabled || role !== 'ADMIN')) {
