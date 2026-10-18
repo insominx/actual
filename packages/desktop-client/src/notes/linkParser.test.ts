@@ -107,6 +107,36 @@ describe('linkParser', () => {
         const lastSegment = result[result.length - 1];
         expect(lastSegment).toEqual({ type: 'text', content: ')' });
       });
+
+      it('should parse plain and www URLs that appear before a markdown link or https URL', () => {
+        const result = parseNotes(
+          'Visit www.first.com then https://second.com and [third](https://third.com)',
+        );
+        const links = result.filter(s => s.type === 'link');
+        expect(links).toEqual([
+          {
+            type: 'link',
+            content: 'www.first.com',
+            displayText: 'www.first.com',
+            url: 'www.first.com',
+            isFilePath: false,
+          },
+          {
+            type: 'link',
+            content: 'https://second.com',
+            displayText: 'https://second.com',
+            url: 'https://second.com',
+            isFilePath: false,
+          },
+          {
+            type: 'link',
+            content: '[third](https://third.com)',
+            displayText: 'third',
+            url: 'https://third.com',
+            isFilePath: false,
+          },
+        ]);
+      });
     });
 
     describe('file path detection', () => {

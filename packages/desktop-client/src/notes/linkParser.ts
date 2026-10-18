@@ -101,17 +101,39 @@ export function parseNotes(notes: string): ParsedSegment[] {
   let remaining = notes;
 
   while (remaining.length > 0) {
-    // Check for markdown link first (highest priority)
     const markdownMatch = remaining.match(MARKDOWN_LINK_REGEX);
-    if (markdownMatch && markdownMatch.index !== undefined) {
-      // Add text before the link
-      if (markdownMatch.index > 0) {
-        const textBefore = remaining.slice(0, markdownMatch.index);
+    const urlMatch = remaining.match(FULL_URL_REGEX);
+    const wwwMatch = remaining.match(WWW_URL_REGEX);
+
+    const candidates = [
+      markdownMatch?.index !== undefined
+        ? { type: 'markdown' as const, match: markdownMatch }
+        : null,
+      urlMatch?.index !== undefined
+        ? { type: 'url' as const, match: urlMatch }
+        : null,
+      wwwMatch?.index !== undefined
+        ? { type: 'www' as const, match: wwwMatch }
+        : null,
+    ].filter(item => item !== null);
+
+    if (candidates.length === 0) {
+      // No more links found, parse remaining text with tags
+      segments.push(...parseTextWithTags(remaining));
+      break;
+    }
+
+    candidates.sort((a, b) => a.match.index! - b.match.index!);
+    const earliest = candidates[0];
+    const matchIndex = earliest.match.index!;
+
+    if (earliest.type === 'markdown') {
+      if (matchIndex > 0) {
+        const textBefore = remaining.slice(0, matchIndex);
         segments.push(...parseTextWithTags(textBefore));
       }
 
-      // Add the link segment
-      const [fullMatch, displayText, url] = markdownMatch;
+      const [fullMatch, displayText, url] = earliest.match;
       const isFilePath =
         url.startsWith('/') ||
         /^[A-Z]:\\/i.test(url) ||
@@ -124,65 +146,27 @@ export function parseNotes(notes: string): ParsedSegment[] {
         isFilePath,
       });
 
-      remaining = remaining.slice(markdownMatch.index + fullMatch.length);
+      remaining = remaining.slice(matchIndex + fullMatch.length);
       continue;
     }
 
-    // Check for plain URLs (http://, https://)
-    const urlMatch = remaining.match(FULL_URL_REGEX);
-    if (urlMatch && urlMatch.index !== undefined) {
-      // Add text before the URL
-      if (urlMatch.index > 0) {
-        const textBefore = remaining.slice(0, urlMatch.index);
-        segments.push(...parseTextWithTags(textBefore));
-      }
-
-      // Strip trailing punctuation from the URL
-      const rawUrl = urlMatch[0];
-      const url = stripTrailingPunctuation(rawUrl);
-
-      // Add the link segment
-      segments.push({
-        type: 'link',
-        content: url,
-        displayText: url,
-        url,
-        isFilePath: false,
-      });
-
-      remaining = remaining.slice(urlMatch.index + url.length);
-      continue;
+    if (matchIndex > 0) {
+      const textBefore = remaining.slice(0, matchIndex);
+      segments.push(...parseTextWithTags(textBefore));
     }
 
-    // Check for www. URLs
-    const wwwMatch = remaining.match(WWW_URL_REGEX);
-    if (wwwMatch && wwwMatch.index !== undefined) {
-      // Add text before the URL
-      if (wwwMatch.index > 0) {
-        const textBefore = remaining.slice(0, wwwMatch.index);
-        segments.push(...parseTextWithTags(textBefore));
-      }
+    const rawUrl = earliest.match[0];
+    const url = stripTrailingPunctuation(rawUrl);
 
-      // Strip trailing punctuation from the URL
-      const rawUrl = wwwMatch[0];
-      const url = stripTrailingPunctuation(rawUrl);
+    segments.push({
+      type: 'link',
+      content: url,
+      displayText: url,
+      url,
+      isFilePath: false,
+    });
 
-      // Add the link segment
-      segments.push({
-        type: 'link',
-        content: url,
-        displayText: url,
-        url,
-        isFilePath: false,
-      });
-
-      remaining = remaining.slice(wwwMatch.index + url.length);
-      continue;
-    }
-
-    // No more links found, parse remaining text with tags
-    segments.push(...parseTextWithTags(remaining));
-    break;
+    remaining = remaining.slice(matchIndex + url.length);
   }
 
   return segments;

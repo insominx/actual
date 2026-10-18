@@ -50,25 +50,30 @@ export function TagAutocomplete({
   const [cursorPosition, setCursorPosition] = useCursorPosition(inputRef);
   const [startIdx, endIdx] = useCurrentWordRange(inputValue, cursorPosition);
   const currentWord = inputValue.slice(startIdx, endIdx);
+  // `##name` is the escape sequence for a literal `#name` (see docs), so only
+  // a word with exactly one leading `#` is eligible for tag completion.
+  const leadingHashCount = currentWord.match(/^#+/)?.[0].length ?? 0;
+  const hasSingleLeadingHash = leadingHashCount === 1;
+  const currentWordNoHash = hasSingleLeadingHash ? currentWord.slice(1) : '';
 
-  const { data: filteredTags, refetch } = useFilteredTags(currentWord, true);
+  const { data: filteredTags, refetch } = useFilteredTags(
+    hasSingleLeadingHash ? currentWord : '',
+    true,
+  );
   const filteredItems = useMemo(() => {
     const tagArr =
       filteredTags?.map(tag => ({ ...tag, name: '#' + tag.tag })) ?? [];
 
-    const isValidTag = currentWord.startsWith('#') && currentWord.length > 1;
-    const exactMatchExists =
-      tagArr.length && '#' + tagArr[0].tag === currentWord;
-    if (isValidTag && !exactMatchExists) {
-      const currentWordSingleHash = currentWord.replace(/^#+/, '#');
+    const exactMatchExists = tagArr.some(tag => tag.tag === currentWordNoHash);
+    if (hasSingleLeadingHash && currentWordNoHash && !exactMatchExists) {
       tagArr.push({
         id: 'create_tag',
-        name: `${currentWordSingleHash}`,
-        tag: currentWordSingleHash.slice(1),
+        name: `#${currentWordNoHash}`,
+        tag: currentWordNoHash,
       });
     }
     return tagArr;
-  }, [filteredTags, currentWord]);
+  }, [filteredTags, hasSingleLeadingHash, currentWordNoHash]);
 
   const [isOpen, setIsOpen] = useState(false);
   const showPopup = isOpen && filteredItems.length > 0;
