@@ -30,7 +30,17 @@ export async function loadPrefs(id?: string): Promise<MetadataPrefs> {
   const fullpath = fs.join(fs.getBudgetDir(id), 'metadata.json');
 
   try {
-    prefs = JSON.parse(await fs.readFile(fullpath));
+    const parsed = JSON.parse(await fs.readFile(fullpath));
+    // Valid JSON that isn't an object (null, a number, an array...) would
+    // make the `prefs.id = id` below throw and keep the budget from loading
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      Array.isArray(parsed)
+    ) {
+      throw new Error('metadata.json does not contain an object');
+    }
+    prefs = parsed;
   } catch {
     // If the user messed something up, be flexible and allow them to
     // still load the budget database. Default the budget name to the

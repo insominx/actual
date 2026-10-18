@@ -66,6 +66,11 @@ describe('unicode LIKE functionality', () => {
     expect(unicodeLike('what\\?', 'what!')).toBe(0);
   });
 
+  it('should let wildcards match across newlines', () => {
+    expect(unicodeLike('a%b', 'a\nb')).toBe(1);
+    expect(unicodeLike('a?b', 'a\nb')).toBe(1);
+  });
+
   it('should treat \\\\ as a literal \\ character', () => {
     expect(unicodeLike('c:\\\\test', 'c:\\test')).toBe(1);
   });

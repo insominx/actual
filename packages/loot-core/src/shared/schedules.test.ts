@@ -92,6 +92,10 @@ describe('schedules', () => {
       ['currentMonth', 20, '2017-02-08'],
       ['currentMonth', 28, '2020-02-01'], // leap-year
       ['2-day', 2, '2017-01-01'],
+      ['NaN-day', 1, '2017-01-01'], // blank number input falls back to 1
+      ['', 7, '2017-01-01'], // blank or garbled length falls back to a week
+      ['abc', 7, '2017-01-01'],
+      ['-week', 7, '2017-01-01'],
       ['5-week', 35, '2017-01-01'],
       ['3-month', 91, '2017-01-01'],
       ['4-year', 1462, '2017-01-01'],

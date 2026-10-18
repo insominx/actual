@@ -467,7 +467,7 @@ async function linkAkahuAccount({
 
   connection.send('sync-event', {
     type: 'success',
-    tables: ['transactions'],
+    tables: ['transactions', 'accounts'],
   });
 
   return 'ok';
@@ -944,15 +944,23 @@ async function pollGoCardlessWebToken({
       throw new Error('Failed to get server config.');
     }
 
-    const data = await post(
-      serverConfig.GOCARDLESS_SERVER + '/get-accounts',
-      {
-        requisitionId,
-      },
-      {
-        'X-ACTUAL-TOKEN': userToken,
-      },
-    );
+    let data;
+    try {
+      data = await post(
+        serverConfig.GOCARDLESS_SERVER + '/get-accounts',
+        {
+          requisitionId,
+        },
+        {
+          'X-ACTUAL-TOKEN': userToken,
+        },
+      );
+    } catch (error) {
+      // A rejected request would otherwise leave the caller waiting forever
+      logger.error('Failed polling gocardless accounts:', error);
+      cb({ status: 'unknown' });
+      return;
+    }
 
     if (data) {
       if (data.error_code) {

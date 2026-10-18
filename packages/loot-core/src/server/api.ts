@@ -2648,7 +2648,10 @@ handlers['api/transaction-delete'] = withMutation(async function ({ id }) {
   }
 
   const { diff } = deleteTransaction(transactions, id);
-  return handlers['transactions-batch-update'](diff)['deleted'];
+  // Awaited so the delete has landed before the mutation wrapper reads back
+  // which tables changed, and so the deleted rows are actually returned
+  const result = await handlers['transactions-batch-update'](diff);
+  return result.deleted;
 });
 
 handlers['api/transactions-merge'] = withMutation(async function ({ ids }) {

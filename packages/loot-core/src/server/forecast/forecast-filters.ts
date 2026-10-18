@@ -155,7 +155,8 @@ function applyTransform(value: unknown, transform: unknown) {
 
 function likeToRegex(pattern: string) {
   const regex = '^' + escapeRegex(pattern).replace(/%/g, '.*') + '$';
-  return new RegExp(regex, 'i');
+  // `s` so `%` also spans newlines, as SQLite's LIKE does
+  return new RegExp(regex, 'is');
 }
 
 function evaluateClause(actualValue: unknown, clause: unknown): boolean {

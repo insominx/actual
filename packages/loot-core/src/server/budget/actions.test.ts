@@ -7,8 +7,11 @@ import * as sheet from '#server/sheet';
 import {
   copyUntilYearEnd,
   coverOverbudgeted,
+  getBudget,
   getSheetValue,
+  set12MonthAvg,
   set3MonthAvg,
+  set6MonthAvg,
   setBudget,
   setCategoryCarryover,
   setNMonthAvg,
@@ -182,6 +185,19 @@ describe('set budget average', () => {
     await sheet.waitOnSpreadsheet();
 
     expect(await getSheetValue('budget202404', 'budget-cat1')).toBe(600);
+  });
+
+  it('has written the bulk 6 month average once the call resolves', async () => {
+    await set6MonthAvg({ month: '2024-04' });
+
+    // Read straight from the database: nothing may still be pending
+    expect(getBudget({ category: 'cat1', month: '2024-04' })).toBe(600);
+  });
+
+  it('has written the bulk 12 month average once the call resolves', async () => {
+    await set12MonthAvg({ month: '2024-04' });
+
+    expect(getBudget({ category: 'cat1', month: '2024-04' })).toBe(600);
   });
 
   it('sets a bulk 3 month average from the first activity month', async () => {

@@ -406,6 +406,36 @@ describe('Transaction rules', () => {
     });
   });
 
+  test('matches condition finds transactions with capitals and uppercase escapes', async () => {
+    const account = await db.insertAccount({ name: 'Checking' });
+    await db.insertTransaction({
+      id: 't-space',
+      account,
+      date: '2026-10-01',
+      amount: -100,
+      notes: 'Coffee Shop',
+    });
+    await db.insertTransaction({
+      id: 't-bar',
+      account,
+      date: '2026-10-02',
+      amount: -200,
+      notes: 'CoffeeBar',
+    });
+
+    // Capitals in the pattern still match (case-insensitive) and \S keeps
+    // meaning "non-whitespace", so only the one-word note matches
+    const matching = await getMatchingTransactions([
+      { op: 'matches', field: 'notes', value: '^Coffee\\S+$' },
+    ]);
+    expect(matching.map(t => t.id)).toEqual(['t-bar']);
+
+    const both = await getMatchingTransactions([
+      { op: 'matches', field: 'notes', value: '^COFFEE' },
+    ]);
+    expect(both.map(t => t.id).sort()).toEqual(['t-bar', 't-space']);
+  });
+
   test('category_group condition matches categories in that group (live)', async () => {
     await loadRules();
     const billsGroupId = await db.insertCategoryGroup({ name: 'Bills' });
@@ -913,6 +943,22 @@ describe('Learning categories', () => {
       { category: 'foo' },
     ]);
     expect(winner).toBe('bar');
+  });
+
+  test('getProbableCategory ignores uncategorized transactions', () => {
+    // The newest transaction has no category yet
+    expect(
+      getProbableCategory([
+        { category: null },
+        { category: 'foo' },
+        { category: 'foo' },
+        { category: 'foo' },
+        { category: 'bar' },
+      ]),
+    ).toBe('foo');
+
+    expect(getProbableCategory([{ category: null }])).toBe(null);
+    expect(getProbableCategory([])).toBe(null);
   });
 
   test('creates rule when inserting transactions', async () => {

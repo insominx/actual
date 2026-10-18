@@ -53,7 +53,9 @@ export const init: T.Init = function (serverChn, handlers) {
 
       const { id, name, args, undoTag, catchErrors } = msg;
 
-      if (handlers[name]) {
+      // Own keys only: `constructor` or `__proto__` would otherwise resolve to
+      // an inherited object and leave the caller without a reply
+      if (Object.hasOwn(handlers, name) && handlers[name]) {
         runHandler(handlers[name], args, { undoTag, name }).then(
           result => {
             post({

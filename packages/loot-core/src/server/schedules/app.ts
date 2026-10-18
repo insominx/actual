@@ -458,7 +458,10 @@ export async function deleteSchedule({ id }) {
   );
 
   await batchMessages(async () => {
-    await db.delete_('rules', ruleId);
+    // A corrupted schedule may have lost its rule; still let it be deleted
+    if (ruleId) {
+      await db.delete_('rules', ruleId);
+    }
     await db.delete_('schedules', id);
   });
 }

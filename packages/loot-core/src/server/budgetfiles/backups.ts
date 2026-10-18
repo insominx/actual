@@ -212,24 +212,6 @@ export async function loadBackup(id: string, backupId: string) {
   } else {
     logger.log('Loading backup', backupId);
 
-    // This function is only ever called when a budget isn't loaded,
-    // so it's safe to load our prefs in. We need to forget about any
-    // syncing data if we are loading a backup (the current sync data
-    // will be restored if the user reverts to the original version)
-    await prefs.loadPrefs(id);
-    await prefs.savePrefs({
-      groupId: null,
-      lastSyncedTimestamp: null,
-      lastUploaded: null,
-    });
-
-    // Re-upload the new file
-    try {
-      await cloudStorage.upload();
-    } catch {}
-
-    prefs.unloadPrefs();
-
     const zipContent = await fs.readFile(
       fs.join(budgetDir, 'backups', backupId),
       'binary',
@@ -251,6 +233,27 @@ export async function loadBackup(id: string, backupId: string) {
       fs.join(budgetDir, 'metadata.json'),
       entries['metadata.json'],
     );
+
+    // This function is only ever called when a budget isn't loaded, so it's
+    // safe to load our prefs in. We need to forget about any syncing data if
+    // we are loading a backup (the current sync data will be restored if the
+    // user reverts to the original version). This has to happen after the
+    // restore above: the backup's metadata carries the old sync data, and the
+    // upload reads db.sqlite from disk, so doing it earlier would overwrite
+    // the reset and upload the file that was just replaced.
+    await prefs.loadPrefs(id);
+    await prefs.savePrefs({
+      groupId: null,
+      lastSyncedTimestamp: null,
+      lastUploaded: null,
+    });
+
+    // Re-upload the restored file
+    try {
+      await cloudStorage.upload();
+    } catch {}
+
+    prefs.unloadPrefs();
   }
 }
 
@@ -263,7 +266,14 @@ export function startBackupService(id: string) {
   serviceInterval = setInterval(
     async () => {
       logger.log('Making backup');
-      await makeBackup(id);
+      try {
+        await makeBackup(id);
+      } catch (error) {
+        // A failed periodic backup (full disk, a file locked by a virus
+        // scanner, …) must not become an unhandled rejection, which stops
+        // the Node process
+        logger.error('Failed to make backup', error);
+      }
     },
     1000 * 60 * 15,
   );

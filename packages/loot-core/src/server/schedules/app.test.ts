@@ -19,6 +19,7 @@ import {
   updateConditions,
   updateSchedule,
 } from './app';
+import { findSchedules } from './find-schedules';
 
 beforeEach(async () => {
   await global.emptyDatabase()();
@@ -125,6 +126,54 @@ describe('schedule app', () => {
     it('areConditionValuesEqual distinguishes nullish values', () => {
       expect(areConditionValuesEqual(null, undefined)).toBe(false);
       expect(areConditionValuesEqual(undefined, undefined)).toBe(true);
+    });
+  });
+
+  describe('find schedules', () => {
+    afterEach(() => {
+      MockDate.reset();
+    });
+
+    it('finds a 1st-and-3rd-weekday pattern regardless of what day it is today', async () => {
+      // 2024-06-24 is a Monday, the transactions are on Wednesdays
+      MockDate.set('2024-06-24');
+
+      await db.insertAccount({ id: 'acct', name: 'Checking' });
+      await db.insertPayee({ id: 'gym', name: 'Gym' });
+      const wednesdays = [
+        '2024-01-03',
+        '2024-01-17',
+        '2024-02-07',
+        '2024-02-21',
+        '2024-03-06',
+        '2024-03-20',
+        '2024-04-03',
+        '2024-04-17',
+        '2024-05-01',
+        '2024-05-15',
+        '2024-06-05',
+        '2024-06-19',
+      ];
+      for (const date of wednesdays) {
+        await db.insertTransaction({
+          id: `tx-${date}`,
+          date,
+          account: 'acct',
+          payee: 'gym',
+          amount: -5000,
+        });
+      }
+
+      const found = await findSchedules();
+
+      expect(found).toHaveLength(1);
+      expect(found[0].date).toMatchObject({
+        frequency: 'monthly',
+        patterns: [
+          { type: 'WE', value: 1 },
+          { type: 'WE', value: 3 },
+        ],
+      });
     });
   });
 

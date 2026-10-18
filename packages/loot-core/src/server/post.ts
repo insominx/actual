@@ -19,7 +19,14 @@ function throwIfNot200(res: Response, text: string) {
 
     const contentType = res.headers.get('Content-Type') ?? '';
     if (contentType.toLowerCase().indexOf('application/json') !== -1) {
-      const json = JSON.parse(text);
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        // A proxy or crashing server can label an HTML/empty body as JSON;
+        // keep it a PostError so callers' error handling still applies
+        throw new PostError('parse-json', { meta: text });
+      }
       throw new PostError(getServerErrorReason(json));
     }
 

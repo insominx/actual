@@ -465,7 +465,7 @@ export async function inspectImportFile(
     ) as Partial<ImportTransaction> & Record<string, unknown>;
     if (isCsv) {
       for (const [field, column] of Object.entries(fields ?? {})) {
-        if (column && !(column in source)) {
+        if (column && !Object.hasOwn(source, column)) {
           errors.push(`column ${column} for ${field} is missing`);
         }
       }

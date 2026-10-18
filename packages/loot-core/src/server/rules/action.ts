@@ -191,7 +191,7 @@ export class Action {
         }
         break;
       case 'set-split-amount':
-        switch (this.options.method) {
+        switch (this.options?.method) {
           case 'fixed-amount':
             object.amount = this.value;
             break;

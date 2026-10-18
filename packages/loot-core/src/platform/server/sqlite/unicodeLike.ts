@@ -27,7 +27,8 @@ function likePatternToRegex(pattern: string): RegExp {
     }
     i++;
   }
-  return new RegExp(regexStr, 'i');
+  // `s` so the wildcards also match newlines, as SQLite's LIKE does
+  return new RegExp(regexStr, 'is');
 }
 
 export function unicodeLike(

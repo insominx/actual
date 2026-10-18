@@ -344,7 +344,7 @@ export async function set12MonthAvg({
       if (cat.is_income === 1 && !isTrackingBudget()) {
         continue;
       }
-      void setNMonthAvg({ month, N: 12, category: cat.id });
+      await setNMonthAvg({ month, N: 12, category: cat.id });
     }
   });
 }
@@ -368,7 +368,7 @@ export async function set6MonthAvg({
       if (cat.is_income === 1 && !isTrackingBudget()) {
         continue;
       }
-      void setNMonthAvg({ month, N: 6, category: cat.id });
+      await setNMonthAvg({ month, N: 6, category: cat.id });
     }
   });
 }

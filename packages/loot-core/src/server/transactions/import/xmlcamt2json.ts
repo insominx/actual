@@ -85,6 +85,15 @@ function convertToNumberOrNull(value: string): number | null {
   return isNaN(number) ? null : number;
 }
 
+// Negating a null amount yields -0, which would slip past the null filter
+// at the end of xmlCAMT2json
+function signAmount(amount: number | null, isDebit: boolean): number | null {
+  if (amount == null) {
+    return null;
+  }
+  return isDebit ? -amount : amount;
+}
+
 function getDtOrDtTm(Date: DateRef | null): string | null {
   if (!Date) {
     return null;
@@ -149,7 +158,7 @@ export async function xmlCAMT2json(
         const Amt = findKeys(TxDtls, 'Amt') as Amt[];
         const amount = Amt.length > 0 ? convertToNumberOrNull(Amt[0]._) : null;
         transactions.push({
-          amount: isDebit ? -amount : amount,
+          amount: signAmount(amount, isDebit),
           date,
           payee_name: subPayee,
           imported_payee: subPayee,
@@ -175,7 +184,7 @@ export async function xmlCAMT2json(
       }
 
       const transaction: TransactionCAMT = {
-        amount: isDebit ? -amount : amount,
+        amount: signAmount(amount, isDebit),
         date,
         payee_name,
         imported_payee: payee_name,

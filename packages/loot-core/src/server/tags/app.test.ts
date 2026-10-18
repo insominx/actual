@@ -25,6 +25,19 @@ async function getNotes(id: string) {
 }
 
 describe('tags app', () => {
+  describe('tags-create', () => {
+    it('finds the existing tag when the new name has surrounding spaces', async () => {
+      const first = await app.handlers['tags-create']({ tag: 'travel' });
+      const second = await app.handlers['tags-create']({ tag: '  travel ' });
+
+      expect(second.id).toBe(first.id);
+      expect(second.tag).toBe('travel');
+      expect(await db.getTags()).toEqual([
+        expect.objectContaining({ id: first.id, tag: 'travel' }),
+      ]);
+    });
+  });
+
   describe('tags-rename', () => {
     beforeEach(async () => {
       await db.insertAccount({ id: 'account-1', name: 'Account 1' });

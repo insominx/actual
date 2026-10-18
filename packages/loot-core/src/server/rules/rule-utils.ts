@@ -265,6 +265,61 @@ export function parseDateString(str) {
   return null;
 }
 
+/**
+ * Lowercases a regular expression's source so it can be tested against a
+ * lowercased value, without changing what it means. Escapes (`\S`, `\D`,
+ * `\p{Lu}`, `\cA`, `\k<Name>`) and group names are copied through untouched;
+ * only literal characters are lowercased.
+ */
+export function lowerCaseRegexSource(source: string): string {
+  let result = '';
+  let i = 0;
+
+  while (i < source.length) {
+    const char = source[i];
+
+    if (char === '\\' && i + 1 < source.length) {
+      const next = source[i + 1];
+      result += char + next;
+      i += 2;
+
+      // \p{...}, \P{...}, \k<...>, \u{...} carry a name or code in brackets
+      const closer =
+        (next === 'p' || next === 'P' || next === 'u') && source[i] === '{'
+          ? '}'
+          : next === 'k' && source[i] === '<'
+            ? '>'
+            : null;
+      if (closer) {
+        const end = source.indexOf(closer, i);
+        const stop = end === -1 ? source.length : end + 1;
+        result += source.slice(i, stop);
+        i = stop;
+      }
+      continue;
+    }
+
+    // Named group: (?<Name>...)
+    if (
+      char === '(' &&
+      source.startsWith('(?<', i) &&
+      source[i + 3] !== '=' &&
+      source[i + 3] !== '!'
+    ) {
+      const end = source.indexOf('>', i);
+      const stop = end === -1 ? source.length : end + 1;
+      result += source.slice(i, stop);
+      i = stop;
+      continue;
+    }
+
+    result += char.toLowerCase();
+    i++;
+  }
+
+  return result;
+}
+
 export function parseBetweenAmount(between) {
   const { num1, num2 } = between;
   if (typeof num1 !== 'number' || typeof num2 !== 'number') {

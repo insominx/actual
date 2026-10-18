@@ -194,16 +194,22 @@ const PATTERN_KEYS: Array<{
   },
 ];
 
+// The tables are plain objects, so a bare lookup would also find inherited
+// names such as `constructor` or `toString`
+function ownEntry<T>(table: Record<string, T>, key: string): T | undefined {
+  return Object.hasOwn(table, key) ? table[key] : undefined;
+}
+
 export function describePreference(key: unknown): PreferenceDescription {
   if (typeof key !== 'string' || !key) {
     throw APIError('Invalid preference key');
   }
-  const setting = SETTINGS[key];
+  const setting = ownEntry(SETTINGS, key);
   if (setting) {
     const { validate: _validate, ...rest } = setting;
     return { key, scope: 'synced', settable: true, ...rest };
   }
-  const domain = DOMAIN_KEYS[key];
+  const domain = ownEntry(DOMAIN_KEYS, key);
   if (domain) {
     return { key, scope: 'synced', settable: false, ...domain };
   }
@@ -262,7 +268,7 @@ export async function inspectPreferences(key?: string) {
     });
   }
   for (const [name, value] of stored) {
-    if (SETTINGS[name] || DOMAIN_KEYS[name]) continue;
+    if (ownEntry(SETTINGS, name) || ownEntry(DOMAIN_KEYS, name)) continue;
     try {
       result.push({ ...describePreference(name), value });
     } catch {

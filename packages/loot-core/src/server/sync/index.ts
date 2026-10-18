@@ -423,7 +423,9 @@ async function _applyMessages(messages: Message[], deferUnknownSchema = false) {
   const prefsToSet: MetadataPrefs = {};
   let budgetTypeToSet: Message['value'] | undefined;
   const deferredMessages = new Set<Message>();
-  const idsPerTable: Record<string, string[]> = {};
+  // Keys are dataset names from remote messages, so the lookup must not see
+  // inherited members like "constructor" or "__proto__"
+  const idsPerTable: Record<string, string[]> = Object.create(null);
   let oldData: DataMap = new Map();
   let newData: DataMap = new Map();
 
@@ -1038,8 +1040,12 @@ async function _fullSync(
         if (clocks.length !== 1) {
           logger.log('Bad number of clocks:', clocks.length);
         }
-        const hash = deserializeClock(clocks[0].clock).merkle.hash;
-        logger.log('Merkle hash in db:', hash);
+        // Diagnostics only: a missing clock row must not replace the
+        // out-of-sync error thrown below with a TypeError
+        if (clocks.length > 0) {
+          const hash = deserializeClock(clocks[0].clock).merkle.hash;
+          logger.log('Merkle hash in db:', hash);
+        }
       }
 
       throw new SyncError('out-of-sync');

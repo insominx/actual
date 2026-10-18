@@ -173,7 +173,12 @@ async function _writeFile(filepath: string, contents): Promise<boolean> {
   if (contents instanceof ArrayBuffer) {
     contents = new Uint8Array(contents);
   } else if (ArrayBuffer.isView(contents)) {
-    contents = new Uint8Array(contents.buffer);
+    // Respect the view's window into its buffer (e.g. a subarray)
+    contents = new Uint8Array(
+      contents.buffer,
+      contents.byteOffset,
+      contents.byteLength,
+    );
   }
 
   // We always create the file if it doesn't exist, and this function

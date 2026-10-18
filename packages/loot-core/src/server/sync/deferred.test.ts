@@ -58,6 +58,26 @@ describe('Deferred sync messages (newer schema)', () => {
     expect(getPending().length).toBe(1);
   });
 
+  it.each(['constructor', 'toString', '__proto__'])(
+    'defers a message for the dataset name %s instead of throwing',
+    async dataset => {
+      await applyMessages(
+        [
+          {
+            dataset,
+            row: 'r1',
+            column: 'value',
+            value: 'x',
+            timestamp: sendTimestamp(),
+          },
+        ],
+        true,
+      );
+
+      expect(getPending().length).toBe(1);
+    },
+  );
+
   it('defers messages for unknown columns without failing the batch', async () => {
     await applyMessages(
       [

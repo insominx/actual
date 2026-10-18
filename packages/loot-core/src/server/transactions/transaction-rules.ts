@@ -29,6 +29,7 @@ import {
   extractBalanceOfLiterals,
   resolveAccountIdForBalanceOf,
 } from '#server/rules/balanceOfFormula';
+import { lowerCaseRegexSource } from '#server/rules/rule-utils';
 import { addSyncListener, batchMessages } from '#server/sync';
 import {
   addDays,
@@ -667,7 +668,13 @@ export function conditionsToAQL(
       case 'matches':
         // Running contains with id will automatically reach into
         // the `name` of the referenced table and do a regex match
-        return apply(type === 'id' ? field + '.name' : field, '$regexp', value);
+        // String fields are compared lowercased (see `apply`), so the
+        // pattern has to be lowercased too, without altering its escapes
+        return apply(
+          type === 'id' ? field + '.name' : field,
+          '$regexp',
+          type === 'string' ? lowerCaseRegexSource(value) : value,
+        );
       case 'doesNotContain':
         // Running contains with id will automatically reach into
         // the `name` of the referenced table and do a string match
@@ -957,6 +964,11 @@ export function getProbableCategory(transactions) {
   });
 
   const winner = transactions.reduce((winner, trans) => {
+    // An uncategorized transaction has no score; letting it become the first
+    // "winner" would block every real category (`n > undefined` is false)
+    if (!trans.category) {
+      return winner;
+    }
     const score = scores.get(trans.category);
     if (!winner || score > winner.score) {
       return { score, category: trans.category };
@@ -964,7 +976,7 @@ export function getProbableCategory(transactions) {
     return winner;
   }, null);
 
-  return winner.score >= 3 ? winner.category : null;
+  return winner && winner.score >= 3 ? winner.category : null;
 }
 
 export async function updateCategoryRules(transactions) {

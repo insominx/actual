@@ -68,10 +68,12 @@ export function applyChanges<T extends { id: string }>(
   if (changes.updated) {
     changes.updated.forEach(({ id, ...fields }) => {
       const idx = items.findIndex(t => t.id === id);
-      items[idx] = {
-        ...items[idx],
-        ...fields,
-      };
+      if (idx !== -1) {
+        items[idx] = {
+          ...items[idx],
+          ...fields,
+        };
+      }
     });
   }
 
@@ -637,6 +639,10 @@ export function tsToRelativeTime(
 
   const parsed = new Date(parseInt(ts, 10));
 
+  // formatDistanceToNow throws on an invalid date, which would crash the
+  // render of anything showing a malformed stored timestamp
+  if (Number.isNaN(parsed.getTime())) return 'Unknown';
+
   let distance = formatDistanceToNow(parsed, { addSuffix: true, locale });
 
   if (options.capitalize) {
@@ -656,8 +662,12 @@ export function applyFindReplace(
   if (!text) return '';
 
   try {
-    const pattern = useRegex ? new RegExp(find, 'g') : find;
-    return text.replaceAll(pattern, replace);
+    if (useRegex) {
+      return text.replaceAll(new RegExp(find, 'g'), replace);
+    }
+    // Use a replacer function so `$` sequences in the literal replacement
+    // text (e.g. `$$`, `$&`) aren't interpreted as substitution patterns
+    return text.replaceAll(find, () => replace);
   } catch {
     return text;
   }

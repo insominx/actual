@@ -25,6 +25,13 @@ function parseOfxAmount(amount: string): number | null {
     cleaned = '-' + cleaned.slice(1, -1);
   }
 
+  // The OFX spec allows a comma as the decimal separator (e.g. "-12,50").
+  // Only treat it as one when it is followed by 1-2 digits and no period is
+  // present, so a thousands separator ("1,234") is left alone.
+  if (!cleaned.includes('.')) {
+    cleaned = cleaned.replace(/,(\d{1,2})$/, '.$1');
+  }
+
   // Remove currency symbols and other non-numeric characters except decimal point and minus sign
   cleaned = cleaned.replace(/[^\d.-]/g, '');
 

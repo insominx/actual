@@ -7,6 +7,12 @@ describe('arithmetic', () => {
     expect(evalArithmetic('10 + -4')).toBe(6);
   });
 
+  test('handles negated parentheses', () => {
+    expect(evalArithmetic('-(2 + 3)')).toBe(-5);
+    expect(evalArithmetic('10 * -(2 + 3)')).toBe(-50);
+    expect(evalArithmetic('10 - -(2)')).toBe(12);
+  });
+
   test('handles simple addition', () => {
     expect(evalArithmetic('10 + 10')).toEqual(20);
     expect(evalArithmetic('1.5 + 1.5')).toEqual(3);

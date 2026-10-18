@@ -12,14 +12,15 @@ export function getLocale(language: string) {
 
   let localeKey = language.replace('-', '');
 
-  if (localeKey in locales) {
+  // Own keys only: `in` would also match inherited names such as "constructor"
+  if (Object.hasOwn(locales, localeKey)) {
     return locales[localeKey];
   }
 
   //if language was not found with four letters, try with two
   localeKey = language.replace('-', '').substring(0, 2);
 
-  if (localeKey in locales) {
+  if (Object.hasOwn(locales, localeKey)) {
     return locales[localeKey];
   }
 

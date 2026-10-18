@@ -3,6 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { qif2json } from './qif2json';
 
 describe('qif2json', () => {
+  it('ignores blank lines in CRLF files', () => {
+    const result = qif2json('!Type:Bank\r\nD01/02/2026\r\nT-1.50\r\n^\r\n\r\n');
+    expect(result.transactions).toHaveLength(1);
+  });
+
   it('parses records, categories and splits', () => {
     const result = qif2json(
       [

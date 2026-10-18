@@ -1,5 +1,29 @@
 import { Rule } from './rule';
-import { migrateIds } from './rule-utils';
+import { lowerCaseRegexSource, migrateIds } from './rule-utils';
+
+describe('lowerCaseRegexSource', () => {
+  it('lowercases literal characters', () => {
+    expect(lowerCaseRegexSource('^Coffee [A-Z]+$')).toBe('^coffee [a-z]+$');
+  });
+
+  it('leaves escape sequences untouched', () => {
+    expect(lowerCaseRegexSource('\\S+\\D\\W\\B')).toBe('\\S+\\D\\W\\B');
+    expect(lowerCaseRegexSource('Foo\\.Bar')).toBe('foo\\.bar');
+  });
+
+  it('leaves property names and named groups untouched', () => {
+    expect(lowerCaseRegexSource('\\p{Lu}X')).toBe('\\p{Lu}x');
+    expect(lowerCaseRegexSource('(?<Word>A)\\k<Word>')).toBe(
+      '(?<Word>a)\\k<Word>',
+    );
+    // Lookbehind is not a named group
+    expect(lowerCaseRegexSource('(?<!A)B')).toBe('(?<!a)b');
+  });
+
+  it('handles a trailing backslash', () => {
+    expect(lowerCaseRegexSource('A\\')).toBe('a\\');
+  });
+});
 
 describe('migrateIds', () => {
   it('deduplicates mapped IDs in oneOf and notOneOf conditions', () => {

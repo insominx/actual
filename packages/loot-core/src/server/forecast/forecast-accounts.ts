@@ -45,8 +45,11 @@ export function matchesAccountCondition(
       );
     case 'matches': {
       try {
-        return new RegExp(String(condition.value)).test(
-          String(account.name).toLowerCase(),
+        // Case-insensitive like the other string operators; testing a
+        // lowercased name against an unmodified pattern could never match a
+        // pattern containing capitals
+        return new RegExp(String(condition.value), 'i').test(
+          String(account.name),
         );
       } catch {
         return false;

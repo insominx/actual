@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { send } from '#server/main-app';
 import { makeChild } from '#shared/transactions';
 
-import { importTransactions } from './ynab4';
+import { getBudgetName, importTransactions } from './ynab4';
 import type * as YNAB4 from './ynab4-types';
 
 vi.mock('#server/main-app', () => ({
@@ -106,5 +106,20 @@ describe('importTransactions', () => {
 
     expect(transferChild.payee).toBe('transfer-payee-2');
     expect(transferChild.transfer_id).toBe(entityIdMap.get('txn-transfer-in'));
+  });
+});
+
+describe('getBudgetName', () => {
+  it.each([
+    ['C:\\Users\\me\\Budget~51938D82.ynab4.zip', 'Budget'],
+    ['/home/me/My Budget.ynab4.zip', 'My Budget'],
+    ['Budget.ynab4.zip', 'Budget'],
+    ['MyBudgetynab4.zip', 'MyBudgetynab4'],
+  ])('derives the name from %s', (filepath, expected) => {
+    expect(getBudgetName(filepath)).toBe(expected);
+  });
+
+  it('returns null for files that are not zips', () => {
+    expect(getBudgetName('Budget.ynab4')).toBeNull();
   });
 });

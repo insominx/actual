@@ -622,12 +622,12 @@ export async function insertPayee(
 }
 
 export async function deletePayee(payee: Pick<DbPayee, 'id'>) {
-  const { transfer_acct } = await first<DbPayee>(
-    'SELECT * FROM payees WHERE id = ?',
-    [payee.id],
-  );
-  if (transfer_acct) {
-    // You should never be able to delete transfer payees
+  const existing = await first<DbPayee>('SELECT * FROM payees WHERE id = ?', [
+    payee.id,
+  ]);
+  if (!existing || existing.transfer_acct) {
+    // Nothing to delete, and you should never be able to delete transfer
+    // payees
     return;
   }
 
@@ -660,10 +660,15 @@ export async function mergePayees(
   const payees = groupById(dbPayees);
 
   // Filter out any transfer payees
-  if (payees[target].transfer_acct != null) {
+  if (payees[target] == null || payees[target].transfer_acct != null) {
     return;
   }
-  ids = ids.filter(id => payees[id].transfer_acct == null);
+  // Merging a payee into itself would delete the target, and unknown ids
+  // have nothing to merge
+  ids = ids.filter(
+    id =>
+      id !== target && payees[id] != null && payees[id].transfer_acct == null,
+  );
 
   await batchMessages(async () => {
     await Promise.all(
@@ -808,6 +813,9 @@ export async function moveAccount(
     'SELECT * FROM accounts WHERE id = ?',
     [id],
   );
+  if (!account) {
+    throw new Error(`Account not found: ${id}`);
+  }
   let accounts;
   if (account.closed) {
     accounts = await all<Pick<DbAccount, 'id' | 'sort_order'>>(
@@ -823,9 +831,9 @@ export async function moveAccount(
   const { updates, sort_order } = shoveSortOrders(accounts, targetId);
   await batchMessages(async () => {
     for (const info of updates) {
-      void update('accounts', info);
+      await update('accounts', info);
     }
-    void update('accounts', {
+    await update('accounts', {
       id,
       sort_order,
       ...(accountGroupId !== undefined && {

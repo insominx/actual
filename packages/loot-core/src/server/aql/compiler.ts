@@ -350,7 +350,10 @@ function val(state, expr, type?: string) {
 
   if (castedExpr.literal) {
     if (castedExpr.type === 'id') {
-      return `'${castedExpr.value}'`;
+      // Ids come from callers (e.g. the API) so quotes must be escaped just
+      // like string literals
+      const value = String(castedExpr.value).replace(/'/g, "''");
+      return `'${value}'`;
     } else if (castedExpr.type === 'string') {
       // Escape quotes
       const value = castedExpr.value.replace(/'/g, "''");
@@ -760,7 +763,7 @@ const compileOp = saveStack('op', (state, fieldRef, opData) => {
 
       return (
         `${String(left)} IN (` +
-        ids.map(id => `'${String(id)}'`).join(',') +
+        ids.map(id => `'${String(id).replace(/'/g, "''")}'`).join(',') +
         ')'
       );
     }
@@ -1156,6 +1159,18 @@ export function compileQuery(
     limit,
     offset,
   } = customizeQuery(queryState);
+
+  // These are interpolated straight into the SQL text
+  for (const [name, value] of [
+    ['limit', limit],
+    ['offset', offset],
+  ] as const) {
+    if (value != null && !(Number.isInteger(value) && value >= 0)) {
+      throw new CompileError(
+        `Invalid ${name}, must be a non-negative integer: ${String(value)}`,
+      );
+    }
+  }
 
   let select = '';
   let where = '';

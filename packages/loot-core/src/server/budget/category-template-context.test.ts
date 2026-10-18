@@ -2281,6 +2281,31 @@ describe('CategoryTemplateContext', () => {
         ctx.runTemplatesForPriority(1, 1_000_000, 1_000_000),
       ).rejects.toThrow(/Unrecognized periodic period/);
     });
+
+    it('throws instead of hanging when a periodic template steps by zero', async () => {
+      vi.mocked(statements.getActiveSchedules).mockResolvedValue(
+        [] as Awaited<ReturnType<typeof statements.getActiveSchedules>>,
+      );
+      const templates: Template[] = [
+        {
+          type: 'periodic',
+          amount: 100,
+          period: { period: 'day', amount: 0 },
+          starting: '2024-01-01',
+          directive: 'template',
+          priority: 1,
+        },
+      ];
+      const ctx = await CategoryTemplateContext.init(
+        templates,
+        category,
+        '2024-01',
+        0,
+      );
+      await expect(
+        ctx.runTemplatesForPriority(1, 1_000_000, 1_000_000),
+      ).rejects.toThrow(/positive whole number of periods/);
+    });
   });
 
   describe('further engine coverage', () => {

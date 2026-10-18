@@ -156,7 +156,7 @@ export function currentWeek(
 
 export function currentYear(): string {
   if (global.IS_TESTING || Platform.isPlaywright) {
-    return global.currentMonth || '2017';
+    return (global.currentMonth || '2017-01').slice(0, 4);
   } else {
     return d.format(new Date(), 'yyyy');
   }

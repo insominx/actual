@@ -139,6 +139,12 @@ export const CONDITION_TYPES = {
         return value;
       }
 
+      // Lowercasing a regex changes what it means (`\S` becomes `\s`, `\D`
+      // becomes `\d`); eval matches it case-insensitively instead
+      if (op === 'matches') {
+        return value;
+      }
+
       return value.toLowerCase();
     },
   },
@@ -426,7 +432,7 @@ export class Condition {
           return false;
         }
         try {
-          return new RegExp(this.value).test(fieldValue);
+          return new RegExp(this.value, 'i').test(fieldValue);
         } catch (e) {
           logger.log('invalid regexp in matches condition', e);
           return false;

@@ -435,7 +435,7 @@ export function getBudgetName(filepath) {
     return null;
   }
 
-  unixFilepath = unixFilepath.replace(/\.zip$/, '').replace(/.ynab4$/, '');
+  unixFilepath = unixFilepath.replace(/\.zip$/, '').replace(/\.ynab4$/, '');
 
   // Most budgets are named like "Budget~51938D82.ynab4" but sometimes
   // they are only "Budget.ynab4". We only want to grab the name

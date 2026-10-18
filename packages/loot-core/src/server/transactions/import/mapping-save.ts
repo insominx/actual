@@ -85,7 +85,11 @@ export async function prepareImportMappingSave(
     throw APIError(`Account does not exist: ${String(account)}`);
   }
   const normalizedFormat = format === 'qfx' ? 'ofx' : format;
-  if (typeof normalizedFormat !== 'string' || !APPLIES[normalizedFormat]) {
+  // `in` / a bare lookup would also accept inherited names like "constructor"
+  if (
+    typeof normalizedFormat !== 'string' ||
+    !Object.hasOwn(APPLIES, normalizedFormat)
+  ) {
     throw APIError('format must be csv, qif, ofx, qfx or xml');
   }
   if (typeof reset !== 'boolean') throw APIError('reset must be a boolean');

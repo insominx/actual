@@ -1,4 +1,4 @@
-import { html2Plain } from './ofx2json';
+import { html2Plain, ofx2json } from './ofx2json';
 
 describe('html2Plain', () => {
   test('regular text works', async () => {
@@ -29,5 +29,22 @@ describe('html2Plain', () => {
     expect(html2Plain('Hello, &amp;quot;world&amp;quot;!')).toBe(
       'Hello, &quot;world&quot;!',
     );
+  });
+});
+
+describe('ofx2json investment statements', () => {
+  test('parses a single INVBANKTRAN entry', async () => {
+    const ofx = `OFXHEADER:100
+DATA:OFXSGML
+VERSION:102
+
+<OFX><INVSTMTMSGSRSV1><INVSTMTTRNRS><INVSTMTRS><INVTRANLIST><INVBANKTRAN><STMTTRN><TRNTYPE>DEBIT<DTPOSTED>20240102<TRNAMT>-5.00<FITID>1<NAME>X</STMTTRN></INVBANKTRAN></INVTRANLIST></INVSTMTRS></INVSTMTTRNRS></INVSTMTMSGSRSV1></OFX>`;
+    const { transactions } = await ofx2json(ofx);
+    expect(transactions).toHaveLength(1);
+    expect(transactions[0]).toMatchObject({
+      amount: '-5.00',
+      fitId: '1',
+      date: '2024-01-02',
+    });
   });
 });

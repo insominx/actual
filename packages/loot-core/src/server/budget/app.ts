@@ -325,6 +325,9 @@ function makeCategoryCreationInput({
   if (!groupId) {
     throw APIError('Creating a category: groupId is required');
   }
+  if (!name?.trim()) {
+    throw APIError('Creating a category: name is required');
+  }
   return {
     name: name.trim(),
     cat_group: groupId,

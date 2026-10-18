@@ -98,6 +98,18 @@ describe('File import', () => {
     ]);
   });
 
+  test('ofx import reads comma decimal separators', async () => {
+    const { errors, transactions } = await parseFile(
+      __dirname + '/../../../mocks/files/ofx-comma-decimal.ofx',
+    );
+
+    expect(errors.length).toBe(0);
+    expect(transactions).toMatchObject([
+      { amount: -12.5 },
+      { amount: 1234.56 },
+    ]);
+  });
+
   test('ofx import works', async () => {
     await prefs.loadPrefs();
     await db.insertAccount({ id: 'one', name: 'one' });

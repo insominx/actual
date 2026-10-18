@@ -39,7 +39,9 @@ function execSplitActions(actions: Action[], transaction) {
   // This also populates any fixed-amount splits.
   actions.forEach(action => {
     const splitTransactionIndex = (action.options?.splitIndex ?? 0) + 1;
-    if (splitTransactionIndex >= newTransactions.length) {
+    // Add as many splits as needed: a rule whose split indexes skip a number
+    // (e.g. 1 and 3) would otherwise index past the end of the list
+    while (splitTransactionIndex >= newTransactions.length) {
       const { data } = addSplitTransaction(newTransactions, transaction.id);
       newTransactions = data;
     }

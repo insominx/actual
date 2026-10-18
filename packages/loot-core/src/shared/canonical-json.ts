@@ -8,7 +8,8 @@ export function canonicalJson(value: unknown): string {
       '{' +
       Object.entries(value)
         .filter(([, v]) => v !== undefined)
-        .sort(([a], [b]) => a.localeCompare(b))
+        // Code-unit order: localeCompare varies with the host's ICU data
+        .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
         .map(([k, v]) => JSON.stringify(k) + ':' + canonicalJson(v))
         .join(',') +
       '}'

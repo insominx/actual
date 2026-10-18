@@ -109,6 +109,14 @@ export function runQuery<T>(
 
   const stmt = typeof sql === 'string' ? db.prepare(sql) : sql;
 
+  // A statement prepared here from a string is only ever used once, and
+  // sql.js keeps it (and its wasm memory) alive until it is freed
+  const freeIfOwned = () => {
+    if (typeof sql === 'string') {
+      stmt.free();
+    }
+  };
+
   if (fetchAll) {
     try {
       stmt.bind(params);
@@ -125,12 +133,17 @@ export function runQuery<T>(
       }
       return rows;
     } catch (e) {
+      freeIfOwned();
       logger.log(sql);
       throw e;
     }
   } else {
-    stmt.run(params);
-    return { changes: db.getRowsModified() };
+    try {
+      stmt.run(params);
+      return { changes: db.getRowsModified() };
+    } finally {
+      freeIfOwned();
+    }
   }
 }
 

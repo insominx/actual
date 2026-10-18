@@ -79,37 +79,47 @@ export function registerHandlebarsHelpers() {
     month: (date?: string) => date && format(date, 'M'),
     year: (date?: string) => date && format(date, 'yyyy'),
     format: (date?: string, f?: string) => date && f && format(date, f),
-    addDays: (date?: string, days?: number) => {
-      if (!date || !days) return date;
-      return format(addDays(date, days), 'yyyy-MM-dd');
+    // The amounts may arrive as numeric strings (e.g. from `fixed`), and
+    // date-fns would concatenate those instead of adding them
+    addDays: (date?: string, days?: number | string) => {
+      const amount = Number(days);
+      if (!date || !amount) return date;
+      return format(addDays(date, amount), 'yyyy-MM-dd');
     },
-    subDays: (date?: string, days?: number) => {
-      if (!date || !days) return date;
-      return format(subDays(date, days), 'yyyy-MM-dd');
+    subDays: (date?: string, days?: number | string) => {
+      const amount = Number(days);
+      if (!date || !amount) return date;
+      return format(subDays(date, amount), 'yyyy-MM-dd');
     },
-    addMonths: (date?: string, months?: number) => {
-      if (!date || !months) return date;
-      return format(addMonths(parseDate(date), months), 'yyyy-MM-dd');
+    addMonths: (date?: string, months?: number | string) => {
+      const amount = Number(months);
+      if (!date || !amount) return date;
+      return format(addMonths(parseDate(date), amount), 'yyyy-MM-dd');
     },
-    subMonths: (date?: string, months?: number) => {
-      if (!date || !months) return date;
-      return format(subMonths(parseDate(date), months), 'yyyy-MM-dd');
+    subMonths: (date?: string, months?: number | string) => {
+      const amount = Number(months);
+      if (!date || !amount) return date;
+      return format(subMonths(parseDate(date), amount), 'yyyy-MM-dd');
     },
-    addWeeks: (date?: string, weeks?: number) => {
-      if (!date || !weeks) return date;
-      return format(addWeeks(parseDate(date), weeks), 'yyyy-MM-dd');
+    addWeeks: (date?: string, weeks?: number | string) => {
+      const amount = Number(weeks);
+      if (!date || !amount) return date;
+      return format(addWeeks(parseDate(date), amount), 'yyyy-MM-dd');
     },
-    subWeeks: (date?: string, weeks?: number) => {
-      if (!date || !weeks) return date;
-      return format(subWeeks(parseDate(date), weeks), 'yyyy-MM-dd');
+    subWeeks: (date?: string, weeks?: number | string) => {
+      const amount = Number(weeks);
+      if (!date || !amount) return date;
+      return format(subWeeks(parseDate(date), amount), 'yyyy-MM-dd');
     },
-    addYears: (date?: string, years?: number) => {
-      if (!date || !years) return date;
-      return format(addYears(parseDate(date), years), 'yyyy-MM-dd');
+    addYears: (date?: string, years?: number | string) => {
+      const amount = Number(years);
+      if (!date || !amount) return date;
+      return format(addYears(parseDate(date), amount), 'yyyy-MM-dd');
     },
-    subYears: (date?: string, years?: number) => {
-      if (!date || !years) return date;
-      return format(subYears(parseDate(date), years), 'yyyy-MM-dd');
+    subYears: (date?: string, years?: number | string) => {
+      const amount = Number(years);
+      if (!date || !amount) return date;
+      return format(subYears(parseDate(date), amount), 'yyyy-MM-dd');
     },
     setDay: (date?: string, day?: number) => {
       if (!date || day == null) return date;

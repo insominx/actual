@@ -48,17 +48,24 @@ async function createScheduleList(
     // Prefer scheduleId so renames don't break the lookup; fall back to name
     // for notes-source templates (and legacy ui-source data) that only carry
     // the name.
-    const {
-      id: sid,
-      name: scheduleName,
-      completed,
-    } = await db.first<Pick<db.DbSchedule, 'id' | 'name' | 'completed'>>(
+    const scheduleRow = await db.first<
+      Pick<db.DbSchedule, 'id' | 'name' | 'completed'>
+    >(
       template.scheduleId
         ? 'SELECT id, name, completed FROM schedules WHERE id = ? AND tombstone = 0'
         : 'SELECT id, name, completed FROM schedules WHERE TRIM(name) = ? AND tombstone = 0',
       [template.scheduleId ?? template.name],
     );
+    if (!scheduleRow) {
+      throw new Error(
+        `Schedule ${template.name ?? template.scheduleId} does not exist`,
+      );
+    }
+    const { id: sid, name: scheduleName, completed } = scheduleRow;
     const rule = await getRuleForSchedule(sid);
+    if (!rule) {
+      throw new Error(`Schedule ${scheduleName ?? sid} has no rule`);
+    }
     const conditions = rule.serialize().conditions;
     const { date: dateConditions, amount: amountCondition } =
       extractScheduleConds(conditions);

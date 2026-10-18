@@ -109,7 +109,9 @@ function filterOptionsMatch(options1, options2) {
   return keys1.every(key => opt1[key] === opt2[key]);
 }
 
-async function createFilter(filter): Promise<TransactionFilterEntity['id']> {
+export async function createFilter(
+  filter,
+): Promise<TransactionFilterEntity['id']> {
   const filterId = uuidv4();
   const item = {
     id: filterId,
@@ -118,7 +120,7 @@ async function createFilter(filter): Promise<TransactionFilterEntity['id']> {
     name: filter.state.name,
   };
 
-  if (item.name) {
+  if (item.name?.trim()) {
     if (await filterNameExists(item.name, item.id, true)) {
       throw new Error('There is already a filter named ' + item.name);
     }
@@ -144,14 +146,14 @@ async function createFilter(filter): Promise<TransactionFilterEntity['id']> {
   return filterId;
 }
 
-async function updateFilter(filter) {
+export async function updateFilter(filter) {
   const item = {
     id: filter.state.id,
     conditions: filter.state.conditions,
     conditionsOp: filter.state.conditionsOp,
     name: filter.state.name,
   };
-  if (item.name) {
+  if (item.name?.trim()) {
     if (await filterNameExists(item.name, item.id, false)) {
       throw new Error('There is already a filter named ' + item.name);
     }

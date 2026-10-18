@@ -18,6 +18,24 @@ describe('forecast filters', () => {
     expect(filterInfo.canRestrictAccounts).toBe(false);
   });
 
+  it('lets $like wildcards match across newlines', () => {
+    expect(
+      matchesAQLFilter({ notes: 'rent\nmarch' }, { notes: { $like: 'rent%' } }),
+    ).toBe(true);
+    expect(
+      matchesAQLFilter(
+        { notes: 'rent\nmarch' },
+        { notes: { $like: '%march' } },
+      ),
+    ).toBe(true);
+    expect(
+      matchesAQLFilter(
+        { notes: 'rent\nmarch' },
+        { notes: { $notlike: 'rent%' } },
+      ),
+    ).toBe(false);
+  });
+
   it('allows account pre-restriction for account-only filters', () => {
     const { filterInfo } = buildFilterInfo(
       [

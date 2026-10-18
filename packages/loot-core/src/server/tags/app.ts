@@ -46,25 +46,28 @@ export async function createTag({
 }: Omit<TagEntity, 'id'>): Promise<TagEntity> {
   const allTags = await db.getAllTags();
 
-  const { id: tagId = null } = allTags.find(t => t.tag === tag) || {};
+  // Stored tags are trimmed, so look up (and save) the trimmed name: `foo `
+  // must find the existing `foo` instead of creating a second one
+  const name = tag.trim();
+  const { id: tagId = null } = allTags.find(t => t.tag === name) || {};
   if (tagId) {
     await db.updateTag({
       id: tagId,
-      tag,
+      tag: name,
       color,
       description,
       tombstone: 0,
     });
-    return { id: tagId, tag, color, description };
+    return { id: tagId, tag: name, color, description };
   }
 
   const id = await db.insertTag({
-    tag: tag.trim(),
+    tag: name,
     color: color ? color.trim() : null,
     description,
   });
 
-  return { id, tag, color, description };
+  return { id, tag: name, color, description };
 }
 
 export async function deleteTag(

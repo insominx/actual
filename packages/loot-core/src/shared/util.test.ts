@@ -1,5 +1,9 @@
+import { enUS } from 'date-fns/locale';
+
 import {
   amountToCurrencyInteger,
+  applyChanges,
+  applyFindReplace,
   currencyToAmount,
   getNumberFormat,
   integerToCurrencyWithDecimal,
@@ -7,9 +11,35 @@ import {
   setNumberFormat,
   stringToInteger,
   titleFirst,
+  tsToRelativeTime,
 } from './util';
 
 describe('utility functions', () => {
+  test('tsToRelativeTime returns Unknown instead of throwing on a malformed timestamp', () => {
+    expect(tsToRelativeTime(null, enUS)).toBe('Unknown');
+    expect(tsToRelativeTime('not-a-number', enUS)).toBe('Unknown');
+  });
+
+  test('applyFindReplace treats $ in a literal replacement as plain text', () => {
+    expect(applyFindReplace('USD 5', 'USD', '$$', false)).toBe('$$ 5');
+    expect(applyFindReplace('a b', 'a', '$&$&', false)).toBe('$&$& b');
+  });
+
+  test('applyFindReplace still expands capture groups in regex mode', () => {
+    expect(applyFindReplace('abc', '(b)', '[$1]', true)).toBe('a[b]c');
+  });
+
+  test('applyChanges ignores updates for unknown ids', () => {
+    const items = [{ id: 'a', name: 'A' }];
+    const result = applyChanges(
+      { added: [], updated: [{ id: 'missing', name: 'X' }], deleted: [] },
+      items,
+    );
+    expect(result).toEqual([{ id: 'a', name: 'A' }]);
+    expect(result).toHaveLength(1);
+    expect(Object.keys(result)).toEqual(['0']);
+  });
+
   test('looseParseAmount works with basic numbers', () => {
     // Parsing is currently limited to 1,2 decimal places or 5-9.
     // Ignoring 3 places removes the possibility of improper parse

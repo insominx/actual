@@ -45,6 +45,29 @@ describe('Web sqlite', () => {
     expect(rows[0].number).toBe(4);
   });
 
+  it('should free the statements it prepares from SQL strings', async () => {
+    const db = await openDatabase();
+    execQuery(db, initSQL);
+
+    // sql.js keeps every prepared statement alive until it is freed
+    const frees = [];
+    const prepare = db.prepare.bind(db);
+    db.prepare = sql => {
+      const stmt = prepare(sql);
+      frees.push(vi.spyOn(stmt, 'free'));
+      return stmt;
+    };
+
+    runQuery(db, "INSERT INTO numbers (id, number) VALUES ('id1', 4)");
+    runQuery(db, 'SELECT * FROM numbers', [], true);
+    expect(() =>
+      runQuery(db, "INSERT INTO numbers (id, number) VALUES ('id1', 1)"),
+    ).toThrow(/constraint failed/);
+
+    expect(frees).toHaveLength(3);
+    frees.forEach(free => expect(free).toHaveBeenCalledTimes(1));
+  });
+
   it('should support nested transactions', async () => {
     const db = await openDatabase();
     execQuery(db, initSQL);

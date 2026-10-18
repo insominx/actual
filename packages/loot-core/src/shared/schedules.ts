@@ -389,7 +389,8 @@ export function getUpcomingDays(
     default:
       if (upcomingLength.includes('-')) {
         const [num, unit] = upcomingLength.split('-');
-        const value = Math.max(1, parseInt(num, 10));
+        // A blank or garbled number would otherwise produce NaN days
+        const value = Math.max(1, parseInt(num, 10) || 1);
         switch (unit) {
           case 'day':
             return value;
@@ -405,7 +406,9 @@ export function getUpcomingDays(
             return 7;
         }
       }
-      return parseInt(upcomingLength, 10);
+      return Number.isNaN(parseInt(upcomingLength, 10))
+        ? 7
+        : parseInt(upcomingLength, 10);
   }
 }
 

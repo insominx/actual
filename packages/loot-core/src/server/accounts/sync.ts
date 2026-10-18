@@ -545,7 +545,7 @@ async function normalizeBankSyncTransactions(transactions, acctId) {
 
     if (!importPending && !trans.cleared) continue;
 
-    if (!trans.amount) {
+    if (!trans.amount && trans.transactionAmount) {
       trans.amount = trans.transactionAmount.amount;
     }
 
@@ -987,7 +987,7 @@ export async function matchTransactions(
             dateFns.parseISO(db.fromDateRepr(b.date)),
           ),
         );
-        return aDistance > bDistance ? 1 : -1;
+        return aDistance - bDistance;
       });
     }
 
@@ -1159,39 +1159,46 @@ async function processBankSyncDownload(
     const { transactions } = download;
     let balanceToUse = currentBalance;
 
-    // Use custom starting balance if provided, otherwise calculate it
-    if (customStartingBalance !== undefined) {
-      balanceToUse = customStartingBalance;
-    } else if (acctRow.account_sync_source === 'simpleFin') {
-      const previousBalance = transactions.reduce((total, trans) => {
-        return (
-          total - parseInt(trans.transactionAmount.amount.replace('.', ''))
-        );
-      }, currentBalance);
-      balanceToUse = previousBalance;
-    } else if (acctRow.account_sync_source === 'pluggyai') {
-      const currentBalance = download.startingBalance;
-      const previousBalance = transactions.reduce(
-        (total, trans) => total - trans.transactionAmount.amount * 100,
-        currentBalance,
-      );
-      balanceToUse = Math.round(previousBalance);
-    } else if (acctRow.account_sync_source === 'enableBanking') {
+    // Pending transactions are skipped on import when the account is set not
+    // to import them, so they must not be walked back out of the balance
+    const getImportableTransactions = async () => {
       const importPending = await aqlQuery(
         q('preferences')
           .filter({ id: `sync-import-pending-${id}` })
           .select('value'),
       ).then(data => String(data?.data?.[0]?.value ?? 'true') === 'true');
-      const importable = importPending
+      return importPending
         ? transactions
         : transactions.filter(trans => Boolean(trans.booked));
+    };
+
+    // Use custom starting balance if provided, otherwise calculate it
+    if (customStartingBalance !== undefined) {
+      balanceToUse = customStartingBalance;
+    } else if (acctRow.account_sync_source === 'simpleFin') {
+      const importable = await getImportableTransactions();
+      const previousBalance = importable.reduce((total, trans) => {
+        return total - amountToInteger(Number(trans.transactionAmount.amount));
+      }, currentBalance);
+      balanceToUse = previousBalance;
+    } else if (acctRow.account_sync_source === 'pluggyai') {
+      const currentBalance = download.startingBalance;
+      const importable = await getImportableTransactions();
+      const previousBalance = importable.reduce(
+        (total, trans) => total - trans.transactionAmount.amount * 100,
+        currentBalance,
+      );
+      balanceToUse = Math.round(previousBalance);
+    } else if (acctRow.account_sync_source === 'enableBanking') {
+      const importable = await getImportableTransactions();
       const previousBalance = importable.reduce((total, trans) => {
         return total - amountToInteger(trans.transactionAmount.amount);
       }, currentBalance);
       balanceToUse = previousBalance;
     } else if (acctRow.account_sync_source === 'akahu') {
       const currentBalance = download.startingBalance;
-      const previousBalance = transactions.reduce(
+      const importable = await getImportableTransactions();
+      const previousBalance = importable.reduce(
         (total, trans) =>
           total - amountToInteger(trans.transactionAmount.amount),
         currentBalance,

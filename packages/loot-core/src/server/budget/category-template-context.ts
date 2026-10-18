@@ -708,6 +708,12 @@ export class CategoryTemplateContext {
     );
     const period = template.period.period;
     const numPeriods = template.period.amount;
+    // A zero (or invalid) step would never advance the date and hang below
+    if (!Number.isInteger(numPeriods) || numPeriods <= 0) {
+      throw new Error(
+        `Periodic template needs a positive whole number of periods, got ${String(numPeriods)}`,
+      );
+    }
     let date =
       template.starting && template.starting.length > 0
         ? template.starting

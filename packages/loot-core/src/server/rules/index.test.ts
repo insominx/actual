@@ -228,6 +228,24 @@ describe('Condition', () => {
     expect(cond.eval({ notes: 'f o o' })).toBe(false);
   });
 
+  test('matches keeps the meaning of uppercase regex escapes', () => {
+    // \S is "non-whitespace" and \D is "non-digit"; lowercasing the pattern
+    // would turn them into \s and \d
+    const nonSpace = new Condition('matches', 'notes', '^\\S+$', null);
+    expect(nonSpace.eval({ notes: 'coffee' })).toBe(true);
+    expect(nonSpace.eval({ notes: 'two words' })).toBe(false);
+
+    const nonDigit = new Condition('matches', 'notes', '^\\D+$', null);
+    expect(nonDigit.eval({ notes: 'abc' })).toBe(true);
+    expect(nonDigit.eval({ notes: '123' })).toBe(false);
+  });
+
+  test('matches is case-insensitive for both pattern and text', () => {
+    const cond = new Condition('matches', 'notes', '^Coffee Shop$', null);
+    expect(cond.eval({ notes: 'COFFEE shop' })).toBe(true);
+    expect(cond.eval({ notes: 'tea shop' })).toBe(false);
+  });
+
   test('matches handles invalid regex', () => {
     const cond = new Condition('matches', 'notes', 'fo**', null);
     expect(cond.eval({ notes: 'foo' })).toBe(false);
@@ -479,6 +497,15 @@ describe('Action', () => {
       testHelper('{{addWeeks}}', '');
       testHelper('{{subWeeks "2002-07-25" 1}}', '2002-07-18');
       testHelper('{{subWeeks}}', '');
+      // `fixed` yields a numeric string, which must still add as a number
+      testHelper('{{addDays "2002-07-25" (fixed 5 0)}}', '2002-07-30');
+      testHelper('{{subDays "2002-07-25" (fixed 5 0)}}', '2002-07-20');
+      testHelper('{{addMonths "2002-07-25" (fixed 5 0)}}', '2002-12-25');
+      testHelper('{{subMonths "2002-07-25" (fixed 5 0)}}', '2002-02-25');
+      testHelper('{{addYears "2002-07-25" (fixed 5 0)}}', '2007-07-25');
+      testHelper('{{subYears "2002-07-25" (fixed 5 0)}}', '1997-07-25');
+      testHelper('{{addWeeks "2002-07-25" (fixed 1 0)}}', '2002-08-01');
+      testHelper('{{subWeeks "2002-07-25" (fixed 1 0)}}', '2002-07-18');
       testHelper('{{setDay "2002-07-25" 1}}', '2002-07-01');
       testHelper('{{setDay "2002-07-25" 32}}', '2002-08-01');
       testHelper('{{setDay "2002-07-25" 0}}', '2002-06-30');
@@ -700,6 +727,43 @@ describe('Rule', () => {
           options: { splitIndex: 2, method: 'fixed-amount' },
         },
       ],
+    });
+
+    test('split indexes with a gap do not crash', () => {
+      const rule = new Rule({
+        conditionsOp: 'and',
+        conditions: [{ op: 'is', field: 'imported_payee', value: 'James' }],
+        actions: [
+          {
+            op: 'set-split-amount',
+            field: 'amount',
+            value: 100,
+            options: { splitIndex: 1, method: 'fixed-amount' },
+          },
+          {
+            op: 'set-split-amount',
+            field: 'amount',
+            value: 100,
+            options: { splitIndex: 3, method: 'fixed-amount' },
+          },
+        ],
+      });
+
+      expect(rule.exec({ imported_payee: 'James', amount: 200 })).toMatchObject(
+        { subtransactions: [{ amount: 100 }, {}, { amount: 100 }] },
+      );
+    });
+
+    test('a split-amount action without options does not crash', () => {
+      const rule = new Rule({
+        conditionsOp: 'and',
+        conditions: [{ op: 'is', field: 'imported_payee', value: 'James' }],
+        actions: [{ op: 'set-split-amount', field: 'amount', value: 100 }],
+      });
+
+      expect(() =>
+        rule.exec({ imported_payee: 'James', amount: 200 }),
+      ).not.toThrow();
     });
 
     test('basic fixed-amount', () => {

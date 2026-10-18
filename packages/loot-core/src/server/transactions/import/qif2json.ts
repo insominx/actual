@@ -46,6 +46,10 @@ export function qif2json(qif, options: { dateFormat?: string } = {}) {
 
   while (next < lines.length && (line = lines[next++])) {
     line = line.trim();
+    if (!line) {
+      // Blank or whitespace-only line (e.g. a stray "\r" in a CRLF file)
+      continue;
+    }
     if (line === '^') {
       transactions.push(transaction);
       transaction = {};

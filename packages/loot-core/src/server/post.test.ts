@@ -98,6 +98,35 @@ describe('post', () => {
   });
 });
 
+describe('error responses with a malformed JSON body', () => {
+  beforeEach(() => {
+    mockedFetch.mockReset();
+  });
+
+  const malformed = () =>
+    new Response('<html>bad gateway', {
+      status: 502,
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+  it.each([
+    ['post', () => post('https://test.env/sync/sync', {})],
+    ['del', () => del('https://test.env/sync/sync', {})],
+    ['patch', () => patch('https://test.env/sync/sync', {})],
+    [
+      'postBinary',
+      () => postBinary('https://test.env/sync/sync', new Uint8Array([1]), {}),
+    ],
+  ])('%s rejects with a PostError, not a raw SyntaxError', async (_, call) => {
+    mockedFetch.mockResolvedValue(malformed());
+
+    const error = await captureError(call());
+
+    expect(error).toBeInstanceOf(PostError);
+    expect((error as PostError).reason).toBe('parse-json');
+  });
+});
+
 describe('del', () => {
   beforeEach(() => {
     mockedFetch.mockReset();

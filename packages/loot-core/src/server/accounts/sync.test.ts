@@ -834,6 +834,121 @@ describe('SimpleFin batch sync', () => {
     }
   });
 
+  test('derives the opening balance from amounts with any number of decimals', async () => {
+    const providerAccountId = 'sf-account-1';
+    const acctId = await db.insertAccount({
+      id: 'acct-1',
+      account_id: providerAccountId,
+      name: 'Account 1',
+      account_sync_source: 'simpleFin',
+    });
+
+    mockSimpleFinTransactions({
+      [providerAccountId]: {
+        transactions: {
+          all: [
+            {
+              booked: true,
+              date: '2017-10-03',
+              payeeName: 'Coffee Shop',
+              transactionAmount: { amount: '-12.5' },
+              transactionId: 'provider-tx-1',
+            },
+            {
+              booked: true,
+              date: '2017-10-02',
+              payeeName: 'Employer',
+              transactionAmount: { amount: '100' },
+              transactionId: 'provider-tx-2',
+            },
+          ],
+          booked: [],
+          pending: [],
+        },
+        balances: [],
+        startingBalance: 10000,
+      },
+      errors: {},
+    });
+
+    setSyncingMode('offline');
+    try {
+      const result = await accountsApp.handlers['simplefin-batch-sync']({
+        ids: [acctId],
+      });
+      expect(result[0].res.errors).toHaveLength(0);
+
+      const startingBalance = (await getAllTransactions()).find(
+        transaction => transaction.starting_balance_flag,
+      );
+      // 100.00 current balance minus (-12.50 + 100.00) of synced transactions
+      expect(startingBalance.amount).toBe(1250);
+    } finally {
+      setSyncingMode('disabled');
+    }
+  });
+
+  test('leaves pending transactions out of the opening balance when they are not imported', async () => {
+    const providerAccountId = 'sf-account-1';
+    const acctId = await db.insertAccount({
+      id: 'acct-1',
+      account_id: providerAccountId,
+      name: 'Account 1',
+      account_sync_source: 'simpleFin',
+    });
+    await db.update('preferences', {
+      id: `sync-import-pending-${acctId}`,
+      value: 'false',
+    });
+
+    mockSimpleFinTransactions({
+      [providerAccountId]: {
+        transactions: {
+          all: [
+            {
+              booked: false,
+              date: '2017-10-03',
+              payeeName: 'Pending Shop',
+              transactionAmount: { amount: '-5' },
+              transactionId: 'provider-tx-pending',
+            },
+            {
+              booked: true,
+              date: '2017-10-02',
+              payeeName: 'Employer',
+              transactionAmount: { amount: '100' },
+              transactionId: 'provider-tx-2',
+            },
+          ],
+          booked: [],
+          pending: [],
+        },
+        balances: [],
+        startingBalance: 10000,
+      },
+      errors: {},
+    });
+
+    setSyncingMode('offline');
+    try {
+      const result = await accountsApp.handlers['simplefin-batch-sync']({
+        ids: [acctId],
+      });
+      expect(result[0].res.errors).toHaveLength(0);
+
+      const transactions = await getAllTransactions();
+      expect(
+        transactions.some(t => t.imported_id === 'provider-tx-pending'),
+      ).toBe(false);
+
+      const startingBalance = transactions.find(t => t.starting_balance_flag);
+      // 100.00 current balance minus only the imported 100.00 deposit
+      expect(startingBalance.amount).toBe(0);
+    } finally {
+      setSyncingMode('disabled');
+    }
+  });
+
   test('returns ACCOUNT_MISSING error when an account is not in the response', async () => {
     const presentAccountId = 'sf-account-1';
     const missingAccountId = 'sf-account-2';

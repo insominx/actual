@@ -103,7 +103,8 @@ export function validateQuery(queryState: QueryState): QueryValidation {
     queryState && typeof queryState.table === 'string'
       ? queryState.table
       : null;
-  if (!table || !(table in schema)) {
+  // `in` would also accept inherited names such as "constructor"
+  if (!table || !Object.hasOwn(schema, table)) {
     return {
       valid: false,
       table,

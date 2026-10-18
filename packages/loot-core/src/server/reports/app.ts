@@ -131,13 +131,13 @@ async function reportNameExists(
   return true;
 }
 
-async function createReport(report: CustomReportEntity) {
+export async function createReport(report: CustomReportEntity) {
   const reportId = uuidv4();
   const item: CustomReportEntity = {
     ...report,
     id: reportId,
   };
-  if (!item.name) {
+  if (!item.name?.trim()) {
     throw new Error('Report name is required');
   }
 
@@ -152,8 +152,8 @@ async function createReport(report: CustomReportEntity) {
   return reportId;
 }
 
-async function updateReport(item: CustomReportEntity) {
-  if (!item.name) {
+export async function updateReport(item: CustomReportEntity) {
+  if (!item.name?.trim()) {
     throw new Error('Report name is required');
   }
 

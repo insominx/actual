@@ -17,7 +17,7 @@ type AstNode = number | OperatorNode;
 
 function fail(state: ParserState, msg: string): never {
   throw new Error(
-    msg + ': ' + JSON.stringify(state.str.slice(state.index, 10)),
+    msg + ': ' + JSON.stringify(state.str.slice(state.index, state.index + 10)),
   );
 }
 
@@ -76,6 +76,12 @@ function parsePrimary(state: ParserState): number {
 }
 
 function parseParens(state: ParserState): AstNode {
+  // A leading minus on a parenthesized group, e.g. `-(2 + 3)`
+  if (char(state) === '-' && state.str[state.index + 1] === '(') {
+    next(state);
+    return { op: '-', left: 0, right: parseParens(state) };
+  }
+
   if (char(state) === '(') {
     next(state);
     const expr = parseOperator(state);

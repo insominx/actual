@@ -830,6 +830,26 @@ describe('sheet language', () => {
     );
     expect(result.sql).toMatch("id IN ('one','two','three')");
   });
+
+  it('escapes quotes in id literals', () => {
+    const oneOf = generateSQLWithState(
+      q('transactions')
+        .filter({ id: { $oneof: ["a'b"] } })
+        .select(['amount'])
+        .serialize(),
+      schemaWithRefs,
+    );
+    expect(oneOf.sql).toMatch("id IN ('a''b')");
+
+    const equal = generateSQLWithState(
+      q('transactions')
+        .filter({ id: "x' OR '1'='1" })
+        .select(['amount'])
+        .serialize(),
+      schemaWithRefs,
+    );
+    expect(equal.sql).toMatch("'x'' OR ''1''=''1'");
+  });
 });
 
 describe('Type conversions', () => {

@@ -72,6 +72,21 @@ describe('web filesystem', () => {
     await idb.closeDatabase();
   });
 
+  test('writing a view stores only the bytes the view covers', async () => {
+    await idb.openDatabase();
+    await sqlite.init();
+    await init();
+
+    // e.g. an entry unzipped as a subarray of the archive's buffer
+    const backing = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
+    await writeFile('/documents/part.bin', backing.subarray(2, 5));
+
+    const contents = await readFile('/documents/part.bin', 'binary');
+    expect(Array.from(contents)).toEqual([3, 4, 5]);
+
+    await idb.closeDatabase();
+  });
+
   test('writing to sqlite files creates symlinks', async () => {
     await idb.openDatabase();
     await sqlite.init();

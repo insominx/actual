@@ -318,7 +318,7 @@ export async function init(config: InitConfig) {
   if (serverURL) {
     setServer(serverURL);
 
-    if ('sessionToken' in config && config.sessionToken) {
+    if (config?.sessionToken) {
       // Session token authentication
       await runHandler(handlers['subscribe-set-token'], {
         token: config.sessionToken,
@@ -341,7 +341,7 @@ export async function init(config: InitConfig) {
           'network-failure',
         );
       }
-    } else if ('password' in config && config.password) {
+    } else if (config?.password) {
       const result = await runHandler(handlers['subscribe-sign-in'], {
         password: config.password,
       });
