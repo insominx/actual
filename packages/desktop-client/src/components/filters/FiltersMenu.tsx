@@ -664,9 +664,12 @@ export function FilterButton<T extends RuleConditionEntity>({
     cond = unparse({ ...cond, type: FIELD_TYPES.get(cond.field) });
 
     if (cond.type === 'date' && cond.options) {
-      if (cond.options.month) {
+      if (
+        cond.options.month &&
+        typeof cond.value === 'string' &&
+        !/^\d{4}-\d{2}$/.test(cond.value)
+      ) {
         const date = parseDate(
-          // @ts-expect-error - fix me
           cond.value,
           getMonthYearFormat(dateFormat),
           new Date(),
@@ -785,8 +788,7 @@ export function FilterButton<T extends RuleConditionEntity>({
           // Datepicker selections for some reason register 2x clicks
           // We want to keep the popover open after selecting a date.
           // So we ignore the "close" event on selection + the subsequent event.
-          // @ts-expect-error - fix me
-          if (element.dataset.pikaYear) {
+          if (element instanceof HTMLElement && element.dataset.pikaYear) {
             isDatepickerClick = true;
             return false;
           }

@@ -273,7 +273,7 @@ function OpenIdLogin({ setError }) {
   );
 }
 
-function HeaderLogin({ error }) {
+function HeaderLogin({ error, onPasswordLogin }) {
   return (
     <View
       style={{
@@ -287,7 +287,8 @@ function HeaderLogin({ error }) {
           variant="button"
           type="button"
           style={{ fontSize: 15 }}
-          to={'/login/password?error=' + error}
+          to={'/login?error=' + encodeURIComponent(String(error))}
+          onPress={onPasswordLogin}
         >
           <Trans>Log in with password</Trans>
         </Link>
@@ -386,7 +387,15 @@ export function Login() {
 
       {method === 'openid' && <OpenIdLogin setError={setError} />}
 
-      {method === 'header' && <HeaderLogin error={error} />}
+      {method === 'header' && (
+        <HeaderLogin
+          error={error}
+          onPasswordLogin={() => {
+            setError(null);
+            setMethod('password');
+          }}
+        />
+      )}
 
       {loginMethods?.length > 1 && (
         <View style={{ marginTop: 10 }}>

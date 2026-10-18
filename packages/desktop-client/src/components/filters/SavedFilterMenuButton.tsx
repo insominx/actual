@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
 import { Button } from '@actual-app/components/button';
@@ -49,12 +49,17 @@ export function SavedFilterMenuButton({
   const id = filterId?.id;
   const originalSavedFilter = useRef<SavedFilter | null>(null);
 
+  useEffect(() => {
+    setName(filterId?.name ?? '');
+  }, [filterId?.name]);
+
   const onFilterMenuSelect = async (item: string) => {
     setMenuItem(item);
     switch (item) {
       case 'rename-filter':
         setErr(null);
         setAdding(false);
+        setName(filterId?.name ?? '');
         setMenuOpen(false);
         setNameOpen(true);
         break;
@@ -90,14 +95,15 @@ export function SavedFilterMenuButton({
       case 'save-filter':
         setErr(null);
         setAdding(true);
+        setName('');
         setMenuOpen(false);
         setNameOpen(true);
         break;
       case 'reload-filter':
         setMenuOpen(false);
-        if (originalSavedFilter.current) {
+        if (originalSavedFilter.current || filterId) {
           originalSavedFilter.current = {
-            ...originalSavedFilter.current,
+            ...(originalSavedFilter.current ?? filterId!),
             status: 'saved',
           };
           onReloadSavedFilter(originalSavedFilter.current, 'reload');

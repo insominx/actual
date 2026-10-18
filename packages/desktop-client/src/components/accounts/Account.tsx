@@ -435,7 +435,13 @@ class AccountInternal extends PureComponent<
 
     //Resest sort/filter/search on account change
     if (this.props.accountId !== prevProps.accountId) {
-      this.setState({ sort: null, search: '', filterConditions: [] });
+      this.setState({
+        sort: null,
+        search: '',
+        filterConditions: [],
+        filterConditionsOp: 'and',
+        filterId: undefined,
+      });
     }
   }
 
@@ -1501,11 +1507,22 @@ class AccountInternal extends PureComponent<
 
   onReloadSavedFilter = (savedFilter: SavedFilter, item?: string) => {
     if (item === 'reload') {
-      const [savedFilter] = this.props.savedFilters.filter(
+      const [targetFilter] = this.props.savedFilters.filter(
         f => f.id === this.state.filterId?.id,
       );
-      this.setState({ filterConditionsOp: savedFilter.conditionsOp ?? 'and' });
-      void this.applyFilters([...savedFilter.conditions]);
+      if (!targetFilter) {
+        return;
+      }
+      this.setState(state => ({
+        filterConditionsOp: targetFilter.conditionsOp ?? 'and',
+        filterId: {
+          ...state.filterId,
+          ...targetFilter,
+          status: 'saved',
+        },
+      }));
+      void this.applyFilters([...targetFilter.conditions]);
+      return;
     } else {
       if (savedFilter.status) {
         this.setState({

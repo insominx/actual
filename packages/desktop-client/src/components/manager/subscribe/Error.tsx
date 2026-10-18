@@ -1,6 +1,6 @@
 // @ts-strict-ignore
 import React from 'react';
-import { Trans } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router';
 
 import { Button } from '@actual-app/components/button';
@@ -10,19 +10,22 @@ import { View } from '@actual-app/components/view';
 
 import { useNavigate } from '#hooks/useNavigate';
 
-function getErrorMessage(reason) {
-  switch (reason) {
-    case 'network-failure':
-      return 'Unable to access server. Make sure the configured URL for the server is accessible.';
-    default:
-      return 'Server returned an error while checking its status.';
-  }
-}
-
 export function Error() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { error } = (location.state || {}) as { error? };
+
+  function getErrorMessage(reason) {
+    switch (reason) {
+      case 'network-failure':
+        return t(
+          'Unable to access server. Make sure the configured URL for the server is accessible.',
+        );
+      default:
+        return t('Server returned an error while checking its status.');
+    }
+  }
 
   function onTryAgain() {
     void navigate('/');

@@ -192,7 +192,7 @@ export function ManagementApp() {
               <Route path="/bootstrap" element={<Bootstrap />} />
               {multiuserEnabled && (
                 <Route
-                  path="/userdirectory"
+                  path="/user-directory"
                   element={
                     <ProtectedRoute
                       permission={Permissions.ADMINISTRATOR}

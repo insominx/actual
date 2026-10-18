@@ -743,9 +743,13 @@ function UserAccessForFile({ fileId, currentUserId }: UserAccessForFileProps) {
 
   const sortedUsersAccess = [...usersAccess].sort((a, b) => {
     const textA =
-      a.userId === currentUserId ? t('You') : (a.displayName ?? a.userName);
+      a.userId === currentUserId
+        ? t('You')
+        : (a.displayName ?? a.userName ?? '');
     const textB =
-      b.userId === currentUserId ? t('You') : (b.displayName ?? b.userName);
+      b.userId === currentUserId
+        ? t('You')
+        : (b.displayName ?? b.userName ?? '');
     return textA.localeCompare(textB);
   });
 
@@ -774,7 +778,7 @@ function UserAccessForFile({ fileId, currentUserId }: UserAccessForFileProps) {
                       color: theme.pageTextLight,
                     }}
                   >
-                    File shared with:
+                    <Trans>File shared with:</Trans>
                   </Text>
                   <View
                     style={{

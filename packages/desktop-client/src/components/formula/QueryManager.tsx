@@ -484,7 +484,14 @@ function QueryItem({
   function handleImport() {
     try {
       const config = JSON.parse(importJsonText);
-      if (config.conditions && config.conditionsOp && config.timeFrame) {
+      if (
+        config &&
+        typeof config === 'object' &&
+        Array.isArray(config.conditions) &&
+        (config.conditionsOp === 'and' || config.conditionsOp === 'or') &&
+        config.timeFrame &&
+        typeof config.timeFrame === 'object'
+      ) {
         // Update refs
         conditionsRef.current = config.conditions;
         conditionsOpRef.current = config.conditionsOp;
@@ -498,6 +505,17 @@ function QueryItem({
           : monthUtils.currentDay();
         setStartDate(importedStart);
         setEndDate(importedEnd);
+        prevFiltersRef.current = {
+          conditions: config.conditions,
+          conditionsOp: config.conditionsOp,
+          startDate: importedStart,
+          endDate: importedEnd,
+        };
+        filters.onApply({
+          conditions: config.conditions,
+          conditionsOp: config.conditionsOp,
+          id: null,
+        });
 
         // Update the query, with the same fallbacks as the pickers above
         sendUpdate(
