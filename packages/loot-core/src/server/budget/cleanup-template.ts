@@ -16,6 +16,33 @@ type GroupSourceRow = { category: string; groupId: string };
 type GroupSinkRow = { category: string; groupId: string; weight: number };
 type GroupOverspendRow = { category: string; groupId: string };
 
+// Rounded weight shares must add up to `total`. Independent rounding
+// leaves a cent undistributed, or hands the same cent to two categories.
+export function weightedShares(
+  weights: readonly number[],
+  total: number,
+): number[] {
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+  if (weights.length === 0 || totalWeight <= 0 || total === 0) {
+    return weights.map(() => 0);
+  }
+
+  let remaining = total;
+  return weights.map((weight, index) => {
+    if (index === weights.length - 1) {
+      return remaining;
+    }
+
+    const raw = Math.round((weight / totalWeight) * total);
+    const share =
+      total > 0
+        ? Math.min(Math.max(raw, 0), remaining)
+        : Math.max(Math.min(raw, 0), remaining);
+    remaining -= share;
+    return share;
+  });
+}
+
 async function applyGroupCleanups(
   month: string,
   sourceGroups: GroupSourceRow[],
@@ -34,7 +61,6 @@ async function applyGroupCleanups(
     const tempSourceGroups = sourceGroups.filter(c => c.groupId === groupId);
     const sinkGroup = sinkGroups.filter(c => c.groupId === groupId);
     const overspendGroup = overspendGroups.filter(c => c.groupId === groupId);
-    let total_weight = 0;
     // We track how mouch amount was produced by all group sinks and only
     // distribute this instead of the "to-budget" amount.
     let available_amount = 0;
@@ -65,11 +91,6 @@ async function applyGroupCleanups(
           amount: budgeted - balance,
         });
         available_amount += balance;
-      }
-
-      //calculate total weight for sinking funds
-      for (let ii = 0; ii < sinkGroup.length; ii++) {
-        total_weight += sinkGroup[ii].weight;
       }
 
       //fill underfunded categories within the group first
@@ -123,18 +144,22 @@ async function applyGroupCleanups(
           available_amount = 0;
         }
       }
-      for (let ii = 0; ii < sinkGroup.length && available_amount > 0; ii++) {
+      const sinkShares = weightedShares(
+        sinkGroup.map(sink => sink.weight),
+        available_amount,
+      );
+      for (let ii = 0; ii < sinkGroup.length; ii++) {
+        if (sinkShares[ii] === 0) {
+          continue;
+        }
         const budgeted = await getSheetValue(
           sheetName,
           `budget-${sinkGroup[ii].category}`,
         );
-        const to_budget =
-          budgeted +
-          Math.round((sinkGroup[ii].weight / total_weight) * available_amount);
         await setBudget({
           category: sinkGroup[ii].category,
           month,
-          amount: to_budget,
+          amount: budgeted + sinkShares[ii],
         });
       }
     } else {
@@ -152,7 +177,6 @@ async function applyGroupCleanups(
 async function processCleanup(month: string): Promise<TemplateNotification> {
   let num_sources = 0;
   let num_sinks = 0;
-  let total_weight = 0;
   const errors = [];
   const warnings = [];
   type SinkCategoryRow = {
@@ -238,7 +262,6 @@ async function processCleanup(month: string): Promise<TemplateNotification> {
     if (globalSink && globalSink.role === 'sink') {
       sinkCategory.push({ cat: category, weight: globalSink.weight });
       num_sinks += 1;
-      total_weight += globalSink.weight;
     }
   }
 
@@ -289,24 +312,20 @@ async function processCleanup(month: string): Promise<TemplateNotification> {
   }
 
   //fill sinking categories
+  const sinkShares = weightedShares(
+    sinkCategory.map(sink => sink.weight),
+    budgetAvailable,
+  );
   for (let c = 0; c < sinkCategory.length; c++) {
-    const { cat, weight } = sinkCategory[c];
-    const budgeted = await getSheetValue(sheetName, `budget-${cat.id}`);
-    let to_budget =
-      budgeted + Math.round((weight / total_weight) * budgetAvailable);
-    if (c === sinkCategory.length - 1) {
-      const currentBudgetAvailable = await getSheetValue(
-        sheetName,
-        `to-budget`,
-      );
-      if (to_budget > currentBudgetAvailable) {
-        to_budget = budgeted + currentBudgetAvailable;
-      }
+    if (sinkShares[c] === 0) {
+      continue;
     }
+    const { cat } = sinkCategory[c];
+    const budgeted = await getSheetValue(sheetName, `budget-${cat.id}`);
     await setBudget({
       category: cat.id,
       month,
-      amount: to_budget,
+      amount: budgeted + sinkShares[c],
     });
   }
 

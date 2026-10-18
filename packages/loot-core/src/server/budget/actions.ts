@@ -4,10 +4,10 @@ import * as asyncStorage from '#platform/server/asyncStorage';
 import * as db from '#server/db';
 import * as sheet from '#server/sheet';
 import { batchMessages } from '#server/sync';
-import { getCurrency } from '#shared/currencies';
 import { getLocale } from '#shared/locale';
 import * as monthUtils from '#shared/months';
-import { integerToCurrency, safeNumber } from '#shared/util';
+import { roundHalfAwayFromZero } from '#shared/schedules';
+import { integerToCurrencyScaled, safeNumber } from '#shared/util';
 import type { IntegerAmount } from '#shared/util';
 import type { CategoryEntity } from '#types/models';
 
@@ -427,7 +427,17 @@ export async function getCategoryAverage({
       'sum-amount-' + categoryId,
     );
   }
-  return Math.round(sumAmount / months.length);
+  return roundStoredAverage(sumAmount, months.length);
+}
+
+// Spending is stored as a negative amount. `Math.round` sends a negative
+// half toward zero, so two months of -150 and -151 would average to -150
+// instead of -151.
+export function roundStoredAverage(
+  sumAmount: number,
+  monthCount: number,
+): number {
+  return roundHalfAwayFromZero(sumAmount / monthCount);
 }
 
 async function getAverageMonths({
@@ -775,12 +785,7 @@ async function addMovementNotes({
   from: CategoryEntity['id'] | 'to-budget';
   currencyCode: string;
 }) {
-  const currency = getCurrency(currencyCode);
-  const displayAmount = integerToCurrency(
-    amount,
-    undefined,
-    currency.decimalPlaces,
-  );
+  const displayAmount = integerToCurrencyScaled(amount, currencyCode);
 
   const monthBudgetNotesId = `budget-${month}`;
   const existingMonthBudgetNotes = addNewLine(

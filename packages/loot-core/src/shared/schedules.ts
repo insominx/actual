@@ -282,7 +282,9 @@ export function extractScheduleConds(conditions) {
 
 export function getNextDate(
   dateCond,
-  start = new Date(monthUtils.currentDay()),
+  // parseDate keeps the local calendar day. new Date('yyyy-MM-dd') is UTC
+  // midnight, which is the previous day in timezones behind UTC.
+  start = monthUtils.parseDate(monthUtils.currentDay()),
   noSkipWeekend = false,
 ): string | null {
   start = d.startOfDay(start);
@@ -365,7 +367,14 @@ export function getScheduledAmount(
     return inverse ? -amount : amount;
   }
   const avg = (amount.num1 + amount.num2) / 2;
-  return inverse ? -Math.round(avg) : Math.round(avg);
+  // Math.round sends a negative half toward zero, so an expense range
+  // whose midpoint ends in .5 is a cent smaller than the same income range.
+  const rounded = roundHalfAwayFromZero(avg);
+  return inverse ? -rounded : rounded;
+}
+
+export function roundHalfAwayFromZero(value: number): number {
+  return Math.sign(value) * Math.round(Math.abs(value));
 }
 
 export function getUpcomingDays(

@@ -512,6 +512,31 @@ describe('CategoryTemplateContext', () => {
       expect(result).toBe(33333);
     });
 
+    it('removes a negative half when the goal is overfunded', async () => {
+      const template: Template = {
+        type: 'spend',
+        amount: 1000,
+        from: '2024-02',
+        month: '2024-02',
+        directive: 'template',
+        priority: 1,
+      };
+      const overfunded = new TestCategoryTemplateContext(
+        [],
+        instance.category,
+        '2024-01',
+        100003,
+        0,
+      );
+
+      const result = await CategoryTemplateContext.runSpend(
+        template,
+        overfunded,
+      );
+      // 1000.00 saved as 1000.03, two months left: -0.015 rounds to -0.02.
+      expect(result).toBe(-2);
+    });
+
     it('should return zero for past target date', async () => {
       const template: Template = {
         type: 'spend',
@@ -975,6 +1000,48 @@ describe('CategoryTemplateContext', () => {
       const result = CategoryTemplateContext.runBy(instance);
       expect(result.toBudget).toBe(66500); // (1000 + 2000 - 5) / 3
     });
+
+    it('funds a one-time target whose date has passed', () => {
+      instance = new TestCategoryTemplateContext(
+        [
+          {
+            type: 'by',
+            amount: 1000,
+            month: '2023-01',
+            directive: 'template',
+            priority: 1,
+          },
+        ],
+        instance.category,
+        '2024-01',
+        0,
+        0,
+      );
+
+      const result = CategoryTemplateContext.runBy(instance);
+      expect(result.toBudget).toBe(100000);
+    });
+
+    it('funds a target that was due last month instead of dividing by zero', () => {
+      instance = new TestCategoryTemplateContext(
+        [
+          {
+            type: 'by',
+            amount: 1000,
+            month: '2023-12',
+            directive: 'template',
+            priority: 1,
+          },
+        ],
+        instance.category,
+        '2024-01',
+        40000,
+        0,
+      );
+
+      const result = CategoryTemplateContext.runBy(instance);
+      expect(result.toBudget).toBe(60000);
+    });
   });
 
   describe('template priorities', () => {
@@ -1180,6 +1247,38 @@ describe('CategoryTemplateContext', () => {
 
       const remaining = distributeRemainder(contexts, 2);
       expect(remaining).toBe(2);
+    });
+
+    it('gives a last cent to the heavier remainder, not a zero-share lighter one', () => {
+      const category: CategoryEntity = {
+        id: 'test',
+        name: 'Test Category',
+        group: 'test-group',
+        is_income: false,
+      };
+      const makeInstance = (id: string, weight: number) =>
+        new TestCategoryTemplateContext(
+          [
+            {
+              type: 'remainder',
+              weight,
+              directive: 'template',
+              priority: null,
+            },
+          ],
+          { ...category, id },
+          '2024-01',
+          0,
+          0,
+        );
+      const light = makeInstance('light', 1);
+      const heavy = makeInstance('heavy', 100);
+
+      const remaining = distributeRemainder([light, heavy], 1);
+
+      expect(light.getValues().budgeted).toBe(0);
+      expect(heavy.getValues().budgeted).toBe(1);
+      expect(remaining).toBe(0);
     });
 
     it('remainder wont over budget', async () => {

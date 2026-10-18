@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { send } from '@actual-app/core/platform/client/connection';
 import {
   createBudgetQueryPrefetchKey,
+  getCachedCurrencyDecimalPlaces,
   setCachedUserPreferences,
 } from '@actual-app/core/shared/formulas/customFunctions';
 import type { FormulaQueryContext } from '@actual-app/core/shared/formulas/customFunctions';
@@ -283,7 +284,7 @@ async function prefetchFormulaQueries(
     const data = await fetchQuerySum(queryConfig);
     formulaQueryContext.querySumPrefetch.set(
       queryName,
-      integerToAmount(data, 2),
+      integerToAmount(data, getCachedCurrencyDecimalPlaces()),
     );
   }
 
@@ -351,7 +352,7 @@ async function fetchAccountBalance(accountId: string): Promise<number> {
       .filter({ account: accountId })
       .calculate({ $sum: '$amount' });
     const { data } = await send('query', balanceQuery.serialize());
-    return integerToAmount(data || 0, 2);
+    return integerToAmount(data || 0, getCachedCurrencyDecimalPlaces());
   } catch (err) {
     console.error('Error fetching account balance:', err);
     return 0;
@@ -661,15 +662,24 @@ async function fetchBudgetDimensionValueDirect(
   };
 
   if (dim === 'budgeted') {
-    return integerToAmount(await sumDimension('budget-{catId}'), 2);
+    return integerToAmount(
+      await sumDimension('budget-{catId}'),
+      getCachedCurrencyDecimalPlaces(),
+    );
   }
 
   if (dim === 'spent') {
-    return integerToAmount(await sumDimension('sum-amount-{catId}'), 2);
+    return integerToAmount(
+      await sumDimension('sum-amount-{catId}'),
+      getCachedCurrencyDecimalPlaces(),
+    );
   }
 
   if (dim === 'goal') {
-    return integerToAmount(await sumDimension('goal-{catId}'), 2);
+    return integerToAmount(
+      await sumDimension('goal-{catId}'),
+      getCachedCurrencyDecimalPlaces(),
+    );
   }
 
   // Handle balance dimensions: chain month-by-month with carryover logic
@@ -728,11 +738,14 @@ async function fetchBudgetDimensionValueDirect(
     }
 
     if (dim === 'balance_start') {
-      return integerToAmount(balances[intervals[0]]?.start || 0, 2);
+      return integerToAmount(
+        balances[intervals[0]]?.start || 0,
+        getCachedCurrencyDecimalPlaces(),
+      );
     }
     return integerToAmount(
       balances[intervals[intervals.length - 1]]?.end || 0,
-      2,
+      getCachedCurrencyDecimalPlaces(),
     );
   }
 

@@ -94,6 +94,48 @@ function execSplitActions(actions: Action[], transaction) {
     // The last remainder split will be adjusted for any leftovers from rounding.
     newTransactions[lastNonFixedTransactionIndex].amount +=
       getSplitRemainder(newTransactions);
+  } else {
+    // Percents that add up to 100 have no remainder split to absorb a
+    // rounded cent, so 50/50 of an odd amount would not add up.
+    const fixedPercentActions = splitAmountActions.filter(
+      action => action.options.method === 'fixed-percent',
+    );
+    const percentTotal = fixedPercentActions.reduce(
+      (sum, action) => sum + Number(action.value),
+      0,
+    );
+    if (
+      fixedPercentActions.length > 0 &&
+      Math.round(percentTotal * 100) === 10000
+    ) {
+      const lastPercentIndex = fixedPercentActions.reduce(
+        (maxIndex, action) =>
+          Math.max(maxIndex, (action.options?.splitIndex ?? 0) + 1),
+        -1,
+      );
+      newTransactions[lastPercentIndex].amount +=
+        getSplitRemainder(newTransactions);
+    } else {
+      // Formula halves round on their own. A leftover of at most one cent
+      // per formula split is rounding dust, so the last formula split
+      // absorbs it. A larger gap is an intentional partial split.
+      const formulaActions = splitAmountActions.filter(
+        action => action.options.method === 'formula',
+      );
+      const remainder = getSplitRemainder(newTransactions);
+      if (
+        formulaActions.length > 0 &&
+        remainder !== 0 &&
+        Math.abs(remainder) <= formulaActions.length
+      ) {
+        const lastFormulaIndex = formulaActions.reduce(
+          (maxIndex, action) =>
+            Math.max(maxIndex, (action.options?.splitIndex ?? 0) + 1),
+          -1,
+        );
+        newTransactions[lastFormulaIndex].amount += remainder;
+      }
+    }
   }
 
   // The split index 0 (transaction index 1) is reserved for "Apply to all" actions.

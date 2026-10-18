@@ -34,7 +34,7 @@ function serializeTransaction(
 
   return {
     ...transaction,
-    date: formatDate(parseISO(date), dateFormat),
+    date: formatDate(monthUtils.parseDate(date), dateFormat),
   };
 }
 

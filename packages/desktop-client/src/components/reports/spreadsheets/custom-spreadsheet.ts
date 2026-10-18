@@ -247,7 +247,7 @@ export function createCustomSpreadsheet({
 
         arr.push({
           date: d.format(
-            d.parseISO(intervalItem),
+            monthUtils.parseDate(intervalItem),
             getIntervalFormat(interval, dateFormat),
           ),
           ...stacked,

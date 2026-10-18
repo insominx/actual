@@ -1,5 +1,7 @@
-// Export helpers for `reports` commands. Amounts stay integer cents in every
-// export; a decimal column is added next to each cents column for humans.
+// Export helpers for `reports` commands. Amounts stay stored integers in every
+// export; a decimal column is added next to each integer column for humans.
+
+import { currentAmountScale } from './agent-output';
 
 export type ExportFormat = 'csv' | 'html';
 
@@ -19,11 +21,16 @@ const FORMULA_START = /^[=+\-@\t\r]/;
 // A plain signed decimal (such as centsToDecimal output) is data, not a formula.
 const PLAIN_NUMBER = /^-?\d+(\.\d+)?$/;
 
-/** Decimal rendering of integer cents without floating point drift. */
-export function centsToDecimal(cents: number): string {
+/** Decimal rendering of a stored amount without floating point drift. */
+export function centsToDecimal(
+  cents: number,
+  scale = currentAmountScale(),
+): string {
   const sign = cents < 0 ? '-' : '';
   const abs = Math.abs(Math.trunc(cents));
-  return `${sign}${Math.floor(abs / 100)}.${String(abs % 100).padStart(2, '0')}`;
+  if (scale <= 1) return `${sign}${abs}`;
+  const digits = Math.round(Math.log10(scale));
+  return `${sign}${Math.floor(abs / scale)}.${String(abs % scale).padStart(digits, '0')}`;
 }
 
 /**

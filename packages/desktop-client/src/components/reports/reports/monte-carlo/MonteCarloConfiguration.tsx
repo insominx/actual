@@ -46,6 +46,7 @@ import {
 } from '#components/reports/reports/monte-carlo/monteCarloStyles';
 import { MonteCarloTaxConfiguration } from '#components/reports/reports/monte-carlo/MonteCarloTaxConfiguration';
 import { MonteCarloWithdrawalRuleConfiguration } from '#components/reports/reports/monte-carlo/MonteCarloWithdrawalRuleConfiguration';
+import { useFormat } from '#hooks/useFormat';
 
 type ConfigurationTab =
   | 'plan'
@@ -71,6 +72,7 @@ export function MonteCarloConfiguration({
   onConfigChange,
 }: MonteCarloConfigurationProps) {
   const { t } = useTranslation();
+  const format = useFormat();
   const [activeTab, setActiveTab] = useState<ConfigurationTab>('plan');
 
   // Whether unspent money is kept is simply whether a surplus pot exists
@@ -93,7 +95,7 @@ export function MonteCarloConfiguration({
       onConfigChange({
         pots: remainingPots.length
           ? remainingPots
-          : [createMonteCarloPot(uuidv4())],
+          : [createMonteCarloPot(uuidv4(), format.currency.decimalPlaces)],
         contributions: config.contributions.filter(
           contribution => !surplusPotIds.includes(contribution.potId),
         ),
@@ -616,7 +618,13 @@ export function MonteCarloConfiguration({
             <Button
               onPress={() =>
                 onConfigChange({
-                  pots: [...config.pots, createMonteCarloPot(uuidv4())],
+                  pots: [
+                    ...config.pots,
+                    createMonteCarloPot(
+                      uuidv4(),
+                      format.currency.decimalPlaces,
+                    ),
+                  ],
                 })
               }
             >

@@ -84,8 +84,10 @@ export function transactionsSearch(
   currentQuery: Query,
   search: string,
   dateFormat: SyncedPrefs['dateFormat'],
+  decimalPlaces = 2,
 ) {
   const amount = currencyToAmount(search);
+  const amountScale = 10 ** decimalPlaces;
   const escapedSearch = search.replace(/[\\%?]/g, '\\$&');
 
   // Support various date formats
@@ -108,12 +110,16 @@ export function transactionsSearch(
       $or: [
         isDateValid(parsedDate) && { date: dayFromDate(parsedDate) },
         amount != null && {
-          amount: { $transform: '$abs', $eq: amountToInteger(amount) },
+          amount: {
+            $transform: '$abs',
+            $eq: amountToInteger(amount, decimalPlaces),
+          },
         },
         amount != null &&
-          Number.isInteger(amount) && {
+          Number.isInteger(amount) &&
+          decimalPlaces > 0 && {
             amount: {
-              $transform: { $abs: { $idiv: ['$', 100] } },
+              $transform: { $abs: { $idiv: ['$', amountScale] } },
               $eq: amount,
             },
           },

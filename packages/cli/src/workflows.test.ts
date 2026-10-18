@@ -76,7 +76,7 @@ describe('workflows', () => {
     ).toThrow(/one statement/);
     expect(() =>
       validateSetup({ accounts: [{ name: 'A', initialBalance: 1.5 }] }),
-    ).toThrow(/cents/);
+    ).toThrow(/budget currency scale/);
   });
 
   it('rejects impossible months and statement dates', () => {

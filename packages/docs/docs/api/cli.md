@@ -222,7 +222,7 @@ actual budgets months
 # View a specific month
 actual budgets month 2026-03
 
-# Set a budget amount (in integer cents)
+# Set a budget amount (stored integer: 50000 = 500.00 dollars, or 50000 yen)
 actual budgets set-amount --month 2026-03 --category <id> --amount 50000
 
 # Set carryover flag
@@ -470,7 +470,7 @@ actual reports net-worth --from-month 2026-01 --to-month 2026-09 [--accounts <id
 actual reports cash-flow --from-month 2026-01 --to-month 2026-09 --details --export csv --out ./cash-flow.csv
 ```
 
-Every report returns `scope` (range, cutoff, accounts, transfer, split and opening-balance treatment, future-dated handling, currency and integer cents) and `completeness`; when no transaction exists before the range start, `completeness.note` says that earlier periods are unknown, not zero. Ranges are at most 60 months. Future-dated transactions are excluded (the cutoff is today) unless `--include-future` is passed. `cash-flow` and `categories` use on-budget accounts and count split children instead of their parent; transfers between accounts are excluded, and `cash-flow` lists transfers to off-budget accounts separately as `transfersOffBudget`. `categories` nets refunds against their category, keeps deleted categories (flagged `deleted`) and reports uncategorized amounts separately. Both list `contributingIds` (at most 1000, with `contributingTruncated`) and, with `--details`, the contributing rows. `net-worth` reports every account at each month end: `netCash` covers on-budget accounts, `tracking` covers off-budget accounts and `netWorth` is their sum. To compare periods, run a report twice. CSV exports keep cents next to a decimal column, quote every field that needs it and prefix text starting with `=`, `+`, `-`, `@`, a tab or a carriage return with `'` so spreadsheets do not evaluate it; HTML exports escape all text and load nothing external. PDF is not produced; print the HTML instead.
+Every report returns `scope` (range, cutoff, accounts, transfer, split and opening-balance treatment, future-dated handling, currency, and whether amounts are integer cents or whole units) and `completeness`; when no transaction exists before the range start, `completeness.note` says that earlier periods are unknown, not zero. Ranges are at most 60 months. Future-dated transactions are excluded (the cutoff is today) unless `--include-future` is passed. `cash-flow` and `categories` use on-budget accounts and count split children instead of their parent; transfers between accounts are excluded, and `cash-flow` lists transfers to off-budget accounts separately as `transfersOffBudget`. `categories` nets refunds against their category, keeps deleted categories (flagged `deleted`) and reports uncategorized amounts separately. Both list `contributingIds` (at most 1000, with `contributingTruncated`) and, with `--details`, the contributing rows. `net-worth` reports every account at each month end: `netCash` covers on-budget accounts, `tracking` covers off-budget accounts and `netWorth` is their sum. To compare periods, run a report twice. CSV exports keep the stored integer next to a decimal column, quote every field that needs it and prefix text starting with `=`, `+`, `-`, `@`, a tab or a carriage return with `'` so spreadsheets do not evaluate it; HTML exports escape all text and load nothing external. PDF is not produced; print the HTML instead.
 
 ### Reversal and recovery
 
@@ -787,7 +787,7 @@ actual server bank-sync [--account <id>]
 
 Writes are checked before anything is stored, so a refused request changes nothing:
 
-- Amounts are integer cents with an absolute value of at most 2,251,799,813,685,247 (2^51 - 1, the engine's own limit); larger values are refused everywhere, including bank-sync and file imports.
+- Amounts are stored integers at the budget currency scale, with an absolute value of at most 2,251,799,813,685,247 (2^51 - 1, the engine's own limit); larger values are refused everywhere, including bank-sync and file imports.
 - Transaction dates must be real calendar days on or after 1995-01-01 (the query engine's floor).
 - `transactions add` and `reconcile adjust` refuse transfer payees and `transfer_id`; a linked transfer pair cannot be created by adding one row, so use `transfers`. Rows may not reference deleted or unknown categories or payees, or put a category on an off-budget account, and split children must add up to the parent.
 - Schedules whose recurrence the schedule engine cannot evaluate are refused.
@@ -798,17 +798,17 @@ Writes are checked before anything is stored, so a refused request changes nothi
 
 ## Amount Convention
 
-All monetary amounts are represented as **integer cents**:
+Amounts are stored integers at the budget currency scale. Two-decimal currencies use cents. Yen, won, and rial use whole units.
 
-| CLI Value | Dollar Amount |
-| --------- | ------------- |
-| `5000`    | $50.00        |
-| `-12350`  | -$123.50      |
-| `100`     | $1.00         |
+| CLI Value | Dollar Amount | Yen Amount |
+| --------- | ------------- | ---------- |
+| `5000`    | $50.00        | ¥5,000     |
+| `-12350`  | -$123.50      | -¥12,350   |
+| `100`     | $1.00         | ¥100       |
 
-When providing amounts, always use integer cents. For example, to budget $50, pass `5000`.
+To budget $50, pass `5000`. To budget ¥5,000, pass `5000`.
 
-**Output formatting:** Table (`--format table`) and CSV (`--format csv`) output automatically converts cent values to decimal (e.g. `1665.00` instead of `166500`). JSON output always returns raw cents for programmatic use.
+**Output formatting:** Table (`--format table`) and CSV (`--format csv`) output formats stored amounts in the budget currency (e.g. `1665.00` instead of `166500` cents, or `1665` for yen). JSON output always returns the stored integer for programmatic use.
 
 ## Output Formats
 
@@ -939,7 +939,7 @@ Receipts reside in `<data-dir>/.actual-cli/changes`. They contain sensitive befo
 
 After forced process termination, the existing cache and journal locks can remain until their approximately 30-second stale window expires. Use `--lock-timeout 45` when inspecting the interrupted operation. An uncertain receipt stays uncertain even when current values resemble the proposal. Inspect the receipt and selected budget before preparing further work; the same ID never automatically replays.
 
-Use `actual changes preview budgets.set-amount <category-id> --operation-id <unique-id> --data '{"month":"2026-08","amount":31234}'` to prepare an allocation amount change. Amounts use integer cents. The proposal records the existing allocation row and the selected engine budget mode, category, and group. Apply rejects changed allocation or reference state and preserves carryover, goals, and settings through the canonical amount setter. A zero no-op on a missing row does not create a new allocation record. The same apply/status/list and receipt rules cover this operation. The CLI does not calculate projected budget totals itself.
+Use `actual changes preview budgets.set-amount <category-id> --operation-id <unique-id> --data '{"month":"2026-08","amount":31234}'` to prepare an allocation amount change. Amounts are stored integers at the budget currency scale. The proposal records the existing allocation row and the selected engine budget mode, category, and group. Apply rejects changed allocation or reference state and preserves carryover, goals, and settings through the canonical amount setter. A zero no-op on a missing row does not create a new allocation record. The same apply/status/list and receipt rules cover this operation. The CLI does not calculate projected budget totals itself.
 
 For direct version 2 writes, use `actual --output-version 2 budgets set-amount --month 2026-08 --category <category-id> --amount 31234 --operation-id <unique-id>`. The command uses the same preview and receipt executor and returns `success` plus `receipt`. Keep the operation ID and request unchanged on retries. A retry returns the acknowledged outcome without resetting a later allocation. Reusing an ID for a different amount, month, category, or budget rejects. Offline writes retain a local acknowledgement until synchronization. Legacy output keeps its existing command behavior.
 

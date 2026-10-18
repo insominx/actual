@@ -68,7 +68,10 @@ function str(value: unknown, field: string) {
 
 function int(value: unknown, field: string) {
   if (!isEngineAmount(value)) {
-    invalid(`${field} must be an integer amount in cents.`, field);
+    invalid(
+      `${field} must be a stored integer at the budget currency scale.`,
+      field,
+    );
   }
   return value as number;
 }

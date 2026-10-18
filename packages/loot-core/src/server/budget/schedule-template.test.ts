@@ -34,6 +34,9 @@ type RuleSpec = {
   amount: number;
   frequency: 'monthly' | 'yearly' | 'weekly' | 'daily';
   interval?: number;
+  endMode?: 'never' | 'on_date' | 'after_n_occurrences';
+  endDate?: string;
+  skipWeekend?: boolean;
 };
 
 function makeRule({
@@ -42,6 +45,9 @@ function makeRule({
   amount,
   frequency,
   interval = 1,
+  endMode = 'never',
+  endDate = '2099-01-01',
+  skipWeekend = false,
 }: RuleSpec): Rule {
   return new Rule({
     id,
@@ -56,11 +62,11 @@ function makeRule({
           interval,
           frequency,
           patterns: [],
-          skipWeekend: false,
+          skipWeekend,
           weekendSolveMode: 'before',
-          endMode: 'never',
+          endMode,
           endOccurrences: 1,
-          endDate: '2099-01-01',
+          endDate,
         },
         type: 'date',
       },
@@ -135,6 +141,42 @@ describe('runSchedule', () => {
     expect(result.to_budget).toBe(10000);
     expect(result.errors).toHaveLength(0);
     expect(result.remainder).toBe(0);
+  });
+
+  it('reports a schedule with no occurrences instead of failing the month', async () => {
+    const template_lines = [
+      {
+        type: 'schedule',
+        name: 'Test Schedule',
+        priority: 0,
+        directive: 'template',
+      } as const,
+    ];
+    mockSingleSchedule({
+      start: '2024-08-01',
+      amount: -10000,
+      frequency: 'monthly',
+      endMode: 'on_date',
+      endDate: '2024-01-01',
+      skipWeekend: true,
+    });
+
+    const result = await runSchedule(
+      template_lines,
+      '2024-08-01',
+      0,
+      0,
+      0,
+      0,
+      [],
+      defaultCategory,
+      defaultCurrency,
+    );
+
+    expect(result.to_budget).toBe(0);
+    expect(result.errors.some(error => error.includes('in the Past'))).toBe(
+      true,
+    );
   });
 
   it('should return correct budget when yearly recurring schedule set and balance is greater than target', async () => {

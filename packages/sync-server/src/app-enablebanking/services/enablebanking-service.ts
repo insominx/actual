@@ -6,6 +6,7 @@ import {
 } from '#app-enablebanking/utils/errors';
 import { getJWT } from '#app-enablebanking/utils/jwt';
 import { SecretName, secretsService } from '#services/secrets-service';
+import { amountScale } from '#util/amount-scale';
 
 const debug = createDebug('actual:enable-banking:service');
 
@@ -289,7 +290,10 @@ export function isImportableTransaction(tx: BankSyncTransaction): boolean {
 }
 
 export function normalizeBalance(bal: EnableBankingBalance): BankSyncBalance {
-  const amount = Math.round(parseFloat(bal.balance_amount.amount) * 100);
+  const amount = Math.round(
+    parseFloat(bal.balance_amount.amount) *
+      amountScale(bal.balance_amount.currency),
+  );
   return {
     balanceAmount: {
       amount,

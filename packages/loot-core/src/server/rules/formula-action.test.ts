@@ -28,6 +28,44 @@ describe('Formula-based rule actions', () => {
     expect(result).toBe(30000);
   });
 
+  it('stores a zero-decimal formula result without scaling by 100', () => {
+    setCachedUserPreferences({
+      currency: getCurrency('JPY'),
+      numberFormat: 'comma-dot',
+      decimalPlaces: 0,
+      thousandsSeparator: ',',
+      decimalSeparator: '.',
+      locale: 'en-US',
+      currencySymbolPosition: 'before',
+      currencySpaceBetweenAmountAndSymbol: false,
+    });
+
+    const action = new Action('set', 'amount', null, {});
+    const result = action.executeFormulaSync('=100 + 200', { amount: 0 });
+
+    expect(result).toBe(300);
+  });
+
+  it('converts a stored yen amount to major units inside a formula', () => {
+    setCachedUserPreferences({
+      currency: getCurrency('JPY'),
+      numberFormat: 'comma-dot',
+      decimalPlaces: 0,
+      thousandsSeparator: ',',
+      decimalSeparator: '.',
+      locale: 'en-US',
+      currencySymbolPosition: 'before',
+      currencySpaceBetweenAmountAndSymbol: false,
+    });
+
+    const action = new Action('set', 'amount', null, {});
+    const result = action.executeFormulaSync('=INTEGER_TO_AMOUNT(amount) / 2', {
+      amount: 1000,
+    });
+
+    expect(result).toBe(500);
+  });
+
   it('should use transaction field variables', () => {
     const action = new Action('set', 'notes', null, {});
     const transaction = { amount: 5000 };

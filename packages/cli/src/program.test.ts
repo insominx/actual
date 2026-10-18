@@ -556,6 +556,12 @@ describe('registered agent commands', () => {
     const result = await run(['capabilities']);
     expect(stdout).toHaveBeenCalledTimes(1);
     expect(result.schemaVersion).toBe(2);
+    expect(result.data.money).toEqual({
+      unit: 'stored-integer',
+      scale: 100,
+      zeroDecimalCurrencies: ['IRR', 'JPY', 'KRW'],
+      zeroDecimalScale: 1,
+    });
     expect(result.context.mode).toBe('no-budget');
     const names = result.data.operations.map((o: { name: string }) => o.name);
     expect(new Set(names).size).toBe(names.length);

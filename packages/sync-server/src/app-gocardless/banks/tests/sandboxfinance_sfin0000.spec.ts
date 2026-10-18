@@ -117,6 +117,25 @@ describe('SandboxfinanceSfin0000', () => {
       ).toEqual(100000);
     });
 
+    it('keeps whole units for a zero-decimal currency', () => {
+      const yenBalances: Balance[] = [
+        {
+          balanceAmount: { amount: '1000', currency: 'JPY' },
+          balanceType: 'interimAvailable',
+        },
+      ];
+      const transactions: Transaction[] = [
+        { transactionAmount: { amount: '-100', currency: 'JPY' } },
+      ];
+
+      expect(
+        SandboxfinanceSfin0000.calculateStartingBalance(
+          transactions,
+          yenBalances,
+        ),
+      ).toEqual(1100);
+    });
+
     it('returns the balance minus the available transactions', () => {
       const transactions: Transaction[] = [
         {

@@ -61,6 +61,7 @@ import { useAccounts } from '#hooks/useAccounts';
 import { SchedulesProvider } from '#hooks/useCachedSchedules';
 import { useCategories } from '#hooks/useCategories';
 import { useDateFormat } from '#hooks/useDateFormat';
+import { useFormat } from '#hooks/useFormat';
 import { useLocalPref } from '#hooks/useLocalPref';
 import { usePayees } from '#hooks/usePayees';
 import { getSchedulesQuery } from '#hooks/useSchedules';
@@ -263,6 +264,7 @@ type AccountInternalProps = {
   categoryId?: string;
   location: ReturnType<typeof useLocation>;
   dateFormat: ReturnType<typeof useDateFormat>;
+  decimalPlaces: number;
   payees: PayeeEntity[];
   categoryGroups: CategoryGroupEntity[];
   hideFraction: boolean;
@@ -631,6 +633,7 @@ class AccountInternal extends PureComponent<
           this.currentQuery,
           this.state.search,
           this.props.dateFormat,
+          this.props.decimalPlaces,
         ),
         true,
       );
@@ -2134,6 +2137,7 @@ export function Account() {
     useAccounts();
   const { data: payees = [] } = usePayees();
   const dateFormat = useDateFormat() || 'MM/dd/yyyy';
+  const decimalPlaces = useFormat().currency.decimalPlaces;
   const [hideFraction] = useSyncedPref('hideFraction');
   const [expandSplits] = useLocalPref('expand-splits');
   const [showNetWorthChart, setShowNetWorthChart] = useSyncedPref(
@@ -2202,6 +2206,7 @@ export function Account() {
             accounts={accounts}
             accountsArePlaceholder={accountsArePlaceholder}
             dateFormat={dateFormat}
+            decimalPlaces={decimalPlaces}
             hideFraction={String(hideFraction) === 'true'}
             expandSplits={expandSplits}
             showBalances={showBalances}

@@ -9,6 +9,7 @@ import {
   getNextDate,
   getNextDateAfter,
   getScheduleOccurrenceMatchStartDate,
+  getScheduledAmount,
   getStatus,
   getUpcomingDays,
   indexPostedScheduleTransactions,
@@ -469,6 +470,21 @@ describe('schedules', () => {
   });
 
   describe('getNextDate', () => {
+    it('searches from the local calendar day, not the previous day', () => {
+      // Test current day is 2017-01-01. A date-only UTC parse of that
+      // string is 2016-12-31 here, which would return that Saturday.
+      const dateCond = {
+        op: 'isapprox',
+        value: {
+          start: '2016-12-31',
+          frequency: 'weekly',
+          patterns: [],
+        },
+      };
+
+      expect(getNextDate(dateCond)).toBe('2017-01-07');
+    });
+
     it('returns last occurrence for a recurring schedule with an end date in the past', () => {
       const dateCond = {
         op: 'isapprox',
@@ -645,5 +661,11 @@ describe('schedules', () => {
       expect(isCustomUpcomingLength(null)).toBe(false);
       expect(isCustomUpcomingLength(undefined)).toBe(false);
     });
+  });
+
+  it('rounds a schedule range the same way for income and expenses', () => {
+    expect(getScheduledAmount({ num1: 101, num2: 200 })).toBe(151);
+    expect(getScheduledAmount({ num1: -200, num2: -101 })).toBe(-151);
+    expect(getScheduledAmount({ num1: -100, num2: -200 })).toBe(-150);
   });
 });

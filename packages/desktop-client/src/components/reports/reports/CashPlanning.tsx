@@ -257,7 +257,11 @@ function CashPlanningInner() {
                 key={count}
                 onPress={() => update(completePlanningMonths(today, count))}
               >
-                <Trans count={count}>Last {{ count }} complete months</Trans>
+                {t('last-complete-months', {
+                  count,
+                  defaultValue_one: 'Last {{count}} complete month',
+                  defaultValue_other: 'Last {{count}} complete months',
+                })}
               </Button>
             ))}
           </View>

@@ -211,7 +211,12 @@ export function createProgram(
       printOutput(
         {
           schemaVersion: 2,
-          money: { unit: 'cents', scale: 100 },
+          money: {
+            unit: 'stored-integer',
+            scale: 100,
+            zeroDecimalCurrencies: ['IRR', 'JPY', 'KRW'],
+            zeroDecimalScale: 1,
+          },
           operations: discoverOperations(program),
         },
         program.opts().format,

@@ -10,6 +10,7 @@ import {
   CustomFunctionsPlugin,
   customFunctionsTranslations,
 } from '#shared/formulas/customFunctions';
+import { getCachedCurrencyDecimalPlaces } from '#shared/formulas/customFunctions';
 import { currentDay, format, parseDate } from '#shared/months';
 import { FIELD_TYPES } from '#shared/rules';
 import { amountToInteger } from '#shared/util';
@@ -109,7 +110,7 @@ export class Action {
                     ? result
                     : parseFloat(String(result));
 
-                if (isNaN(numValue)) {
+                if (!Number.isFinite(numValue)) {
                   const error = `Formula for "${this.field}" must produce a numeric value. Got: ${JSON.stringify(result)}`;
                   object._ruleErrors.push(error);
                 } else {
@@ -148,17 +149,29 @@ export class Action {
             break;
           }
         } else if (this.handlebarsTemplate) {
-          object[this.field] = this.handlebarsTemplate({
-            ...object,
-            today: currentDay(),
-          });
+          // A bad date format or regular expression inside the template
+          // throws. That used to abort the transaction save.
+          try {
+            object[this.field] = this.handlebarsTemplate({
+              ...object,
+              today: currentDay(),
+            });
+          } catch (err) {
+            if (!object._ruleErrors) {
+              object._ruleErrors = [];
+            }
+            object._ruleErrors.push(
+              `Error executing template for "${this.field}": ${err instanceof Error ? err.message : String(err)}`,
+            );
+            break;
+          }
 
           // Handlebars always returns a string, so we need to convert
           switch (this.type) {
             case 'number': {
               const numValue = parseFloat(object[this.field]);
-              // If the result is NaN, default to 0 to avoid database insertion errors
-              object[this.field] = isNaN(numValue) ? 0 : numValue;
+              // NaN and Infinity cannot be stored. Division by zero is Infinity.
+              object[this.field] = Number.isFinite(numValue) ? numValue : 0;
               break;
             }
             case 'date': {
@@ -362,7 +375,14 @@ export class Action {
       }
 
       if (typeof cellValue === 'number') {
-        return amountToInteger(Math.round(cellValue * 100) / 100);
+        // Formula results are in major units. Zero-decimal currencies store
+        // that number as-is; multiplying by 100 would record 100 yen as 10,000.
+        const decimalPlaces = getCachedCurrencyDecimalPlaces();
+        const scale = 10 ** decimalPlaces;
+        return amountToInteger(
+          Math.round(cellValue * scale) / scale,
+          decimalPlaces,
+        );
       }
 
       return cellValue;

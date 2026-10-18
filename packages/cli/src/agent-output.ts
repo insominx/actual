@@ -27,7 +27,7 @@ export type AgentContext = {
   serverUrl: string | null;
   mode: 'remote-cache' | 'offline-local' | 'no-budget';
   currency: string | null;
-  scale: 100;
+  scale: number;
   lastSyncedAt: number | null;
   freshness: 'unknown' | 'observed';
   commit: 'none' | 'committed-local' | 'synced' | 'uncertain';
@@ -63,8 +63,25 @@ export function beginAgentOutput(operation: string) {
   };
 }
 
+// Keep this aligned with currencies whose decimalPlaces is 0 in
+// packages/loot-core/src/shared/currencies.ts.
+function amountScale(currency: string | null | undefined): number {
+  const code = currency?.trim().toUpperCase();
+  if (code === 'IRR' || code === 'JPY' || code === 'KRW') return 1;
+  return 100;
+}
+
+export function currentAmountScale(): number {
+  return invocation?.context.scale ?? 100;
+}
+
 export function updateAgentContext(context: Partial<AgentContext>) {
-  if (invocation) Object.assign(invocation.context, context);
+  if (!invocation) return;
+  const next = { ...context };
+  if ('currency' in next) {
+    next.scale = amountScale(next.currency);
+  }
+  Object.assign(invocation.context, next);
 }
 
 export function addAgentWarning(message: string) {

@@ -74,6 +74,9 @@ describe('reservation properties', () => {
       const allowanceTotal = Math.floor(random() * 300000);
       const row = settleReservations(balance, claims, allowanceTotal);
       expect(row.reserved + row.allowance + row.spare).toBe(row.balance);
+      expect(row.claims.reduce((sum, claim) => sum + claim.accrued, 0)).toBe(
+        row.reserved,
+      );
       expect(row.allowance).toBeGreaterThanOrEqual(0);
       expect(row.allowance).toBeLessThanOrEqual(allowanceTotal);
       expect(row.shortfall).toBe(Math.max(0, -row.spare));

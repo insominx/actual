@@ -4,7 +4,7 @@ import * as db from '#server/db';
 import type { CleanupTemplate } from '#types/models/cleanup-templates';
 
 import * as actions from './actions';
-import { cleanupTemplate } from './cleanup-template';
+import { cleanupTemplate, weightedShares } from './cleanup-template';
 
 vi.mock('./actions', () => ({
   getSheetValue: vi.fn(),
@@ -20,6 +20,13 @@ vi.mock('#server/db', () => ({
 vi.mock('./cleanup-template-notes', () => ({
   storeNoteCleanups: vi.fn(),
 }));
+
+test('weighted shares add up to the available amount', () => {
+  expect(weightedShares([1, 1, 1], 100)).toEqual([33, 33, 34]);
+  expect(weightedShares([1, 1, 1], 2)).toEqual([1, 1, 0]);
+  expect(weightedShares([1, 1], -100)).toEqual([-50, -50]);
+  expect(weightedShares([1, 1], 0)).toEqual([0, 0]);
+});
 
 const MONTH = '2026-08';
 const GROUP_ID = 'pool-1';

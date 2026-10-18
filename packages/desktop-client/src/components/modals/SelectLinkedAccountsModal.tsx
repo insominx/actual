@@ -10,7 +10,7 @@ import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { Tooltip } from '@actual-app/components/tooltip';
 import { View } from '@actual-app/components/view';
-import { currentDay, subDays } from '@actual-app/core/shared/months';
+import { currentDay, parseDate, subDays } from '@actual-app/core/shared/months';
 import type {
   AccountEntity,
   SyncServerAkahuAccount,
@@ -19,7 +19,7 @@ import type {
   SyncServerPluggyAiAccount,
   SyncServerSimpleFinAccount,
 } from '@actual-app/core/types/models';
-import { format as formatDate, parseISO } from 'date-fns';
+import { format as formatDate } from 'date-fns';
 
 import {
   useLinkAccountAkahuMutation,
@@ -861,7 +861,7 @@ function TableRow({
                   fontStyle: 'italic',
                 }}
               >
-                {formatDate(parseISO(startingBalanceInfo.date), dateFormat)}
+                {formatDate(parseDate(startingBalanceInfo.date), dateFormat)}
               </Text>
             ) : null}
           </Field>
@@ -1178,7 +1178,7 @@ function AccountCard({
                 fontStyle: 'italic',
               }}
             >
-              {formatDate(parseISO(startingBalanceInfo.date), dateFormat)}
+              {formatDate(parseDate(startingBalanceInfo.date), dateFormat)}
             </Text>
           </View>
           <View style={{ display: 'flex', flexDirection: 'row', gap: 4 }}>

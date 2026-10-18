@@ -19,6 +19,7 @@ import { getPrefs } from '#server/prefs';
 import { getServer } from '#server/server-config';
 import { batchMessages } from '#server/sync';
 import { undoable, withUndo } from '#server/undo';
+import { getCurrency } from '#shared/currencies';
 import { isNonProductionEnvironment } from '#shared/environment';
 import { dayFromDate } from '#shared/months';
 import * as monthUtils from '#shared/months';
@@ -584,10 +585,15 @@ async function createAccount({
 
   if (balance != null && balance !== 0) {
     const payee = await getStartingBalancePayee();
+    const currencyCode = db.firstSync<{ value: string }>(
+      `SELECT value FROM preferences WHERE id = ?`,
+      ['defaultCurrencyCode'],
+    )?.value;
+    const decimalPlaces = getCurrency(currencyCode ?? '').decimalPlaces;
 
     await db.insertTransaction({
       account: id,
-      amount: amountToInteger(balance),
+      amount: amountToInteger(balance, decimalPlaces),
       category: offBudget ? null : payee.category,
       payee: payee.id,
       date: openingDate ?? monthUtils.currentDay(),

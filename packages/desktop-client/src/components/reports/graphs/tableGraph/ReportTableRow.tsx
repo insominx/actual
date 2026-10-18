@@ -40,6 +40,13 @@ type ReportTableRowProps = {
   colorized?: boolean;
 };
 
+export function amountOverflowsCell(
+  amount: number,
+  decimalPlaces: number,
+): boolean {
+  return Math.abs(amount) / 10 ** decimalPlaces > 100_000;
+}
+
 const getAmountColor = (amount: number) => {
   if (amount === 0) return theme.reportsNumberNeutral;
   return amount > 0 ? theme.reportsNumberPositive : theme.reportsNumberNegative;
@@ -71,6 +78,8 @@ export const ReportTableRow = memo(
       intervalsCount > 0 ? Math.round(item[balanceTypeOp] / intervalsCount) : 0;
     const groupByItem = groupBy === 'Interval' ? 'date' : 'name';
     const format = useFormat();
+    const showFullAmount = (amount: number) =>
+      amountOverflowsCell(amount, format.currency.decimalPlaces);
 
     const navigate = useNavigate();
     const { isNarrowWidth } = useResponsive();
@@ -154,7 +163,7 @@ export const ReportTableRow = memo(
                     valueStyle={compactStyle}
                     value={format(intervalItem[balanceTypeOp], 'financial')}
                     title={
-                      Math.abs(intervalItem[balanceTypeOp]) > 100000
+                      showFullAmount(intervalItem[balanceTypeOp])
                         ? format(intervalItem[balanceTypeOp], 'financial')
                         : undefined
                     }
@@ -187,7 +196,7 @@ export const ReportTableRow = memo(
                   <Cell
                     value={format(item.totalAssets, 'financial')}
                     title={
-                      Math.abs(item.totalAssets) > 100000
+                      showFullAmount(item.totalAssets)
                         ? format(item.totalAssets, 'financial')
                         : undefined
                     }
@@ -235,7 +244,7 @@ export const ReportTableRow = memo(
                   <Cell
                     value={format(item.totalDebts, 'financial')}
                     title={
-                      Math.abs(item.totalDebts) > 100000
+                      showFullAmount(item.totalDebts)
                         ? format(item.totalDebts, 'financial')
                         : undefined
                     }
@@ -285,7 +294,7 @@ export const ReportTableRow = memo(
           <Cell
             value={format(item[balanceTypeOp], 'financial')}
             title={
-              Math.abs(item[balanceTypeOp]) > 100000
+              showFullAmount(item[balanceTypeOp])
                 ? format(item[balanceTypeOp], 'financial')
                 : undefined
             }
@@ -332,9 +341,7 @@ export const ReportTableRow = memo(
           <Cell
             value={format(average, 'financial')}
             title={
-              Math.abs(average / 100) > 100000
-                ? format(average, 'financial')
-                : undefined
+              showFullAmount(average) ? format(average, 'financial') : undefined
             }
             textAlign="right"
             style={{

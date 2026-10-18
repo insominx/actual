@@ -114,7 +114,7 @@ export async function testRules(
     invalid('date must be YYYY-MM-DD');
   }
   if (!Number.isSafeInteger(sample.amount)) {
-    invalid('amount must be integer cents');
+    invalid('amount must be a stored integer at the budget currency scale');
   }
   for (const key of [
     'payee_name',

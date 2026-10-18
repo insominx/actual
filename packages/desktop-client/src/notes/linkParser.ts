@@ -10,20 +10,35 @@ export type ParsedSegment =
     };
 
 // Regex patterns for link detection
-const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\(([^)]+)\)/;
+// One pair of parentheses inside the address is part of the URL, as in a
+// Wikipedia title. The final `)` still closes the markdown link.
+const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\(((?:[^()]|\([^()]*\))+)\)/;
 const FULL_URL_REGEX = /https?:\/\/[^\s]+/;
 const WWW_URL_REGEX = /www\.[^\s]+/;
 const UNIX_PATH_REGEX = /^\/[^\s/]+\/[^\s]*$/;
 const WINDOWS_PATH_REGEX = /^[A-Z]:\\(?:[^\s\\]+\\)*[^\s\\]+$/i;
 
-// Common trailing punctuation that should not be part of URLs
-const TRAILING_PUNCTUATION_REGEX = /[.,;:!?)\]"']+$/;
-
 /**
  * Strips trailing punctuation from a URL
  */
 function stripTrailingPunctuation(url: string): string {
-  return url.replace(TRAILING_PUNCTUATION_REGEX, '');
+  let end = url.length;
+  while (end > 0 && /[.,;:!?)\]"']/.test(url[end - 1])) {
+    const last = url[end - 1];
+    // A Wikipedia title ends in a real parenthesis. Drop that character
+    // only when it does not close an opening parenthesis in the URL.
+    if (last === ')' || last === ']') {
+      const open = last === ')' ? '(' : '[';
+      const slice = url.slice(0, end);
+      const opens = slice.split(open).length - 1;
+      const closes = slice.split(last).length - 1;
+      if (opens >= closes) {
+        break;
+      }
+    }
+    end -= 1;
+  }
+  return url.slice(0, end);
 }
 
 /**

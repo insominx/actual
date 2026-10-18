@@ -40,13 +40,14 @@ import { View } from '@actual-app/components/view';
 import {
   currentDate,
   getDayMonthFormat,
+  parseDate as parseBudgetDate,
   getDayMonthRegex,
   getShortYearFormat,
   getShortYearRegex,
 } from '@actual-app/core/shared/months';
 import { css } from '@emotion/css';
 import { CalendarDate } from '@internationalized/date';
-import { addDays, format, isValid, parse, parseISO, subDays } from 'date-fns';
+import { addDays, format, isValid, parse, subDays } from 'date-fns';
 
 import { LabeledCheckbox } from '#components/forms/LabeledCheckbox';
 import { InputField } from '#components/mobile/MobileForms';
@@ -66,7 +67,8 @@ function toCalendarDate(date: Date): CalendarDate {
 }
 
 function fromCalendarDate(date: CalendarDate): Date {
-  return new Date(date.year, date.month - 1, date.day);
+  // Noon, so a midnight timezone shift cannot move the picked day backward.
+  return new Date(date.year, date.month - 1, date.day, 12);
 }
 
 const calendarShadow = '0 0px 4px rgba(0, 0, 0, .25)';
@@ -334,9 +336,11 @@ function DateSelectDesktop({
 }: DateSelectProps) {
   const parsedDefaultValue = useMemo(() => {
     if (defaultValue) {
-      const date = parseISO(defaultValue);
-      if (isValid(date)) {
-        return format(date, dateFormat);
+      if (/^\d{4}-\d{2}-\d{2}/.test(defaultValue)) {
+        const date = parseBudgetDate(defaultValue.slice(0, 10));
+        if (isValid(date)) {
+          return format(date, dateFormat);
+        }
       }
     }
     return '';

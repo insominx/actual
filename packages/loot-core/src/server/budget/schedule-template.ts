@@ -12,6 +12,7 @@ import {
   extractScheduleConds,
   getDateWithSkippedWeekend,
   getNextDate,
+  roundHalfAwayFromZero,
 } from '#shared/schedules';
 import { amountToInteger } from '#shared/util';
 import type { CategoryEntity, TransactionEntity } from '#types/models';
@@ -94,7 +95,7 @@ async function createScheduleList(
       }
     }
 
-    scheduleAmount = Math.round(scheduleAmount);
+    scheduleAmount = roundHalfAwayFromZero(scheduleAmount);
 
     const next_date_string = getNextDate(
       dateConditions,
@@ -148,10 +149,15 @@ async function createScheduleList(
     const isRepeating =
       Object(dateConditions.value) === dateConditions.value &&
       'frequency' in dateConditions.value;
-    const num_months = monthUtils.differenceInCalendarMonths(
-      next_date_string,
-      current_month,
-    );
+    // A schedule with no occurrence has no next date. Comparing that
+    // missing date throws and stops every other template in the month.
+    const num_months =
+      next_date_string == null
+        ? -1
+        : monthUtils.differenceInCalendarMonths(
+            next_date_string,
+            current_month,
+          );
     const displayName = scheduleName ?? template.name ?? '';
     if (num_months < 0) {
       //non-repeating schedules could be negative
@@ -177,20 +183,31 @@ async function createScheduleList(
             current_month,
             t[t.length - 1].num_months + 1,
           );
+          const occurrenceDate = (base: string | null): string | null => {
+            if (base == null) {
+              return null;
+            }
+            if (!dateConditions.value.skipWeekend) {
+              return base;
+            }
+            return monthUtils.dayFromDate(
+              getDateWithSkippedWeekend(
+                monthUtils._parse(base),
+                dateConditions.value.weekendSolveMode,
+              ),
+            );
+          };
           let nextBaseDate = getNextDate(
             dateConditions,
             monthUtils._parse(current_month),
             true,
           );
-          let nextDate = dateConditions.value.skipWeekend
-            ? monthUtils.dayFromDate(
-                getDateWithSkippedWeekend(
-                  monthUtils._parse(nextBaseDate),
-                  dateConditions.value.weekendSolveMode,
-                ),
-              )
-            : nextBaseDate;
-          while (nextDate < nextMonth) {
+          let nextDate = occurrenceDate(nextBaseDate);
+          while (
+            nextBaseDate != null &&
+            nextDate != null &&
+            nextDate < nextMonth
+          ) {
             monthlyTarget += -target;
             const currentDate = nextBaseDate;
             const oneDayLater = monthUtils.addDays(nextBaseDate, 1);
@@ -199,14 +216,10 @@ async function createScheduleList(
               monthUtils._parse(oneDayLater),
               true,
             );
-            nextDate = dateConditions.value.skipWeekend
-              ? monthUtils.dayFromDate(
-                  getDateWithSkippedWeekend(
-                    monthUtils._parse(nextBaseDate),
-                    dateConditions.value.weekendSolveMode,
-                  ),
-                )
-              : nextBaseDate;
+            nextDate = occurrenceDate(nextBaseDate);
+            if (nextBaseDate == null || nextDate == null) {
+              break;
+            }
             const diffDays = monthUtils.differenceInCalendarDays(
               nextBaseDate,
               currentDate,

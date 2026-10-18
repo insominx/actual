@@ -1,3 +1,8 @@
+import {
+  beginAgentOutput,
+  flushAgentOutput,
+  updateAgentContext,
+} from './agent-output';
 import { formatOutput, printOutput } from './output';
 
 describe('formatOutput', () => {
@@ -59,6 +64,18 @@ describe('formatOutput', () => {
       const result = formatOutput(data, 'table');
       expect(result).toContain('a');
       expect(result).toContain('b');
+    });
+
+    it('formats yen amounts as whole units', () => {
+      beginAgentOutput('test');
+      try {
+        updateAgentContext({ currency: 'JPY' });
+        const result = formatOutput([{ amount: -2500 }], 'table');
+        expect(result).toContain('-2500');
+        expect(result).not.toContain('-25.00');
+      } finally {
+        flushAgentOutput();
+      }
     });
 
     it('formats amount fields as decimal values', () => {

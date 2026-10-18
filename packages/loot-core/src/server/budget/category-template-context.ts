@@ -4,6 +4,7 @@ import { getCurrency } from '#shared/currencies';
 import type { Currency } from '#shared/currencies';
 import * as monthUtils from '#shared/months';
 import { q } from '#shared/query';
+import { roundHalfAwayFromZero } from '#shared/schedules';
 import { amountToInteger, integerToAmount } from '#shared/util';
 import type { CategoryEntity } from '#types/models';
 import type {
@@ -343,8 +344,13 @@ export class CategoryTemplateContext {
       smallest = 100;
     }
 
-    //check possible overbudget from rounding, 1cent leftover
-    if (toBudget > budgetAvail || budgetAvail - toBudget <= smallest) {
+    // Take a leftover cent only when this category was already going to
+    // receive money. A share that rounded to zero must not swallow the last
+    // cent ahead of a heavier category.
+    if (
+      toBudget > budgetAvail ||
+      (toBudget > 0 && budgetAvail - toBudget <= smallest)
+    ) {
       toBudget = budgetAvail;
     }
 
@@ -825,7 +831,11 @@ export class CategoryTemplateContext {
     if (numMonths < 0) {
       return 0;
     } else {
-      return Math.round((target - alreadyBudgeted) / (numMonths + 1));
+      // An overfunded goal is negative. A half cent has to round away from
+      // zero, or the extra cent stays in the category.
+      return roundHalfAwayFromZero(
+        (target - alreadyBudgeted) / (numMonths + 1),
+      );
     }
   }
 
@@ -942,6 +952,13 @@ export class CategoryTemplateContext {
           templateContext.month,
         );
       }
+      // A one-time date that has already passed has no next occurrence.
+      // Treat it as due this month. Leaving the count negative divides by
+      // zero when the date was last month, or unbudgets money when it was
+      // further back.
+      if (numMonths < 0) {
+        numMonths = 0;
+      }
       savedInfo.push({ numMonths, period });
       if (
         workingShortNumMonths === undefined ||
@@ -988,7 +1005,7 @@ export class CategoryTemplateContext {
       perTemplateNeed.set(template, amount);
       totalNeeded += amount;
     }
-    const toBudget = Math.round(
+    const toBudget = roundHalfAwayFromZero(
       (totalNeeded - templateContext.fromLastMonth) / (shortNumMonths + 1),
     );
     return { toBudget, perTemplateNeed };

@@ -497,6 +497,25 @@ export function integerToCurrencyWithDecimal(
   return integerToCurrency(integerAmount);
 }
 
+// Display a stored integer amount. Two-decimal currencies keep the
+// hide-fraction preference. Other currencies use their own scale, so
+// 1,234 yen is not shown as 12.34.
+export function integerToCurrencyScaled(
+  integerAmount: IntegerAmount,
+  currencyCode?: string,
+): string {
+  const decimalPlaces =
+    currencyCode !== undefined ? getDecimalPlaces(currencyCode) : 2;
+  if (decimalPlaces === 2) {
+    return integerToCurrency(integerAmount);
+  }
+  return integerToCurrency(
+    integerAmount,
+    getNumberFormat({ decimalPlaces }).formatter,
+    decimalPlaces,
+  );
+}
+
 export function amountToCurrencyInteger(amount: number, code: string): number {
   return amountToInteger(amount, getDecimalPlaces(code));
 }
@@ -592,6 +611,11 @@ export function looselyParseAmount(amount: string) {
   }
 
   amount = amount.trim();
+  // Some bank files put the minus after the number (`3.45-`, `1.234,56-`)
+  // instead of before it. A trailing sign has to be removed before the
+  // decimal marker is detected, or the digits after the marker no longer
+  // sit at the end of the string and the amount is read as positive.
+  let trailingNegative = false;
 
   if (amount.startsWith('(') && amount.endsWith(')')) {
     // Remove Unicode minus inside parentheses before converting to ASCII minus
@@ -600,19 +624,29 @@ export function looselyParseAmount(amount: string) {
   } else {
     // Replace Unicode minus with ASCII minus for non-parenthesized amounts
     amount = amount.replace(/\u2212/g, '-');
+    if (amount.endsWith('-') && !amount.startsWith('-')) {
+      trailingNegative = true;
+      amount = amount.slice(0, -1).trimEnd();
+    }
   }
 
   // Look for a decimal marker, then look for either 1-2 or 4-9 decimal places.
   // This avoids matching against 3 places which may not actually be decimal
   const m = amount.match(/[.,]([^.,]{4,9}|[^.,]{1,2})$/);
-  if (!m || m.index === undefined) {
-    return safeNumber(parseFloat(extractNumbers(amount)));
+  const parsed =
+    !m || m.index === undefined
+      ? safeNumber(parseFloat(extractNumbers(amount)))
+      : safeNumber(
+          parseFloat(
+            extractNumbers(amount.slice(0, m.index)) +
+              '.' +
+              extractNumbers(amount.slice(m.index + 1)),
+          ),
+        );
+  if (parsed == null || !trailingNegative) {
+    return parsed;
   }
-
-  const left = extractNumbers(amount.slice(0, m.index));
-  const right = extractNumbers(amount.slice(m.index + 1));
-
-  return safeNumber(parseFloat(left + '.' + right));
+  return -parsed;
 }
 
 export function sortByKey<T>(arr: T[], key: keyof T): T[] {

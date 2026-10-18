@@ -2,11 +2,14 @@ import express from 'express';
 
 import { handleError } from '#app-gocardless/util/handle-error';
 import { SecretName, secretsService } from '#services/secrets-service';
+import { amountScale } from '#util/amount-scale';
 import {
   requestLoggerMiddleware,
   validateSessionMiddleware,
 } from '#util/middlewares';
 import { assertUrlAllowed } from '#util/ssrf';
+
+import { simplefinUnixSeconds } from './simplefin-date';
 
 const app = express();
 export { app as handlers };
@@ -200,8 +203,11 @@ function getAccountResponse(results, accountId, startDate) {
   }
 
   // SimpleFIN balances are numeric strings with any number of decimals
-  // (e.g. "100", "12.5"), so don't assume exactly two
-  const startingBalance = Math.round(parseFloat(account.balance) * 100);
+  // (e.g. "100", "12.5"). The scale comes from the account currency so a
+  // yen balance is not stored as cents.
+  const startingBalance = Math.round(
+    parseFloat(account.balance) * amountScale(account.currency),
+  );
   const date = getDate(new Date(account['balance-date'] * 1000));
 
   const balances = [
@@ -250,7 +256,10 @@ function getAccountResponse(results, accountId, startDate) {
     newTrans.date = getDate(transactionDate);
     newTrans.payeeName = trans.payee;
     newTrans.notes = trans.description;
-    newTrans.transactionAmount = { amount: trans.amount, currency: 'USD' };
+    newTrans.transactionAmount = {
+      amount: trans.amount,
+      currency: account.currency || 'USD',
+    };
     newTrans.transactionId = trans.id;
     newTrans.valueDate = newTrans.bookingDate;
 
@@ -409,10 +418,6 @@ function getDate(date) {
   return date.toISOString().split('T')[0];
 }
 
-function normalizeDate(date) {
-  return (date.valueOf() - date.getTimezoneOffset() * 60 * 1000) / 1000;
-}
-
 async function getAccounts(
   accessKey,
   accounts,
@@ -431,10 +436,10 @@ async function getAccounts(
   const params = new URLSearchParams();
   if (!noTransactions) {
     if (startDate) {
-      params.append('start-date', normalizeDate(startDate));
+      params.append('start-date', simplefinUnixSeconds(startDate));
     }
     if (endDate) {
-      params.append('end-date', normalizeDate(endDate));
+      params.append('end-date', simplefinUnixSeconds(endDate));
     }
     params.append('pending', '1');
   } else {

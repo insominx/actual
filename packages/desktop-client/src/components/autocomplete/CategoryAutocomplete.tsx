@@ -17,7 +17,7 @@ import { Text } from '@actual-app/components/text';
 import { TextOneLine } from '@actual-app/components/text-one-line';
 import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
-import { integerToCurrency } from '@actual-app/core/shared/util';
+import { integerToCurrencyScaled } from '@actual-app/core/shared/util';
 import type {
   CategoryEntity,
   CategoryGroupEntity,
@@ -29,6 +29,7 @@ import { makeAmountFullStyle } from '#components/budget/util';
 import { FinancialText } from '#components/FinancialText';
 import { useCategories } from '#hooks/useCategories';
 import { useSheetValue } from '#hooks/useSheetValue';
+import { useFormat } from '#hooks/useFormat';
 import { useSyncedPref } from '#hooks/useSyncedPref';
 import { envelopeBudget, trackingBudget } from '#spreadsheet/bindings';
 
@@ -353,6 +354,7 @@ function CategoryItem({
   ...props
 }: CategoryItemProps) {
   const { t } = useTranslation();
+  const currencyCode = useFormat().currency.code;
   const { isNarrowWidth } = useResponsive();
   const narrowStyle = isNarrowWidth
     ? {
@@ -422,7 +424,7 @@ function CategoryItem({
                 <>
                   {' '}
                   <FinancialText>
-                    {integerToCurrency(toBudget || 0)}
+                    {integerToCurrencyScaled(toBudget || 0, currencyCode)}
                   </FinancialText>
                 </>
               )
@@ -430,7 +432,7 @@ function CategoryItem({
                 <>
                   {' '}
                   <FinancialText>
-                    {integerToCurrency(balance || 0)}
+                    {integerToCurrencyScaled(balance || 0, currencyCode)}
                   </FinancialText>
                 </>
               )}

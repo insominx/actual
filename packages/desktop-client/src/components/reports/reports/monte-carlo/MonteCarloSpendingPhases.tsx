@@ -21,6 +21,7 @@ import type { MonteCarloSpendingPhase } from '#components/reports/reports/monte-
 import { FIELD_LABEL_STYLE } from '#components/reports/reports/monte-carlo/monteCarloStyles';
 import { Field, Row, TableHeader } from '#components/table';
 import { FinancialInput } from '#components/util/FinancialInput';
+import { useFormat } from '#hooks/useFormat';
 
 // Fixed remove column; the rest flex evenly with these minimum widths
 const PHASE_COLUMNS = {
@@ -47,6 +48,7 @@ export function MonteCarloSpendingPhases({
   onPhasesChange,
 }: MonteCarloSpendingPhasesProps) {
   const { t } = useTranslation();
+  const format = useFormat();
 
   function updatePhase(
     phaseId: string,
@@ -79,7 +81,11 @@ export function MonteCarloSpendingPhases({
     onPhasesChange(
       sortMonteCarloSpendingPhases([
         ...phases,
-        createMonteCarloSpendingPhase(uuidv4(), fromAge),
+        createMonteCarloSpendingPhase(
+          uuidv4(),
+          fromAge,
+          format.currency.decimalPlaces,
+        ),
       ]),
     );
   }

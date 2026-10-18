@@ -128,10 +128,10 @@ function AgeOfMoneyInner({ widget }: AgeOfMoneyInnerProps) {
 
       const currentMonth = monthUtils.currentMonth();
       let earliestMonth = earliestTrans
-        ? monthUtils.monthFromDate(d.parseISO(fromDateRepr(earliestTrans.date)))
+        ? monthUtils.monthFromDate(fromDateRepr(earliestTrans.date))
         : currentMonth;
       const latestTransactionMonth = latestTrans
-        ? monthUtils.monthFromDate(d.parseISO(fromDateRepr(latestTrans.date)))
+        ? monthUtils.monthFromDate(fromDateRepr(latestTrans.date))
         : currentMonth;
 
       const latestMonth =

@@ -56,12 +56,20 @@ export function registerHandlebarsHelpers() {
     replace: regexHelper(
       (regex, flags) => new RegExp(regex, flags),
       value => value,
-      (value, regex, replace) => value.replace(regex, replace),
+      (value, regex, replace) =>
+        // A plain string is a literal replacement. `$&` and `$$` stay
+        // characters. A `/pattern/` still supports capture groups.
+        typeof regex === 'string'
+          ? value.replace(regex, () => replace)
+          : value.replace(regex, replace),
     ),
     replaceAll: regexHelper(
       (regex, flags) => new RegExp(regex, flags),
       value => value,
-      (value, regex, replace) => value.replaceAll(regex, replace),
+      (value, regex, replace) =>
+        typeof regex === 'string'
+          ? value.replaceAll(regex, () => replace)
+          : value.replaceAll(regex, replace),
     ),
     add: mathHelper((a, b) => a + b),
     sub: mathHelper((a, b) => a - b),

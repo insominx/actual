@@ -19,6 +19,7 @@ import {
   runMonteCarloSimulation,
 } from '#components/reports/reports/monte-carlo/monteCarloSimulation';
 import { useResolvedMonteCarloConfig } from '#components/reports/reports/monte-carlo/useResolvedMonteCarloConfig';
+import { useFormat } from '#hooks/useFormat';
 
 // Stable default so an unsaved widget doesn't bust the simulation's
 // memoization on every re-render (e.g. hover state changes)
@@ -38,6 +39,7 @@ export function MonteCarloCard({
   onMetaChange,
 }: MonteCarloCardProps) {
   const { t } = useTranslation();
+  const format = useFormat();
   const { isNarrowWidth } = useResponsive();
 
   const [nameMenuOpen, setNameMenuOpen] = useState(false);
@@ -45,7 +47,10 @@ export function MonteCarloCard({
 
   // Memoised by hand so hovering the card (which toggles state) doesn't
   // re-run thousands of simulations
-  const config = useMemo(() => monteCarloConfigFromMeta(meta), [meta]);
+  const config = useMemo(
+    () => monteCarloConfigFromMeta(meta, format.currency.decimalPlaces),
+    [meta, format.currency.decimalPlaces],
+  );
   const resolvedConfig = useResolvedMonteCarloConfig(config);
   const result = useMemo(
     () =>

@@ -888,6 +888,131 @@ describe('SimpleFin batch sync', () => {
     }
   });
 
+  test('derives a yen opening balance without inventing cents', async () => {
+    const providerAccountId = 'sf-account-1';
+    const acctId = await db.insertAccount({
+      id: 'acct-1',
+      account_id: providerAccountId,
+      name: 'Yen account',
+      account_sync_source: 'simpleFin',
+    });
+
+    mockSimpleFinTransactions({
+      [providerAccountId]: {
+        transactions: {
+          all: [
+            {
+              booked: true,
+              date: '2017-10-03',
+              payeeName: 'Coffee Shop',
+              transactionAmount: { amount: '-12', currency: 'JPY' },
+              transactionId: 'provider-tx-1',
+            },
+            {
+              booked: true,
+              date: '2017-10-02',
+              payeeName: 'Employer',
+              transactionAmount: { amount: '100', currency: 'JPY' },
+              transactionId: 'provider-tx-2',
+            },
+          ],
+          booked: [],
+          pending: [],
+        },
+        balances: [],
+        startingBalance: 1000,
+      },
+      errors: {},
+    });
+
+    setSyncingMode('offline');
+    try {
+      const result = await accountsApp.handlers['simplefin-batch-sync']({
+        ids: [acctId],
+      });
+      expect(result[0].res.errors).toHaveLength(0);
+
+      const transactions = await getAllTransactions();
+      const startingBalance = transactions.find(
+        transaction => transaction.starting_balance_flag,
+      );
+      // 1000 yen current balance minus (-12 + 100) of synced transactions
+      expect(startingBalance.amount).toBe(912);
+      expect(
+        transactions.find(t => t.imported_id === 'provider-tx-1').amount,
+      ).toBe(-12);
+      expect(
+        transactions.find(t => t.imported_id === 'provider-tx-2').amount,
+      ).toBe(100);
+    } finally {
+      setSyncingMode('disabled');
+    }
+  });
+
+  test('uses the budget currency when the bank omits a transaction currency', async () => {
+    await db.update('preferences', {
+      id: 'defaultCurrencyCode',
+      value: 'JPY',
+    });
+    const providerAccountId = 'sf-account-1';
+    const acctId = await db.insertAccount({
+      id: 'acct-1',
+      account_id: providerAccountId,
+      name: 'Yen account',
+      account_sync_source: 'simpleFin',
+    });
+
+    mockSimpleFinTransactions({
+      [providerAccountId]: {
+        transactions: {
+          all: [
+            {
+              booked: true,
+              date: '2017-10-03',
+              payeeName: 'Coffee Shop',
+              transactionAmount: { amount: '-12' },
+              transactionId: 'provider-tx-1',
+            },
+            {
+              booked: true,
+              date: '2017-10-02',
+              payeeName: 'Employer',
+              transactionAmount: { amount: '100' },
+              transactionId: 'provider-tx-2',
+            },
+          ],
+          booked: [],
+          pending: [],
+        },
+        balances: [],
+        startingBalance: 1000,
+      },
+      errors: {},
+    });
+
+    setSyncingMode('offline');
+    try {
+      const result = await accountsApp.handlers['simplefin-batch-sync']({
+        ids: [acctId],
+      });
+      expect(result[0].res.errors).toHaveLength(0);
+
+      const transactions = await getAllTransactions();
+      const startingBalance = transactions.find(
+        transaction => transaction.starting_balance_flag,
+      );
+      expect(startingBalance.amount).toBe(912);
+      expect(
+        transactions.find(t => t.imported_id === 'provider-tx-1').amount,
+      ).toBe(-12);
+      expect(
+        transactions.find(t => t.imported_id === 'provider-tx-2').amount,
+      ).toBe(100);
+    } finally {
+      setSyncingMode('disabled');
+    }
+  });
+
   test('leaves pending transactions out of the opening balance when they are not imported', async () => {
     const providerAccountId = 'sf-account-1';
     const acctId = await db.insertAccount({

@@ -126,7 +126,10 @@ export async function prepareBudgetMove(
   }
   if (request.from === request.to) invalid(noun, 'from and to must differ');
   if (!isEngineAmount(request.amount) || request.amount <= 0) {
-    invalid(noun, 'amount must be a positive integer in cents');
+    invalid(
+      noun,
+      'amount must be a positive stored integer at the budget currency scale',
+    );
   }
   if (
     request.allowOverspend !== undefined &&

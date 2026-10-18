@@ -2,8 +2,10 @@
 import { v4 as uuidv4 } from 'uuid';
 
 import { logger } from '#platform/server/log';
+import * as db from '#server/db';
 import { send } from '#server/main-app';
 import { ruleModel } from '#server/transactions/transaction-rules';
+import { getCurrency } from '#shared/currencies';
 import * as monthUtils from '#shared/months';
 import { q } from '#shared/query';
 import { groupBy, sortByKey } from '#shared/util';
@@ -70,10 +72,18 @@ function findIdByName<T extends { id: string; name: string }>(
   return findByNameIgnoreCase<T>(categories, name)?.id;
 }
 
-function amountFromYnab(amount: number) {
-  // YNAB multiplies amount by 1000 and Actual by 100
-  // so, this function divides by 10
-  return Math.round(amount / 10);
+function budgetDecimalPlaces() {
+  const code = db.firstSync<{ value: string }>(
+    `SELECT value FROM preferences WHERE id = ?`,
+    ['defaultCurrencyCode'],
+  )?.value;
+  return getCurrency(code ?? '').decimalPlaces;
+}
+
+function amountFromYnab(amount: number, decimalPlaces = 2) {
+  // YNAB stores milliunits (major units × 1000). Actual stores
+  // 10^decimalPlaces, so dollars divide by 10 and yen by 1000.
+  return Math.round(amount / 10 ** (3 - decimalPlaces));
 }
 
 function getDayOfMonth(date: string) {
@@ -590,6 +600,7 @@ export async function importTransactions(
   entityIdMap: Map<string, string>,
   flagNameConflicts: Set<string>,
   tick?: ImportTick,
+  decimalPlaces = 2,
 ) {
   const payees = await send('api/payees-get');
   const categories = await send('api/categories-get');
@@ -778,7 +789,7 @@ export async function importTransactions(
             id: entityIdMap.get(transaction.id),
             account: entityIdMap.get(transaction.account_id),
             date: transaction.date,
-            amount: amountFromYnab(transaction.amount),
+            amount: amountFromYnab(transaction.amount, decimalPlaces),
             category: entityIdMap.get(transaction.category_id) || null,
             cleared: ['cleared', 'reconciled'].includes(transaction.cleared),
             reconciled: transaction.cleared === 'reconciled',
@@ -792,7 +803,7 @@ export async function importTransactions(
               ? subtransactions.map(subtrans => {
                   return {
                     id: entityIdMap.get(subtrans.id),
-                    amount: amountFromYnab(subtrans.amount),
+                    amount: amountFromYnab(subtrans.amount, decimalPlaces),
                     category: entityIdMap.get(subtrans.category_id) || null,
                     notes: subtrans.memo,
                     transfer_id:
@@ -874,6 +885,7 @@ export async function importScheduledTransactions(
   entityIdMap: Map<string, string>,
   flagNameConflicts: Set<string>,
   tick: ImportTick,
+  decimalPlaces = 2,
 ) {
   const scheduledTransactions = data.scheduled_transactions;
   const scheduledSubtransactionsGrouped = groupBy(
@@ -980,7 +992,7 @@ export async function importScheduledTransactions(
       posts_transaction: false,
       payee: mappedPayeeId,
       account: mappedAccountId,
-      amount: amountFromYnab(scheduled.amount),
+      amount: amountFromYnab(scheduled.amount, decimalPlaces),
       amountOp: 'is',
       date: scheduleDate,
     });
@@ -1060,7 +1072,7 @@ export async function importScheduledTransactions(
 
         actions.push({
           op: 'set-split-amount',
-          value: amountFromYnab(subtransaction.amount),
+          value: amountFromYnab(subtransaction.amount, decimalPlaces),
           options: { splitIndex, method: 'fixed-amount' },
         });
 
@@ -1132,6 +1144,7 @@ async function importBudgets(
   data: Budget,
   entityIdMap: Map<string, string>,
   tick: ImportTick,
+  decimalPlaces = 2,
 ) {
   // There should be info in the docs to deal with
   // no credit card category and how YNAB and Actual
@@ -1160,7 +1173,7 @@ async function importBudgets(
       await Promise.all(
         budget.categories.map(async catBudget => {
           const catId = entityIdMap.get(catBudget.id);
-          const amount = Math.round(catBudget.budgeted / 10);
+          const amount = amountFromYnab(catBudget.budgeted, decimalPlaces);
 
           if (
             !catId ||
@@ -1207,6 +1220,7 @@ export function getBudgetName(_filepath: string, data: Budget) {
 export async function doImport(data: Budget) {
   const entityIdMap = new Map<string, string>();
   const flagNameConflicts = getFlagNameConflicts(data);
+  const decimalPlaces = budgetDecimalPlaces();
 
   await runImportSteps([
     {
@@ -1240,18 +1254,30 @@ export async function doImport(data: Budget) {
       step: 'transactions',
       total: data.transactions.length,
       run: tick =>
-        importTransactions(data, entityIdMap, flagNameConflicts, tick),
+        importTransactions(
+          data,
+          entityIdMap,
+          flagNameConflicts,
+          tick,
+          decimalPlaces,
+        ),
     },
     {
       step: 'scheduled-transactions',
       total: data.scheduled_transactions.length,
       run: tick =>
-        importScheduledTransactions(data, entityIdMap, flagNameConflicts, tick),
+        importScheduledTransactions(
+          data,
+          entityIdMap,
+          flagNameConflicts,
+          tick,
+          decimalPlaces,
+        ),
     },
     {
       step: 'budgets',
       total: data.months.length,
-      run: tick => importBudgets(data, entityIdMap, tick),
+      run: tick => importBudgets(data, entityIdMap, tick, decimalPlaces),
     },
   ]);
 }

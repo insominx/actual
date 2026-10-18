@@ -510,13 +510,18 @@ export function getFormulaFunctionCatalog(): Record<
       category: 'other',
       modes: ['query', 'transaction'],
       description: t(
-        'Converts integer amount to decimal amount (e.g., 1234 -> 12.34).',
+        'Converts a stored amount to major units (for example, 1234 cents is 12.34).',
       ),
       parameters: [
-        { name: 'integer_amount', description: t('Integer amount in cents') },
+        {
+          name: 'integer_amount',
+          description: t('Stored integer amount'),
+        },
         {
           name: 'decimal_places',
-          description: t('Number of decimal places (default: 2)'),
+          description: t(
+            'Number of decimal places (default: the budget currency)',
+          ),
         },
       ],
     },
@@ -1134,7 +1139,7 @@ export function getFormulaFunctionCatalog(): Record<
       category: 'other',
       modes: ['query', 'transaction'],
       description: t(
-        "Balance for an account. In rule formulas, this is the running balance (in cents) at this transaction, same cutoff as balance (use the balance variable instead for the current account). In report/query formulas, this is the account's current balance (in money/display units). Use a quoted account id for a deterministic match, or a quoted account name.",
+        "Balance for an account. In rule formulas, this is the running stored balance at this transaction, same cutoff as balance (use the balance variable instead for the current account; use INTEGER_TO_AMOUNT to convert a stored amount to major units). In report/query formulas, this is the account's current balance in major units. Use a quoted account id for a deterministic match, or a quoted account name.",
       ),
       parameters: [
         {
@@ -1336,7 +1341,7 @@ export function getRuleFieldCompletions(): Completion[] {
       section: ruleFieldSection,
       boost: 5,
       info: t(
-        'Transaction amount in cents. Use for calculations and comparisons.\n\nExample: =amount / 100 to get dollar value',
+        'Stored transaction amount. Use for calculations and comparisons.\n\nExample: =INTEGER_TO_AMOUNT(amount) for the major-unit value',
       ),
     },
     {
@@ -1453,7 +1458,7 @@ export function getRuleFieldCompletions(): Completion[] {
       section: ruleFieldSection,
       boost: 5,
       info: t(
-        'The amount of the parent transaction in cents in split transactions.\n\nExample: =(parent_amount / 100) * .05',
+        'The stored amount of the parent transaction in a split.\n\nExample: =INTEGER_TO_AMOUNT(parent_amount) * .05',
       ),
     },
     {

@@ -245,6 +245,9 @@ export class Condition {
 
   eval(object) {
     let fieldValue = object[this.field];
+    // Tag identity is case sensitive. The lowered copy below is for the
+    // other string operators.
+    const rawFieldValue = fieldValue;
     const type = this.type;
 
     if (type === 'string') {
@@ -353,29 +356,25 @@ export class Condition {
         return this.value.indexOf(fieldValue) !== -1;
 
       case 'hasTags':
-        if (fieldValue === null) {
+        if (rawFieldValue == null) {
           return false;
         }
-        const normalizedFieldValue = String(fieldValue);
+        const normalizedFieldValue = String(rawFieldValue);
         const tags = extractTagsForFilter(this.value);
         return !tags.some(tag => {
-          const escapedTag = tag
-            .toLowerCase()
-            .replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const escapedTag = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           const pattern = new RegExp(`(?<!#)${escapedTag}([\\s#]|$)`);
           return !pattern.test(normalizedFieldValue);
         });
 
       case 'hasAnyTag': {
-        if (fieldValue === null) {
+        if (rawFieldValue == null) {
           return false;
         }
-        const normalizedFieldValue = String(fieldValue);
+        const normalizedFieldValue = String(rawFieldValue);
         const tags = extractTagsForFilter(this.value);
         return tags.some(tag => {
-          const escapedTag = tag
-            .toLowerCase()
-            .replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const escapedTag = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           const pattern = new RegExp(`(?<!#)${escapedTag}([\\s#]|$)`);
           return pattern.test(normalizedFieldValue);
         });

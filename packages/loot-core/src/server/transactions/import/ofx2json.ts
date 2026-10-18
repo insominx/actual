@@ -7,7 +7,7 @@ type OFXTransaction = {
   amount: string;
   fitId: string;
   name: string;
-  date: string;
+  date: string | null;
   memo: string;
   type: string;
 };
@@ -104,22 +104,27 @@ function getAsArray(value) {
   return Array.isArray(value) ? value : value === undefined ? [] : [value];
 }
 
+function postedDay(dtPosted: unknown): string | null {
+  // YYYYMMDDHHMMSS format. Keep the calendar day through dayFromDate, which
+  // parses at noon. A local midnight Date can fall into the previous day
+  // where a timezone shifts across midnight. A missing or non-numeric posted
+  // date used to throw and fail the whole file.
+  if (typeof dtPosted !== 'string' || !/^\d{8}/.test(dtPosted)) {
+    return null;
+  }
+  return dayFromDate(
+    `${dtPosted.substring(0, 4)}-${dtPosted.substring(4, 6)}-${dtPosted.substring(6, 8)}`,
+  );
+}
+
 function mapOfxTransaction(stmtTrn): OFXTransaction {
-  // YYYYMMDDHHMMSS format. We just need the date.
-  const dtPosted = stmtTrn['DTPOSTED'];
-  const transactionDate = dtPosted
-    ? new Date(
-        Number(dtPosted.substring(0, 4)), // year
-        Number(dtPosted.substring(4, 6)) - 1, // month (zero-based index)
-        Number(dtPosted.substring(6, 8)), // date
-      )
-    : null;
+  const date = postedDay(stmtTrn['DTPOSTED']);
 
   return {
     amount: stmtTrn['TRNAMT'],
     type: stmtTrn['TRNTYPE'],
     fitId: stmtTrn['FITID'],
-    date: dayFromDate(transactionDate),
+    date,
     name: html2Plain(stmtTrn['NAME']),
     memo: html2Plain(stmtTrn['MEMO']),
   };

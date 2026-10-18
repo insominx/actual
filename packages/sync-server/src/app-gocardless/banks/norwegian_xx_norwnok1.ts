@@ -69,9 +69,18 @@ export default {
 
     return sortedTransactions.reduce(
       (total, trans) => {
-        return total - amountToInteger(trans.transactionAmount.amount);
+        return (
+          total -
+          amountToInteger(
+            trans.transactionAmount.amount,
+            trans.transactionAmount.currency,
+          )
+        );
       },
-      amountToInteger(currentBalance?.balanceAmount.amount || 0),
+      amountToInteger(
+        currentBalance?.balanceAmount.amount || 0,
+        currentBalance?.balanceAmount.currency,
+      ),
     );
   },
 } satisfies IBank;

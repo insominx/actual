@@ -22,6 +22,7 @@ import {
   normalizeBalance,
   normalizeTransaction,
 } from './services/enablebanking-service';
+import { syncRangeEnd } from './sync-range';
 import { EnableBankingError } from './utils/errors';
 
 const debug = createDebug('actual:enable-banking:app');
@@ -507,7 +508,7 @@ app.post(
     const psuHeaders = extractPsuHeaders(req);
 
     try {
-      const dateTo = new Date().toISOString().split('T')[0];
+      const dateTo = syncRangeEnd();
       const dateFrom =
         typeof startDate === 'string'
           ? startDate

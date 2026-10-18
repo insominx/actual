@@ -568,7 +568,7 @@ export function registerBudgetsCommand(program: Command) {
     .requiredOption('--category <id>', 'Category ID')
     .requiredOption(
       '--amount <amount>',
-      'Amount in cents (e.g. 50000 = 500.00)',
+      'Stored amount (50000 = 500.00 dollars, or 500 yen)',
     )
     .action(async cmdOpts => {
       const amount = parseIntFlag(cmdOpts.amount, '--amount');
@@ -603,7 +603,10 @@ export function registerBudgetsCommand(program: Command) {
     .requiredOption('--month <month>', 'Budget month (YYYY-MM)')
     .requiredOption('--from <id>', 'Source category ID or to-budget')
     .requiredOption('--to <id>', 'Destination category ID or to-budget')
-    .requiredOption('--amount <amount>', 'Positive amount in cents')
+    .requiredOption(
+      '--amount <amount>',
+      'Positive stored amount (50000 = 500.00 dollars, or 500 yen)',
+    )
     .option(
       '--allow-overspend',
       'Allow the move to leave the source category with a negative balance',
@@ -730,7 +733,7 @@ export function registerBudgetsCommand(program: Command) {
     .requiredOption('--month <month>', 'Budget month (YYYY-MM)')
     .requiredOption(
       '--amount <amount>',
-      'Amount in cents (e.g. 50000 = 500.00)',
+      'Stored amount (50000 = 500.00 dollars, or 500 yen)',
     )
     .action(async cmdOpts => {
       const parsedAmount = parseIntFlag(cmdOpts.amount, '--amount');

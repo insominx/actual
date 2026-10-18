@@ -50,37 +50,19 @@ export function calendarSpreadsheet(
     }
     const conditionsOpKey = conditionsOp === 'or' ? '$or' : '$and';
 
-    let startDay: Date;
-    try {
-      startDay = d.parse(
-        monthUtils.firstDayOfMonth(start),
-        'yyyy-MM-dd',
-        new Date(),
-      );
-    } catch (error) {
-      console.error('Failed to parse start date:', error);
-      throw new Error('Invalid start date format');
-    }
-
-    let endDay: Date;
-    try {
-      endDay = d.parse(
-        monthUtils.lastDayOfMonth(end),
-        'yyyy-MM-dd',
-        new Date(),
-      );
-    } catch (error) {
-      console.error('Failed to parse end date:', error);
-      throw new Error('Invalid end date format');
+    const startDay = monthUtils.firstDayOfMonth(start);
+    const endDay = monthUtils.lastDayOfMonth(end);
+    if (
+      !monthUtils.isValidYearMonthDay(startDay) ||
+      !monthUtils.isValidYearMonthDay(endDay)
+    ) {
+      throw new Error('Invalid date format provided');
     }
 
     const makeRootQuery = () =>
       q('transactions')
         .filter({
-          $and: [
-            { date: { $gte: d.format(startDay, 'yyyy-MM-dd') } },
-            { date: { $lte: d.format(endDay, 'yyyy-MM-dd') } },
-          ],
+          $and: [{ date: { $gte: startDay } }, { date: { $lte: endDay } }],
         })
         .filter({
           [conditionsOpKey]: filters,
@@ -114,11 +96,12 @@ export function calendarSpreadsheet(
 
     const getOneDatePerMonth = (start: Date, end: Date) => {
       const months = [];
-      let currentDate = d.startOfMonth(start);
+      let currentDate = new Date(start.getFullYear(), start.getMonth(), 1, 12);
+      const endMonth = new Date(end.getFullYear(), end.getMonth(), 1, 12);
 
-      // `isBefore` rather than `!isSameMonth`: a start after the end would
-      // otherwise step away from the end forever
-      while (d.isBefore(currentDate, d.startOfMonth(end))) {
+      // Compare the first of each month. A start after the end does not
+      // step away from the end forever.
+      while (currentDate < endMonth) {
         months.push(currentDate);
         currentDate = d.addMonths(currentDate, 1);
       }
@@ -131,7 +114,10 @@ export function calendarSpreadsheet(
       recalculate(
         incomeData.data,
         expenseData.data,
-        getOneDatePerMonth(startDay, endDay),
+        getOneDatePerMonth(
+          monthUtils.parseDate(startDay),
+          monthUtils.parseDate(endDay),
+        ),
         start,
         firstDayOfWeekIdx,
       ),
@@ -166,7 +152,7 @@ function recalculate(
     const cache = new Map<string, Date>();
     return (dateStr: string) => {
       if (!cache.has(dateStr)) {
-        cache.set(dateStr, d.parse(dateStr, 'yyyy-MM-dd', new Date()));
+        cache.set(dateStr, monthUtils.parseDate(dateStr));
       }
       return cache.get(dateStr)!;
     };
@@ -208,16 +194,18 @@ function recalculate(
       }
     };
 
-    const firstDay = d.startOfMonth(month);
-    const beginDay = d.startOfWeek(firstDay, {
-      weekStartsOn:
-        firstDayOfWeekIdx !== undefined &&
-        !Number.isNaN(parseInt(firstDayOfWeekIdx)) &&
-        parseInt(firstDayOfWeekIdx) >= 0 &&
-        parseInt(firstDayOfWeekIdx) <= 6
-          ? (parseInt(firstDayOfWeekIdx) as 0 | 1 | 2 | 3 | 4 | 5 | 6)
-          : 0,
-    });
+    const weekStartsOn =
+      firstDayOfWeekIdx !== undefined &&
+      !Number.isNaN(parseInt(firstDayOfWeekIdx)) &&
+      parseInt(firstDayOfWeekIdx) >= 0 &&
+      parseInt(firstDayOfWeekIdx) <= 6
+        ? parseInt(firstDayOfWeekIdx)
+        : 0;
+    const firstDay = new Date(month.getFullYear(), month.getMonth(), 1, 12);
+    const beginDay = d.subDays(
+      firstDay,
+      (firstDay.getDay() - weekStartsOn + 7) % 7,
+    );
     let totalDays =
       d.differenceInDays(firstDay, beginDay) + d.getDaysInMonth(firstDay);
     if (totalDays % 7 !== 0) {
@@ -261,8 +249,8 @@ function recalculate(
     calendarData: months.map(m => {
       return {
         ...getDaysArray(m),
-        start: d.startOfMonth(m),
-        end: d.endOfMonth(m),
+        start: new Date(m.getFullYear(), m.getMonth(), 1, 12),
+        end: new Date(m.getFullYear(), m.getMonth(), d.getDaysInMonth(m), 12),
       };
     }),
   };

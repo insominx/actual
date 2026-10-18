@@ -6,6 +6,7 @@ import {
   applyFindReplace,
   currencyToAmount,
   getNumberFormat,
+  integerToCurrencyScaled,
   integerToCurrencyWithDecimal,
   looselyParseAmount,
   setNumberFormat,
@@ -86,6 +87,16 @@ describe('utility functions', () => {
     expect(looselyParseAmount('−3')).toBe(-3);
     expect(looselyParseAmount('−3.45')).toBe(-3.45);
     expect(looselyParseAmount('−3,45')).toBe(-3.45);
+  });
+
+  test('looseParseAmount keeps a trailing minus negative', () => {
+    expect(looselyParseAmount('3.45-')).toBe(-3.45);
+    expect(looselyParseAmount('3,45-')).toBe(-3.45);
+    expect(looselyParseAmount('1.234,56-')).toBe(-1234.56);
+    expect(looselyParseAmount('$1,055.00-')).toBe(-1055);
+    expect(looselyParseAmount('3-')).toBe(-3);
+    expect(looselyParseAmount('3.45−')).toBe(-3.45);
+    expect(looselyParseAmount('-3.45')).toBe(-3.45);
   });
 
   test('looseParseAmount works with parentheses (negative)', () => {
@@ -298,6 +309,23 @@ describe('utility functions', () => {
     test('no currency argument preserves existing behavior', () => {
       expect(integerToCurrencyWithDecimal(1234)).toBe('12.34');
       expect(integerToCurrencyWithDecimal(1200)).toBe('12.00');
+    });
+  });
+
+  describe('integerToCurrencyScaled', () => {
+    beforeEach(() => {
+      setNumberFormat({ format: 'comma-dot', hideFraction: true });
+    });
+
+    test('two-decimal currencies keep the hide-fraction preference', () => {
+      expect(integerToCurrencyScaled(10000, 'USD')).toBe('100');
+      expect(integerToCurrencyScaled(10000)).toBe('100');
+    });
+
+    test('zero-decimal currencies are not divided by 100', () => {
+      expect(integerToCurrencyScaled(1234, 'JPY')).toBe('1,234');
+      expect(integerToCurrencyScaled(1234, 'KRW')).toBe('1,234');
+      expect(integerToCurrencyScaled(1234, 'IRR')).toBe('1,234');
     });
   });
 

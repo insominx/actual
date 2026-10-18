@@ -9,6 +9,21 @@ import { formatPayeeName } from '#util/payee-name';
 
 import type { IBank } from './bank.interface';
 
+// A booking timestamp's leading date is the bank's calendar day. Formatting
+// the instant in the server timezone moves a midnight booking to the
+// previous day wherever that server is behind UTC.
+function bookingDay(value: string): string {
+  const match = /^(\d{4}-\d{2}-\d{2})/.exec(value);
+  if (match) {
+    const day = d.parseISO(match[1]);
+    if (d.isValid(day)) {
+      return d.format(day, 'yyyy-MM-dd');
+    }
+  }
+
+  return d.format(d.parseISO(value), 'yyyy-MM-dd');
+}
+
 const SORTED_BALANCE_TYPE_LIST = [
   'closingBooked',
   'expected',
@@ -71,7 +86,7 @@ export default {
     return {
       ...transaction,
       payeeName: trans.payeeName ?? formatPayeeName(trans),
-      date: d.format(d.parseISO(date), 'yyyy-MM-dd'),
+      date: bookingDay(date),
       notes,
     };
   },
@@ -90,9 +105,18 @@ export default {
       )[0];
     return sortedTransactions.reduce(
       (total, trans) => {
-        return total - amountToInteger(trans.transactionAmount.amount);
+        return (
+          total -
+          amountToInteger(
+            trans.transactionAmount.amount,
+            trans.transactionAmount.currency,
+          )
+        );
       },
-      amountToInteger(currentBalance?.balanceAmount.amount || 0),
+      amountToInteger(
+        currentBalance?.balanceAmount.amount || 0,
+        currentBalance?.balanceAmount.currency,
+      ),
     );
   },
 } satisfies IBank;

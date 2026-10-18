@@ -77,6 +77,26 @@ export function _parse(value: DateLike): Date {
   if (typeof value === 'number') {
     return new Date(value);
   }
+  if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+    return value;
+  }
+  // `new Date('2030-12-31')` is UTC midnight. West of UTC that instant
+  // is the previous evening, so a balance cutoff would drop the last day.
+  // A local `new Date(y, m, d)` is not UTC midnight except in UTC itself,
+  // where the calendar day is the same either way.
+  if (
+    value.getUTCHours() === 0 &&
+    value.getUTCMinutes() === 0 &&
+    value.getUTCSeconds() === 0 &&
+    value.getUTCMilliseconds() === 0
+  ) {
+    return new Date(
+      value.getUTCFullYear(),
+      value.getUTCMonth(),
+      value.getUTCDate(),
+      12,
+    );
+  }
   return value;
 }
 
@@ -106,7 +126,12 @@ export function isValidYearMonthDay(value: string): boolean {
   const month = Number(match[2]);
   const day = Number(match[3]);
   if (month < 1 || month > 12) return false;
-  return day >= 1 && day <= d.getDaysInMonth(new Date(year, month - 1));
+  // Noon, same as _parse. Midnight on the 1st can fall into the previous
+  // month where a timezone shifts across midnight, which rejects the
+  // last day of the real month.
+  return (
+    day >= 1 && day <= d.getDaysInMonth(_parse(`${match[1]}-${match[2]}-01`))
+  );
 }
 
 export function weekFromDate(
@@ -114,18 +139,32 @@ export function weekFromDate(
   firstDayOfWeekIdx: SyncedPrefs['firstDayOfWeekIdx'],
 ): string {
   const converted = parseInt(firstDayOfWeekIdx || '0') as Day;
+  const parsed = _parse(date);
+  // Step back from noon. startOfWeek resets the time to midnight, which
+  // can fall into the previous day where a timezone shifts across midnight.
+  const diff = (parsed.getDay() - converted + 7) % 7;
+  return d.format(d.subDays(parsed, diff), 'yyyy-MM-dd');
+}
+
+export function firstDayOfMonth(date: DateLike): string {
+  const parsed = _parse(date);
   return d.format(
-    _parse(d.startOfWeek(_parse(date), { weekStartsOn: converted })),
+    new Date(parsed.getFullYear(), parsed.getMonth(), 1, 12),
     'yyyy-MM-dd',
   );
 }
 
-export function firstDayOfMonth(date: DateLike): string {
-  return dayFromDate(d.startOfMonth(_parse(date)));
-}
-
 export function lastDayOfMonth(date: DateLike): string {
-  return dayFromDate(d.endOfMonth(_parse(date)));
+  const parsed = _parse(date);
+  return d.format(
+    new Date(
+      parsed.getFullYear(),
+      parsed.getMonth(),
+      d.getDaysInMonth(parsed),
+      12,
+    ),
+    'yyyy-MM-dd',
+  );
 }
 
 export function dayFromDate(date: DateLike): string {
@@ -146,11 +185,7 @@ export function currentWeek(
   if (global.IS_TESTING || Platform.isPlaywright) {
     return global.currentWeek || '2017-01-01';
   } else {
-    const converted = parseInt(firstDayOfWeekIdx || '0') as Day;
-    return d.format(
-      _parse(d.startOfWeek(new Date(), { weekStartsOn: converted })),
-      'yyyy-MM-dd',
-    );
+    return weekFromDate(currentDay(), firstDayOfWeekIdx);
   }
 }
 
@@ -164,7 +199,7 @@ export function currentYear(): string {
 
 export function currentDate(): Date {
   if (global.IS_TESTING || Platform.isPlaywright) {
-    return d.parse(currentDay(), 'yyyy-MM-dd', new Date());
+    return _parse(currentDay());
   }
 
   return new Date();
@@ -260,8 +295,8 @@ export function isCurrentDay(day: DateLike): boolean {
 // probably live elsewhere
 export function bounds(month: DateLike): { start: number; end: number } {
   return {
-    start: parseInt(d.format(d.startOfMonth(_parse(month)), 'yyyyMMdd')),
-    end: parseInt(d.format(d.endOfMonth(_parse(month)), 'yyyyMMdd')),
+    start: parseInt(firstDayOfMonth(month).replaceAll('-', ''), 10),
+    end: parseInt(lastDayOfMonth(month).replaceAll('-', ''), 10),
   };
 }
 
@@ -402,11 +437,7 @@ export function getWeekEnd(
   date: DateLike,
   firstDayOfWeekIdx?: SyncedPrefs['firstDayOfWeekIdx'],
 ): string {
-  const converted = parseInt(firstDayOfWeekIdx || '0') as Day;
-  return d.format(
-    _parse(d.endOfWeek(_parse(date), { weekStartsOn: converted })),
-    'yyyy-MM-dd',
-  );
+  return addDays(weekFromDate(date, firstDayOfWeekIdx), 6);
 }
 
 export function getYearStart(month: string): string {

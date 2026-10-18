@@ -1,4 +1,6 @@
-import Nationwide from '#app-gocardless/banks/nationwide_naiagb21';
+import Nationwide, {
+  pendingBookingDay,
+} from '#app-gocardless/banks/nationwide_naiagb21';
 import { mockTransactionAmount } from '#app-gocardless/services/tests/fixtures';
 
 describe('Nationwide', () => {
@@ -20,6 +22,12 @@ describe('Nationwide', () => {
       );
 
       expect(normalizedTransaction?.date).toEqual(date);
+    });
+
+    it('clamps a future pending booking to the local calendar day', () => {
+      const now = new Date(2026, 0, 15, 20, 0, 0);
+
+      expect(pendingBookingDay('2099-01-01', now)).toBe('2026-01-15');
     });
 
     it('fixes date for pending transactions', () => {

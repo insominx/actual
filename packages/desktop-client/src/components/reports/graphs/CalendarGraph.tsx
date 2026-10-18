@@ -13,8 +13,7 @@ import {
   format as formatDate,
   getDate,
   isSameMonth,
-  startOfMonth,
-  startOfWeek,
+  subDays,
 } from 'date-fns';
 
 import { FinancialText } from '#components/FinancialText';
@@ -44,15 +43,24 @@ export function CalendarGraph({
 }: CalendarGraphProps) {
   const format = useFormat();
 
-  const startingDate = startOfWeek(new Date(), {
-    weekStartsOn:
-      firstDayOfWeekIdx !== undefined &&
-      !Number.isNaN(parseInt(firstDayOfWeekIdx)) &&
-      parseInt(firstDayOfWeekIdx) >= 0 &&
-      parseInt(firstDayOfWeekIdx) <= 6
-        ? (parseInt(firstDayOfWeekIdx) as 0 | 1 | 2 | 3 | 4 | 5 | 6)
-        : 0,
-  });
+  const weekStartsOn =
+    firstDayOfWeekIdx !== undefined &&
+    !Number.isNaN(parseInt(firstDayOfWeekIdx)) &&
+    parseInt(firstDayOfWeekIdx) >= 0 &&
+    parseInt(firstDayOfWeekIdx) <= 6
+      ? parseInt(firstDayOfWeekIdx)
+      : 0;
+  const today = new Date();
+  const todayNoon = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+    12,
+  );
+  const startingDate = subDays(
+    todayNoon,
+    (todayNoon.getDay() - weekStartsOn + 7) % 7,
+  );
   const [fontSize, setFontSize] = useState(14);
 
   const buttonRef = useResizeObserver(rect => {
@@ -106,7 +114,7 @@ export function CalendarGraph({
         }}
       >
         {data.map((day, index) =>
-          !isSameMonth(day.date, startOfMonth(start)) ? (
+          !isSameMonth(day.date, start) ? (
             <View
               key={`empty-${day.date.getTime()}`}
               onClick={() => onDayClick(null)}

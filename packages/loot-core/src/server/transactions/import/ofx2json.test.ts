@@ -47,4 +47,20 @@ VERSION:102
       date: '2024-01-02',
     });
   });
+
+  test('a transaction without a posted date does not fail the file', async () => {
+    const ofx = `OFXHEADER:100
+DATA:OFXSGML
+VERSION:102
+
+<OFX><BANKMSGSRSV1><STMTTRNRS><STMTRS><BANKTRANLIST>
+<STMTTRN><TRNTYPE>DEBIT<TRNAMT>-1.00<FITID>missing<NAME>No date</STMTTRN>
+<STMTTRN><TRNTYPE>DEBIT<DTPOSTED>20240103<TRNAMT>-2.00<FITID>ok<NAME>Has date</STMTTRN>
+</BANKTRANLIST></STMTRS></STMTTRNRS></BANKMSGSRSV1></OFX>`;
+    const { transactions } = await ofx2json(ofx);
+    expect(transactions).toEqual([
+      expect.objectContaining({ fitId: 'missing', date: null }),
+      expect.objectContaining({ fitId: 'ok', date: '2024-01-03' }),
+    ]);
+  });
 });

@@ -125,7 +125,10 @@ describe('settleReservations', () => {
       0,
     );
     expect(row.reserved).toBe(833);
-    expect(row.claims.map(c => c.accrued)).toEqual([417, 417]);
+    expect(row.claims.map(c => c.accrued)).toEqual([417, 416]);
+    expect(row.claims.reduce((sum, claim) => sum + claim.accrued, 0)).toBe(
+      row.reserved,
+    );
     expect(row).toMatchObject({ allowance: 0, spare: 167, shortfall: 0 });
     expectReconciles(row);
   });

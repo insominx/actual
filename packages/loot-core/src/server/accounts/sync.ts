@@ -18,6 +18,7 @@ import {
   defaultMappings,
   mappingsFromString,
 } from '#server/util/custom-sync-mapping';
+import { getDecimalPlaces } from '#shared/currencies';
 import * as monthUtils from '#shared/months';
 import { q } from '#shared/query';
 import {
@@ -513,8 +514,28 @@ export async function normalizeTransactions(
   return { normalized, payeesToCreate };
 }
 
+async function budgetAmountDecimalPlaces(): Promise<number> {
+  const row = await db.first<{ value: string }>(
+    "SELECT value FROM preferences WHERE id = 'defaultCurrencyCode'",
+  );
+  return getDecimalPlaces(row?.value || '');
+}
+
+function storedBankAmount(
+  amount: string | number,
+  currency: string | null | undefined,
+  fallbackDecimalPlaces: number,
+): number {
+  const code = typeof currency === 'string' ? currency.trim() : '';
+  return amountToInteger(
+    Number(amount),
+    code ? getDecimalPlaces(code) : fallbackDecimalPlaces,
+  );
+}
+
 async function normalizeBankSyncTransactions(transactions, acctId) {
   const payeesToCreate = new Map();
+  const fallbackDecimalPlaces = await budgetAmountDecimalPlaces();
 
   const [customMappingsRaw, importPending, importNotes] = await Promise.all([
     aqlQuery(
@@ -607,7 +628,11 @@ async function normalizeBankSyncTransactions(transactions, acctId) {
         `Amount from the bank is missing or not a number: ${String(trans.amount)}`,
       );
     }
-    const amount = amountToInteger(trans.amount);
+    const amount = storedBankAmount(
+      trans.amount,
+      trans.transactionAmount?.currency,
+      fallbackDecimalPlaces,
+    );
     if (!isEngineAmount(amount)) {
       // A single out-of-range amount would otherwise be stored and break every
       // balance and budget sum that includes it.
@@ -692,6 +717,11 @@ export async function planReconciledTransactions(
   const added = [];
   const updatedPreview = [];
   const existingPayeeMap = new Map<string, string>();
+  const currencyCode = db.firstSync<{ value: string }>(
+    `SELECT value FROM preferences WHERE id = ?`,
+    ['defaultCurrencyCode'],
+  )?.value;
+  const decimalPlaces = getDecimalPlaces(currencyCode ?? '');
 
   const {
     payeesToCreate,
@@ -753,7 +783,7 @@ export async function planReconciledTransactions(
           existingPayeeMap.set(existing.payee, payee?.name);
         }
         existing.payee_name = existingPayeeMap.get(existing.payee);
-        existing.amount = integerToAmount(existing.amount);
+        existing.amount = integerToAmount(existing.amount, decimalPlaces);
         updatedPreview.push({ transaction: trans, existing });
       } else {
         updatedPreview.push({ transaction: trans, ignored: true });
@@ -1164,6 +1194,7 @@ async function processBankSyncDownload(
   if (initialSync) {
     const { transactions } = download;
     let balanceToUse = currentBalance;
+    const fallbackDecimalPlaces = await budgetAmountDecimalPlaces();
 
     // Pending transactions are skipped on import when the account is set not
     // to import them, so they must not be walked back out of the balance
@@ -1184,21 +1215,41 @@ async function processBankSyncDownload(
     } else if (acctRow.account_sync_source === 'simpleFin') {
       const importable = await getImportableTransactions();
       const previousBalance = importable.reduce((total, trans) => {
-        return total - amountToInteger(Number(trans.transactionAmount.amount));
+        return (
+          total -
+          storedBankAmount(
+            trans.transactionAmount.amount,
+            trans.transactionAmount.currency,
+            fallbackDecimalPlaces,
+          )
+        );
       }, currentBalance);
       balanceToUse = previousBalance;
     } else if (acctRow.account_sync_source === 'pluggyai') {
       const currentBalance = download.startingBalance;
       const importable = await getImportableTransactions();
       const previousBalance = importable.reduce(
-        (total, trans) => total - trans.transactionAmount.amount * 100,
+        (total, trans) =>
+          total -
+          storedBankAmount(
+            trans.transactionAmount.amount,
+            trans.transactionAmount.currency,
+            fallbackDecimalPlaces,
+          ),
         currentBalance,
       );
       balanceToUse = Math.round(previousBalance);
     } else if (acctRow.account_sync_source === 'enableBanking') {
       const importable = await getImportableTransactions();
       const previousBalance = importable.reduce((total, trans) => {
-        return total - amountToInteger(trans.transactionAmount.amount);
+        return (
+          total -
+          storedBankAmount(
+            trans.transactionAmount.amount,
+            trans.transactionAmount.currency,
+            fallbackDecimalPlaces,
+          )
+        );
       }, currentBalance);
       balanceToUse = previousBalance;
     } else if (acctRow.account_sync_source === 'akahu') {
@@ -1206,7 +1257,12 @@ async function processBankSyncDownload(
       const importable = await getImportableTransactions();
       const previousBalance = importable.reduce(
         (total, trans) =>
-          total - amountToInteger(trans.transactionAmount.amount),
+          total -
+          storedBankAmount(
+            trans.transactionAmount.amount,
+            trans.transactionAmount.currency,
+            fallbackDecimalPlaces,
+          ),
         currentBalance,
       );
       balanceToUse = Math.round(previousBalance);

@@ -28,7 +28,7 @@ import type {
 } from '@actual-app/core/types/models';
 import { css } from '@emotion/css';
 import { useDrag } from '@use-gesture/react';
-import { format as formatDate, parseISO } from 'date-fns';
+import { format as formatDate } from 'date-fns';
 
 import { EditablePageHeaderTitle } from '#components/EditablePageHeaderTitle';
 import { FinancialText } from '#components/FinancialText';
@@ -272,14 +272,10 @@ function CalendarInner({ widget, parameters }: CalendarInnerProps) {
 
       const currentMonth = monthUtils.currentMonth();
       let earliestMonth = earliestTransaction
-        ? monthUtils.monthFromDate(
-            parseISO(fromDateRepr(earliestTransaction.date)),
-          )
+        ? monthUtils.monthFromDate(fromDateRepr(earliestTransaction.date))
         : currentMonth;
       const latestTransactionMonth = latestTransaction
-        ? monthUtils.monthFromDate(
-            parseISO(fromDateRepr(latestTransaction.date)),
-          )
+        ? monthUtils.monthFromDate(fromDateRepr(latestTransaction.date))
         : currentMonth;
 
       const latestMonth =

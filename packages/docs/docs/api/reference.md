@@ -387,7 +387,7 @@ Create an account with an initial balance of `initialBalance` (defaults to 0). R
 
 #### `previewAccountCreation`
 
-`previewAccountCreation({ name, offbudget, initialBalance, closed? })` returns an `accounts.create` proposal for the loaded budget. `initialBalance` uses signed integer cents. Preview records the source fingerprint, account fields, transfer payee creation, and any opening transaction. It inspects Starting Balance references without creating a payee. A nonzero opening balance binds the execution date and the canonical income category. Off-budget opening transactions have no category.
+`previewAccountCreation({ name, offbudget, initialBalance, closed? })` returns an `accounts.create` proposal for the loaded budget. `initialBalance` is a stored integer at the budget currency scale (cents, or whole units for yen, won, and rial). Preview records the source fingerprint, account fields, transfer payee creation, and any opening transaction. It inspects Starting Balance references without creating a payee. A nonzero opening balance binds the execution date and the canonical income category. Off-budget opening transactions have no category.
 
 #### `applyAccountCreation`
 
@@ -401,7 +401,7 @@ Update fields of an account. `fields` can specify any field described in [`Accou
 
 #### `previewAccountUpdate`
 
-`previewAccountUpdate({ id, fields })` supports `name`, `offbudget`, `closed`, `balance_current`, and `account_group_id`. Supply at least one field. `balance_current` uses integer cents or null; it is the stored bank balance, not the computed ledger balance. `account_group_id` accepts an existing group ID or null. Preview validates references and preserves account, payee, and transaction records. It records before/after account fields and derived transfer payee names. Its source fingerprint binds the persistent ledger and references.
+`previewAccountUpdate({ id, fields })` supports `name`, `offbudget`, `closed`, `balance_current`, and `account_group_id`. Supply at least one field. `balance_current` is a stored integer at the budget currency scale, or null; it is the stored bank balance, not the computed ledger balance. `account_group_id` accepts an existing group ID or null. Preview validates references and preserves account, payee, and transaction records. It records before/after account fields and derived transfer payee names. Its source fingerprint binds the persistent ledger and references.
 
 #### `applyAccountUpdate`
 
@@ -950,7 +950,7 @@ Sets a single synced preference. The `id` must be a valid SyncedPrefs key.
 
 #### `previewBudgetAmount`
 
-`previewBudgetAmount({ month, categoryId, amount })` returns a version 1 `budgets.set-amount` proposal. The month uses YYYY-MM and amount uses integer cents. The engine validates the category and current budget mode. The proposal records the current allocation row, before/after amount, category/group references, and recalculation side effects. Preview does not change allocations, carryover, goals, or templates.
+`previewBudgetAmount({ month, categoryId, amount })` returns a version 1 `budgets.set-amount` proposal. The month uses YYYY-MM and amount is a stored integer at the budget currency scale. The engine validates the category and current budget mode. The proposal records the current allocation row, before/after amount, category/group references, and recalculation side effects. Preview does not change allocations, carryover, goals, or templates.
 
 #### `applyBudgetAmount`
 

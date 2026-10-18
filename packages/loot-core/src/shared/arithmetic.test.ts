@@ -7,6 +7,13 @@ describe('arithmetic', () => {
     expect(evalArithmetic('10 + -4')).toBe(6);
   });
 
+  test('a trailing minus on a single amount is negative', () => {
+    expect(evalArithmetic('45-')).toBe(-45);
+    expect(evalArithmetic('1.50-')).toBe(-1.5);
+    expect(evalArithmetic('45−')).toBe(-45);
+    expect(evalArithmetic('10+20-')).toBe(null);
+  });
+
   test('handles negated parentheses', () => {
     expect(evalArithmetic('-(2 + 3)')).toBe(-5);
     expect(evalArithmetic('10 * -(2 + 3)')).toBe(-50);
@@ -35,6 +42,8 @@ describe('arithmetic', () => {
 
   test('handles division', () => {
     expect(evalArithmetic('10 / 10')).toEqual(1);
+    expect(evalArithmetic('1/0')).toBe(null);
+    expect(evalArithmetic('1/0', 0)).toBe(0);
     expect(evalArithmetic('1.5 / .5')).toEqual(3);
     expect(evalArithmetic('2400 / 2 / 5')).toEqual(240);
   });

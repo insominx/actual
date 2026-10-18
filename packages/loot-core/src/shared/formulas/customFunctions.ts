@@ -68,6 +68,10 @@ export function clearCachedUserPreferences(): void {
   cachedUserPreferences = null;
 }
 
+export function getCachedCurrencyDecimalPlaces(): number {
+  return cachedUserPreferences?.currency.decimalPlaces ?? 2;
+}
+
 function getUserPreferences(): UserPreferences {
   if (!cachedUserPreferences) {
     // If not loaded, use defaults
@@ -162,6 +166,19 @@ function formatCurrencyValue({
   return isNegative ? `-${formattedCurrency}` : formattedCurrency;
 }
 
+// `Number#toFixed` throws when the count is negative or above 100, which
+// fails the whole formula instead of the one cell.
+function decimalCount(decimals: number): number | null {
+  if (!Number.isFinite(decimals)) {
+    return null;
+  }
+  const count = Math.trunc(decimals);
+  if (count < 0 || count > 100) {
+    return null;
+  }
+  return count;
+}
+
 function getCurrencySymbolPositionFromArg(
   value: string | undefined,
   fallback: CurrencySymbolPosition,
@@ -183,8 +200,11 @@ export class CustomFunctionsPlugin extends FunctionPlugin {
       ast.args,
       state,
       this.metadata('INTEGER_TO_AMOUNT'),
-      (integerAmount: number, decimalPlaces: number = 2) => {
-        return integerToAmount(integerAmount, decimalPlaces);
+      (integerAmount: number, decimalPlaces?: number) => {
+        return integerToAmount(
+          integerAmount,
+          decimalPlaces ?? getCachedCurrencyDecimalPlaces(),
+        );
       },
     );
   }
@@ -194,7 +214,9 @@ export class CustomFunctionsPlugin extends FunctionPlugin {
       ast.args,
       state,
       this.metadata('FIXED'),
-      (number: number, decimals: number = 0) => {
+      (number: number, decimals: number = 2) => {
+        // Excel and HyperFormula default FIXED to 2 places. Defaulting to 0
+        // turned 10.50 into 11.
         return Number(number).toFixed(decimals);
       },
     );
@@ -365,8 +387,11 @@ export class CustomFunctionsPlugin extends FunctionPlugin {
             ? decimalSeparator
             : prefs.decimalSeparator;
         const actualDecimals = hasDecimalsArg
-          ? (decimals ?? 2)
-          : prefs.decimalPlaces;
+          ? decimalCount(decimals ?? 2)
+          : decimalCount(prefs.decimalPlaces);
+        if (actualDecimals == null) {
+          return new CellError(ErrorType.NUM);
+        }
 
         const fixedNum = num.toFixed(actualDecimals);
         const [integerPart, decimalPart] = fixedNum.split('.');
@@ -417,8 +442,11 @@ export class CustomFunctionsPlugin extends FunctionPlugin {
           ? (currencySymbol ?? '')
           : prefs.currency.symbol;
         const actualDecimals = hasDecimalsArg
-          ? (decimals ?? 2)
-          : prefs.currency.decimalPlaces;
+          ? decimalCount(decimals ?? 2)
+          : decimalCount(prefs.currency.decimalPlaces);
+        if (actualDecimals == null) {
+          return new CellError(ErrorType.NUM);
+        }
         const actualThousandsSeparator =
           hasThousandsSeparatorArg && thousandsSeparator !== undefined
             ? thousandsSeparator
@@ -466,7 +494,7 @@ CustomFunctionsPlugin.implementedFunctions = {
       {
         argumentType: FunctionArgumentType.NUMBER,
         optionalArg: true,
-        defaultValue: 0,
+        defaultValue: 2,
       },
     ],
   },
@@ -477,7 +505,6 @@ CustomFunctionsPlugin.implementedFunctions = {
       {
         argumentType: FunctionArgumentType.NUMBER,
         optionalArg: true,
-        defaultValue: 2,
       },
     ],
   },

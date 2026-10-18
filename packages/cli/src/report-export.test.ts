@@ -1,4 +1,9 @@
 import {
+  beginAgentOutput,
+  flushAgentOutput,
+  updateAgentContext,
+} from './agent-output';
+import {
   centsToDecimal,
   csvCell,
   escapeHtml,
@@ -12,6 +17,17 @@ describe('report export', () => {
     expect(centsToDecimal(5)).toBe('0.05');
     expect(centsToDecimal(-123456)).toBe('-1234.56');
     expect(centsToDecimal(1999)).toBe('19.99');
+  });
+
+  it('renders yen as whole units', () => {
+    beginAgentOutput('test');
+    try {
+      updateAgentContext({ currency: 'JPY' });
+      expect(centsToDecimal(1000)).toBe('1000');
+      expect(centsToDecimal(-12)).toBe('-12');
+    } finally {
+      flushAgentOutput();
+    }
   });
 
   it('neutralizes formula-like text and quotes CSV cells', () => {

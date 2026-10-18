@@ -106,6 +106,58 @@ describe('importTransactions', () => {
 
     expect(transferChild.payee).toBe('transfer-payee-2');
     expect(transferChild.transfer_id).toBe(entityIdMap.get('txn-transfer-in'));
+    expect(parent.amount).toBe(-100000);
+    expect(child.amount).toBe(-5000);
+  });
+
+  it('stores amounts in whole units when the budget currency has no cents', async () => {
+    const entityIdMap = new Map<string, string>([
+      ['ynab-account-1', 'actual-account-1'],
+      ['ynab-payee-1', 'actual-payee-1'],
+    ]);
+
+    vi.mocked(send).mockImplementation(async (name: string) => {
+      switch (name) {
+        case 'api/categories-get':
+          return [{ id: 'income-id', name: 'Income' }];
+        case 'api/accounts-get':
+          return [{ id: 'actual-account-1', offbudget: false }];
+        case 'api/payees-get':
+          return [];
+        case 'api/transactions-add':
+          return null;
+        default:
+          throw new Error(`Unexpected send call: ${name}`);
+      }
+    });
+
+    await importTransactions(
+      {
+        payees: [{ entityId: 'ynab-payee-1', name: 'Shop' }],
+        accounts: [],
+        transactions: [
+          {
+            entityId: 'txn-1',
+            accountId: 'ynab-account-1',
+            payeeId: 'ynab-payee-1',
+            amount: -1000,
+            date: '2024-10-07',
+            cleared: 'Cleared',
+          },
+        ],
+      } as unknown as YNAB4.YFull,
+      entityIdMap,
+      vi.fn(),
+      0,
+    );
+
+    const imported = vi
+      .mocked(send)
+      .mock.calls.filter(([name]) => name === 'api/transactions-add')
+      .flatMap(([, args]) => args.transactions);
+    expect(imported.find(t => t.id === entityIdMap.get('txn-1')).amount).toBe(
+      -1000,
+    );
   });
 });
 

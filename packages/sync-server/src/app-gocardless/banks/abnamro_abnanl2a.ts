@@ -43,16 +43,21 @@ export default {
         sortedTransactions[sortedTransactions.length - 1];
       const oldestKnownBalance = amountToInteger(
         oldestTransaction.balanceAfterTransaction?.balanceAmount.amount || 0,
+        oldestTransaction.balanceAfterTransaction?.balanceAmount.currency,
       );
       const oldestTransactionAmount = amountToInteger(
         oldestTransaction.transactionAmount.amount,
+        oldestTransaction.transactionAmount.currency,
       );
 
       return oldestKnownBalance - oldestTransactionAmount;
     } else {
+      const booked = balances.find(
+        balance => 'interimBooked' === balance.balanceType,
+      );
       return amountToInteger(
-        balances.find(balance => 'interimBooked' === balance.balanceType)
-          ?.balanceAmount.amount || 0,
+        booked?.balanceAmount.amount || 0,
+        booked?.balanceAmount.currency,
       );
     }
   },

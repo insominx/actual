@@ -55,7 +55,7 @@ import {
   getChangedValues,
   groupById,
   integerToAmount,
-  integerToCurrency,
+  integerToCurrencyScaled,
   titleFirst,
 } from '@actual-app/core/shared/util';
 import type {
@@ -68,7 +68,6 @@ import {
   format as formatDate,
   isValid as isValidDate,
   parse as parseDate,
-  parseISO,
 } from 'date-fns';
 
 import { NoteInsertHashButton } from '#components/autocomplete/NoteInsertHashButton';
@@ -86,6 +85,7 @@ import { shouldApplyRuleChange } from '#components/transactions/table/utils';
 import { useAccounts } from '#hooks/useAccounts';
 import { useCategories } from '#hooks/useCategories';
 import { useDateFormat } from '#hooks/useDateFormat';
+import { useFormat } from '#hooks/useFormat';
 import { useLocalPref } from '#hooks/useLocalPref';
 import { useLocationPermission } from '#hooks/useLocationPermission';
 import { useNavigate } from '#hooks/useNavigate';
@@ -111,6 +111,7 @@ import {
 } from '#util/schedule-actions';
 
 import { AmountInput } from './AmountInput';
+import { parseEditedTransactionDate } from './editedTransactionDate';
 import { SplitAmountInput } from './SplitAmountInput';
 
 function getFieldName(transactionId: TransactionEntity['id'], field: string) {
@@ -120,12 +121,13 @@ function getFieldName(transactionId: TransactionEntity['id'], field: string) {
 function serializeTransaction(
   transaction: TransactionEntity,
   dateFormat: string,
+  decimalPlaces: number,
 ) {
   const { date, amount } = transaction;
   return {
     ...transaction,
-    date: formatDate(parseISO(date), dateFormat),
-    amount: integerToAmount(amount || 0),
+    date: formatDate(monthUtils.parseDate(date), dateFormat),
+    amount: integerToAmount(amount || 0, decimalPlaces),
   };
 }
 
@@ -133,32 +135,11 @@ function deserializeTransaction(
   transaction: TransactionEntity,
   originalTransaction: TransactionEntity | null,
   dateFormat: string,
+  decimalPlaces: number,
 ) {
   const { amount, date: originalDate, ...realTransaction } = transaction;
 
-  const dayMonth = monthUtils.getDayMonthRegex(dateFormat);
-  let date: string | null = originalDate;
-  if (dayMonth.test(date)) {
-    const test = parseDate(
-      date,
-      monthUtils.getDayMonthFormat(dateFormat),
-      new Date(),
-    );
-    if (isValidDate(test)) {
-      date = monthUtils.dayFromDate(test);
-    } else {
-      date = null;
-    }
-  } else {
-    const test = parseDate(date, dateFormat, new Date());
-    // This is a quick sanity check to make sure something invalid
-    // like "year 201" was entered
-    if (test.getFullYear() > 2000 && isValidDate(test)) {
-      date = monthUtils.dayFromDate(test);
-    } else {
-      date = null;
-    }
-  }
+  let date = parseEditedTransactionDate(originalDate, dateFormat);
 
   if (date == null) {
     date =
@@ -166,7 +147,11 @@ function deserializeTransaction(
       monthUtils.currentDay();
   }
 
-  return { ...realTransaction, date, amount: amountToInteger(amount || 0) };
+  return {
+    ...realTransaction,
+    date,
+    amount: amountToInteger(amount || 0, decimalPlaces),
+  };
 }
 
 export function lookupName(items: CategoryEntity[], id?: CategoryEntity['id']) {
@@ -321,10 +306,11 @@ function Footer({
               <Trans>
                 Add new split -{' '}
                 {{
-                  amount: integerToCurrency(
+                  amount: integerToCurrencyScaled(
                     transaction.amount > 0
                       ? transaction.error.difference
                       : -transaction.error.difference,
+                    currencyCode,
                   ),
                 }}{' '}
                 left
@@ -333,10 +319,11 @@ function Footer({
               <Trans>
                 Amount left:{' '}
                 {{
-                  amount: integerToCurrency(
+                  amount: integerToCurrencyScaled(
                     transaction.amount > 0
                       ? transaction.error.difference
                       : -transaction.error.difference,
+                    currencyCode,
                   ),
                 }}
               </Trans>
@@ -643,6 +630,9 @@ const TransactionEditInner = memo<TransactionEditInnerProps>(
     nearestPayee,
   }) {
     const { t } = useTranslation();
+    const format = useFormat();
+    const decimalPlaces = format.currency.decimalPlaces;
+    const currencyCode = format.currency.code;
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [showHiddenCategories] = useLocalPref('budget.showHiddenCategories');
@@ -652,9 +642,9 @@ const TransactionEditInner = memo<TransactionEditInnerProps>(
     const transactions = useMemo(
       () =>
         unserializedTransactions.map(t =>
-          serializeTransaction(t, dateFormat),
+          serializeTransaction(t, dateFormat, decimalPlaces),
         ) || [],
-      [unserializedTransactions, dateFormat],
+      [unserializedTransactions, dateFormat, decimalPlaces],
     );
     const { data: { grouped: categoryGroups } = { grouped: [] } } =
       useCategories();
@@ -1380,7 +1370,7 @@ const TransactionEditInner = memo<TransactionEditInnerProps>(
                     void onUpdateInner(
                       childTrans,
                       'amount',
-                      integerToAmount(remaining),
+                      integerToAmount(remaining, decimalPlaces),
                     );
                   }}
                 />
@@ -1461,7 +1451,7 @@ const TransactionEditInner = memo<TransactionEditInnerProps>(
                 onChange={event => {
                   // A cleared date input reports an empty string, which
                   // can't be formatted
-                  const parsed = parseISO(event.target.value);
+                  const parsed = monthUtils.parseDate(event.target.value);
                   if (!isValidDate(parsed)) {
                     return;
                   }
@@ -1570,6 +1560,7 @@ function TransactionEditUnconnected({
   dateFormat,
 }: TransactionEditUnconnectedProps) {
   const { t } = useTranslation();
+  const decimalPlaces = useFormat().currency.decimalPlaces;
   const { transactionId } = useParams();
   const { state: locationState } = useLocation();
   const [searchParams] = useSearchParams();
@@ -1674,6 +1665,7 @@ function TransactionEditUnconnected({
           category: searchParamCategory || locationState?.categoryId || null,
           amount: -amountToInteger(
             parseFloat(searchParams.get('amount') || '') || 0,
+            decimalPlaces,
           ),
           cleared: searchParams.get('cleared') === 'true',
           notes: searchParams.get('notes') || '',
@@ -1688,6 +1680,7 @@ function TransactionEditUnconnected({
     searchParamCategory,
     searchParamPayee,
     searchParams,
+    decimalPlaces,
   ]);
 
   const onUpdate = useCallback(
@@ -1699,6 +1692,7 @@ function TransactionEditUnconnected({
         serializedTransaction,
         null,
         dateFormat,
+        decimalPlaces,
       );
 
       // Run the rules to auto-fill in any data. Right now we only do
@@ -1797,7 +1791,7 @@ function TransactionEditUnconnected({
         }
       }
     },
-    [dateFormat, isLocationGranted],
+    [dateFormat, decimalPlaces, isLocationGranted],
   );
 
   const onSave = useCallback(
@@ -1905,11 +1899,11 @@ function TransactionEditUnconnected({
     }
 
     const updated = {
-      ...serializeTransaction(transaction, dateFormat),
+      ...serializeTransaction(transaction, dateFormat, decimalPlaces),
       payee: nearestPayee.id,
     };
     void onUpdate(updated, 'payee');
-  }, [transactions, nearestPayee, onUpdate, dateFormat]);
+  }, [transactions, nearestPayee, onUpdate, dateFormat, decimalPlaces]);
 
   if (accounts.length === 0) {
     return (
@@ -2081,6 +2075,7 @@ function FillRemainingButton({
   readonly remaining: number;
   readonly onPress: () => void;
 }) {
+  const currencyCode = useFormat().currency.code;
   return (
     <Button
       variant="primary"
@@ -2098,7 +2093,7 @@ function FillRemainingButton({
         <Trans>
           Use remaining:{' '}
           {{
-            amount: integerToCurrency(Math.abs(remaining)),
+            amount: integerToCurrencyScaled(Math.abs(remaining), currencyCode),
           }}
         </Trans>
       </Text>

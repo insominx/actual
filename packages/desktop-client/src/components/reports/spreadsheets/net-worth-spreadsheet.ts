@@ -64,13 +64,13 @@ export function createSpreadsheet(
 
     // Go back exactly one interval before the selected range start
     // to get the correct starting balance for the first period
-    const rangeStart = d.parseISO(monthUtils.firstDayOfMonth(start));
+    const rangeStart = monthUtils.firstDayOfMonth(start);
     let startDate: string;
     if (interval === 'Daily') {
-      startDate = monthUtils.dayFromDate(d.subDays(rangeStart, 1));
+      startDate = monthUtils.subDays(rangeStart, 1);
     } else if (interval === 'Weekly') {
       startDate = monthUtils.weekFromDate(
-        d.subDays(rangeStart, 1),
+        monthUtils.subDays(rangeStart, 1),
         firstDayOfWeekIdx,
       );
     } else {
@@ -439,14 +439,7 @@ function recalculate(
     }
 
     // Parse dates based on interval type - following the working pattern
-    let x: Date;
-    if (interval === 'Daily' || interval === 'Weekly') {
-      x = d.parseISO(intervalItem);
-    } else if (interval === 'Yearly') {
-      x = d.parseISO(intervalItem + '-01-01');
-    } else {
-      x = d.parseISO(intervalItem + '-01');
-    }
+    const x = monthUtils.parseDate(intervalItem);
 
     const change = last ? total - last.y : total - priorPeriodNetWorth;
 

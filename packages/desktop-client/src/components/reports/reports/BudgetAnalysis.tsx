@@ -193,8 +193,8 @@ function BudgetAnalysisInternal({ widget }: BudgetAnalysisInternalProps) {
     const startMonth = monthUtils.getMonth(start);
     const endMonth = monthUtils.getMonth(end);
     const numDays = d.differenceInCalendarDays(
-      d.parseISO(endMonth + '-01'),
-      d.parseISO(startMonth + '-01'),
+      monthUtils.parseDate(endMonth),
+      monthUtils.parseDate(startMonth),
     );
     return numDays > 31 * 3;
   };
@@ -210,10 +210,10 @@ function BudgetAnalysisInternal({ widget }: BudgetAnalysisInternalProps) {
 
       const currentMonth = monthUtils.currentMonth();
       let earliestMonth = earliestTrans
-        ? monthUtils.monthFromDate(d.parseISO(fromDateRepr(earliestTrans.date)))
+        ? monthUtils.monthFromDate(fromDateRepr(earliestTrans.date))
         : currentMonth;
       const latestTransactionMonth = latestTrans
-        ? monthUtils.monthFromDate(d.parseISO(fromDateRepr(latestTrans.date)))
+        ? monthUtils.monthFromDate(fromDateRepr(latestTrans.date))
         : currentMonth;
 
       const latestMonth =
@@ -343,7 +343,10 @@ function BudgetAnalysisInternal({ widget }: BudgetAnalysisInternalProps) {
 
   const onExportCsv = () => {
     if (!data) return;
-    const csv = buildBudgetAnalysisCsv(data.intervalData);
+    const csv = buildBudgetAnalysisCsv(
+      data.intervalData,
+      format.currency.decimalPlaces,
+    );
     const reportName = (widget?.meta?.name || t('Budget Analysis'))
       .replace(/[^a-z0-9]/gi, '-')
       .toLowerCase();

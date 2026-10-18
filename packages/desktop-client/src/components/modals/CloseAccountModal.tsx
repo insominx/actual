@@ -12,7 +12,7 @@ import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
-import { integerToCurrency } from '@actual-app/core/shared/util';
+import { integerToCurrencyScaled } from '@actual-app/core/shared/util';
 import type { AccountEntity } from '@actual-app/core/types/models';
 import type { TransObjectLiteral } from '@actual-app/core/types/util';
 
@@ -22,6 +22,7 @@ import { CategoryAutocomplete } from '#components/autocomplete/CategoryAutocompl
 import { Link } from '#components/common/Link';
 import { Modal, ModalCloseButton, ModalHeader } from '#components/common/Modal';
 import { useAccounts } from '#hooks/useAccounts';
+import { useFormat } from '#hooks/useFormat';
 import { useCategories } from '#hooks/useCategories';
 import { pushModal } from '#modals/modalsSlice';
 import type { Modal as ModalType } from '#modals/modalsSlice';
@@ -50,7 +51,8 @@ export function CloseAccountModal({
   balance,
   canDelete,
 }: CloseAccountModalProps) {
-  const { t } = useTranslation(); // Initialize translation hook
+  const { t } = useTranslation();
+  const currencyCode = useFormat().currency.code;
   const { data: allAccounts = [] } = useAccounts();
   const accounts = allAccounts.filter(a => a.closed === 0);
   const {
@@ -178,7 +180,7 @@ export function CloseAccountModal({
                       <strong>
                         {
                           {
-                            balance: integerToCurrency(balance),
+                            balance: integerToCurrencyScaled(balance, currencyCode),
                           } as TransObjectLiteral
                         }
                       </strong>

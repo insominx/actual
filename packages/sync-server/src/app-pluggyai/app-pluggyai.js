@@ -4,6 +4,7 @@ import { isAdmin } from '#account-db';
 import { handleError } from '#app-gocardless/util/handle-error';
 import { SecretName, secretsService } from '#services/secrets-service';
 import * as UserService from '#services/user-service';
+import { amountScale } from '#util/amount-scale';
 import {
   requestLoggerMiddleware,
   validateSessionMiddleware,
@@ -170,7 +171,9 @@ app.post(
       const account = await pluggyaiService.getAccountById(accountId, fileId);
 
       let startingBalance = parseInt(
-        Math.round(account.balance * 100).toString(),
+        Math.round(
+          account.balance * amountScale(account.currencyCode),
+        ).toString(),
       );
       if (account.type === 'CREDIT') {
         startingBalance = -startingBalance;

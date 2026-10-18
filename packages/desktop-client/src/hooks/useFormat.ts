@@ -268,11 +268,17 @@ export function useFormat(): UseFormatResult {
         .replace(/\p{L}+/gu, '');
       let numericValue: number | null = evalArithmetic(normalized, null);
 
-      if (numericValue === null || isNaN(numericValue)) {
+      // A failed expression must not be re-read by deleting the operators.
+      // `1/0` would otherwise become 10.
+      const hasOperator = /[+*/^]/.test(normalized) || /\d-/.test(normalized);
+      if (
+        (numericValue === null || !Number.isFinite(numericValue)) &&
+        !hasOperator
+      ) {
         numericValue = currencyToAmount(normalized);
       }
 
-      if (numericValue !== null && !isNaN(numericValue)) {
+      if (numericValue !== null && Number.isFinite(numericValue)) {
         return fromAmount(numericValue);
       }
 

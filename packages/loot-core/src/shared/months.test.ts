@@ -28,6 +28,29 @@ test('prevQuarter subtracts three months, landing in the previous quarter', () =
   expect(monthUtils.prevQuarter('2024-04')).toBe('2024-01');
 });
 
+test('a date-only UTC midnight keeps that calendar day', () => {
+  expect(monthUtils.dayFromDate(new Date('2030-12-31'))).toBe('2030-12-31');
+  expect(monthUtils.monthFromDate(new Date('2030-12-31'))).toBe('2030-12');
+  expect(monthUtils.dayFromDate(new Date(2030, 11, 31))).toBe('2030-12-31');
+});
+
+test('month and week bounds stay on the calendar day', () => {
+  expect(monthUtils.firstDayOfMonth('2017-01-31')).toBe('2017-01-01');
+  expect(monthUtils.firstDayOfMonth('2017-01')).toBe('2017-01-01');
+  expect(monthUtils.lastDayOfMonth('2017-02')).toBe('2017-02-28');
+  expect(monthUtils.lastDayOfMonth('2024-02-15')).toBe('2024-02-29');
+  expect(monthUtils.bounds('2017-01')).toEqual({
+    start: 20170101,
+    end: 20170131,
+  });
+  // 2017-01-01 is a Sunday. A Monday-start week begins the previous Monday.
+  expect(monthUtils.weekFromDate('2017-01-01', '0')).toBe('2017-01-01');
+  expect(monthUtils.weekFromDate('2017-01-01', '1')).toBe('2016-12-26');
+  expect(monthUtils.weekFromDate('2017-01-04', '0')).toBe('2017-01-01');
+  expect(monthUtils.getWeekEnd('2017-01-04', '0')).toBe('2017-01-07');
+  expect(monthUtils.getWeekEnd('2017-01-01', '1')).toBe('2017-01-01');
+});
+
 test('isValidYearMonthDay validates the day against the month and year', () => {
   expect(monthUtils.isValidYearMonthDay('2024-02-29')).toBe(true);
   expect(monthUtils.isValidYearMonthDay('2023-02-29')).toBe(false);

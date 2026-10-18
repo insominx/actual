@@ -39,6 +39,25 @@ describe('buildBudgetAnalysisCsv', () => {
     );
   });
 
+  it('exports yen amounts as whole units', () => {
+    expect(
+      lines(
+        buildBudgetAnalysisCsv(
+          [
+            {
+              date: '2024-01',
+              budgeted: 1000,
+              spent: -250,
+              balance: 750,
+              overspendingAdjustment: 0,
+            },
+          ],
+          0,
+        ),
+      )[1],
+    ).toBe('2024-01,1000,-250,0,750');
+  });
+
   it('handles negative spent values correctly', () => {
     // spent -110000 → -1100
     const fields = lines(buildBudgetAnalysisCsv(rows))[2].split(',');

@@ -106,7 +106,10 @@ export async function reconciliationStatus(
     request.statementBalance !== undefined &&
     !isEngineAmount(request.statementBalance)
   ) {
-    invalid(noun, 'statementBalance must be integer cents');
+    invalid(
+      noun,
+      'statementBalance must be a stored integer at the budget currency scale',
+    );
   }
   if (
     request.statementDate !== undefined &&
@@ -319,7 +322,10 @@ export async function prepareReconcileAdjust(
     invalid(noun, 'provide accountId, amount and optional date');
   }
   if (!isEngineAmount(request.amount) || request.amount === 0) {
-    invalid(noun, 'amount must be non-zero integer cents');
+    invalid(
+      noun,
+      'amount must be a non-zero stored integer at the budget currency scale',
+    );
   }
   if (
     request.date !== undefined &&

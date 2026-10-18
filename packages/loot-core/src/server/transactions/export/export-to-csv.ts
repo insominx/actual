@@ -6,6 +6,74 @@ import { integerToAmount } from '#shared/util';
 
 const FORMULA_TRIGGERS = /^[=+\-@\t\r]/;
 
+type SplitRow = {
+  Id: string;
+  ParentId: string | null;
+  IsChild: boolean;
+  SortOrder: number | null;
+};
+
+// Query order is not split order. A date sort can return the later half
+// first, and the CSV would label that half "SPLIT 1".
+export function childSplitPositions(transactions: readonly SplitRow[]): {
+  childSplitOrder: Map<string, number>;
+  parentsChildCount: Map<string, number>;
+} {
+  const childrenByParent = new Map<string, SplitRow[]>();
+  for (const trans of transactions) {
+    if (!trans.IsChild || trans.ParentId == null) {
+      continue;
+    }
+    const list = childrenByParent.get(trans.ParentId) ?? [];
+    list.push(trans);
+    childrenByParent.set(trans.ParentId, list);
+  }
+
+  const childSplitOrder = new Map<string, number>();
+  const parentsChildCount = new Map<string, number>();
+  for (const [parentId, children] of childrenByParent) {
+    const ordered = [...children].sort(
+      (a, b) => (a.SortOrder ?? 0) - (b.SortOrder ?? 0),
+    );
+    parentsChildCount.set(parentId, ordered.length);
+    ordered.forEach((child, index) => {
+      childSplitOrder.set(child.Id, index + 1);
+    });
+  }
+  return { childSplitOrder, parentsChildCount };
+}
+
+export function splitExportNotes(
+  trans: {
+    Id: string;
+    ParentId: string | null;
+    IsParent: boolean;
+    IsChild: boolean;
+    Notes: string | null;
+  },
+  childSplitOrder: ReadonlyMap<string, number>,
+  parentsChildCount: ReadonlyMap<string, number>,
+): string | null {
+  const body = trans.Notes || '';
+  if (trans.IsParent) {
+    const count = parentsChildCount.get(trans.Id);
+    const label = count == null ? '(SPLIT) ' : `(SPLIT INTO ${count}) `;
+    return label + body;
+  }
+  if (trans.IsChild) {
+    const index = childSplitOrder.get(trans.Id);
+    const count =
+      trans.ParentId == null
+        ? undefined
+        : parentsChildCount.get(trans.ParentId);
+    if (index == null || count == null) {
+      return trans.Notes;
+    }
+    return `(SPLIT ${index} OF ${count}) ` + body;
+  }
+  return trans.Notes;
+}
+
 const csvStringifyOptions = {
   header: true,
   cast: {
@@ -19,6 +87,7 @@ export async function exportToCSV(
   accounts,
   categoryGroups,
   payees,
+  decimalPlaces = 2,
 ) {
   const accountNamesById = accounts.reduce((reduced, { id, name }) => {
     reduced[id] = name;
@@ -57,7 +126,7 @@ export async function exportToCSV(
       Payee: payeeNamesById[payee],
       Notes: notes,
       Category: categoryNamesById[category],
-      Amount: amount == null ? 0 : integerToAmount(amount),
+      Amount: amount == null ? 0 : integerToAmount(amount, decimalPlaces),
       Cleared: cleared,
       Reconciled: reconciled,
     }),
@@ -66,7 +135,7 @@ export async function exportToCSV(
   return csvStringify(transactionsForExport, csvStringifyOptions);
 }
 
-export async function exportQueryToCSV(query) {
+export async function exportQueryToCSV(query, decimalPlaces = 2) {
   const { data: transactions } = await aqlQuery(
     query
       .select([
@@ -88,19 +157,8 @@ export async function exportQueryToCSV(query) {
       .options({ splits: 'all' }),
   );
 
-  // initialize a map to allow splits to have correct number of split from
-  const parentsChildCount: Map<number, number> = new Map();
-  const childSplitOrder: Map<number, number> = new Map();
-
-  // find children, their order, and total # siblings
-  for (const trans of transactions) {
-    if (trans.IsChild) {
-      let childNumber = parentsChildCount.get(trans.ParentId) || 0;
-      childNumber++;
-      childSplitOrder.set(trans.Id, childNumber);
-      parentsChildCount.set(trans.ParentId, childNumber);
-    }
-  }
+  const { childSplitOrder, parentsChildCount } =
+    childSplitPositions(transactions);
 
   // map final properties for export and grab the child count for splits from their parent transaction
   const transactionsForExport = transactions.map(trans => {
@@ -108,27 +166,17 @@ export async function exportQueryToCSV(query) {
       Account: trans.Account,
       Date: trans.Date,
       Payee: trans.Payee,
-      Notes: trans.IsParent
-        ? '(SPLIT INTO ' +
-          parentsChildCount.get(trans.Id) +
-          ') ' +
-          (trans.Notes || '')
-        : trans.IsChild
-          ? '(SPLIT ' +
-            childSplitOrder.get(trans.Id) +
-            ' OF ' +
-            parentsChildCount.get(trans.ParentId) +
-            ') ' +
-            (trans.Notes || '')
-          : trans.Notes,
+      Notes: splitExportNotes(trans, childSplitOrder, parentsChildCount),
       Category_Group: trans.CategoryGroup,
       Category: trans.Category,
       Amount: trans.IsParent
         ? 0
         : trans.Amount == null
           ? 0
-          : integerToAmount(trans.Amount),
-      Split_Amount: trans.IsParent ? integerToAmount(trans.Amount) : 0,
+          : integerToAmount(trans.Amount, decimalPlaces),
+      Split_Amount: trans.IsParent
+        ? integerToAmount(trans.Amount, decimalPlaces)
+        : 0,
       Cleared:
         trans.Reconciled === true
           ? 'Reconciled'

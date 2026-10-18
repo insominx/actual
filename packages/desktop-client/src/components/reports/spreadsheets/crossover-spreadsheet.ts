@@ -284,7 +284,7 @@ function recalculate(
     const monthlyIncome = balance * monthlySWR;
     const spend = expenseMap.get(month) || 0;
     data.push({
-      x: d.format(d.parseISO(month + '-01'), 'MMM yyyy'),
+      x: d.format(monthUtils.parseDate(month), 'MMM yyyy'),
       investmentIncome: Math.round(monthlyIncome),
       expenses: spend,
       nestEgg: balance,
@@ -351,7 +351,7 @@ function recalculate(
     // Project up to 600 months max to avoid infinite loops (50 years)
     const maxProjectionMonths = 600;
     let projectedBalance = lastBalance;
-    let monthCursor = d.parseISO(months[months.length - 1] + '-01');
+    let monthCursor = monthUtils.parseDate(months[months.length - 1]);
     let flatExpense = 0;
 
     const y: number[] = months.map(m => expenseMap.get(m) || 0);

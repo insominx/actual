@@ -32,7 +32,10 @@ import { validForMerge } from '@actual-app/core/shared/merge';
 import * as monthUtils from '@actual-app/core/shared/months';
 import { isPreviewId } from '@actual-app/core/shared/transactions';
 import { validForTransfer } from '@actual-app/core/shared/transfer';
-import { groupById, integerToCurrency } from '@actual-app/core/shared/util';
+import {
+  groupById,
+  integerToCurrencyScaled,
+} from '@actual-app/core/shared/util';
 import type { IntegerAmount } from '@actual-app/core/shared/util';
 import type {
   CategoryEntity,
@@ -46,6 +49,7 @@ import { useLocale } from '#hooks/useLocale';
 import { useNavigate } from '#hooks/useNavigate';
 import { usePayees } from '#hooks/usePayees';
 import { useScrollListener } from '#hooks/useScrollListener';
+import { useFormat } from '#hooks/useFormat';
 import { useSelectedDispatch, useSelectedItems } from '#hooks/useSelected';
 import { useTransactionBatchActions } from '#hooks/useTransactionBatchActions';
 import { useUndo } from '#hooks/useUndo';
@@ -288,6 +292,7 @@ function SelectedTransactionsFloatingActionBar({
   showMakeTransfer,
 }: SelectedTransactionsFloatingActionBarProps) {
   const { t } = useTranslation();
+  const currencyCode = useFormat().currency.code;
   const editMenuTriggerRef = useRef(null);
   const [isEditMenuOpen, setIsEditMenuOpen] = useState(false);
   const moreOptionsMenuTriggerRef = useRef(null);
@@ -511,7 +516,7 @@ function SelectedTransactionsFloatingActionBar({
                       case 'amount':
                         displayValue = Number.isNaN(Number(value))
                           ? value
-                          : integerToCurrency(Number(value));
+                          : integerToCurrencyScaled(Number(value), currencyCode);
                         break;
                       case 'notes':
                         displayValue = `${mode} with ${String(value)}`;

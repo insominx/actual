@@ -116,6 +116,17 @@ function parseMultiplicative(state: ParserState): AstNode {
 
 function parseAdditive(state: ParserState): AstNode {
   let node = parseMultiplicative(state);
+  // `45-` is an accounting negative, not subtraction with a missing
+  // right-hand side. Only a bare number gets that reading; `10+20-`
+  // is still an unfinished expression.
+  if (
+    typeof node === 'number' &&
+    char(state) === '-' &&
+    state.index === state.str.length - 1
+  ) {
+    next(state);
+    return -node;
+  }
   while (char(state) === '+' || char(state) === '-') {
     const op = next(state) as '+' | '-';
     node = { op, left: node, right: parseMultiplicative(state) };
@@ -127,7 +138,10 @@ function parseAdditive(state: ParserState): AstNode {
 const parseOperator = parseAdditive;
 
 function parse(expression: string): AstNode {
-  const state = { str: expression.replace(/\s/g, ''), index: 0 };
+  const state = {
+    str: expression.replace(/\u2212/g, '-').replace(/\s/g, ''),
+    index: 0,
+  };
   return parseOperator(state);
 }
 
@@ -171,6 +185,6 @@ export function evalArithmetic(
     return defaultValue;
   }
 
-  // Never return NaN
-  return isNaN(result) ? defaultValue : result;
+  // NaN and Infinity cannot be stored as an amount. `1/0` is Infinity.
+  return Number.isFinite(result) ? result : defaultValue;
 }

@@ -102,8 +102,8 @@ function CashFlowInner({ widget }: CashFlowInnerProps) {
 
   useEffect(() => {
     const numDays = d.differenceInCalendarDays(
-      d.parseISO(end),
-      d.parseISO(start),
+      monthUtils.parseDate(end),
+      monthUtils.parseDate(start),
     );
     setIsConcise(numDays > 31 * 3);
   }, [start, end]);
@@ -139,10 +139,10 @@ function CashFlowInner({ widget }: CashFlowInnerProps) {
 
       const currentMonth = monthUtils.currentMonth();
       const earliestMonth = earliestTransaction
-        ? monthUtils.monthFromDate(d.parseISO(earliestTransaction.date))
+        ? monthUtils.monthFromDate(earliestTransaction.date)
         : currentMonth;
       const latestTransactionMonth = latestTransaction
-        ? monthUtils.monthFromDate(d.parseISO(latestTransaction.date))
+        ? monthUtils.monthFromDate(latestTransaction.date)
         : currentMonth;
 
       const latestMonth =

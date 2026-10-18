@@ -1,6 +1,34 @@
 import type { IBank } from './bank.interface';
 import Fallback from './integration-bank';
 
+// A future pending booking is "today", the server's local calendar day.
+// Formatting the current instant as a UTC date makes that tomorrow during
+// the evening in timezones behind UTC, and yesterday during the morning
+// in timezones ahead of UTC.
+export function pendingBookingDay(
+  bookingDate: string | undefined,
+  now = new Date(),
+): string | null {
+  if (!bookingDate) {
+    return null;
+  }
+
+  const bookingTime = new Date(bookingDate).getTime();
+  if (Number.isNaN(bookingTime)) {
+    return null;
+  }
+
+  if (bookingTime > now.getTime()) {
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  const match = /^(\d{4}-\d{2}-\d{2})/.exec(bookingDate);
+  return match ? match[1] : new Date(bookingTime).toISOString().slice(0, 10);
+}
+
 export default {
   ...Fallback,
 
@@ -15,13 +43,12 @@ export default {
     // ahead/behind and the transactionID from Nationwide changes when a
     // transaction is booked
     if (!booked) {
-      const bookingTime = new Date(transaction.bookingDate ?? '').getTime();
       // Without a usable booking date there is nothing to clamp; leave the
       // date to the fallback (value date, ...) instead of throwing on an
       // invalid date, which would abort the whole account sync.
-      if (!Number.isNaN(bookingTime)) {
-        const useDate = new Date(Math.min(bookingTime, new Date().getTime()));
-        editedTrans.date = useDate.toISOString().slice(0, 10);
+      const pendingDate = pendingBookingDay(transaction.bookingDate);
+      if (pendingDate) {
+        editedTrans.date = pendingDate;
       }
     }
 

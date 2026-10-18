@@ -93,6 +93,7 @@ export function MonteCarloContributions({
           uuidv4(),
           // The surplus pot is managed by the plan, so start on an ordinary one
           (pots.find(pot => !pot.isSurplus) ?? pots[0]).id,
+          format.currency.decimalPlaces,
         ),
       ],
     });

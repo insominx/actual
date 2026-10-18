@@ -92,7 +92,7 @@ If a function isn’t listed here, it still might work. Actual uses HyperFormula
 | `IFNA`                          | Query, Rules | Returns value if not #N/A error, otherwise returns alternative.                                                                                                                             | `=IFNA(VLOOKUP("x", A1:B10, 2, FALSE), 0)`                                                                                    | —                                                                                                               |
 | `IFS`                           | Query, Rules | Checks multiple conditions and returns corresponding values.                                                                                                                                | `=IFS(amount<0, "Expense", amount>0, "Income")`                                                                               | Repeat `(condition, value)` pairs                                                                               |
 | `INDEX`                         | Query        | Returns value at specified row and column.                                                                                                                                                  | `=INDEX(A1:C10, 2, 3)`                                                                                                        | —                                                                                                               |
-| `INTEGER_TO_AMOUNT`             | Query, Rules | Converts integer amount to decimal amount (e.g., 1234 -> 12.34).                                                                                                                            | `=INTEGER_TO_AMOUNT(amount, 2)`                                                                                               | `decimal_places` (default: 2)                                                                                   |
+| `INTEGER_TO_AMOUNT`             | Query, Rules | Converts a stored integer to major units. 1234 cents is 12.34; 1234 yen is 1234.                                                                                                            | `=INTEGER_TO_AMOUNT(amount)`                                                                                                  | `decimal_places` (default: the budget currency)                                                                 |
 | `INT`                           | Rules        | Rounds down to nearest integer.                                                                                                                                                             | `=INT(10.9)`                                                                                                                  | —                                                                                                               |
 | `IPMT`                          | Query, Rules | Calculates the interest portion of a loan payment for a given period.                                                                                                                       | `=IPMT(0.05/12, 1, 60, 20000)`                                                                                                | —                                                                                                               |
 | `IRR`                           | Query        | Calculates internal rate of return.                                                                                                                                                         | `=IRR(A1:A12)`                                                                                                                | —                                                                                                               |
@@ -230,7 +230,7 @@ Example:
 ```
 
 :::tip
-In rule formulas, `BALANCE_OF` instead returns the running balance **at a specific transaction**, in cents — see [Rule formulas](#rule-formulas) below.
+In rule formulas, `BALANCE_OF` instead returns the running stored balance **at a specific transaction** — see [Rule formulas](#rule-formulas) below.
 :::
 
 ### Define a query
@@ -326,14 +326,14 @@ Rule formulas evaluate with named variables from the transaction context, includ
 - `today` — Current date in YYYY-MM-DD format (e.g., `"2025-12-19"`)
 - `date` — Transaction date in YYYY-MM-DD format (e.g., `"2025-01-15"`)
 
-**Numeric variables (stored in cents):**
+**Numeric variables (stored integers):**
 
-- `amount` — Transaction amount as an integer in cents (e.g., `12345` represents $123.45)
+- `amount` — Stored transaction amount. `12345` is $123.45, or ¥12,345
   - Positive for income, negative for expenses
-  - To convert to dollars: `=amount / 100`
-- `balance` — Account balance after this transaction, as an integer in cents
+  - Major units: `=INTEGER_TO_AMOUNT(amount)`
+- `balance` — Stored account balance after this transaction
   - Represents the running balance at this transaction
-  - To convert to dollars: `=balance / 100`
+  - Major units: `=INTEGER_TO_AMOUNT(balance)`
 
 **Text variables:**
 
@@ -348,12 +348,12 @@ Rule formulas evaluate with named variables from the transaction context, includ
 - `cleared` — Whether transaction is cleared (`TRUE` or `FALSE`)
 - `reconciled` — Whether transaction is reconciled (`TRUE` or `FALSE`)
 
-:::caution Cents in, dollars out
+:::caution Stored integers in, major units out
 Numbers going **into** a formula and numbers coming **out** of one use different units.
 
-The `amount` and `balance` variables hand you integer cents, but a number your formula produces is read as **dollars** and converted to cents when Actual stores it. So a formula of `=500 + 250` sets the amount to $750.00, not $7.50.
+The `amount` and `balance` variables are stored integers. Two-decimal currencies store cents (`12345` is $123.45). Yen, won, and rial store whole units (`12345` is ¥12,345). A number your formula produces is read as major units and stored at the budget currency scale. A formula of `=500 + 250` sets the amount to $750.00, or ¥750.
 
-When you calculate with `amount` or `balance`, divide by 100 first so both sides are in dollars. For example, `=amount / 100 * 1.05` adds 5% to the transaction amount, while `=amount * 1.05` gives a result 100 times too large.
+Convert a stored amount with `INTEGER_TO_AMOUNT` before you do further math. `=INTEGER_TO_AMOUNT(amount) * 1.05` adds 5%. `=amount * 1.05` multiplies the stored integer and, for a two-decimal currency, stores a result 100 times too large.
 :::
 
 ### Available functions
@@ -365,11 +365,11 @@ When you calculate with `amount` or `balance`, divide by 100 first so both sides
 =BALANCE_OF("Checking")
 ```
 
-- `BALANCE_OF("…")` — Running balance for another account, in **cents**, using the same cutoff as `balance` (same `date`, `sort_order`, and `id` ordering as the current transaction).
+- `BALANCE_OF("…")` — Running stored balance for another account, using the same cutoff as `balance` (same `date`, `sort_order`, and `id` ordering as the current transaction).
 - Pass a **quoted account id** (matches an account id in your budget) for a deterministic result, or a **quoted account name** for an exact name match. If the account name is ambiguous (duplicates), the first match is used.
 - If the account is not found, the value is **0**.
 - For the **current** transaction’s account, use the `balance` variable instead of `BALANCE_OF`.
-- Returns an integer in cents. For the amount in dollars, divide by 100 or `=INTEGER_TO_AMOUNT(BALANCE_OF("Checking"))`.
+- Returns the stored integer. For major units, use `=INTEGER_TO_AMOUNT(BALANCE_OF("Checking"))`.
 - `BALANCE_OF` is also available in Formula cards, where it returns the account's current balance instead — see [Account balances with `BALANCE_OF("name")`](#account-balances-with-balance_ofname) above.
 
 **Loan payment functions (`IPMT`, `PPMT`, `NPER`, `CUMIPMT`, `CUMPRINC`):**
@@ -382,7 +382,7 @@ If you record a loan (mortgage, auto loan, etc.) payment as a single transaction
 
 This computes the interest portion of the payment for the month of the current transaction, for a 30-year (360-month) loan that started 2024-01-01 at 5% annual interest on a $300,000 principal. Swap `IPMT` for `PPMT` to get the principal portion instead, or use `CUMIPMT`/`CUMPRINC` with a `start_period` of `1` and that same period as `end_period` to get interest/principal paid to date.
 
-Write the principal in dollars (`-300000`), not cents. These functions return their result in the same unit you pass in, and Actual expects a numeric formula result in dollars — see [Cents in, dollars out](#available-variables) above.
+Write the principal in major units (`-300000`), not the stored integer. These functions return their result in the same unit you pass in, and Actual expects a numeric formula result in major units — see [Stored integers in, major units out](#available-variables) above.
 
 ### Result types
 
@@ -393,4 +393,4 @@ When a rule runs, Actual converts the formula result to the field type:
 - **boolean fields**: `TRUE`/`FALSE` (or a string that equals `"true"`/`"false"`)
 - **string fields**: converted with `String(...)`
 
-Number fields receive the result in dollars and store it in cents — see [Cents in, dollars out](#available-variables) above.
+Number fields receive the result in major units and store it at the budget currency scale — see [Stored integers in, major units out](#available-variables) above.

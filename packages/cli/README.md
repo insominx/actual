@@ -266,7 +266,7 @@ All monetary amounts are **integer cents** when passed as input (flags, JSON):
 | `5000`    | $50.00        |
 | `-12350`  | -$123.50      |
 
-**Output formatting:** Table (`--format table`) and CSV (`--format csv`) output automatically converts cent values to decimal (e.g. `1665.00` instead of `166500`). JSON output always returns raw cents for programmatic use.
+**Output formatting:** Table (`--format table`) and CSV (`--format csv`) output formats stored amounts in the budget currency (e.g. `1665.00` instead of `166500` cents, or `1665` for yen). JSON output always returns the stored integer for programmatic use.
 
 ### Input limits and refusals
 

@@ -21,7 +21,6 @@ import type {
   SummaryWidget,
   TimeFrame,
 } from '@actual-app/core/types/models';
-import { parseISO } from 'date-fns';
 
 import { EditablePageHeaderTitle } from '#components/EditablePageHeaderTitle';
 import { AppliedFilters } from '#components/filters/AppliedFilters';
@@ -171,14 +170,10 @@ function SummaryInner({ widget }: SummaryInnerProps) {
 
       const currentMonth = monthUtils.currentMonth();
       let earliestMonth = earliestTransaction
-        ? monthUtils.monthFromDate(
-            parseISO(fromDateRepr(earliestTransaction.date)),
-          )
+        ? monthUtils.monthFromDate(fromDateRepr(earliestTransaction.date))
         : currentMonth;
       const latestTransactionMonth = latestTransaction
-        ? monthUtils.monthFromDate(
-            parseISO(fromDateRepr(latestTransaction.date)),
-          )
+        ? monthUtils.monthFromDate(fromDateRepr(latestTransaction.date))
         : currentMonth;
 
       const latestMonth =

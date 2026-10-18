@@ -337,6 +337,17 @@ describe('Condition', () => {
     expect(cond.eval({ cleared: false })).toBe(true);
     expect(cond.eval({ cleared: true })).toBe(false);
   });
+
+  test('tag conditions keep the tag’s case', () => {
+    const all = new Condition('hasTags', 'notes', '#Tag_1', null);
+    expect(all.eval({ notes: 'Follow up #Tag_1 issue' })).toBe(true);
+    expect(all.eval({ notes: 'Follow up #tag_1 issue' })).toBe(false);
+    expect(all.eval({ notes: 'Follow up ##Tag_1 issue' })).toBe(false);
+
+    const any = new Condition('hasAnyTag', 'notes', '#Tag_1 #Other', null);
+    expect(any.eval({ notes: 'note #Other' })).toBe(true);
+    expect(any.eval({ notes: 'note #tag_1' })).toBe(false);
+  });
 });
 
 describe('Action', () => {
@@ -380,6 +391,16 @@ describe('Action', () => {
       }).not.toThrow();
     });
 
+    test('an invalid template helper leaves the field unchanged', () => {
+      const action = new Action('set', 'notes', '', {
+        template: '{{regex notes "/[/" "x"}}',
+      });
+      const item = { notes: 'Sarah' };
+      expect(() => action.exec(item)).not.toThrow();
+      expect(item.notes).toBe('Sarah');
+      expect(item._ruleErrors?.[0]).toContain('template');
+    });
+
     test('should not escape text', () => {
       const action = new Action('set', 'notes', '', {
         template: '{{notes}}',
@@ -415,6 +436,10 @@ describe('Action', () => {
       testHelper('{{replace notes "/[a-z]/g" "a"}}', 'Saaaa Caaaaaaaa');
       // should replace once with non regex
       testHelper('{{replace notes "a" "b"}}', 'Sbrah Condition');
+      // a plain replacement keeps dollar sequences as text
+      testHelper('{{replace notes "Sarah" "$&"}}', '$& Condition');
+      // a real pattern can still use the matched text
+      testHelper('{{replace notes "/Sarah/" "$& Doe"}}', 'Sarah Doe Condition');
 
       // should not use regex when not in regex format
       testHelper('{{replaceAll notes "[a-z]" "a"}}', 'Sarah Condition');
@@ -422,6 +447,7 @@ describe('Action', () => {
       testHelper('{{replaceAll notes "/[a-z]/g" "a"}}', 'Saaaa Caaaaaaaa');
       // should replace all with non regex
       testHelper('{{replaceAll notes "a" "b"}}', 'Sbrbh Condition');
+      testHelper('{{replaceAll notes "a" "$$"}}', 'S$$r$$h Condition');
     });
 
     describe('math helpers', () => {
@@ -445,6 +471,7 @@ describe('Action', () => {
       testHelper('{{mul amount 5}}', 50);
       testHelper('{{mul amount 5 10}}', 500);
       testHelper('{{div amount 5}}', 2);
+      testHelper('{{div amount 0}}', 0);
       testHelper('{{div amount 5 10}}', 0.2);
       testHelper('{{mod amount 3}}', 1);
       testHelper('{{mod amount 6 5}}', 4);
@@ -799,6 +826,12 @@ describe('Rule', () => {
           subtransactions: [{ amount: 100 }, { amount: 100 }],
         },
       );
+
+      expect(rule.exec({ imported_payee: 'James', amount: 201 })).toMatchObject(
+        {
+          subtransactions: [{ amount: 101 }, { amount: 100 }],
+        },
+      );
     });
 
     test('basic remainder', () => {
@@ -1027,6 +1060,42 @@ describe('Rule', () => {
           rule.exec({ imported_payee: 'James', amount: 20000 }),
         ).toMatchObject({
           subtransactions: [{ amount: 10000 }, { amount: 10000 }],
+        });
+      });
+
+      test('formula halves of an odd amount add up to the parent', () => {
+        const rule = new Rule({
+          conditionsOp: 'and',
+          conditions: [{ op: 'is', field: 'imported_payee', value: 'James' }],
+          actions: [
+            {
+              op: 'set-split-amount',
+              field: 'amount',
+              value: 0,
+              options: {
+                splitIndex: 1,
+                method: 'formula',
+                formula: '=INTEGER_TO_AMOUNT(parent_amount) * 0.5',
+              },
+            },
+            {
+              op: 'set-split-amount',
+              field: 'amount',
+              value: 0,
+              options: {
+                splitIndex: 2,
+                method: 'formula',
+                formula: '=INTEGER_TO_AMOUNT(parent_amount) * 0.5',
+              },
+            },
+          ],
+        });
+
+        expect(
+          rule.exec({ imported_payee: 'James', amount: 201 }),
+        ).toMatchObject({
+          error: null,
+          subtransactions: [{ amount: 100 }, { amount: 101 }],
         });
       });
 

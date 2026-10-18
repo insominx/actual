@@ -208,7 +208,7 @@ function recalculate(
       totalIncome += income;
       balance += income + expense + creditTransfers + debitTransfers;
       totalTransfers += creditTransfers + debitTransfers;
-      const x = d.parseISO(date);
+      const x = monthUtils.parseDate(date);
 
       const label = (
         <div>

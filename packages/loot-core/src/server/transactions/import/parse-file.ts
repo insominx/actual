@@ -14,21 +14,34 @@ import { xmlCAMT2json } from './xmlcamt2json';
  * Handles various OFX amount formats including currency symbols, parentheses, and multiple decimal places.
  * Returns null for invalid amounts instead of NaN.
  */
-function parseOfxAmount(amount: string): number | null {
+export function parseOfxAmount(amount: string): number | null {
   if (!amount || typeof amount !== 'string') {
     return null;
   }
 
-  // Handle parentheses for negative amounts (e.g., "(30.00)" -> "-30.00")
-  let cleaned = amount.trim();
+  // Handle parentheses for negative amounts (e.g., "(30.00)" -> "-30.00").
+  // A trailing minus (`12,50-`) has to be removed before the comma-decimal
+  // check, which only looks at the end of the string.
+  let cleaned = amount.trim().replace(/\u2212/g, '-');
+  let trailingNegative = false;
   if (cleaned.startsWith('(') && cleaned.endsWith(')')) {
     cleaned = '-' + cleaned.slice(1, -1);
+  } else if (cleaned.endsWith('-') && !cleaned.startsWith('-')) {
+    trailingNegative = true;
+    cleaned = cleaned.slice(0, -1).trimEnd();
   }
 
-  // The OFX spec allows a comma as the decimal separator (e.g. "-12,50").
-  // Only treat it as one when it is followed by 1-2 digits and no period is
-  // present, so a thousands separator ("1,234") is left alone.
-  if (!cleaned.includes('.')) {
+  // A comma is the decimal mark when it is the last separator and only
+  // 1-2 digits follow (`12,50`, `1.234,56`). A period in that role is the
+  // decimal mark and commas are thousands (`1,234.56`). A comma followed
+  // by 3 digits (`1,234`) stays a thousands separator.
+  const lastComma = cleaned.lastIndexOf(',');
+  const lastDot = cleaned.lastIndexOf('.');
+  if (lastComma > lastDot && /,\d{1,2}$/.test(cleaned)) {
+    cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+  } else if (lastDot > lastComma && /\.\d{1,2}$/.test(cleaned)) {
+    cleaned = cleaned.replace(/,/g, '');
+  } else if (lastDot === -1) {
     cleaned = cleaned.replace(/,(\d{1,2})$/, '.$1');
   }
 
@@ -49,7 +62,10 @@ function parseOfxAmount(amount: string): number | null {
   }
 
   const parsed = parseFloat(cleaned);
-  return isNaN(parsed) ? null : parsed;
+  if (isNaN(parsed)) {
+    return null;
+  }
+  return trailingNegative ? -parsed : parsed;
 }
 
 type StructuredTransaction = {
@@ -67,6 +83,17 @@ type StructuredTransaction = {
  * else decodes as UTF-8. Files in other encodings can be selected manually
  * in the import dialog.
  */
+// `split` on a file that ends with a newline yields a final empty string.
+// That phantom line is not a row, and counting it made "skip the last line"
+// drop the blank instead of the footer.
+export function csvLinesWithoutTrailingBlank(contents: string): string[] {
+  const lines = contents.split(/\r?\n/);
+  if (lines.length > 0 && lines[lines.length - 1] === '') {
+    lines.pop();
+  }
+  return lines;
+}
+
 function decodeCsvBytes(bytes: Uint8Array, encoding = 'auto'): string {
   if (encoding !== 'auto') {
     // Per the WHATWG encoding spec, the iso-8859-1 label resolves to the
@@ -162,7 +189,7 @@ async function parseCSV(
   const skipEnd = Math.max(0, options.skipEndLines || 0);
 
   if (skipStart > 0 || skipEnd > 0) {
-    const lines = contents.split(/\r?\n/);
+    const lines = csvLinesWithoutTrailingBlank(contents);
 
     if (skipStart + skipEnd >= lines.length) {
       errors.push({
@@ -266,31 +293,40 @@ async function parseOFX(
   const useMemoFallback = options.fallbackMissingPayeeToMemo;
   const swap = options.swapPayeeAndMemo;
 
-  return {
-    errors,
-    transactions: data.transactions.map(trans => {
-      const parsedAmount = parseOfxAmount(trans.amount);
-      if (parsedAmount === null) {
-        errors.push({
-          message: `Invalid amount format: ${trans.amount}`,
-          internal: `Failed to parse amount: ${trans.amount}`,
-        });
-      }
+  const transactions: StructuredTransaction[] = [];
+  for (const trans of data.transactions) {
+    if (trans.date == null) {
+      errors.push({
+        message: 'Transaction is missing a posted date',
+        internal: `Missing DTPOSTED for FITID ${trans.fitId}`,
+      });
+      continue;
+    }
 
-      const payeeSource = swap ? trans.memo : trans.name;
-      const memoSource = swap ? trans.name : trans.memo;
-      const fallbackUsed = !payeeSource && useMemoFallback;
+    const parsedAmount = parseOfxAmount(trans.amount);
+    if (parsedAmount === null) {
+      errors.push({
+        message: `Invalid amount format: ${trans.amount}`,
+        internal: `Failed to parse amount: ${trans.amount}`,
+      });
+      continue;
+    }
 
-      return {
-        amount: parsedAmount || 0,
-        imported_id: trans.fitId,
-        date: trans.date,
-        payee_name: payeeSource || (fallbackUsed ? memoSource : null),
-        imported_payee: payeeSource || (fallbackUsed ? memoSource : null),
-        notes: options.importNotes && !fallbackUsed ? memoSource || null : null,
-      };
-    }),
-  };
+    const payeeSource = swap ? trans.memo : trans.name;
+    const memoSource = swap ? trans.name : trans.memo;
+    const fallbackUsed = !payeeSource && useMemoFallback;
+
+    transactions.push({
+      amount: parsedAmount,
+      imported_id: trans.fitId,
+      date: trans.date,
+      payee_name: payeeSource || (fallbackUsed ? memoSource : null),
+      imported_payee: payeeSource || (fallbackUsed ? memoSource : null),
+      notes: options.importNotes && !fallbackUsed ? memoSource || null : null,
+    });
+  }
+
+  return { errors, transactions };
 }
 
 async function parseCAMT(

@@ -201,10 +201,14 @@ export function SankeyCard({
     layerTo,
   ]);
 
-  const startDate = d.parseISO(start);
-  const endDate = d.parseISO(end);
-  const formattedStartDate = d.format(startDate, 'MMM yyyy', { locale });
-  const formattedEndDate = d.format(endDate, 'MMM yyyy', { locale });
+  const startDate = monthUtils.parseDate(start);
+  const endDate = monthUtils.parseDate(end);
+  const formattedStartDate = d.isValid(startDate)
+    ? d.format(startDate, 'MMM yyyy', { locale })
+    : start;
+  const formattedEndDate = d.isValid(endDate)
+    ? d.format(endDate, 'MMM yyyy', { locale })
+    : end;
 
   let dateDescription: string | ReactElement;
   if (

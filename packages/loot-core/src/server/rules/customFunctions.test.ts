@@ -1,4 +1,4 @@
-import { HyperFormula } from 'hyperformula';
+import { ErrorType, HyperFormula } from 'hyperformula';
 import enUS from 'hyperformula/i18n/languages/enUS';
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -78,6 +78,23 @@ describe('CustomFunctionsPlugin formula query functions', () => {
       CustomFunctionsPlugin,
       customFunctionsTranslations,
     );
+  });
+
+  it('rejects a decimal count that toFixed cannot format', () => {
+    const context = createFormulaQueryContext();
+
+    expect(evaluateFormula('=FORMATNUMBER(10.5, 2)', context)).toBe('10.50');
+
+    expect(evaluateFormula('=FORMATNUMBER(10.5, -1)', context)).toMatchObject({
+      type: ErrorType.NUM,
+    });
+  });
+
+  it('formats FIXED to two decimal places when the count is omitted', () => {
+    const context = createFormulaQueryContext();
+
+    expect(evaluateFormula('=FIXED(10.5)', context)).toBe('10.50');
+    expect(evaluateFormula('=FIXED(10.5, 0)', context)).toBe('11');
   });
 
   it('records QUERY and QUERY_COUNT requests and returns prefetched values', () => {

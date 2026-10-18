@@ -141,6 +141,23 @@ export function settleReservations(
   }));
 
   const reserved = Math.round(exact.reduce((sum, c) => sum + c.accrued, 0));
+  // Each claim is shown as a whole amount. Rounding them independently can
+  // total one cent more than `reserved`, so the last claim keeps the rest.
+  let claimRemainder = reserved;
+  const shownClaims = exact.map(({ claim, accrued }, index) => {
+    const isLast = index === exact.length - 1;
+    const share = isLast ? claimRemainder : Math.round(accrued);
+    const shown = Math.max(0, Math.min(share, claimRemainder));
+    claimRemainder -= shown;
+    return {
+      key: claim.key,
+      kind: claim.kind,
+      label: claim.label,
+      nextDate: claim.nextDate,
+      target: claim.target,
+      accrued: shown,
+    };
+  });
   const allowance = Math.min(
     Math.max(0, balance - reserved),
     Math.max(0, allowanceTotal),
@@ -154,14 +171,7 @@ export function settleReservations(
     allowanceTotal,
     spare,
     shortfall: Math.max(0, -spare),
-    claims: exact.map(({ claim, accrued }) => ({
-      key: claim.key,
-      kind: claim.kind,
-      label: claim.label,
-      nextDate: claim.nextDate,
-      target: claim.target,
-      accrued: Math.round(accrued),
-    })),
+    claims: shownClaims,
   };
 }
 

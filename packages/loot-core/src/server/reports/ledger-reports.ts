@@ -8,6 +8,7 @@
 // periods before the first recorded transaction are reported as unknown.
 import * as db from '#server/db';
 import { APIError } from '#server/errors';
+import { getDecimalPlaces } from '#shared/currencies';
 import * as monthUtils from '#shared/months';
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -33,8 +34,20 @@ export type ReportScope = {
   opening: string;
   futureDated: 'excluded' | 'included';
   currency: string | null;
-  amounts: 'integer cents';
+  amounts: ReportAmountUnit;
 };
+
+// Stored report amounts use the budget currency scale: cents for two-decimal
+// currencies, and whole units for yen, won, and rial.
+export type ReportAmountUnit = 'integer cents' | 'whole units';
+
+export function reportAmountUnit(
+  currencyCode: string | null,
+): ReportAmountUnit {
+  return getDecimalPlaces(currencyCode ?? '') === 0
+    ? 'whole units'
+    : 'integer cents';
+}
 
 export type ReportCompleteness = {
   firstTransactionDate: string | null;
@@ -221,6 +234,7 @@ async function scope(
   accountIds: string[] | null,
   transfers: string,
 ): Promise<ReportScope> {
+  const currencyCode = await currency();
   return {
     start: request.start,
     end: request.end,
@@ -235,8 +249,8 @@ async function scope(
     opening:
       'starting balances are ordinary transactions; earlier history is reported under completeness',
     futureDated: request.includeFuture ? 'included' : 'excluded',
-    currency: await currency(),
-    amounts: 'integer cents',
+    currency: currencyCode,
+    amounts: reportAmountUnit(currencyCode),
   };
 }
 

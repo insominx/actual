@@ -8,12 +8,16 @@ import { Input } from '@actual-app/components/input';
 import { theme } from '@actual-app/components/theme';
 import { tokens } from '@actual-app/components/tokens';
 import { View } from '@actual-app/components/view';
-import { currentDay, dayFromDate } from '@actual-app/core/shared/months';
+import {
+  currentDay,
+  dayFromDate,
+  parseDate as parseBudgetDate,
+} from '@actual-app/core/shared/months';
 import {
   amountToInteger,
-  currencyToInteger,
+  currencyToAmount,
 } from '@actual-app/core/shared/util';
-import { format as formatDate, parse as parseDate, parseISO } from 'date-fns';
+import { format as formatDate } from 'date-fns';
 
 import { NoteInsertHashButton } from '#components/autocomplete/NoteInsertHashButton';
 import { NoteTagAutocomplete } from '#components/autocomplete/NoteTagAutocomplete';
@@ -23,6 +27,7 @@ import { LabeledCheckbox } from '#components/forms/LabeledCheckbox';
 import { InputField } from '#components/mobile/MobileForms';
 import { DateSelect } from '#components/select/DateSelect';
 import { useDateFormat } from '#hooks/useDateFormat';
+import { useFormat } from '#hooks/useFormat';
 import type { Modal as ModalType } from '#modals/modalsSlice';
 
 const itemStyle: CSSProperties = {
@@ -54,6 +59,7 @@ export function EditFieldModal({
   onClose,
 }: EditFieldModalProps) {
   const { t } = useTranslation();
+  const format = useFormat();
   const dateFormat = useDateFormat() || 'MM/dd/yyyy';
   const noteInputRef = useRef<HTMLInputElement | null>(null);
   const noteReplaceInputRef = useRef<HTMLInputElement | null>(null);
@@ -68,15 +74,16 @@ export function EditFieldModal({
     if (value != null) {
       // Process the value if needed
       if (name === 'amount') {
+        const decimalPlaces = format.currency.decimalPlaces;
         if (typeof value === 'string') {
-          const parsed = currencyToInteger(value);
+          const parsed = currencyToAmount(value);
           if (parsed === null) {
             alert(t('Invalid amount value'));
             return;
           }
-          value = parsed;
+          value = amountToInteger(parsed, decimalPlaces);
         } else if (typeof value === 'number') {
-          value = amountToInteger(value);
+          value = amountToInteger(value, decimalPlaces);
         }
       }
 
@@ -113,11 +120,11 @@ export function EditFieldModal({
       height = 'auto'; // fit the calendar; 275 clips six-row months
       editor = ({ close }) => (
         <DateSelect
-          value={formatDate(parseISO(today), dateFormat)}
+          value={formatDate(parseBudgetDate(today), dateFormat)}
           dateFormat={dateFormat}
           embedded
           onSelect={date => {
-            onSelect(dayFromDate(parseDate(date, 'yyyy-MM-dd', new Date())));
+            onSelect(dayFromDate(parseBudgetDate(date)));
             close();
           }}
         />

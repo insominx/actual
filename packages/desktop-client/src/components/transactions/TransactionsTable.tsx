@@ -67,7 +67,7 @@ import {
 import {
   amountToCurrency,
   currencyToAmount,
-  integerToCurrency,
+  integerToCurrencyScaled,
   titleFirst,
 } from '@actual-app/core/shared/util';
 import type { IntegerAmount } from '@actual-app/core/shared/util';
@@ -80,7 +80,7 @@ import type {
   ScheduleEntity,
   TransactionEntity,
 } from '@actual-app/core/types/models';
-import { format as formatDate, parseISO } from 'date-fns';
+import { format as formatDate } from 'date-fns';
 
 import { getAccountsById } from '#accounts/accountsSlice';
 import { AccountAutocomplete } from '#components/autocomplete/AccountAutocomplete';
@@ -125,6 +125,7 @@ import type {
   OnDragChangeCallback,
   OnDropCallback,
 } from '#hooks/useDragDrop';
+import { useFormat } from '#hooks/useFormat';
 import { useLocalPref } from '#hooks/useLocalPref';
 import { useMergedRefs } from '#hooks/useMergedRefs';
 import { usePrevious } from '#hooks/usePrevious';
@@ -213,12 +214,15 @@ function measureAmountColumnWidth(values: string[], minWidth: number) {
 export function useAmountColumnWidths(
   transactions: TransactionEntity[],
   balances: Record<TransactionEntity['id'], IntegerAmount> | null,
+  currencyCode?: string,
 ): AmountColumnWidths {
   const debitCreditValues = transactions.map(t =>
-    integerToCurrency(Math.abs(t.amount ?? 0)),
+    integerToCurrencyScaled(Math.abs(t.amount ?? 0), currencyCode),
   );
   const balanceValues = balances
-    ? Object.values(balances).map(balance => integerToCurrency(balance))
+    ? Object.values(balances).map(balance =>
+        integerToCurrencyScaled(balance, currencyCode),
+      )
     : [];
 
   return {
@@ -1182,27 +1186,36 @@ const Transaction = memo(function Transaction({
   textColumnWidths,
 }: TransactionProps) {
   const { t } = useTranslation();
+  const format = useFormat();
+  const currencyCode = format.currency.code;
 
   const dispatch = useDispatch();
   const dispatchSelected = useSelectedDispatch();
   const triggerRef = useRef(null);
 
   const [prevShowZero, setPrevShowZero] = useState(showZeroInDeposit);
+  const [prevCurrencyCode, setPrevCurrencyCode] = useState(currencyCode);
   const [prevTransaction, setPrevTransaction] = useState(originalTransaction);
   const [transaction, setTransaction] = useState(() =>
-    serializeTransaction(originalTransaction, showZeroInDeposit),
+    serializeTransaction(originalTransaction, showZeroInDeposit, currencyCode),
   );
   const isPreview = isPreviewId(transaction.id);
 
   if (
     originalTransaction !== prevTransaction ||
-    showZeroInDeposit !== prevShowZero
+    showZeroInDeposit !== prevShowZero ||
+    currencyCode !== prevCurrencyCode
   ) {
     setTransaction(
-      serializeTransaction(originalTransaction, showZeroInDeposit),
+      serializeTransaction(
+        originalTransaction,
+        showZeroInDeposit,
+        currencyCode,
+      ),
     );
     setPrevTransaction(originalTransaction);
     setPrevShowZero(showZeroInDeposit);
+    setPrevCurrencyCode(currencyCode);
   }
 
   const [showReconciliationWarning, setShowReconciliationWarning] =
@@ -1352,10 +1365,13 @@ const Transaction = memo(function Transaction({
       const deserialized = deserializeTransaction(
         newTransaction,
         originalTransaction,
+        currencyCode,
       );
       // Run the transaction through the formatting so that we know
       // it's always showing the formatted result
-      setTransaction(serializeTransaction(deserialized, showZeroInDeposit));
+      setTransaction(
+        serializeTransaction(deserialized, showZeroInDeposit, currencyCode),
+      );
 
       const deserializedName = ['credit', 'debit'].includes(name)
         ? 'amount'
@@ -1708,7 +1724,7 @@ const Transaction = memo(function Transaction({
             value={date}
             valueStyle={valueStyle}
             formatter={date =>
-              date ? formatDate(parseISO(date), dateFormat) : ''
+              date ? formatDate(monthUtils.parseDate(date), dateFormat) : ''
             }
             onExpose={name => {
               if (!isPreview) {
@@ -2142,7 +2158,7 @@ const Transaction = memo(function Transaction({
             value={
               runningBalance == null || isChild || isTemporaryId(id)
                 ? ''
-                : integerToCurrency(runningBalance)
+                : integerToCurrencyScaled(runningBalance, currencyCode)
             }
             valueStyle={{
               color:
@@ -2268,7 +2284,7 @@ const Transaction = memo(function Transaction({
             }}
           >
             <Text style={{ color: theme.tableText, width: '10%' }}>
-              {date ? formatDate(parseISO(date), dateFormat) : ''}
+              {date ? formatDate(monthUtils.parseDate(date), dateFormat) : ''}
             </Text>
             <Text
               style={{
@@ -2310,7 +2326,7 @@ const Transaction = memo(function Transaction({
                 textAlign: 'right',
               }}
             >
-              {integerToCurrency(amount)}
+              {integerToCurrencyScaled(amount, currencyCode)}
             </Text>
           </View>
         )}
@@ -2440,6 +2456,7 @@ function TransactionError({
   onDistributeRemainder,
   style,
 }: TransactionErrorProps) {
+  const currencyCode = useFormat().currency.code;
   switch (error.type) {
     case 'SplitTransactionError':
       if (error.version === 1) {
@@ -2457,8 +2474,9 @@ function TransactionError({
             <Text style={{ whiteSpace: 'nowrap' }}>
               <Trans>Amount left:</Trans>{' '}
               <Text style={{ fontWeight: 500 }}>
-                {integerToCurrency(
+                {integerToCurrencyScaled(
                   isDeposit ? error.difference : -error.difference,
+                  currencyCode,
                 )}
               </Text>
             </Text>
@@ -2818,6 +2836,7 @@ function TransactionTableInner({
   onCommitColumnWidth,
   ...props
 }: TransactionTableInnerProps) {
+  const currencyCode = useFormat().currency.code;
   const containerRef = createRef<HTMLDivElement>();
   const isAddingPrev = usePrevious(props.isAdding);
   const [scrollWidth, setScrollWidth] = useState(0);
@@ -2931,6 +2950,7 @@ function TransactionTableInner({
   const amountColumnWidths = useAmountColumnWidths(
     transactionsToRender,
     props.balances,
+    currencyCode,
   );
 
   const renderRow: TableProps<TransactionEntity>['renderItem'] = ({

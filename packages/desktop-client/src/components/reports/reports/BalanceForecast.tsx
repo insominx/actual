@@ -216,7 +216,7 @@ function BalanceForecastInner({ widget }: BalanceForecastInnerProps) {
       );
 
       const earliestMonth = earliestTransactionResponse
-        ? monthUtils.monthFromDate(d.parseISO(earliestTransactionResponse.date))
+        ? monthUtils.monthFromDate(earliestTransactionResponse.date)
         : monthUtils.subMonths(currentMonthLocal, 12);
 
       let futureEndMonth = monthUtils.addMonths(currentMonthLocal, 24);

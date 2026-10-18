@@ -26,6 +26,7 @@ import {
 import { AmountInput } from '#components/mobile/transactions/AmountInput';
 import { Notes } from '#components/Notes';
 import { useCategory } from '#hooks/useCategory';
+import { useFormat } from '#hooks/useFormat';
 import { useFeatureFlag } from '#hooks/useFeatureFlag';
 import { useNotes } from '#hooks/useNotes';
 import type { Modal as ModalType } from '#modals/modalsSlice';
@@ -65,11 +66,12 @@ export function EnvelopeBudgetMenuModal({
   );
   const { data: category } = useCategory(categoryId);
   const mobileCalculatorEnabled = useFeatureFlag('mobileCalculator');
+  const decimalPlaces = useFormat().currency.decimalPlaces;
 
   const notesId = category ? `${category.id}-${month}` : '';
   const originalNotes = useNotes(notesId) ?? '';
   const _onUpdateBudget = (amount: number) => {
-    onUpdateBudget?.(amountToInteger(amount));
+    onUpdateBudget?.(amountToInteger(amount, decimalPlaces));
   };
 
   const [showMore, setShowMore] = useState(false);
@@ -116,7 +118,7 @@ export function EnvelopeBudgetMenuModal({
               <Trans>Budgeted</Trans>
             </Text>
             <AmountInput
-              value={integerToAmount(budgeted || 0)}
+              value={integerToAmount(budgeted || 0, decimalPlaces)}
               onEnter={() => state.close()}
               onChange={_onUpdateBudget}
               data-testid="budget-amount"

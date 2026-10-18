@@ -116,7 +116,10 @@ export function registerCheckupCommand(program: Command) {
     )
     .requiredOption('--account <id>', 'Account ID')
     .requiredOption('--month <month>', 'Statement month YYYY-MM')
-    .option('--ending-balance <cents>', 'Statement ending balance in cents')
+    .option(
+      '--ending-balance <amount>',
+      'Statement ending balance at the budget currency scale (50000 = 500.00 dollars, or 500 yen)',
+    )
     .option('--no-activity', 'The statement shows no activity this month')
     .option('--source <text>', 'Where the evidence came from')
     .option(

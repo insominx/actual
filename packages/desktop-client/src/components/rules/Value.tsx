@@ -5,8 +5,8 @@ import { useTranslation } from 'react-i18next';
 
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
-import { getMonthYearFormat } from '@actual-app/core/shared/months';
-import { format as formatDate, parseISO } from 'date-fns';
+import { getMonthYearFormat, parseDate } from '@actual-app/core/shared/months';
+import { format as formatDate } from 'date-fns';
 
 import { Link } from '#components/common/Link';
 import { FinancialText } from '#components/FinancialText';
@@ -109,15 +109,15 @@ export function Value<T>({
             if (value.frequency) {
               return getRecurringDescription(value, dateFormat, locale);
             }
-            return formatDate(parseISO(value), dateFormat);
+            return formatDate(parseDate(value), dateFormat);
           }
           return null;
         case 'month':
           return value
-            ? formatDate(parseISO(value), getMonthYearFormat(dateFormat))
+            ? formatDate(parseDate(value), getMonthYearFormat(dateFormat))
             : null;
         case 'year':
-          return value ? formatDate(parseISO(value), 'yyyy') : null;
+          return value ? formatDate(parseDate(value), 'yyyy') : null;
         case 'notes':
         case 'imported_payee':
         case 'payee_name':

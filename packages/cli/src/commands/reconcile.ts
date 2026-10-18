@@ -27,7 +27,10 @@ export function registerReconcileCommand(program: Command) {
     .description(
       "Cleared balance (the app's reconcile definition, optionally cut off at the statement date), difference from the statement balance, and the cleared unreconciled candidates a finish would lock; read-only",
     )
-    .option('--balance <cents>', 'Statement ending balance in cents')
+    .option(
+      '--balance <amount>',
+      'Statement ending balance at the budget currency scale (50000 = 500.00 dollars, or 500 yen)',
+    )
     .option('--date <date>', 'Statement date YYYY-MM-DD (cutoff)')
     .action(
       async (
@@ -66,7 +69,10 @@ export function registerReconcileCommand(program: Command) {
       'Lock the frozen set of cleared transactions through a guarded change when the statement difference is zero, and set last reconciled',
     )
     .option('--operation-id <id>', 'Required; durable retry ID')
-    .requiredOption('--balance <cents>', 'Statement ending balance in cents')
+    .requiredOption(
+      '--balance <amount>',
+      'Statement ending balance at the budget currency scale (50000 = 500.00 dollars, or 500 yen)',
+    )
     .option('--date <date>', 'Statement date YYYY-MM-DD (cutoff)')
     .requiredOption(
       '--ids <ids>',
@@ -108,7 +114,10 @@ export function registerReconcileCommand(program: Command) {
       "Add an explicit cleared 'Reconciliation balance adjustment' transaction through a guarded change, as the app's adjustment does",
     )
     .option('--operation-id <id>', 'Required; durable retry ID')
-    .requiredOption('--amount <cents>', 'Signed adjustment in cents')
+    .requiredOption(
+      '--amount <amount>',
+      'Signed adjustment at the budget currency scale (50000 = 500.00 dollars, or 500 yen)',
+    )
     .option('--date <date>', 'Transaction date YYYY-MM-DD (default today)')
     .action(
       async (

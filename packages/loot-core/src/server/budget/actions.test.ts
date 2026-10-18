@@ -9,6 +9,7 @@ import {
   coverOverbudgeted,
   getBudget,
   getSheetValue,
+  roundStoredAverage,
   set12MonthAvg,
   set3MonthAvg,
   set6MonthAvg,
@@ -17,6 +18,14 @@ import {
   setNMonthAvg,
 } from './actions';
 import * as budget from './base';
+
+describe('roundStoredAverage', () => {
+  it('rounds a negative half away from zero', () => {
+    expect(roundStoredAverage(-301, 2)).toBe(-151);
+    expect(roundStoredAverage(301, 2)).toBe(151);
+    expect(roundStoredAverage(-300, 2)).toBe(-150);
+  });
+});
 
 describe('copyUntilYearEnd', () => {
   beforeEach(global.emptyDatabase());
@@ -228,6 +237,35 @@ describe('coverOverbudgeted', () => {
     const sheetName = 'budget202402';
     expect(await getSheetValue(sheetName, 'to-budget')).toBe(0);
     expect(await getSheetValue(sheetName, 'leftover-cat1')).toBe(10);
+  });
+
+  it('writes dollar cover notes in cents and yen cover notes as whole units', async () => {
+    await prepareDatabase();
+    await coverOverbudgeted({
+      month: '2024-02',
+      category: 'cat1',
+      currencyCode: 'USD',
+    });
+    const dollars = await db.first<{ note: string }>(
+      'SELECT note FROM notes WHERE id = ?',
+      ['budget-2024-02'],
+    );
+    expect(dollars?.note).toContain('Reassigned 0.90 from cat1');
+  });
+
+  it('does not append a decimal to a yen cover note', async () => {
+    await prepareDatabase();
+    await coverOverbudgeted({
+      month: '2024-02',
+      category: 'cat1',
+      currencyCode: 'JPY',
+    });
+    const yen = await db.first<{ note: string }>(
+      'SELECT note FROM notes WHERE id = ?',
+      ['budget-2024-02'],
+    );
+    expect(yen?.note).toContain('Reassigned 90 from cat1');
+    expect(yen?.note).not.toContain('90.00');
   });
 
   it('partially covers the overbudget when category leftover is insufficient', async () => {

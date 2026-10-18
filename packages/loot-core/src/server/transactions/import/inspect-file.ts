@@ -7,6 +7,7 @@ import * as fs from '#platform/server/fs';
 import * as db from '#server/db';
 import { APIError } from '#server/errors';
 import { storedPreference } from '#server/preferences/catalog';
+import { getCurrency } from '#shared/currencies';
 import {
   applyFieldMappings,
   dateFormats,
@@ -320,6 +321,14 @@ export async function readImportFile(path: unknown) {
   };
 }
 
+function budgetDecimalPlaces() {
+  const code = db.firstSync<{ value: string }>(
+    `SELECT value FROM preferences WHERE id = ?`,
+    ['defaultCurrencyCode'],
+  )?.value;
+  return getCurrency(code ?? '').decimalPlaces;
+}
+
 function text(value: unknown) {
   return value == null || value === '' ? null : String(value);
 }
@@ -449,6 +458,7 @@ export async function inspectImportFile(
   const multiplier = requested.multiplier ?? null;
   const splitMode = !!(fields?.outflow || fields?.inflow);
 
+  const decimalPlaces = budgetDecimalPlaces();
   const rows: ImportFileInspection['rows'] = [];
   let validCount = 0;
   let start: string | null = null;
@@ -542,7 +552,7 @@ export async function inspectImportFile(
       ? null
       : {
           date: date as string,
-          amount: amountToInteger(amount as number),
+          amount: amountToInteger(amount as number, decimalPlaces),
           payee_name: text(payee),
           imported_payee: text(mapped.imported_payee ?? payee),
           notes: text(mapped.notes),

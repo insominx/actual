@@ -40,27 +40,20 @@ export function summarySpreadsheet(
     }
     const conditionsOpKey = conditionsOp === 'or' ? '$or' : '$and';
 
-    let startDay: Date;
-    let endDay: Date;
-    try {
-      startDay = d.parse(
-        monthUtils.firstDayOfMonth(start),
-        'yyyy-MM-dd',
-        new Date(),
-      );
-
-      endDay = d.parse(
-        monthUtils.getMonth(end) ===
-          monthUtils.getMonth(monthUtils.currentDay())
-          ? monthUtils.currentDay()
-          : monthUtils.lastDayOfMonth(end),
-        'yyyy-MM-dd',
-        new Date(),
-      );
-    } catch (error) {
-      console.error('Error parsing dates:', error);
+    const startDayText = monthUtils.firstDayOfMonth(start);
+    const endDayText =
+      monthUtils.getMonth(end) === monthUtils.getMonth(monthUtils.currentDay())
+        ? monthUtils.currentDay()
+        : monthUtils.lastDayOfMonth(end);
+    if (
+      !monthUtils.isValidYearMonthDay(startDayText) ||
+      !monthUtils.isValidYearMonthDay(endDayText)
+    ) {
       throw new Error('Invalid date format provided');
     }
+
+    const startDay = monthUtils.parseDate(startDayText);
+    const endDay = monthUtils.parseDate(endDayText);
 
     if (!d.isValid(startDay) || !d.isValid(endDay)) {
       throw new Error('Invalid date values provided');
@@ -72,9 +65,10 @@ export function summarySpreadsheet(
 
     const getOneDatePerMonth = (start: Date, end: Date) => {
       const months = [];
-      let currentDate = d.startOfMonth(start);
+      let currentDate = new Date(start.getFullYear(), start.getMonth(), 1, 12);
+      const endMonth = new Date(end.getFullYear(), end.getMonth(), 1, 12);
 
-      while (!d.isSameMonth(currentDate, end)) {
+      while (currentDate < endMonth) {
         months.push(currentDate);
         currentDate = d.addMonths(currentDate, 1);
       }
@@ -199,10 +193,7 @@ function calculatePerMonth(
 
   const monthlyData = data.reduce(
     (acc, day) => {
-      const monthKey = d.format(
-        d.parse(day.date, 'yyyy-MM-dd', new Date()),
-        'yyyy-MM',
-      );
+      const monthKey = monthUtils.getMonth(day.date);
       acc[monthKey] = (acc[monthKey] || 0) + day.amount;
       return acc;
     },

@@ -18,13 +18,13 @@ type DateRangeProps = {
   comparisonLabel?: string;
 };
 
-function checkDate(date: string) {
-  const dateParsed = monthUtils.parseDate(date);
-  if (dateParsed) {
-    return d.format(dateParsed, 'yyyy-MM-dd');
-  } else {
-    return null;
-  }
+// parseDate is noon on the calendar day. A Date object is always truthy,
+// so an unparseable value must be rejected with isValid; formatting it
+// throws. Re-parsing the day at midnight can move the 1st into the
+// previous month.
+export function parseReportRangeDate(date: string): Date | null {
+  const parsed = monthUtils.parseDate(date);
+  return d.isValid(parsed) ? parsed : null;
 }
 
 export function DateRange({
@@ -35,15 +35,10 @@ export function DateRange({
 }: DateRangeProps): ReactElement {
   const { t } = useTranslation();
   const locale = useLocale();
-  const checkStart = checkDate(start);
-  const checkEnd = checkDate(end);
+  const startDate = parseReportRangeDate(start);
+  const endDate = parseReportRangeDate(end);
 
-  let startDate;
-  let endDate;
-  if (checkStart && checkEnd) {
-    startDate = d.parseISO(checkStart);
-    endDate = d.parseISO(checkEnd);
-  } else {
+  if (!startDate || !endDate) {
     return (
       <Text style={{ ...styles.mediumText, color: theme.errorText }}>
         <Trans>There was a problem loading your date range</Trans>

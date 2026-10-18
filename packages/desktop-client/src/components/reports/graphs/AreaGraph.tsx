@@ -23,11 +23,13 @@ import type { LabelProps } from 'recharts';
 import { FinancialText } from '#components/FinancialText';
 import { useRechartsAnimation } from '#components/reports/chart-theme';
 import { Container } from '#components/reports/Container';
+import { chartAxisMargin } from '#components/reports/graphs/chartAxisMargin';
 import { useFormat } from '#hooks/useFormat';
 import type { FormatType } from '#hooks/useFormat';
 import { usePrivacyMode } from '#hooks/usePrivacyMode';
 
 import { adjustTextSize } from './adjustTextSize';
+import { areaChartDomainEdge } from './areaChartDomain';
 import { renderCustomLabel } from './renderCustomLabel';
 
 type PayloadItem = {
@@ -209,17 +211,18 @@ export function AreaGraph({
   const absDataMax = Math.max(Math.abs(dataMax), Math.abs(dataMin));
   //Calculate how much to add to max and min values for graph range
   const extendRangeAmount = Math.floor(dataDiff / 20);
-  const labelsMin =
-    //If min is zero or graph range passes zero then set it to zero
-    dataMin === 0 || Math.abs(dataMin) <= extendRangeAmount
-      ? 0
-      : //Else add the range and round to nearest 100s
-        Math.floor((dataMin - extendRangeAmount) / 100) * 100;
-  //Same as above but for max
-  const labelsMax =
-    dataMax === 0 || Math.abs(dataMax) <= extendRangeAmount
-      ? 0
-      : Math.ceil((dataMax + extendRangeAmount) / 100) * 100;
+  const labelsMin = areaChartDomainEdge(
+    dataMin,
+    extendRangeAmount,
+    format.currency.decimalPlaces,
+    'min',
+  );
+  const labelsMax = areaChartDomainEdge(
+    dataMax,
+    extendRangeAmount,
+    format.currency.decimalPlaces,
+    'max',
+  );
   const lastLabel = data.intervalData.length - 1;
 
   const tickFormatter = (tick: number) => {
@@ -240,7 +243,11 @@ export function AreaGraph({
 
   const off = gradientOffset();
 
-  const leftMargin = Math.abs(absDataMax) > 1000000 ? 20 : 0;
+  const leftMargin = chartAxisMargin(
+    absDataMax,
+    value => format(value, 'financial-no-decimals'),
+    20,
+  );
   return (
     <Container
       style={{

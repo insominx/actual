@@ -13,6 +13,18 @@ import {
 } from '#app-gocardless/services/tests/fixtures';
 
 describe('IntegrationBank', () => {
+  it('keeps the calendar day of a booking timestamp', () => {
+    const normalized = IntegrationBank.normalizeTransaction(
+      {
+        transactionAmount: { amount: '-1.00', currency: 'EUR' },
+        bookingDateTime: '2026-01-15T23:30:00-08:00',
+      },
+      true,
+    );
+
+    expect(normalized?.date).toBe('2026-01-15');
+  });
+
   describe('normalizeAccount', () => {
     const account = mockExtendAccountsAboutInstitutions[0];
 

@@ -273,7 +273,7 @@ export function registerQueryAggregate(query: Command, program: Command) {
                 range: { start: start ?? null, end: end ?? null },
                 account: cmdOpts.account ?? null,
                 amounts:
-                  'signed integer cents; inflow is the sum of positive amounts and outflow the sum of negative amounts',
+                  'signed stored integers at the budget currency scale (cents, or whole units for yen, won, and rial); inflow is the sum of positive amounts and outflow the sum of negative amounts',
               },
               ...combined,
             },

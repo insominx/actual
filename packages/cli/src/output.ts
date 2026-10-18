@@ -1,6 +1,6 @@
 import Table from 'cli-table3';
 
-import { bufferAgentOutput } from './agent-output';
+import { bufferAgentOutput, currentAmountScale } from './agent-output';
 
 export type OutputFormat = 'json' | 'table' | 'csv';
 
@@ -22,7 +22,9 @@ function isAmountValue(key: string, value: unknown): value is number {
 
 function formatCellValue(key: string, value: unknown): string {
   if (isAmountValue(key, value)) {
-    return (value / 100).toFixed(2);
+    const scale = currentAmountScale();
+    const digits = scale <= 1 ? 0 : Math.round(Math.log10(scale));
+    return (value / scale).toFixed(digits);
   }
   return String(value ?? '');
 }

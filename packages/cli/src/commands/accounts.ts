@@ -83,7 +83,7 @@ export function registerAccountsCommand(program: Command) {
     .option('--offbudget', 'Create as off-budget account', false)
     .option(
       '--balance <amount>',
-      'Initial balance in cents (e.g. 50000 = 500.00)',
+      'Stored initial balance (50000 = 500.00 dollars, or 500 yen)',
       '0',
     )
     .action(async cmdOpts => {

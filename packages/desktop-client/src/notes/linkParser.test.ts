@@ -93,6 +93,35 @@ describe('linkParser', () => {
         });
       });
 
+      it('keeps a parenthesis inside a markdown link', () => {
+        const result = parseNotes(
+          'See [Budget](https://en.wikipedia.org/wiki/Budget_(disambiguation)).',
+        );
+        const linkSegment = result.find(s => s.type === 'link');
+        expect(linkSegment).toEqual({
+          type: 'link',
+          content:
+            '[Budget](https://en.wikipedia.org/wiki/Budget_(disambiguation))',
+          displayText: 'Budget',
+          url: 'https://en.wikipedia.org/wiki/Budget_(disambiguation)',
+          isFilePath: false,
+        });
+      });
+
+      it('keeps a parenthesis that belongs to the URL', () => {
+        const result = parseNotes(
+          'See https://en.wikipedia.org/wiki/Budget_(disambiguation).',
+        );
+        const linkSegment = result.find(s => s.type === 'link');
+        expect(linkSegment).toEqual({
+          type: 'link',
+          content: 'https://en.wikipedia.org/wiki/Budget_(disambiguation)',
+          displayText: 'https://en.wikipedia.org/wiki/Budget_(disambiguation)',
+          url: 'https://en.wikipedia.org/wiki/Budget_(disambiguation)',
+          isFilePath: false,
+        });
+      });
+
       it('should handle URL followed by closing bracket', () => {
         const result = parseNotes('(see https://example.com)');
         const linkSegment = result.find(s => s.type === 'link');

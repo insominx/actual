@@ -1,9 +1,11 @@
+import { setNumberFormat } from '@actual-app/core/shared/util';
 import type { TransactionEntity } from '@actual-app/core/types/models';
 
 import type { SerializedTransaction } from './utils';
 import {
   deserializeTransaction,
   distributeSplitAmounts,
+  serializeTransaction,
   shouldApplyRuleChange,
 } from './utils';
 
@@ -147,6 +149,20 @@ describe('deserializeTransaction', () => {
 
     expect(result.amount).toBe(-10000);
     expect(result.cleared).toBe(true);
+  });
+
+  test('keeps zero-decimal currencies on their own scale', () => {
+    setNumberFormat({ format: 'comma-dot', hideFraction: false });
+    const serialized = serializeTransaction(
+      { ...originalTransaction, amount: 1234 },
+      false,
+      'JPY',
+    );
+    expect(serialized.credit).toBe('1,234');
+    expect(serialized.debit).toBe('');
+    expect(
+      deserializeTransaction(serialized, originalTransaction, 'JPY').amount,
+    ).toBe(1234);
   });
 
   test('falls back to the original amount when the row has none', () => {

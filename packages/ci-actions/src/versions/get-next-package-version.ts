@@ -28,11 +28,12 @@ function parseVersion(version: string): ParsedVersion {
 }
 
 function computeNextMonth(versionYear: number, versionMonth: number) {
-  const versionDate = new Date(2000 + versionYear, versionMonth - 1, 1);
+  const versionDate = new Date(2000 + versionYear, versionMonth - 1, 1, 12);
   const nextVersionMonthDate = new Date(
     versionDate.getFullYear(),
     versionDate.getMonth() + 1,
     1,
+    12,
   );
 
   const fullYear = nextVersionMonthDate.getFullYear();

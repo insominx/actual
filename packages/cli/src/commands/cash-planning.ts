@@ -30,7 +30,7 @@ function parseAmount(value: string, field: string) {
   if (!isEngineAmount(amount)) {
     throw new AgentError(
       'INVALID_INPUT',
-      `${field} must be an integer amount in cents.`,
+      `${field} must be a stored integer at the budget currency scale.`,
       false,
       { field },
     );
@@ -175,7 +175,10 @@ export function registerCashPlanningCommand(program: Command) {
     .description('Set one monthly category target in the saved plan')
     .option('--operation-id <id>', 'Required; durable retry ID')
     .requiredOption('--category <id>', 'Category ID')
-    .requiredOption('--amount <cents>', 'Monthly target in cents (>= 0)')
+    .requiredOption(
+      '--amount <amount>',
+      'Monthly target at the budget currency scale (>= 0; 50000 = 500.00 dollars, or 500 yen)',
+    )
     .action(
       async (cmdOpts: {
         operationId?: string;
@@ -228,7 +231,10 @@ export function registerCashPlanningCommand(program: Command) {
     .command('set-goal')
     .description('Set the savings goal, and optionally its deadline')
     .option('--operation-id <id>', 'Required; durable retry ID')
-    .option('--balance <cents>', 'Goal balance in cents')
+    .option(
+      '--balance <amount>',
+      'Goal balance at the budget currency scale (50000 = 500.00 dollars, or 500 yen)',
+    )
     .option('--deadline <date>', 'Goal deadline YYYY-MM-DD')
     .option('--clear', 'Remove the goal instead', false)
     .action(

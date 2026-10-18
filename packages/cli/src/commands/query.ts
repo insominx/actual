@@ -473,8 +473,9 @@ Common filter operators: $eq, $ne, $lt, $lte, $gt, $gte, $like, $and, $or
 See ActualQL docs for full reference: https://actualbudget.org/docs/api/actual-ql/
 
 Tips:
-  - Amounts are stored as integer cents (e.g. 166500 = 1665.00).
-    Table and CSV output auto-formats these as decimals; JSON keeps raw cents.
+  - Amounts are stored integers. Two-decimal currencies use cents (166500 = 1665.00).
+    Yen, won, and rial use whole units (1665 = 1665). Table and CSV output
+    format them with the open budget's currency scale; JSON keeps the stored integer.
   - Filter "is_parent": false to avoid double-counting split transactions.
   - Fetch all data in a single query with a date range instead of running
     one query per month — rapid sequential requests may cause auth failures.

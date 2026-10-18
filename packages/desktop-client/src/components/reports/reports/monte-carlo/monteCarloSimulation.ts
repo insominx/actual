@@ -179,15 +179,20 @@ export type MonteCarloSpendingPhase = {
   annualWithdrawal: number;
 };
 
+function majorUnitsToStored(majorUnits: number, decimalPlaces = 2): number {
+  return majorUnits * 10 ** decimalPlaces;
+}
+
 export function createMonteCarloSpendingPhase(
   id: string,
   fromAge: number | null = null,
+  decimalPlaces = 2,
 ): MonteCarloSpendingPhase {
   return {
     id,
     name: '',
     fromAge,
-    annualWithdrawal: 2_000_000, // 20,000.00 in minor units
+    annualWithdrawal: majorUnitsToStored(20_000, decimalPlaces),
   };
 }
 
@@ -267,6 +272,7 @@ export type MonteCarloContribution = {
 export function createMonteCarloContribution(
   id: string,
   potId: string,
+  decimalPlaces = 2,
 ): MonteCarloContribution {
   return {
     id,
@@ -274,7 +280,7 @@ export function createMonteCarloContribution(
     potId,
     fromAge: null,
     toAge: null,
-    annualAmount: 1_000_000, // 10,000.00 in minor units
+    annualAmount: majorUnitsToStored(10_000, decimalPlaces),
     adjustsWithInflation: true,
     sourceIncomeStreamId: null,
     beforeTax: false,
@@ -306,13 +312,14 @@ export type MonteCarloIncomeStream = {
 
 export function createMonteCarloIncomeStream(
   id: string,
+  decimalPlaces = 2,
 ): MonteCarloIncomeStream {
   return {
     id,
     name: '',
     fromAge: null,
     toAge: null,
-    annualAmount: 1_000_000, // 10,000.00 in minor units
+    annualAmount: majorUnitsToStored(10_000, decimalPlaces),
     adjustsWithInflation: true,
     taxRate: 0,
     taxableFraction: 1,
@@ -359,11 +366,14 @@ export type MonteCarloPot = {
   isSurplus: boolean;
 };
 
-export function createMonteCarloPot(id: string): MonteCarloPot {
+export function createMonteCarloPot(
+  id: string,
+  decimalPlaces = 2,
+): MonteCarloPot {
   return {
     id,
     name: '',
-    startingBalance: 50_000_000, // 500,000.00 in minor units
+    startingBalance: majorUnitsToStored(500_000, decimalPlaces),
     allocationPreset: 'equity-60',
     allocationStocks: PRESET_ASSET_WEIGHTS['equity-60'].stocks,
     allocationBonds: PRESET_ASSET_WEIGHTS['equity-60'].bonds,
@@ -547,8 +557,15 @@ export function getMonteCarloHorizonYears(
   );
 }
 
-function potFromMeta(potMeta: MonteCarloPotMeta, index: number): MonteCarloPot {
-  const defaults = createMonteCarloPot(potMeta.id || `pot-${index + 1}`);
+function potFromMeta(
+  potMeta: MonteCarloPotMeta,
+  index: number,
+  decimalPlaces = 2,
+): MonteCarloPot {
+  const defaults = createMonteCarloPot(
+    potMeta.id || `pot-${index + 1}`,
+    decimalPlaces,
+  );
   return {
     ...defaults,
     name: potMeta.name ?? defaults.name,
@@ -587,9 +604,12 @@ function taxBandFromMeta(
 function spendingPhaseFromMeta(
   phaseMeta: MonteCarloSpendingPhaseMeta,
   index: number,
+  decimalPlaces = 2,
 ): MonteCarloSpendingPhase {
   const defaults = createMonteCarloSpendingPhase(
     phaseMeta.id || `phase-${index + 1}`,
+    null,
+    decimalPlaces,
   );
   return {
     ...defaults,
@@ -602,10 +622,12 @@ function spendingPhaseFromMeta(
 function contributionFromMeta(
   contributionMeta: MonteCarloContributionMeta,
   index: number,
+  decimalPlaces = 2,
 ): MonteCarloContribution {
   const defaults = createMonteCarloContribution(
     contributionMeta.id || `contribution-${index + 1}`,
     contributionMeta.potId ?? '',
+    decimalPlaces,
   );
   return {
     ...defaults,
@@ -623,9 +645,11 @@ function contributionFromMeta(
 function incomeStreamFromMeta(
   incomeStreamMeta: MonteCarloIncomeStreamMeta,
   index: number,
+  decimalPlaces = 2,
 ): MonteCarloIncomeStream {
   const defaults = createMonteCarloIncomeStream(
     incomeStreamMeta.id || `income-${index + 1}`,
+    decimalPlaces,
   );
   return {
     ...defaults,
@@ -643,11 +667,15 @@ function incomeStreamFromMeta(
 
 export function monteCarloConfigFromMeta(
   meta: MonteCarloWidget['meta'] | undefined,
+  decimalPlaces = 2,
 ): MonteCarloConfig {
   return {
     pots: meta?.pots?.length
-      ? meta.pots.map(potFromMeta)
-      : MONTE_CARLO_DEFAULTS.pots,
+      ? meta.pots.map((pot, index) => potFromMeta(pot, index, decimalPlaces))
+      : [
+          createMonteCarloSurplusPot('surplus-pot'),
+          createMonteCarloPot('pot-1', decimalPlaces),
+        ],
     withdrawalStrategy:
       meta?.withdrawalStrategy ?? MONTE_CARLO_DEFAULTS.withdrawalStrategy,
     returnModel: meta?.returnModel ?? MONTE_CARLO_DEFAULTS.returnModel,
@@ -655,13 +683,19 @@ export function monteCarloConfigFromMeta(
     minimumSpending:
       meta?.minimumSpending ?? MONTE_CARLO_DEFAULTS.minimumSpending,
     spendingPhases: meta?.spendingPhases?.length
-      ? meta.spendingPhases.map(spendingPhaseFromMeta)
-      : [createMonteCarloSpendingPhase('phase-1')],
+      ? meta.spendingPhases.map((phase, index) =>
+          spendingPhaseFromMeta(phase, index, decimalPlaces),
+        )
+      : [createMonteCarloSpendingPhase('phase-1', null, decimalPlaces)],
     contributions: meta?.contributions?.length
-      ? meta.contributions.map(contributionFromMeta)
+      ? meta.contributions.map((contribution, index) =>
+          contributionFromMeta(contribution, index, decimalPlaces),
+        )
       : [],
     incomeStreams: meta?.incomeStreams?.length
-      ? meta.incomeStreams.map(incomeStreamFromMeta)
+      ? meta.incomeStreams.map((incomeStream, index) =>
+          incomeStreamFromMeta(incomeStream, index, decimalPlaces),
+        )
       : [],
     inflationMean:
       meta?.inflationMean !== undefined

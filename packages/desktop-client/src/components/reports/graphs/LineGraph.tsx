@@ -26,6 +26,7 @@ import { FinancialText } from '#components/FinancialText';
 import { useRechartsAnimation } from '#components/reports/chart-theme';
 import { Container } from '#components/reports/Container';
 import { getCustomTick } from '#components/reports/getCustomTick';
+import { chartAxisMargin } from '#components/reports/graphs/chartAxisMargin';
 import { numberFormatterTooltip } from '#components/reports/numberFormatter';
 import { useAccounts } from '#hooks/useAccounts';
 import { useCategories } from '#hooks/useCategories';
@@ -183,7 +184,12 @@ export function LineGraph({
     .map(c => c[balanceTypeOp])
     .reduce((acc, cur) => (Math.abs(cur) > Math.abs(acc) ? cur : acc), 0);
 
-  const leftMargin = Math.abs(largestValue) > 1000000 ? 20 : 5;
+  const leftMargin = chartAxisMargin(
+    largestValue,
+    value => format(value, 'financial-no-decimals'),
+    20,
+    5,
+  );
 
   const trendLines = showTrendLines
     ? computeTrendLines(data.intervalData, data.legend)

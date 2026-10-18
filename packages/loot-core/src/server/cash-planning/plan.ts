@@ -87,7 +87,7 @@ export function strictCashPlanningConfig(
         !isForecastEndDate(value.forecastEndDate, asOf)))
   ) {
     throw APIError(
-      `Invalid cash plan: history must end by ${asOf}, targets must be non-negative integer amounts in cents, the goal an integer balance with an optional deadline, and the forecast end after ${asOf} and within 50 years`,
+      `Invalid cash plan: history must end by ${asOf}, targets must be non-negative stored integers at the budget currency scale, the goal an integer balance with an optional deadline, and the forecast end after ${asOf} and within 50 years`,
     );
   }
   const config: CashPlanningConfig = {

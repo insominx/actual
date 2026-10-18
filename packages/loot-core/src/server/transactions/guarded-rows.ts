@@ -101,7 +101,7 @@ export async function assertPlannableTransactionRows(
     }
     if (row.amount !== undefined && !isEngineAmount(row.amount)) {
       throw APIError(
-        `${label}: amount must be integer cents within the budget engine limit`,
+        `${label}: amount must be a stored integer at the budget currency scale, within the budget engine limit`,
       );
     }
     if (row.transfer_id != null) {
@@ -123,7 +123,7 @@ export async function assertPlannableTransactionRows(
           }
           if (!isEngineAmount(child.amount)) {
             throw APIError(
-              `${label}: subtransaction amount must be integer cents within the budget engine limit`,
+              `${label}: subtransaction amount must be a stored integer at the budget currency scale, within the budget engine limit`,
             );
           }
           await check(child, `${label} subtransaction`);

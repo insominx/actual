@@ -91,7 +91,8 @@ export function rangePosition(
 
 function toDate(value: string): Date {
   const [year, month = 1, day = 1] = value.split('-').map(Number);
-  return new Date(year, month - 1, day);
+  // Noon, so a midnight timezone shift cannot format the previous day.
+  return new Date(year, month - 1, day, 12);
 }
 
 // Intl.DateTimeFormat construction is expensive and the picker uses only a

@@ -1730,7 +1730,7 @@ function changeRequest(
     ) {
       throw new AgentError(
         'INVALID_INPUT',
-        'Reconciliation finish takes accountId, statementBalance (integer cents), ids (candidate IDs) and optional statementDate.',
+        'Reconciliation finish takes accountId, statementBalance (stored integer at the budget currency scale), ids (candidate IDs) and optional statementDate.',
       );
     }
     return {
@@ -1754,7 +1754,7 @@ function changeRequest(
     ) {
       throw new AgentError(
         'INVALID_INPUT',
-        'Reconciliation adjustment takes accountId, amount (integer cents) and optional date.',
+        'Reconciliation adjustment takes accountId, amount (stored integer at the budget currency scale) and optional date.',
       );
     }
     return {
@@ -1781,7 +1781,7 @@ function changeRequest(
     ) {
       throw new AgentError(
         'INVALID_INPUT',
-        'Allocation move takes month, from, to (category IDs or to-budget), amount (integer cents) and optional allowOverspend.',
+        'Allocation move takes month, from, to (category IDs or to-budget), amount (stored integer at the budget currency scale) and optional allowOverspend.',
       );
     }
     return {
