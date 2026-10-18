@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { isPreviewId } from '@actual-app/core/shared/transactions';
 import type { TransactionEntity } from '@actual-app/core/types/models';
@@ -13,6 +14,7 @@ import { uncategorizedTransactions } from '#queries';
 import * as bindings from '#spreadsheet/bindings';
 
 export function UncategorizedTransactions() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const baseTransactionsQuery = useCallback(
     () => uncategorizedTransactions().options({ splits: 'inline' }).select('*'),
@@ -57,7 +59,7 @@ export function UncategorizedTransactions() {
         isLoading={isTransactionsLoading}
         transactions={transactions}
         balance={balance}
-        searchPlaceholder="Search uncategorized transactions"
+        searchPlaceholder={t('Search uncategorized transactions')}
         onSearch={onSearch}
         isLoadingMore={isLoadingMoreTransactions}
         onLoadMore={fetchMoreTransactions}
