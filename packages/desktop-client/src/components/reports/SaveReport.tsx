@@ -118,7 +118,7 @@ export function SaveReport({
       const newSavedReport = {
         ...report,
         ...customReportItems,
-        name: newName,
+        name: newName.trim(),
       };
 
       if (!saveDashboardId) {
@@ -177,7 +177,7 @@ export function SaveReport({
 
     const updatedReport = {
       ...report,
-      ...(menuChoice === 'rename-report' ? { name: newName } : props),
+      ...(menuChoice === 'rename-report' ? { name: newName.trim() } : props),
     };
 
     updateReportMutation.mutate(

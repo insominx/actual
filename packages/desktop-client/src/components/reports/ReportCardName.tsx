@@ -25,8 +25,8 @@ export const ReportCardName = ({
         <Input
           className={NON_DRAGGABLE_AREA_CLASS_NAME}
           defaultValue={name}
-          onEnter={onChange}
-          onUpdate={onChange}
+          onEnter={newName => onChange(newName.trim())}
+          onUpdate={newName => onChange(newName.trim())}
           onEscape={onClose}
           style={{
             ...styles.mediumText,
