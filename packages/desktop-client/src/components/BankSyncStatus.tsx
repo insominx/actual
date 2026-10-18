@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trans } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import { animated, useTransition } from 'react-spring';
 
 import { styles } from '@actual-app/components/styles';
@@ -12,6 +12,7 @@ import { useSelector } from '#redux';
 import { AnimatedRefresh } from './AnimatedRefresh';
 
 export function BankSyncStatus() {
+  const { t } = useTranslation();
   const accountsSyncing = useSelector(state => state.account.accountsSyncing);
   const accountsSyncingCount = accountsSyncing.length;
   const count = accountsSyncingCount;
@@ -57,9 +58,12 @@ export function BankSyncStatus() {
                   iconStyle={{ color: theme.pillTextSelected }}
                 />
                 <Text style={{ marginLeft: 5 }}>
-                  <Trans count={accountsSyncingCount}>
-                    Syncing... {{ count }} accounts remaining
-                  </Trans>
+                  {t('bank-sync-accounts-remaining', {
+                    count,
+                    defaultValue_one: 'Syncing... {{count}} account remaining',
+                    defaultValue_other:
+                      'Syncing... {{count}} accounts remaining',
+                  })}
                 </Text>
               </View>
             </animated.div>
