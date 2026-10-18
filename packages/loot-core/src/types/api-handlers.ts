@@ -1,4 +1,7 @@
-import type { ImportTransactionsResult } from '#server/accounts/app';
+import type {
+  ImportTransactionsResult,
+  SyncResponse,
+} from '#server/accounts/app';
 import type {
   bankSyncRefresh,
   bankSyncStatus,
@@ -802,7 +805,7 @@ export type ApiHandlers = {
 
   'api/bank-sync': (arg?: {
     accountId: APIAccountEntity['id'];
-  }) => Promise<void>;
+  }) => Promise<SyncResponse>;
 
   'api/accounts-get': () => Promise<APIAccountEntity[]>;
 
