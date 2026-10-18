@@ -41,36 +41,52 @@ function useRenderResults() {
     } else {
       if (numBlankPayees > 0) {
         result.push(
-          t('Fixed {{count}} splits with a blank payee.', {
+          t('repair-blank-payee-splits', {
             count: numBlankPayees,
+            defaultValue_one: 'Fixed {{count}} split with a blank payee.',
+            defaultValue_other: 'Fixed {{count}} splits with a blank payee.',
           }),
         );
       }
       if (numCleared > 0) {
         result.push(
-          t('Fixed {{count}} splits with the wrong cleared flag.', {
+          t('repair-cleared-splits', {
             count: numCleared,
+            defaultValue_one:
+              'Fixed {{count}} split with the wrong cleared flag.',
+            defaultValue_other:
+              'Fixed {{count}} splits with the wrong cleared flag.',
           }),
         );
       }
       if (numDeleted > 0) {
         result.push(
-          t("Fixed {{count}} splits that weren't properly deleted.", {
+          t('repair-deleted-splits', {
             count: numDeleted,
+            defaultValue_one:
+              "Fixed {{count}} split that wasn't properly deleted.",
+            defaultValue_other:
+              "Fixed {{count}} splits that weren't properly deleted.",
           }),
         );
       }
       if (numNonParentErrorsFixed > 0) {
         result.push(
-          t('Fixed {{count}} non-split transactions with split errors.', {
+          t('repair-non-split-errors', {
             count: numNonParentErrorsFixed,
+            defaultValue_one:
+              'Fixed {{count}} non-split transaction with split errors.',
+            defaultValue_other:
+              'Fixed {{count}} non-split transactions with split errors.',
           }),
         );
       }
       if (numTransfersFixed > 0) {
         result.push(
-          t('Fixed {{count}} transfers.', {
+          t('repair-transfers', {
             count: numTransfersFixed,
+            defaultValue_one: 'Fixed {{count}} transfer.',
+            defaultValue_other: 'Fixed {{count}} transfers.',
           }),
         );
       }
@@ -88,8 +104,12 @@ function useRenderResults() {
       }
       if (numParentTransactionsWithCategoryFixed > 0) {
         result.push(
-          t('Fixed {{count}} split transactions with non-null category.', {
+          t('repair-parent-category', {
             count: numParentTransactionsWithCategoryFixed,
+            defaultValue_one:
+              'Fixed {{count}} split transaction with non-null category.',
+            defaultValue_other:
+              'Fixed {{count}} split transactions with non-null category.',
           }),
         );
       }

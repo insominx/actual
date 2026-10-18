@@ -532,7 +532,13 @@ export function ScheduleEditForm({
               <View style={{ flex: 1 }} />
               <SelectedItemsButton
                 id="transactions"
-                name={count => t('{{count}} transactions', { count })}
+                name={count =>
+                  t('selected-transactions-menu-label', {
+                    count,
+                    defaultValue_one: '{{count}} transaction',
+                    defaultValue_other: '{{count}} transactions',
+                  })
+                }
                 items={
                   transactionsMode === 'linked'
                     ? [{ name: 'unlink', text: t('Unlink from schedule') }]

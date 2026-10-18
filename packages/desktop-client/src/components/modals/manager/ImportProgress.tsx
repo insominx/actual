@@ -94,10 +94,14 @@ function getStepText(
       // Transactions go in one batch per account, so the tick reports an
       // account that has already landed rather than one in flight.
       return batch
-        ? t('Imported {{count}} transactions for {{account}}{{progress}}...', {
+        ? t('imported-transactions-count', {
             count: batch.amount,
             account: batch.account,
             progress,
+            defaultValue_one:
+              'Imported {{count}} transaction for {{account}}{{progress}}...',
+            defaultValue_other:
+              'Imported {{count}} transactions for {{account}}{{progress}}...',
           })
         : t('Importing transactions{{progress}}...', { progress });
     case 'scheduled-transactions':

@@ -110,8 +110,12 @@ export function translateBudgetTemplateNotification(
     case 'templates-applied':
       return {
         ...notification,
-        message: t('Successfully applied templates to {{count}} categories', {
+        message: t('templates-applied-count', {
           count: notification.count ?? 0,
+          defaultValue_one:
+            'Successfully applied templates to {{count}} category',
+          defaultValue_other:
+            'Successfully applied templates to {{count}} categories',
         }),
       };
     case 'templates-check-passed':

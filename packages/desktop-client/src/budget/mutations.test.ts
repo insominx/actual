@@ -52,14 +52,28 @@ describe('translateBudgetTemplateNotification', () => {
   });
 
   it('translates template notification counts', () => {
-    expect(
-      translateBudgetTemplateNotification(
-        { message: 'templates-applied', count: 3 },
-        t,
-      ).message,
-    ).toBe(
-      'Successfully applied templates to {{count}} categories:{"count":3}',
+    const message = translateBudgetTemplateNotification(
+      { message: 'templates-applied', count: 3 },
+      t,
+    ).message;
+    expect(message).toMatch(/^templates-applied-count:/);
+    expect(message).toContain('"count":3');
+    expect(message).toContain(
+      '"defaultValue_one":"Successfully applied templates to {{count}} category"',
     );
+    expect(message).toContain(
+      '"defaultValue_other":"Successfully applied templates to {{count}} categories"',
+    );
+  });
+
+  it('uses the singular form for a single category', async () => {
+    const singular = pluralI18n.t('templates-applied-count', {
+      count: 1,
+      defaultValue_one: 'Successfully applied templates to {{count}} category',
+      defaultValue_other:
+        'Successfully applied templates to {{count}} categories',
+    });
+    expect(singular).toBe('Successfully applied templates to 1 category');
   });
 
   it('leaves non-template notifications unchanged', () => {
