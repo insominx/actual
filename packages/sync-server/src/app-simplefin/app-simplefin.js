@@ -2,17 +2,22 @@ import createDebug from 'debug';
 import express from 'express';
 
 import { handleError } from '#app-gocardless/util/handle-error';
+import { config } from '#load-config';
 import { SecretName, secretsService } from '#services/secrets-service';
 import { amountScale } from '#util/amount-scale';
 import {
   requestLoggerMiddleware,
   validateSessionMiddleware,
 } from '#util/middlewares';
-import { assertUrlAllowed } from '#util/ssrf';
+import { assertUrlAllowed, createSsrfDispatcher } from '#util/ssrf';
 
 import { simplefinUnixSeconds } from './simplefin-date';
 
 const debugSensitive = createDebug('actual-sensitive:simplefin');
+const networkOptions = {
+  allowedNetworks: config.get('simplefinAllowedNetworks'),
+};
+const dispatcher = createSsrfDispatcher(networkOptions);
 
 const app = express();
 export { app as handlers };
@@ -386,15 +391,13 @@ function decodeClaimUrl(base64Token) {
 }
 
 async function claimAccessKey(claimUrl) {
-  // Self-hosters may run their own SimpleFIN bridge on the local network, so
-  // private addresses are allowed here; cloud metadata and other always-blocked
-  // ranges are still rejected.
-  await assertUrlAllowed(claimUrl, { allowPrivateNetwork: true });
+  await assertUrlAllowed(claimUrl, networkOptions);
 
   // don't auto-follow redirects for SSRF safety
   const response = await fetch(claimUrl, {
     method: 'POST',
     redirect: 'manual',
+    dispatcher,
   });
 
   if (!response.ok && response.status !== 403) {
@@ -478,12 +481,13 @@ async function getAccounts(
   let currentUrl = url.toString();
   let response;
   for (let hop = 0; ; hop++) {
-    await assertUrlAllowed(currentUrl, { allowPrivateNetwork: true });
+    await assertUrlAllowed(currentUrl, networkOptions);
 
     response = await fetch(currentUrl, {
       method: 'GET',
       headers,
       redirect: 'manual',
+      dispatcher,
     });
 
     const location = response.headers.get('location');
