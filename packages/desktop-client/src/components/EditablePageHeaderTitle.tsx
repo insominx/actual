@@ -22,9 +22,14 @@ export function EditablePageHeaderTitle({
   useEffect(() => setTitle(initialTitle), [initialTitle]);
 
   const onSaveValue = useCallback(
-    (newValue: string) => {
+    (rawValue: string) => {
+      // Trim so a whitespace-only name reaches the callers' empty-name
+      // fallback instead of being saved as a blank title
+      const newValue = rawValue.trim();
       onSave(newValue);
-      setTitle(newValue);
+      // An empty name makes callers fall back to a default title, which may
+      // equal the current one and so never re-sync; keep showing what we had
+      setTitle(newValue || initialTitle);
       setIsEditing(false);
     },
     [onSave],
