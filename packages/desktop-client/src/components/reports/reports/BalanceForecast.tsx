@@ -624,10 +624,13 @@ function BalanceForecastInner({ widget }: BalanceForecastInnerProps) {
                     occurrences fall in it.
                   </Trans>
                 ) : (
-                  <Trans count={scheduledOccurrenceCount}>
-                    {{ count: scheduledOccurrenceCount }} scheduled transactions
-                    included in this date range
-                  </Trans>
+                  t('balance-forecast-scheduled-included-range', {
+                    count: scheduledOccurrenceCount,
+                    defaultValue_one:
+                      '{{count}} scheduled transaction included in this date range',
+                    defaultValue_other:
+                      '{{count}} scheduled transactions included in this date range',
+                  })
                 )}
                 {isUpdatingForecast ? (
                   <>

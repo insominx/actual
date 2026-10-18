@@ -350,10 +350,13 @@ export function BalanceForecastCard({
                 )
               ) : (
                 <>
-                  <Trans count={scheduledOccurrenceCount}>
-                    {{ count: scheduledOccurrenceCount }} scheduled transactions
-                    included
-                  </Trans>
+                  {t('balance-forecast-scheduled-included', {
+                    count: scheduledOccurrenceCount,
+                    defaultValue_one:
+                      '{{count}} scheduled transaction included',
+                    defaultValue_other:
+                      '{{count}} scheduled transactions included',
+                  })}
                   {hasFilters ? (
                     <>
                       {' '}
