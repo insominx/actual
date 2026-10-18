@@ -68,6 +68,7 @@ export function CreateLocalAccountModal() {
     }
 
     const nameError = validateAccountName(name, '', accounts);
+    setNameError(nameError || null);
 
     const balanceError = !validateBalance(balance);
     setBalanceError(balanceError);
