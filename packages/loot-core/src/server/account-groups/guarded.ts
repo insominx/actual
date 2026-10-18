@@ -36,7 +36,7 @@ function validName(value: unknown): value is string {
 
 async function clash(name: string, exceptId?: string) {
   return db.first<RawGroup>(
-    'SELECT * FROM account_groups WHERE UPPER(name) = ? AND tombstone = 0 AND id != ? LIMIT 1',
+    'SELECT * FROM account_groups WHERE UNICODE_UPPER(name) = ? AND tombstone = 0 AND id != ? LIMIT 1',
     [name.toUpperCase(), exceptId ?? ''],
   );
 }

@@ -447,6 +447,16 @@ describe('read-only category insertion planning', () => {
       ).toEqual({ id, transferId: id });
     },
   );
+  test('duplicate-name check is case-insensitive for non-ASCII names', async () => {
+    const group = await db.insertCategoryGroup({ name: 'épargne' });
+    await db.insertCategory({ name: 'éducation', cat_group: group });
+    await expect(
+      db.inspectCategoryGroupInsertion({ name: 'Épargne' }),
+    ).rejects.toThrow('already exists');
+    await expect(
+      db.inspectCategoryInsertion({ name: 'Éducation', cat_group: group }),
+    ).rejects.toThrow('already exists');
+  });
   test('duplicate-name rejection does not change category rows or synchronization messages', async () => {
     const group = await db.insertCategoryGroup({ name: 'Duplicate group' });
     await db.insertCategory({ name: 'Existing name', cat_group: group });

@@ -363,7 +363,7 @@ export async function inspectCategoryGroupInsertion(
   const existingGroup = await first<
     Pick<DbCategoryGroup, 'id' | 'name' | 'hidden'>
   >(
-    `SELECT id, name, hidden FROM category_groups WHERE UPPER(name) = ? and tombstone = 0 LIMIT 1`,
+    `SELECT id, name, hidden FROM category_groups WHERE UNICODE_UPPER(name) = ? and tombstone = 0 LIMIT 1`,
     [group.name.toUpperCase()],
   );
   if (existingGroup) {
@@ -403,7 +403,7 @@ export async function inspectCategoryGroupUpdate(
     const existingGroup = await first<
       Pick<DbCategoryGroup, 'id' | 'name' | 'hidden'>
     >(
-      `SELECT id, name, hidden FROM category_groups WHERE UPPER(name) = ? AND id != ? AND tombstone = 0 LIMIT 1`,
+      `SELECT id, name, hidden FROM category_groups WHERE UNICODE_UPPER(name) = ? AND id != ? AND tombstone = 0 LIMIT 1`,
       [group.name.toUpperCase(), group.id],
     );
     if (existingGroup) {
@@ -472,7 +472,7 @@ export async function inspectCategoryInsertion(
 ) {
   const validated = categoryModel.validate(category);
   const existingCatInGroup = await first<Pick<DbCategory, 'id'>>(
-    `SELECT id FROM categories WHERE cat_group = ? and UPPER(name) = ? and tombstone = 0 LIMIT 1`,
+    `SELECT id FROM categories WHERE cat_group = ? and UNICODE_UPPER(name) = ? and tombstone = 0 LIMIT 1`,
     [category.cat_group, category.name.toUpperCase()],
   );
   if (existingCatInGroup) {
@@ -854,7 +854,7 @@ export async function insertAccountGroup(
 ): Promise<DbAccountGroup['id']> {
   // Don't allow duplicate group
   const existingGroup = await first<Pick<DbAccountGroup, 'id' | 'name'>>(
-    `SELECT id, name FROM account_groups WHERE UPPER(name) = ? AND tombstone = 0 LIMIT 1`,
+    `SELECT id, name FROM account_groups WHERE UNICODE_UPPER(name) = ? AND tombstone = 0 LIMIT 1`,
     [group.name.toUpperCase()],
   );
   if (existingGroup) {
@@ -881,7 +881,7 @@ export async function updateAccountGroup(
   group: WithRequired<Partial<DbAccountGroup>, 'id' | 'name'>,
 ) {
   const existingGroup = await first<Pick<DbAccountGroup, 'id' | 'name'>>(
-    `SELECT id, name FROM account_groups WHERE UPPER(name) = ? AND id != ? AND tombstone = 0 LIMIT 1`,
+    `SELECT id, name FROM account_groups WHERE UNICODE_UPPER(name) = ? AND id != ? AND tombstone = 0 LIMIT 1`,
     [group.name.toUpperCase(), group.id],
   );
   if (existingGroup) {
