@@ -181,10 +181,10 @@ export function BudgetPage() {
         modal: {
           name: 'new-category-group',
           options: {
-            onValidate: name => (!name ? 'Name is required.' : null),
+            onValidate: name => (!name.trim() ? t('Name is required.') : null),
             onSubmit: async name => {
               createCategoryGroup.mutate(
-                { name },
+                { name: name.trim() },
                 {
                   onSettled: () => {
                     dispatch(
@@ -198,7 +198,7 @@ export function BudgetPage() {
         },
       }),
     );
-  }, [dispatch, createCategoryGroup]);
+  }, [dispatch, createCategoryGroup, t]);
 
   const onOpenNewCategoryModal = useCallback(
     (groupId, isIncome) => {
@@ -207,11 +207,12 @@ export function BudgetPage() {
           modal: {
             name: 'new-category',
             options: {
-              onValidate: name => (!name ? 'Name is required.' : null),
+              onValidate: name =>
+                !name.trim() ? t('Name is required.') : null,
               onSubmit: async name => {
                 createCategory.mutate(
                   {
-                    name,
+                    name: name.trim(),
                     groupId,
                     isIncome,
                     isHidden: false,
@@ -232,7 +233,7 @@ export function BudgetPage() {
         }),
       );
     },
-    [dispatch, createCategory],
+    [dispatch, createCategory, t],
   );
 
   const onSaveGroup = useCallback(
