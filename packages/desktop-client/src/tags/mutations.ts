@@ -201,10 +201,10 @@ export function useUnhideTagsMutation() {
     },
     onSuccess: () => invalidateQueries(queryClient),
     onError: error => {
-      console.error('Error hiding tags:', error);
+      console.error('Error unhiding tags:', error);
       dispatchErrorNotification(
         dispatch,
-        t('There was an error hiding the tags. Please try again.'),
+        t('There was an error unhiding the tags. Please try again.'),
         error,
       );
     },
