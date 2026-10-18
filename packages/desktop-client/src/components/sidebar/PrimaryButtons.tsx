@@ -36,6 +36,7 @@ export function PrimaryButtons() {
     '/payees',
     '/rules',
     '/bank-sync',
+    '/tags',
     '/settings',
     '/tools',
   ].some(route => location.pathname.startsWith(route));

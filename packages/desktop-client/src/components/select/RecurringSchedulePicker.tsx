@@ -169,16 +169,18 @@ function reducer(state: ReducerState, action: ReducerAction): ReducerState {
   switch (action.type) {
     case 'replace-config':
       return { ...state, config: action.config };
-    case 'change-field':
+    case 'change-field': {
+      const nextFrequency =
+        action.field === 'frequency' ? action.value : state.config.frequency;
       return {
         ...state,
         config: {
           ...state.config,
           [action.field]: action.value,
-          patterns:
-            state.config.frequency !== 'monthly' ? [] : state.config.patterns,
+          patterns: nextFrequency !== 'monthly' ? [] : state.config.patterns,
         },
       };
+    }
     case 'update-recurrence':
       return {
         ...state,
@@ -466,7 +468,7 @@ function RecurringScheduleTooltip({
               onChangeValue={value => updateField('endOccurrences', value)}
               defaultValue={config.endOccurrences || 1}
             />
-            {config.endOccurrences === '1' ? (
+            {Number(config.endOccurrences) === 1 ? (
               <Trans>occurrence</Trans>
             ) : (
               <Trans>occurrences</Trans>

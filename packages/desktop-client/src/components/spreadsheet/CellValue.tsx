@@ -53,7 +53,11 @@ export function CellValue<
   );
 }
 
-const PRIVACY_FILTER_TYPES = ['financial', 'financial-with-sign'];
+const PRIVACY_FILTER_TYPES = [
+  'financial',
+  'financial-with-sign',
+  'financial-no-decimals',
+];
 
 type CellValueTextProps<
   SheetName extends SheetNames,

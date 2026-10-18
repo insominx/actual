@@ -113,7 +113,7 @@ export function ScheduleLink({
                 />
               )}
             </InitialFocus>
-            {ids.length === 1 && (
+            {ids?.length === 1 && (
               <Button
                 variant="primary"
                 style={{ marginLeft: 15, padding: '4px 10px' }}

@@ -40,7 +40,8 @@ export function PayeeMenu({
 
   const selectedPayeeNames = [...selectedPayees]
     .slice(0, 4)
-    .map(id => payeesById[id].name)
+    .map(id => payeesById[id]?.name)
+    .filter(Boolean)
     .join(', ');
 
   const items: MenuItem[] = [

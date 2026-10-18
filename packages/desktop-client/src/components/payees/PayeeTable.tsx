@@ -42,8 +42,8 @@ export const PayeeTable = forwardRef<
 
     const onScrollToSelected = useEffectEvent(() => {
       const firstSelected = [...selectedItems][0] as string;
-      if (typeof ref !== 'function') {
-        ref.current.scrollTo(firstSelected, 'center');
+      if (firstSelected && ref && typeof ref !== 'function') {
+        ref.current?.scrollTo(firstSelected, 'center');
       }
     });
 

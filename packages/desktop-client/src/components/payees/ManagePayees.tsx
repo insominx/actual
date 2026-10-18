@@ -147,7 +147,7 @@ export const ManagePayees = ({
 
   function onFavorite() {
     const allFavorited = [...selected.items]
-      .map(id => payeesById[id].favorite)
+      .map(id => payeesById[id]?.favorite)
       .every(f => f);
     if (allFavorited) {
       onBatchChange({
@@ -167,7 +167,7 @@ export const ManagePayees = ({
 
   function onLearn() {
     const allLearnCategories = [...selected.items]
-      .map(id => payeesById[id].learn_categories)
+      .map(id => payeesById[id]?.learn_categories)
       .every(f => f);
     if (allLearnCategories) {
       onBatchChange({

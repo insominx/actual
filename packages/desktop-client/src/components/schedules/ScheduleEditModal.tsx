@@ -59,7 +59,9 @@ export function ScheduleEditModal({ id, transaction }: ScheduleEditModalProps) {
           _account: transaction.account,
           _amount: transaction.amount,
           _amountOp: 'is',
-          name: transaction.payee ? payees[transaction.payee].name : '',
+          name: transaction.payee
+            ? (payees?.[transaction.payee]?.name ?? '')
+            : '',
           _payee: transaction.payee ? transaction.payee : '',
           _date: {
             ...date,

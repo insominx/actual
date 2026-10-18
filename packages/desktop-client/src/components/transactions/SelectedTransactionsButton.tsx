@@ -79,6 +79,9 @@ export function SelectedTransactionsButton({
   }, [selectedIds]);
 
   const scheduleQuery = useMemo(() => {
+    if (scheduleIds.length === 0) {
+      return undefined;
+    }
     return q('schedules')
       .filter({ id: { $oneof: scheduleIds } })
       .select('*');
@@ -265,12 +268,19 @@ export function SelectedTransactionsButton({
   ]);
   useHotkeys(
     's',
-    () =>
-      !types.trans || linked ? onViewSchedule() : onLinkSchedule(selectedIds),
+    () => {
+      if (!types.trans || linked) {
+        if (selectedIds.length === 1) {
+          onViewSchedule();
+        }
+      } else {
+        onLinkSchedule(selectedIds);
+      }
+    },
     {
       scopes: ['app'],
     },
-    [onLinkSchedule, onViewSchedule, linked, selectedIds],
+    [onLinkSchedule, onViewSchedule, linked, selectedIds, types.trans],
   );
   // edit amount (only if we're not in a merge context)
   useHotkeys(
@@ -306,6 +316,7 @@ export function SelectedTransactionsButton({
                 name: 'view-schedule',
                 text: t('View schedule'),
                 key: 'S',
+                disabled: selectedIds.length > 1,
               } as const,
               {
                 name: 'post-transaction',

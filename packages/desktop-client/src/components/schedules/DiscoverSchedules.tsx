@@ -47,7 +47,8 @@ function DiscoverSchedulesTable({
 
   function renderItem({ item }: { item: DiscoverScheduleEntity }) {
     const selected = selectedItems.has(item.id);
-    const amountOp = item._conditions.find(c => c.field === 'amount').op;
+    const amountOp =
+      item._conditions.find(c => c.field === 'amount')?.op ?? 'is';
     const recurDescription = getRecurringDescription(
       item.date,
       dateFormat,
@@ -164,33 +165,34 @@ export function DiscoverSchedules() {
   async function onCreate() {
     const selected = schedules.filter(s => selectedInst.items.has(s.id));
     setCreating(true);
-
-    for (const schedule of selected) {
-      const scheduleId = await send('schedule/create', {
-        conditions: schedule._conditions,
-        schedule: {},
-      });
-
-      // Now query for matching transactions and link them automatically
-      const { filters } = await send('make-filters-from-conditions', {
-        conditions: schedule._conditions,
-      });
-
-      if (filters.length > 0) {
-        const { data: transactions } = await aqlQuery(
-          q('transactions').filter({ $and: filters }).select('id'),
-        );
-
-        await send('transactions-batch-update', {
-          updated: transactions.map(t => ({
-            id: t.id,
-            schedule: scheduleId,
-          })),
+    try {
+      for (const schedule of selected) {
+        const scheduleId = await send('schedule/create', {
+          conditions: schedule._conditions,
+          schedule: {},
         });
-      }
-    }
 
-    setCreating(false);
+        // Now query for matching transactions and link them automatically
+        const { filters } = await send('make-filters-from-conditions', {
+          conditions: schedule._conditions,
+        });
+
+        if (filters.length > 0) {
+          const { data: transactions } = await aqlQuery(
+            q('transactions').filter({ $and: filters }).select('id'),
+          );
+
+          await send('transactions-batch-update', {
+            updated: transactions.map(t => ({
+              id: t.id,
+              schedule: scheduleId,
+            })),
+          });
+        }
+      }
+    } finally {
+      setCreating(false);
+    }
   }
 
   return (
@@ -235,8 +237,8 @@ export function DiscoverSchedules() {
               variant="primary"
               isLoading={creating}
               isDisabled={selectedInst.items.size === 0}
-              onPress={() => {
-                void onCreate();
+              onPress={async () => {
+                await onCreate();
                 state.close();
               }}
             >

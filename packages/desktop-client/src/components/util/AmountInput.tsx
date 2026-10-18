@@ -248,8 +248,8 @@ export function BetweenAmountInput({
   onChange,
 }: BetweenAmountInputProps) {
   const { t } = useTranslation();
-  const [num1, setNum1] = useState(defaultValue.num1);
-  const [num2, setNum2] = useState(defaultValue.num2);
+  const [num1, setNum1] = useState(defaultValue?.num1 ?? 0);
+  const [num2, setNum2] = useState(defaultValue?.num2 ?? 0);
 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>

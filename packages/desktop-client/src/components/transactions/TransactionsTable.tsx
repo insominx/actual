@@ -1318,7 +1318,7 @@ const Transaction = memo(function Transaction({
       name === 'account' &&
       value &&
       typeof value === 'string' &&
-      getAccountsById(accounts)[value].offbudget
+      getAccountsById(accounts)[value]?.offbudget
     ) {
       newTransaction.category = undefined;
     }

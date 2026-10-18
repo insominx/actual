@@ -134,12 +134,13 @@ export const GenericInput = ({
   let content: JSX.Element | null = null;
   switch (props.type) {
     case 'id': {
-      const showPlaceholder = props.multi ? props.value.length === 0 : true;
+      const multiValue = Array.isArray(props.value) ? props.value : [];
+      const showPlaceholder = props.multi ? multiValue.length === 0 : true;
       const multiProps =
         props.multi === true
           ? {
               type: 'multi' as const,
-              value: props.value,
+              value: multiValue,
               onSelect: props.onChange,
             }
           : {
@@ -171,7 +172,7 @@ export const GenericInput = ({
                         options: {
                           onSelect: newValue => {
                             if (props.multi === true) {
-                              props.onChange([...props.value, newValue]);
+                              props.onChange([...multiValue, newValue]);
                               return;
                             }
                             props.onChange(newValue);
@@ -213,13 +214,13 @@ export const GenericInput = ({
                             options: {
                               onSelect: newValue => {
                                 if (props.multi === true) {
-                                  props.onChange([...props.value, newValue]);
+                                  props.onChange([...multiValue, newValue]);
                                   return;
                                 }
                                 props.onChange(newValue);
                               },
                               hiddenAccounts:
-                                props.multi === true ? props.value : undefined,
+                                props.multi === true ? multiValue : undefined,
                             },
                           },
                         }),
@@ -258,7 +259,7 @@ export const GenericInput = ({
                               return;
                             }
                             if (props.multi === true) {
-                              props.onChange([...props.value, newValue]);
+                              props.onChange([...multiValue, newValue]);
                               return;
                             }
                             props.onChange(newValue);
@@ -295,8 +296,11 @@ export const GenericInput = ({
                         name: 'category-group-autocomplete',
                         options: {
                           onSelect: newValue => {
+                            if (newValue === null) {
+                              return;
+                            }
                             if (props.multi === true) {
-                              props.onChange([...props.value, newValue]);
+                              props.onChange([...multiValue, newValue]);
                               return;
                             }
                             props.onChange(newValue);
@@ -317,14 +321,15 @@ export const GenericInput = ({
     }
 
     case 'saved': {
+      const savedMultiValue = Array.isArray(props.value) ? props.value : [];
       const showSavedPlaceholder = props.multi
-        ? props.value.length === 0
+        ? savedMultiValue.length === 0
         : true;
       const savedMultiProps =
         props.multi === true
           ? {
               type: 'multi' as const,
-              value: props.value,
+              value: savedMultiValue,
               onSelect: props.onChange,
             }
           : {
@@ -487,7 +492,7 @@ export const GenericInput = ({
           <Autocomplete
             type="multi"
             suggestions={[]}
-            value={props.value}
+            value={Array.isArray(props.value) ? props.value : []}
             inputProps={{ ref }}
             onSelect={props.onChange}
           />

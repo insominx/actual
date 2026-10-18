@@ -923,10 +923,15 @@ function ConditionsList({
             op !== 'notOneOf'
           ) {
             return newInput(
-              makeValue(cond.value.length > 0 ? cond.value[0] : null, {
-                ...cond,
-                op: value,
-              }),
+              makeValue(
+                Array.isArray(cond.value) && cond.value.length > 0
+                  ? cond.value[0]
+                  : null,
+                {
+                  ...cond,
+                  op: value,
+                },
+              ),
             );
           } else if (cond.op !== 'isbetween' && op === 'isbetween') {
             // TODO: I don't think we need `makeValue` anymore. It
@@ -941,7 +946,7 @@ function ConditionsList({
               { ...cond, op: value },
             );
           } else if (cond.op === 'isbetween' && op !== 'isbetween') {
-            return makeValue(cond.value.num1 || 0, {
+            return makeValue(cond.value?.num1 || 0, {
               ...cond,
               op: value,
             });
@@ -1215,7 +1220,11 @@ export function RuleEditor({
             } else if (field === 'op') {
               a.value = null;
               a.inputKey = '' + Math.random();
-              a.options = { ...a.options, template: undefined };
+              a.options = {
+                ...a.options,
+                template: undefined,
+                formula: undefined,
+              };
               return newInput(a);
             }
           }

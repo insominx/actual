@@ -53,7 +53,12 @@ export function Value<T>({
     color: theme.pageTextPositive,
     ...style,
   };
-  const ValueText = field === 'amount' ? FinancialText : Text;
+  const ValueText =
+    field === 'amount' ||
+    field === 'amount-inflow' ||
+    field === 'amount-outflow'
+      ? FinancialText
+      : Text;
   const locale = useLocale();
 
   function getData() {
@@ -143,7 +148,7 @@ export function Value<T>({
 
   if (Array.isArray(value)) {
     if (value.length === 0) {
-      return <ValueText style={valueStyle}>(empty)</ValueText>;
+      return <ValueText style={valueStyle}>{t('(empty)')}</ValueText>;
     } else if (value.length === 1) {
       return (
         <Text>
