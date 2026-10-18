@@ -267,11 +267,19 @@ function onApplySync(oldValues, newValues) {
         } else {
           // Inserted/updated
           const rule = makeRule(newValue);
-          if (rule) {
-            if (oldRule) {
-              firstcharIndexer.remove(oldRule);
-              payeeIndexer.remove(oldRule);
+          // The previous version is stale either way. An update that makes
+          // the rule invalid must drop it, as loading from the database would,
+          // instead of leaving the old version running until a restart.
+          if (oldRule) {
+            firstcharIndexer.remove(oldRule);
+            payeeIndexer.remove(oldRule);
+            if (!rule) {
+              allRules.delete(newValue.id);
             }
+          }
+          if (rule) {
+            // set() on an existing key keeps its position, which rule
+            // ordering relies on
             allRules.set(newValue.id, rule);
             firstcharIndexer.index(rule);
             payeeIndexer.index(rule);
