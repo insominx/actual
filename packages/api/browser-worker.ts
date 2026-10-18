@@ -68,7 +68,12 @@ self.fetch = function patchedFetch(
 ] = async function (args?: unknown) {
   const { config } = (args ?? {}) as { config?: InitConfig };
   // There is no meaningful `process.cwd()` to fall back to in a worker
-  await init({ dataDir: '/documents', ...config });
+  // `??` rather than a spread default: an explicit `dataDir: undefined` in the
+  // caller's config would otherwise replace the default
+  await init({
+    ...config,
+    dataDir: config?.dataDir ?? '/documents',
+  } as InitConfig);
 };
 
 connection.init(self, handlers);

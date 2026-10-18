@@ -113,19 +113,22 @@ const createOAuthServer = async () => {
     return { url: `http://localhost:${port}`, server: oAuthServer };
   }
 
-  return new Promise<{ url: string; server: Server }>(resolve => {
+  return new Promise<{ url: string; server: Server }>((resolve, reject) => {
     const server = createServer(async (req, res) => {
       const query = new URL(req.url || '', `http://localhost:${port}`)
         .searchParams;
 
       const code = query.get('token');
       if (code && clientWin) {
+        // `code` was decoded by URLSearchParams, so re-encode it: a value with
+        // "&" or "#" would otherwise add parameters or cut the URL short
+        const encodedCode = encodeURIComponent(code);
         if (isDev) {
           void clientWin.loadURL(
-            `http://localhost:3001/openid-cb?token=${code}`,
+            `http://localhost:3001/openid-cb?token=${encodedCode}`,
           );
         } else {
-          void clientWin.loadURL(`app://actual/openid-cb?token=${code}`);
+          void clientWin.loadURL(`app://actual/openid-cb?token=${encodedCode}`);
         }
 
         // Respond to the browser
@@ -146,7 +149,12 @@ const createOAuthServer = async () => {
       }
     });
 
+    // e.g. EADDRINUSE: without a listener this is an uncaught exception in the
+    // main process and the caller's promise never settles
+    server.once('error', reject);
+
     server.listen(port, '127.0.0.1', () => {
+      server.off('error', reject);
       logMessage('info', `OAuth server started on port: ${port}`);
       resolve({ url: `http://localhost:${port}`, server });
     });
@@ -163,7 +171,19 @@ const getGlobalPrefsPath = () =>
 async function loadGlobalPrefs() {
   let state: GlobalPrefsJson = {};
   try {
-    state = JSON.parse(fs.readFileSync(getGlobalPrefsPath(), 'utf8'));
+    const parsed: unknown = JSON.parse(
+      fs.readFileSync(getGlobalPrefsPath(), 'utf8'),
+    );
+    // Valid JSON that isn't an object (null, a number, a list) is as unusable
+    // as a truncated file, and would crash the callers reading its fields
+    if (
+      parsed === null ||
+      typeof parsed !== 'object' ||
+      Array.isArray(parsed)
+    ) {
+      throw new Error('Global preferences file is not a JSON object');
+    }
+    state = parsed as GlobalPrefsJson;
   } catch {
     logMessage('info', 'Could not load global state - using defaults');
     state = {};
@@ -372,7 +392,22 @@ async function startSyncServer() {
     let syncServerStarted = false;
 
     const syncServerPromise = new Promise<void>(resolve => {
-      syncServerProcess = utilityProcess.fork(serverPath, [], forkOptions);
+      const startedProcess = utilityProcess.fork(serverPath, [], forkOptions);
+      syncServerProcess = startedProcess;
+
+      // A server that crashed (or never came up) must not stay recorded as
+      // running, or it could never be started again and would be reported as
+      // running. `stopSyncServer` clears the reference first, so an intentional
+      // stop is left alone.
+      startedProcess.on('exit', code => {
+        if (syncServerProcess === startedProcess) {
+          syncServerProcess = null;
+          logMessage(
+            'error',
+            `Sync-Server: exited unexpectedly (code ${code})`,
+          );
+        }
+      });
 
       syncServerProcess.stdout?.on('data', (chunk: Buffer) => {
         // Send the Server console.log messages to the main browser window
@@ -738,18 +773,25 @@ ipcMain.handle(
   ) => {
     const fileLocation = await dialog.showSaveDialog({ title, defaultPath });
 
-    return new Promise<void>((resolve, reject) => {
-      if (fileLocation) {
-        const contents =
-          typeof fileContents === 'string'
-            ? fileContents
-            : new Uint8Array(fileContents.buffer);
-        fs.writeFile(fileLocation.filePath, contents, error => {
-          return reject(error);
-        });
-      }
-      resolve();
-    });
+    // showSaveDialog always returns an object; a cancelled dialog has no path
+    if (fileLocation.canceled || !fileLocation.filePath) {
+      return;
+    }
+
+    // Respect the view's offset and length: `.buffer` alone is the whole
+    // underlying ArrayBuffer, which can be larger than the data
+    const contents =
+      typeof fileContents === 'string'
+        ? fileContents
+        : new Uint8Array(
+            fileContents.buffer,
+            fileContents.byteOffset,
+            fileContents.byteLength,
+          );
+
+    // Wait for the write so a failure reaches the renderer instead of the
+    // call reporting success while the file is still being written
+    await writeFile(fileLocation.filePath, contents);
   },
 );
 
@@ -791,7 +833,19 @@ ipcMain.handle(
         throw new Error('The from and to directories must be provided');
       }
 
-      if (newDirectory.startsWith(currentBudgetDirectory)) {
+      // A string-prefix test would also reject a sibling such as
+      // "Actual-backup" for "Actual", and miss differences in separators or
+      // trailing slashes, so compare resolved paths instead
+      const relativeToCurrent = path.relative(
+        path.resolve(currentBudgetDirectory),
+        path.resolve(newDirectory),
+      );
+      const isSameOrInsideCurrent =
+        relativeToCurrent === '' ||
+        (relativeToCurrent !== '..' &&
+          !relativeToCurrent.startsWith(`..${path.sep}`) &&
+          !path.isAbsolute(relativeToCurrent));
+      if (isSameOrInsideCurrent) {
         throw new Error(
           'The destination must not be a subdirectory of the current directory',
         );

@@ -47,12 +47,19 @@ function updateState(win: BrowserWindow, state: WindowState) {
 }
 
 async function saveState(win: BrowserWindow, state: WindowState) {
-  updateState(win, state);
-  fs.writeFileSync(
-    path.join(getDataDir(), 'window.json'),
-    JSON.stringify(state),
-    'utf8',
-  );
+  // Runs as a window 'close' listener, so a failure here (read-only data dir,
+  // a folder protected from writes, full disk) would otherwise be an unhandled
+  // rejection in the main process. Losing the window position is harmless.
+  try {
+    updateState(win, state);
+    fs.writeFileSync(
+      path.join(getDataDir(), 'window.json'),
+      JSON.stringify(state),
+      'utf8',
+    );
+  } catch (error) {
+    console.log('Could not save window state', error);
+  }
 }
 
 export function listen(win: BrowserWindow, state: WindowState) {
@@ -149,7 +156,7 @@ export async function get() {
       x: 100,
       y: 50,
       width: Math.min(1000, displayBounds.width - 100),
-      height: Math.min(700, displayBounds.width - 50),
+      height: Math.min(700, displayBounds.height - 50),
     },
     await loadState(),
   );

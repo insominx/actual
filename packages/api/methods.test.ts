@@ -4851,6 +4851,10 @@ describe('typed synced preferences', () => {
       }),
     ]);
     await expect(api.inspectPreferences('not-a-pref')).rejects.toThrow();
+    // Inherited object names are not preferences
+    for (const inherited of ['constructor', 'toString', '__proto__']) {
+      await expect(api.inspectPreferences(inherited)).rejects.toThrow();
+    }
   });
   test('sets and resets allowlisted preferences with validated values', async () => {
     const proposal = await api.previewPreferenceSet({
@@ -5304,7 +5308,26 @@ describe('query metadata', () => {
     expect(
       api.validateQuery(api.q('transactions').select(['missing_field'])),
     ).toMatchObject({ valid: false, table: 'transactions' });
+    // Inherited object names are not tables
+    expect(api.validateQuery(api.q('constructor').select(['id']))).toEqual({
+      valid: false,
+      table: 'constructor',
+      message: 'Table "constructor" does not exist in the schema',
+    });
   });
+});
+
+test('q().unfilter() with no arguments removes every filter', () => {
+  const filtered = api
+    .q('transactions')
+    .filter({ amount: { $gt: 0 } })
+    .filter({ cleared: true });
+
+  expect(filtered.unfilter().serialize().filterExpressions).toEqual([]);
+  // Naming a field still removes only that field's filters
+  expect(filtered.unfilter(['amount']).serialize().filterExpressions).toEqual([
+    { cleared: true },
+  ]);
 });
 
 describe('query snapshot marker', () => {
@@ -6682,6 +6705,16 @@ describe('import file inspection and saved mappings', () => {
           settings: { delimiter: ';' },
         }),
       ).rejects.toThrow(/does not apply/);
+      // Inherited object names are not import formats
+      for (const inherited of ['constructor', 'toString']) {
+        await expect(
+          api.previewImportMappingSave({
+            account,
+            format: inherited as 'csv',
+            reset: true,
+          }),
+        ).rejects.toThrow(/format must be/);
+      }
       await api.applyImportMappingSave(
         await api.previewImportMappingSave({
           account,

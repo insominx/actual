@@ -33,6 +33,14 @@ class Query {
   }
 
   unfilter(exprs?: string[]) {
+    // Remove all filters if no arguments are passed (as the core query does)
+    if (!exprs) {
+      return new Query({
+        ...this.state,
+        filterExpressions: [],
+      });
+    }
+
     const exprSet = new Set(exprs);
     return new Query({
       ...this.state,

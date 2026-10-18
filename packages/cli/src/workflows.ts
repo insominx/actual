@@ -32,7 +32,16 @@ import type {
 import { writeRun } from './workflow-runs';
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
-const MONTH = /^\d{4}-\d{2}$/;
+const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+// The shape alone accepts impossible days such as 2026-02-31
+function isCalendarDate(value: string) {
+  return (
+    DATE.test(value) &&
+    Number.isFinite(Date.parse(value)) &&
+    new Date(value).toISOString().slice(0, 10) === value
+  );
+}
 
 function invalid(message: string, field?: string): never {
   throw new AgentError(
@@ -232,7 +241,7 @@ export function validateClose(raw: {
     }
     seen.add(accountId);
     const date = s.date === undefined ? monthEnd(raw.month) : s.date;
-    if (typeof date !== 'string' || !DATE.test(date)) {
+    if (typeof date !== 'string' || !isCalendarDate(date)) {
       invalid(`statements[${i}].date must be YYYY-MM-DD.`, 'statements');
     }
     return {

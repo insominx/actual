@@ -79,6 +79,32 @@ describe('workflows', () => {
     ).toThrow(/cents/);
   });
 
+  it('rejects impossible months and statement dates', () => {
+    expect(() =>
+      validateClose({ month: '2026-13', statements: [], finish: false }),
+    ).toThrow(/YYYY-MM/);
+    expect(() =>
+      validateClose({ month: '2026-00', statements: [], finish: false }),
+    ).toThrow(/YYYY-MM/);
+    for (const date of ['2026-02-30', '2026-13-01', '2025-02-29']) {
+      expect(() =>
+        validateClose({
+          month: '2026-02',
+          statements: [{ accountId: 'a', endingBalance: 1, date }],
+          finish: false,
+        }),
+      ).toThrow(/YYYY-MM-DD/);
+    }
+    // A real leap day is fine
+    expect(
+      validateClose({
+        month: '2028-02',
+        statements: [{ accountId: 'a', endingBalance: 1, date: '2028-02-29' }],
+        finish: false,
+      }).statements[0].date,
+    ).toBe('2028-02-29');
+  });
+
   it('cancels with accurate partial outcomes', () => {
     const cancelled = cancelRun(
       run({

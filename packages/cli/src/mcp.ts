@@ -389,8 +389,12 @@ export function serveMcp(options: ServeOptions): Promise<void> {
           annotations: tool.annotations,
         }));
         const pageSize = 100;
+        // A malformed or negative cursor restarts at the first page rather
+        // than slicing from the end of the list
         const start =
-          typeof params.cursor === 'string' ? Number(params.cursor) || 0 : 0;
+          typeof params.cursor === 'string'
+            ? Math.max(0, Math.floor(Number(params.cursor)) || 0)
+            : 0;
         const page = tools.slice(start, start + pageSize);
         reply(id, {
           tools: page,

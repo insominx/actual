@@ -684,7 +684,12 @@ export function registerQueryCommand(program: Command) {
         );
         return;
       }
-      const schema = LEGACY_TABLE_SCHEMA[table];
+      const schema = Object.prototype.hasOwnProperty.call(
+        LEGACY_TABLE_SCHEMA,
+        table,
+      )
+        ? LEGACY_TABLE_SCHEMA[table]
+        : undefined;
       if (!schema) {
         throw new AgentError(
           'INVALID_INPUT',
@@ -706,7 +711,9 @@ export function registerQueryCommand(program: Command) {
     )
     .action(async (table: string, text: string) => {
       const opts = program.opts();
-      const config = RESOLVE_TABLES[table];
+      const config = Object.prototype.hasOwnProperty.call(RESOLVE_TABLES, table)
+        ? RESOLVE_TABLES[table]
+        : undefined;
       if (!config) {
         throw new AgentError(
           'INVALID_INPUT',
