@@ -876,7 +876,9 @@ async function setSecret({
       serverConfig.BASE_SERVER + '/secret',
       {
         name,
-        value,
+        // Pasted credentials often carry a trailing space or newline, which
+        // makes the provider reject them
+        value: value.trim(),
       },
       headers,
     );
