@@ -498,28 +498,28 @@ export function useBuiltInBankSyncProviders({
     try {
       const results = await send('pluggyai-accounts');
       if (results.error_code) {
-        throw new Error(results.reason);
+        throw new Error(results.reason || results.error_code);
       }
-      if ('error' in results) {
-        throw new Error(results.error);
+      if ('error' in results && results.error) {
+        throw new Error(results.reason || results.error);
       }
 
-      const externalAccounts = (results.accounts as PluggyAiAccount[]).map(
-        oldAccount => ({
-          account_id: oldAccount.id,
-          name: `${oldAccount.name.trim()} - ${
-            oldAccount.type === 'BANK' ? oldAccount.taxNumber : oldAccount.owner
-          }`,
-          institution: oldAccount.name,
-          orgDomain: null,
-          orgId: oldAccount.id,
-          balance:
-            oldAccount.type === 'BANK'
-              ? oldAccount.bankData.automaticallyInvestedBalance +
-                oldAccount.bankData.closingBalance
-              : oldAccount.balance,
-        }),
-      );
+      const externalAccounts = (
+        (results.accounts ?? []) as PluggyAiAccount[]
+      ).map(oldAccount => ({
+        account_id: oldAccount.id,
+        name: `${oldAccount.name.trim()} - ${
+          oldAccount.type === 'BANK' ? oldAccount.taxNumber : oldAccount.owner
+        }`,
+        institution: oldAccount.name,
+        orgDomain: null,
+        orgId: oldAccount.id,
+        balance:
+          oldAccount.type === 'BANK' && oldAccount.bankData
+            ? oldAccount.bankData.automaticallyInvestedBalance +
+              oldAccount.bankData.closingBalance
+            : oldAccount.balance,
+      }));
 
       dispatch(
         pushModal({
@@ -569,7 +569,7 @@ export function useBuiltInBankSyncProviders({
     try {
       const results = await send('akahu-accounts');
       if (results.error_code) {
-        throw new Error(results.reason);
+        throw new Error(results.reason || results.error_code);
       }
       if ('error' in results && results.error) {
         throw new Error(results.reason || results.error);

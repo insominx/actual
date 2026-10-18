@@ -1062,4 +1062,52 @@ describe('SimpleFin batch sync', () => {
     expect(missingResult.res.error_code).toBe('ACCOUNT_MISSING');
     expect(missingResult.res.error_type).toBe('ACCOUNT_MISSING');
   });
+
+  test('falls back to default mappings when custom sync mappings omit a direction or are malformed', async () => {
+    const providerAccountId = 'sf-account-1';
+    const acctId = await db.insertAccount({
+      id: 'acct-1',
+      account_id: providerAccountId,
+      name: 'Account 1',
+      account_sync_source: 'simpleFin',
+    });
+    await db.update('preferences', {
+      id: `custom-sync-mappings-${acctId}`,
+      value: JSON.stringify({
+        payment: { date: 'date', payee: 'payeeName', notes: 'notes' },
+      }),
+    });
+
+    mockSimpleFinTransactions({
+      [providerAccountId]: {
+        transactions: {
+          all: [
+            {
+              booked: true,
+              date: '2017-10-02',
+              payeeName: 'Employer',
+              transactionAmount: { amount: '100.00' },
+              transactionId: 'provider-tx-deposit',
+            },
+          ],
+          booked: [],
+          pending: [],
+        },
+        balances: [],
+        startingBalance: 10000,
+      },
+      errors: {},
+    });
+
+    setSyncingMode('offline');
+    try {
+      const result = await accountsApp.handlers['simplefin-batch-sync']({
+        ids: [acctId],
+      });
+      expect(result[0].res.errors).toHaveLength(0);
+      expect(result[0].res.newTransactions).toHaveLength(2);
+    } finally {
+      setSyncingMode('disabled');
+    }
+  });
 });

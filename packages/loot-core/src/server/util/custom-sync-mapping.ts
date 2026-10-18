@@ -13,14 +13,24 @@ export const mappingsToString = (mapping: Mappings): string =>
 export const mappingsFromString = (str: string): Mappings => {
   try {
     const parsed = JSON.parse(str);
-    if (typeof parsed !== 'object' || parsed === null) {
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      Array.isArray(parsed)
+    ) {
       throw new Error('Invalid mapping format');
     }
     return new Map(
-      Object.entries(parsed).map(([key, value]) => [
-        key,
-        new Map(Object.entries(value as object)),
-      ]),
+      Object.entries(parsed).map(([key, value]) => {
+        if (
+          typeof value !== 'object' ||
+          value === null ||
+          Array.isArray(value)
+        ) {
+          throw new Error('Invalid mapping format');
+        }
+        return [key, new Map(Object.entries(value as Record<string, string>))];
+      }),
     );
   } catch (e) {
     const message = e instanceof Error ? e.message : e;

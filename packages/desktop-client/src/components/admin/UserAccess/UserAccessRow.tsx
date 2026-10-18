@@ -1,5 +1,5 @@
 // @ts-strict-ignore
-import React, { memo, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { theme } from '@actual-app/components/theme';
@@ -30,6 +30,9 @@ export const UserAccessRow = memo(
     const [marked, setMarked] = useState(
       access.owner === 1 || access.haveAccess === 1,
     );
+    useEffect(() => {
+      setMarked(access.owner === 1 || access.haveAccess === 1);
+    }, [access.owner, access.haveAccess]);
     const [cloudFileId] = useMetadataPref('cloudFileId');
 
     const handleAccessToggle = async () => {
@@ -42,6 +45,7 @@ export const UserAccessRow = memo(
 
         if (error) {
           handleError(error);
+          return;
         }
       } else {
         const result = await send('access-delete-all', {
@@ -62,6 +66,7 @@ export const UserAccessRow = memo(
               },
             }),
           );
+          return;
         }
       }
       setMarked(newValue);
@@ -119,9 +124,9 @@ export const UserAccessRow = memo(
           style={{ padding: '0 15px', paddingLeft: 5, alignItems: 'center' }}
         >
           <Checkbox
-            defaultChecked={marked}
+            checked={marked}
             disabled={access.owner === 1}
-            onClick={handleAccessToggle}
+            onChange={handleAccessToggle}
           />
         </Cell>
         <Cell

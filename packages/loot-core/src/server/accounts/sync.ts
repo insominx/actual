@@ -534,9 +534,14 @@ async function normalizeBankSyncTransactions(transactions, acctId) {
     ).then(data => String(data?.data?.[0]?.value ?? 'true') === 'true'),
   ]);
 
-  const mappings = customMappingsRaw
-    ? mappingsFromString(customMappingsRaw)
-    : defaultMappings;
+  let mappings = defaultMappings;
+  if (customMappingsRaw) {
+    try {
+      mappings = mappingsFromString(customMappingsRaw);
+    } catch {
+      mappings = defaultMappings;
+    }
+  }
 
   const categoryIds = new Set((await db.getCategories()).map(c => c.id));
   const normalized = [];
@@ -549,7 +554,8 @@ async function normalizeBankSyncTransactions(transactions, acctId) {
       trans.amount = trans.transactionAmount.amount;
     }
 
-    const mapping = mappings.get(trans.amount <= 0 ? 'payment' : 'deposit');
+    const direction = trans.amount <= 0 ? 'payment' : 'deposit';
+    const mapping = mappings.get(direction) ?? defaultMappings.get(direction);
 
     const date = trans[mapping.get('date')] ?? trans.date;
     const payeeName = trans[mapping.get('payee')] ?? trans.payeeName;

@@ -81,14 +81,15 @@ function UserDirectoryContent({ isModal }: ManageUserDirectoryContentProps) {
   const { getUserDirectoryErrors } = useGetUserDirectoryErrors();
 
   const filteredUsers = useMemo(() => {
+    const filterLower = filter.toLowerCase();
     return (
       filter === ''
         ? allUsers
         : allUsers.filter(
             user =>
-              user.displayName.toLowerCase().includes(filter.toLowerCase()) ||
-              user.userName.toLowerCase().includes(filter.toLowerCase()) ||
-              user.role.toLowerCase().includes(filter.toLowerCase()),
+              (user.displayName ?? '').toLowerCase().includes(filterLower) ||
+              (user.userName ?? '').toLowerCase().includes(filterLower) ||
+              (user.role ?? '').toLowerCase().includes(filterLower),
           )
     ).slice(0, 100 + page * 50);
   }, [allUsers, filter, page]);

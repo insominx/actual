@@ -169,6 +169,9 @@ export class FixedSizeList extends PureComponent<
 
     if (this.needsAnimationRerender.current) {
       this.needsAnimationRerender.current = false;
+      if (this.rerenderTimeout != null) {
+        clearTimeout(this.rerenderTimeout);
+      }
       this.rerenderTimeout = setTimeout(() => {
         this.forceUpdate();
       }, 10);
@@ -180,6 +183,9 @@ export class FixedSizeList extends PureComponent<
   componentWillUnmount() {
     if (this._resetIsScrollingTimeoutId !== null) {
       clearTimeout(this._resetIsScrollingTimeoutId);
+    }
+    if (this.rerenderTimeout != null) {
+      clearTimeout(this.rerenderTimeout);
     }
   }
 

@@ -48,7 +48,7 @@ function UserAccessContent({ isModal }: ManageUserAccessContentProps) {
         : allAccess.filter(
             access =>
               access?.displayName
-                .toLowerCase()
+                ?.toLowerCase()
                 .includes(filter.toLowerCase()) ?? false,
           )
       ).slice(0, 100 + page * 50),
