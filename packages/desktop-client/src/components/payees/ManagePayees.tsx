@@ -114,8 +114,12 @@ export const ManagePayees = ({
       value: PayeeEntity[T],
     ) => {
       // A payee can't be renamed to nothing; keep the current name
-      if (name === 'name' && !String(value ?? '').trim()) {
-        return;
+      if (name === 'name') {
+        const trimmed = String(value ?? '').trim();
+        if (!trimmed) {
+          return;
+        }
+        value = trimmed as PayeeEntity[T];
       }
 
       const payee = payees.find(p => p.id === id);
