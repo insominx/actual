@@ -242,6 +242,16 @@ describe('/admin', () => {
         }
       });
 
+      it('rejects a non-string username with a 400', async () => {
+        const res = await request(app)
+          .post('/users')
+          .send({ userName: { a: 1 }, enabled: 1, role: BASIC_ROLE })
+          .set('x-actual-token', sessionToken);
+
+        expect(res.statusCode).toEqual(400);
+        expect(res.body.reason).toBe('user-cant-be-empty');
+      });
+
       it('stores the role of a newly created user', async () => {
         const res = await request(app)
           .post('/users')

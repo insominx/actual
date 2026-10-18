@@ -17,6 +17,12 @@ app.use(requestLoggerMiddleware);
 
 export { app as handlers };
 
+// Non-strings can't be stored and blank names are empty; trim so that
+// " bob" and "bob" are the same user
+function normalizeUserName(userName) {
+  return typeof userName === 'string' ? userName.trim() : '';
+}
+
 app.get('/owner-created/', (req, res) => {
   try {
     const ownerCount = UserService.getOwnerCount();
@@ -54,7 +60,8 @@ app.post('/users', validateSessionMiddleware, async (req, res) => {
     return;
   }
 
-  const { userName, role, displayName, enabled } = req.body || {};
+  const { role, displayName, enabled } = req.body || {};
+  const userName = normalizeUserName(req.body?.userName);
 
   if (!userName || !role) {
     res.status(400).send({
@@ -107,7 +114,8 @@ app.patch('/users', validateSessionMiddleware, async (req, res) => {
     return;
   }
 
-  const { id, userName, role, displayName, enabled } = req.body || {};
+  const { id, role, displayName, enabled } = req.body || {};
+  const userName = normalizeUserName(req.body?.userName);
 
   if (!userName || !role) {
     res.status(400).send({
