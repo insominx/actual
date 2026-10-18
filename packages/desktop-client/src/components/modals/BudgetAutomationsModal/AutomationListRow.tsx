@@ -70,7 +70,15 @@ export function AutomationListRow({
 
   return (
     <View
+      role="button"
+      tabIndex={0}
       onClick={() => onSelect(index)}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect(index);
+        }
+      }}
       aria-label={t('Select automation')}
       style={{
         flexShrink: 0,
