@@ -156,15 +156,13 @@ export function getPeriodKey(
   date: string,
   granularity: AgeOfMoneyGranularity,
 ): string {
-  const parsed = d.parseISO(date);
   switch (granularity) {
     case 'daily':
       return date; // YYYY-MM-DD
-    case 'weekly': {
-      // Use start of week (Monday) as key
-      const weekStart = d.startOfWeek(parsed, { weekStartsOn: 1 });
-      return d.format(weekStart, 'yyyy-MM-dd');
-    }
+    case 'weekly':
+      // Monday-start week, stepped from noon so midnight cannot fall
+      // into the previous day.
+      return monthUtils.weekFromDate(date, '1');
     case 'monthly':
     default:
       return monthUtils.getMonth(date); // YYYY-MM
@@ -180,12 +178,12 @@ export function formatPeriodLabel(
 ): string {
   switch (granularity) {
     case 'daily':
-      return d.format(d.parseISO(periodKey), 'MMM d, yyyy');
+      return d.format(monthUtils.parseDate(periodKey), 'MMM d, yyyy');
     case 'weekly':
-      return d.format(d.parseISO(periodKey), 'MMM d, yyyy');
+      return d.format(monthUtils.parseDate(periodKey), 'MMM d, yyyy');
     case 'monthly':
     default:
-      return d.format(d.parseISO(periodKey + '-01'), 'MMM yyyy');
+      return d.format(monthUtils.parseDate(periodKey + '-01'), 'MMM yyyy');
   }
 }
 
@@ -198,24 +196,25 @@ export function generatePeriods(
   granularity: AgeOfMoneyGranularity,
 ): string[] {
   const periods: string[] = [];
-  let current = d.parseISO(startDate);
-  const end = d.parseISO(endDate);
 
   switch (granularity) {
-    case 'daily':
-      while (current <= end) {
-        periods.push(d.format(current, 'yyyy-MM-dd'));
-        current = d.addDays(current, 1);
+    case 'daily': {
+      let cursor = startDate;
+      while (cursor <= endDate) {
+        periods.push(cursor);
+        cursor = monthUtils.addDays(cursor, 1);
       }
       break;
-    case 'weekly':
-      // Start from the beginning of the week containing startDate
-      current = d.startOfWeek(current, { weekStartsOn: 1 });
-      while (current <= end) {
-        periods.push(d.format(current, 'yyyy-MM-dd'));
-        current = d.addWeeks(current, 1);
+    }
+    case 'weekly': {
+      // Start from the Monday of the week containing startDate.
+      let cursor = monthUtils.weekFromDate(startDate, '1');
+      while (cursor <= endDate) {
+        periods.push(cursor);
+        cursor = monthUtils.addDays(cursor, 7);
       }
       break;
+    }
     case 'monthly':
     default: {
       const months = monthUtils.rangeInclusive(
@@ -386,7 +385,7 @@ function accountConditionToTransferAcctAql(
       return {
         'payee.transfer_acct.name': {
           $transform: '$lower',
-          $like: `%${value}%`,
+          $like: `%${value.replace(/[\\%?]/g, '\\$&')}%`,
         },
       };
     }
@@ -395,7 +394,7 @@ function accountConditionToTransferAcctAql(
       return {
         'payee.transfer_acct.name': {
           $transform: '$lower',
-          $notlike: `%${value}%`,
+          $notlike: `%${value.replace(/[\\%?]/g, '\\$&')}%`,
         },
       };
     }
