@@ -98,8 +98,9 @@ function EditableBudgetName() {
           }}
           defaultValue={budgetName}
           onEnter={newBudgetName => {
-            if (newBudgetName.trim() !== '') {
-              setBudgetNamePref(newBudgetName);
+            const trimmedName = newBudgetName.trim();
+            if (trimmedName !== '') {
+              setBudgetNamePref(trimmedName);
               setEditing(false);
             }
           }}
