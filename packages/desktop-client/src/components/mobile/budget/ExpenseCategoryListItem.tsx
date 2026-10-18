@@ -293,7 +293,7 @@ export function ExpenseCategoryListItem({
                     toCategoryName:
                       toCategoryId === 'to-budget'
                         ? t('To Budget')
-                        : categoriesById[toCategoryId].name,
+                        : (categoriesById[toCategoryId]?.name ?? ''),
                   },
                 ),
               });
@@ -347,7 +347,7 @@ export function ExpenseCategoryListItem({
                     fromCategoryName:
                       fromCategoryId === 'to-budget'
                         ? t('To Budget')
-                        : categoriesById[fromCategoryId].name,
+                        : (categoriesById[fromCategoryId]?.name ?? ''),
                   },
                 ),
               });

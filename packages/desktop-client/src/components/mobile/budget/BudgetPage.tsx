@@ -825,7 +825,7 @@ function OverbudgetedBanner({ month, onBudgetAction, ...props }) {
               });
               showUndoNotification({
                 message: t('Covered overbudgeted from {{categoryName}}', {
-                  categoryName: categoriesById[categoryId].name,
+                  categoryName: categoriesById[categoryId]?.name ?? '',
                 }),
               });
             },
@@ -944,7 +944,7 @@ function OverspendingBanner({ month, onBudgetAction, budgetType, ...props }) {
                       fromCategoryName:
                         fromCategoryId === 'to-budget'
                           ? t('To Budget')
-                          : categoriesById[fromCategoryId].name,
+                          : (categoriesById[fromCategoryId]?.name ?? ''),
                     },
                   ),
                 });

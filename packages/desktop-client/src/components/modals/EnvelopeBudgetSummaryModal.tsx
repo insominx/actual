@@ -70,7 +70,7 @@ export function EnvelopeBudgetSummaryModal({
               showUndoNotification({
                 message: t('Transferred {{amount}} to {{categoryName}}', {
                   amount: format(amount, 'financial'),
-                  categoryName: categoriesById[toCategoryId].name,
+                  categoryName: categoriesById[toCategoryId]?.name ?? '',
                 }),
               });
             },
@@ -99,7 +99,7 @@ export function EnvelopeBudgetSummaryModal({
               dispatch(collapseModals({ rootModalName: 'cover' }));
               showUndoNotification({
                 message: t('Covered overbudgeted from {{categoryName}}', {
-                  categoryName: categoriesById[categoryId].name,
+                  categoryName: categoriesById[categoryId]?.name ?? '',
                 }),
               });
             },
