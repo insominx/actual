@@ -67,7 +67,13 @@ export function SelectedTagsButton({ onRename }: SelectedTagsButtonProps) {
   return (
     <SelectedItemsButton<Actions>
       id="selected-tags"
-      name={c => `${c} Tags`}
+      name={count =>
+        t('selected-tags-count', {
+          count,
+          defaultValue_one: '{{count}} tag',
+          defaultValue_other: '{{count}} tags',
+        })
+      }
       items={[
         ...(isSingleSelection
           ? [
