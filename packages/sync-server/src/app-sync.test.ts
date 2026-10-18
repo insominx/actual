@@ -1067,6 +1067,25 @@ describe('/update-user-filename', () => {
     expect(rows[0].name).toEqual(newName);
   });
 
+  it('saves the name trimmed', async () => {
+    const fileId = crypto.randomBytes(16).toString('hex');
+    getAccountDb().mutate(
+      'INSERT INTO files (id, name, deleted) VALUES (?, ?, FALSE)',
+      [fileId, 'old-filename'],
+    );
+
+    const res = await request(app)
+      .post('/update-user-filename')
+      .set('x-actual-token', 'valid-token')
+      .send({ fileId, name: '  spaced name ' });
+
+    expect(res.statusCode).toEqual(200);
+    const rows = getAccountDb().all('SELECT name FROM files WHERE id = ?', [
+      fileId,
+    ]);
+    expect(rows[0].name).toEqual('spaced name');
+  });
+
   it('rejects a missing, blank or non-string name', async () => {
     const fileId = crypto.randomBytes(16).toString('hex');
     getAccountDb().mutate(

@@ -561,7 +561,7 @@ app.post('/update-user-filename', (req, res) => {
     return;
   }
 
-  filesService.update(file.id, new FileUpdate({ name }));
+  filesService.update(file.id, new FileUpdate({ name: name.trim() }));
   res.send(OK_RESPONSE);
 });
 
