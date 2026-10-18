@@ -576,7 +576,13 @@ const compileFunction = saveStack('function', (state, func) => {
         'integer',
         'integer',
       ]);
-      return typed(`SUBSTR(${arg1}, ${arg2}, ${arg3})`, 'string');
+      // The length is optional; interpolating a missing one emits `undefined`
+      return typed(
+        arg3 === undefined
+          ? `SUBSTR(${arg1}, ${arg2})`
+          : `SUBSTR(${arg1}, ${arg2}, ${arg3})`,
+        'string',
+      );
     }
     case '$lower': {
       validateArgLength(args, 1);

@@ -383,6 +383,16 @@ describe('sheet language', () => {
     expect(result.sql).toMatch('GROUP BY SUBSTR(payees1.name, 0, 4)');
   });
 
+  it('$substr works without a length argument', () => {
+    const result = generateSQLWithState(
+      q('transactions')
+        .select(['id', { name: { $substr: ['$payee.name', 2] } }])
+        .serialize(),
+      schemaWithRefs,
+    );
+    expect(result.sql).toMatch('SUBSTR(payees1.name, 2) AS name');
+  });
+
   it('orderBy should work', () => {
     let result = generateSQLWithState(
       q('transactions').orderBy('payee.name').select('id').serialize(),
