@@ -334,7 +334,11 @@ function AgeOfMoneyInner({ widget }: AgeOfMoneyInnerProps) {
           >
             <PrivacyFilter>
               {data.currentAge !== null
-                ? t('{{days}} days', { days: data.currentAge })
+                ? t('age-of-money-current-days', {
+                    count: data.currentAge,
+                    defaultValue_one: '{{count}} day',
+                    defaultValue_other: '{{count}} days',
+                  })
                 : t('N/A')}
             </PrivacyFilter>
           </View>

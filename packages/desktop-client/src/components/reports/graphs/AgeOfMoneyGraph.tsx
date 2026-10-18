@@ -50,8 +50,10 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
           <strong>{payload[0].payload.date}</strong>
         </div>
         <div>
-          {t('Age of Money: {{days}} days', {
-            days: payload[0].payload.ageOfMoney,
+          {t('age-of-money-days', {
+            count: payload[0].payload.ageOfMoney,
+            defaultValue_one: 'Age of Money: {{count}} day',
+            defaultValue_other: 'Age of Money: {{count}} days',
           })}
         </div>
       </div>
