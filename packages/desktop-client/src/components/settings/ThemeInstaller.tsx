@@ -151,7 +151,19 @@ export function ThemeInstaller({
     async (theme: CatalogTheme) => {
       setSelectedCatalogTheme(theme);
 
-      const normalizedRepo = normalizeGitHubRepo(theme.repo);
+      let normalizedRepo: string;
+      try {
+        normalizedRepo = normalizeGitHubRepo(theme.repo);
+      } catch (err) {
+        // A malformed catalog entry must surface as an error on that theme
+        // instead of leaving it selected with no feedback
+        setError(
+          err instanceof Error ? err.message : t('Failed to load theme'),
+        );
+        setErroringTheme(theme);
+        setSelectedCatalogTheme(null);
+        return;
+      }
       // Fetch CSS and embed any referenced font files as data: URIs
       const cssWithFonts = fetchThemeCss(theme.repo).then(css =>
         embedThemeFonts(css, theme.repo),
