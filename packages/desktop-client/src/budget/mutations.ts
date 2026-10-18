@@ -220,7 +220,7 @@ export function useSaveCategoryMutation() {
       const exists = categoriesInGroup.some(
         c =>
           c.id !== category.id &&
-          c.name.toUpperCase() === category.name.toUpperCase(),
+          c.name.trim().toUpperCase() === category.name.trim().toUpperCase(),
       );
 
       if (exists) {
@@ -415,7 +415,7 @@ export function useUpdateCategoryGroupMutation() {
       const exists = categoryGroups.some(
         g =>
           g.id !== group.id &&
-          g.name.toUpperCase() === group.name.toUpperCase(),
+          g.name.trim().toUpperCase() === group.name.trim().toUpperCase(),
       );
 
       if (exists) {
