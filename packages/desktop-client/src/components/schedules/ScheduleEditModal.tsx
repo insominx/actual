@@ -1,5 +1,5 @@
 // @ts-strict-ignore
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
 import { Button } from '@actual-app/components/button';
@@ -36,6 +36,7 @@ export function ScheduleEditModal({ id, transaction }: ScheduleEditModalProps) {
   const fromTrans = transaction != null;
   const { data: payees } = usePayeesById();
   const globalDispatch = useDispatch();
+  const [isSaving, setIsSaving] = useState(false);
 
   // Create initial schedule if adding from transaction
   const initialSchedule = useMemo(() => {
@@ -95,6 +96,20 @@ export function ScheduleEditModal({ id, transaction }: ScheduleEditModalProps) {
   );
 
   async function onSave(close: () => void) {
+    // A second press while the first save is running would create the
+    // schedule's rule and links twice
+    if (isSaving) {
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await saveSchedule(close);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function saveSchedule(close: () => void) {
     dispatch({ type: 'form-error', error: null });
     if (!state.schedule) {
       return;
