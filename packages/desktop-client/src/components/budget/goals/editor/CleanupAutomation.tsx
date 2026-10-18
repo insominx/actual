@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
 import { Button } from '@actual-app/components/button';
@@ -194,6 +194,10 @@ function ScopeCard({
   onRemove,
 }: ScopeCardProps) {
   const { t } = useTranslation();
+  const [rawWeight, setRawWeight] = useState(String(weight));
+  useEffect(() => {
+    setRawWeight(String(weight));
+  }, [weight]);
   return (
     <View
       style={{
@@ -275,10 +279,25 @@ function ScopeCard({
                 min={1}
                 step={1}
                 style={{ width: 80 }}
-                value={String(weight)}
+                value={rawWeight}
                 onChangeValue={value => {
-                  const parsed = Math.max(1, Math.trunc(Number(value)) || 1);
-                  onChangeWeight(parsed);
+                  // Keep what is typed so the field can be cleared and
+                  // retyped; only valid weights are committed upward
+                  setRawWeight(value);
+                  const parsed = Math.trunc(Number(value));
+                  if (value.trim() !== '' && parsed >= 1 && parsed !== weight) {
+                    onChangeWeight(parsed);
+                  }
+                }}
+                onBlur={() => {
+                  const parsed = Math.max(
+                    1,
+                    Math.trunc(Number(rawWeight)) || 1,
+                  );
+                  setRawWeight(String(parsed));
+                  if (parsed !== weight) {
+                    onChangeWeight(parsed);
+                  }
                 }}
               />
             </SpaceBetween>
