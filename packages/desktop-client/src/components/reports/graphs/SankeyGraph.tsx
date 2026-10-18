@@ -3,7 +3,6 @@ import type { CSSProperties } from 'react';
 
 import { theme } from '@actual-app/components/theme';
 import { css, keyframes } from '@emotion/css';
-import { t } from 'i18next';
 import {
   Layer,
   Rectangle,
@@ -184,7 +183,7 @@ function SankeyNode({
         height / 2 + 13,
         11,
         0.5,
-        privacyMode ? t('Redacted Script') : undefined,
+        privacyMode ? 'Redacted Script' : undefined,
       )}
     </Layer>
   );
@@ -307,7 +306,7 @@ export function SankeyGraph({
                           <div
                             style={{
                               fontFamily: privacyMode
-                                ? t('Redacted Script')
+                                ? 'Redacted Script'
                                 : undefined,
                             }}
                           >
@@ -327,7 +326,7 @@ export function SankeyGraph({
                                   <span
                                     style={{
                                       fontFamily: privacyMode
-                                        ? t('Redacted Script')
+                                        ? 'Redacted Script'
                                         : undefined,
                                     }}
                                   >
