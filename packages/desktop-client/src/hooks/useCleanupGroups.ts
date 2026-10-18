@@ -12,18 +12,24 @@ export function useCleanupGroups() {
   const [loading, setLoading] = useState(true);
 
   async function reload() {
-    const result = await aqlQuery(
-      q('cleanup_groups').filter({ tombstone: false }).select(['id', 'name']),
-    );
-    const rows = Array.isArray(result.data) ? result.data : [];
-    setGroups(
-      rows.flatMap(row =>
-        row && typeof row.id === 'string' && typeof row.name === 'string'
-          ? [{ id: row.id, name: row.name }]
-          : [],
-      ),
-    );
-    setLoading(false);
+    try {
+      const result = await aqlQuery(
+        q('cleanup_groups').filter({ tombstone: false }).select(['id', 'name']),
+      );
+      const rows = Array.isArray(result.data) ? result.data : [];
+      setGroups(
+        rows.flatMap(row =>
+          row && typeof row.id === 'string' && typeof row.name === 'string'
+            ? [{ id: row.id, name: row.name }]
+            : [],
+        ),
+      );
+    } catch (e) {
+      console.error('Failed to load cleanup groups:', e);
+    } finally {
+      // A failed load must not leave the picker stuck on its loading state
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
