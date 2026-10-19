@@ -4517,7 +4517,7 @@ async function prepareGuardedCategoryUpdate(
   if (patch.name !== undefined || group_id !== undefined) {
     const name = String(patch.name ?? category.name);
     const clash = await db.first<{ id: string }>(
-      'SELECT id FROM categories WHERE cat_group = ? AND UPPER(name) = ? AND id != ? AND tombstone = 0 LIMIT 1',
+      'SELECT id FROM categories WHERE cat_group = ? AND UNICODE_UPPER(name) = ? AND id != ? AND tombstone = 0 LIMIT 1',
       [destinationGroupId, name.toUpperCase(), request.id],
     );
     if (clash) {

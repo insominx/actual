@@ -1358,4 +1358,56 @@ describe('RuleIndexer', () => {
       new Set([rule2]),
     );
   });
+
+  test('negative operators are always applicable', () => {
+    const indexer = new RuleIndexer({ field: 'payee' });
+    const isNot = new Rule({
+      conditionsOp: 'and',
+      conditions: [{ op: 'isNot', field: 'payee', value: 'p1' }],
+      actions: [{ op: 'set', field: 'notes', value: 'x' }],
+    });
+    const notOneOf = new Rule({
+      conditionsOp: 'and',
+      conditions: [{ op: 'notOneOf', field: 'payee', value: ['p1', 'p2'] }],
+      actions: [{ op: 'set', field: 'notes', value: 'x' }],
+    });
+    indexer.index(isNot);
+    indexer.index(notOneOf);
+
+    expect(indexer.getApplicableRules({ payee: 'p3' })).toEqual(
+      new Set([isNot, notOneOf]),
+    );
+    indexer.remove(isNot);
+    indexer.remove(notOneOf);
+    expect(indexer.getApplicableRules({ payee: 'p3' }).size).toBe(0);
+  });
+
+  test('or rules are indexed under every way they can match', () => {
+    const indexer = new RuleIndexer({ field: 'payee' });
+    const mixed = new Rule({
+      conditionsOp: 'or',
+      conditions: [
+        { op: 'is', field: 'payee', value: 'p1' },
+        { op: 'contains', field: 'notes', value: 'coffee' },
+      ],
+      actions: [{ op: 'set', field: 'notes', value: 'x' }],
+    });
+    const payeesOnly = new Rule({
+      conditionsOp: 'or',
+      conditions: [
+        { op: 'is', field: 'payee', value: 'p1' },
+        { op: 'is', field: 'payee', value: 'p2' },
+      ],
+      actions: [{ op: 'set', field: 'notes', value: 'x' }],
+    });
+    indexer.index(mixed);
+    indexer.index(payeesOnly);
+
+    expect(indexer.getApplicableRules({ payee: 'p9' })).toEqual(
+      new Set([mixed]),
+    );
+    expect(indexer.getApplicableRules({ payee: 'p2' })).toEqual(
+      new Set([mixed, payeesOnly]),
+    );
+  });
 });

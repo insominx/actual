@@ -70,6 +70,11 @@ describe('acquireExclusive', () => {
     await release2();
   });
 
+  it('succeeds with timeoutMs: 0 when no readers or writers hold the lock', async () => {
+    const release = await acquireExclusive(dir, { timeoutMs: 0 });
+    await release();
+  });
+
   it('rejects with a user-friendly error when another holder has the lock', async () => {
     const release = await acquireExclusive(dir, { timeoutMs: 1000 });
     await expect(acquireExclusive(dir, { timeoutMs: 100 })).rejects.toThrow(

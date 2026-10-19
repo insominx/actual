@@ -106,7 +106,7 @@ export function registerJobsCommand(program: Command) {
     .description('Saved jobs on this device')
     .action(async () => {
       const opts = program.opts();
-      const { dataDir } = await resolveConfig(opts);
+      const { dataDir } = await resolveConfig(opts, { localOnly: true });
       printOutput(await listJobs(dataDir), opts.format);
     });
 
@@ -117,7 +117,7 @@ export function registerJobsCommand(program: Command) {
     )
     .action(async (name: string) => {
       const opts = program.opts();
-      const { dataDir } = await resolveConfig(opts);
+      const { dataDir } = await resolveConfig(opts, { localOnly: true });
       printOutput(await jobStatus(dataDir, name), opts.format);
     });
 
@@ -137,7 +137,7 @@ export function registerJobsCommand(program: Command) {
         cmdOpts: { dryRun?: boolean; stopAfter?: string },
       ) => {
         const opts = program.opts();
-        const { dataDir } = await resolveConfig(opts);
+        const { dataDir } = await resolveConfig(opts, { localOnly: true });
         printOutput(
           await runJob(opts, dataDir, name, {
             dryRun: cmdOpts.dryRun === true,
@@ -155,7 +155,7 @@ export function registerJobsCommand(program: Command) {
     )
     .action(async (name: string) => {
       const opts = program.opts();
-      const { dataDir } = await resolveConfig(opts);
+      const { dataDir } = await resolveConfig(opts, { localOnly: true });
       printOutput(await disableJob(dataDir, name), opts.format);
     });
 
@@ -164,7 +164,7 @@ export function registerJobsCommand(program: Command) {
     .description('Allow a disabled job to run again')
     .action(async (name: string) => {
       const opts = program.opts();
-      const { dataDir } = await resolveConfig(opts);
+      const { dataDir } = await resolveConfig(opts, { localOnly: true });
       printOutput(await enableJob(dataDir, name), opts.format);
     });
 
@@ -178,7 +178,7 @@ export function registerJobsCommand(program: Command) {
     .action(
       async (name: string, cmdOpts: { every: string; executable: string }) => {
         const opts = program.opts();
-        const { dataDir } = await resolveConfig(opts);
+        const { dataDir } = await resolveConfig(opts, { localOnly: true });
         const minutes = parseIntFlag(cmdOpts.every, '--every');
         if (minutes < 1 || minutes > 59) {
           throw new AgentError('INVALID_INPUT', '--every must be 1-59.');

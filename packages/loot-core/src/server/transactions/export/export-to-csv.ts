@@ -32,8 +32,10 @@ export function childSplitPositions(transactions: readonly SplitRow[]): {
   const childSplitOrder = new Map<string, number>();
   const parentsChildCount = new Map<string, number>();
   for (const [parentId, children] of childrenByParent) {
+    // Children are created with decreasing sort_order (-1, -2, ...), so
+    // the first split has the highest value.
     const ordered = [...children].sort(
-      (a, b) => (a.SortOrder ?? 0) - (b.SortOrder ?? 0),
+      (a, b) => (b.SortOrder ?? 0) - (a.SortOrder ?? 0),
     );
     parentsChildCount.set(parentId, ordered.length);
     ordered.forEach((child, index) => {

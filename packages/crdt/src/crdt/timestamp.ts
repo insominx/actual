@@ -58,6 +58,10 @@ export function deserializeClock(clock: string): Clock {
   try {
     data = JSON.parse(clock);
   } catch {
+    data = null;
+  }
+
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
     data = {
       timestamp: '1970-01-01T00:00:00.000Z-0000-' + makeClientId(),
       merkle: {},
@@ -72,7 +76,12 @@ export function deserializeClock(clock: string): Clock {
 
   return {
     timestamp: MutableTimestamp.from(ts),
-    merkle: data.merkle,
+    merkle:
+      data.merkle &&
+      typeof data.merkle === 'object' &&
+      !Array.isArray(data.merkle)
+        ? data.merkle
+        : {},
   };
 }
 
@@ -171,12 +180,15 @@ export class Timestamp {
       const parts = timestamp.split('-');
       if (parts && parts.length === 5) {
         const millis = Date.parse(parts.slice(0, 3).join('-')).valueOf();
-        const counter = parseInt(parts[3], 16);
+        const counter = /^[0-9A-Fa-f]+$/.test(parts[3])
+          ? parseInt(parts[3], 16)
+          : NaN;
         const node = parts[4];
         if (
           !isNaN(millis) &&
           millis >= 0 &&
           !isNaN(counter) &&
+          counter >= 0 &&
           counter <= MAX_COUNTER &&
           typeof node === 'string' &&
           node.length <= MAX_NODE_LENGTH

@@ -294,7 +294,13 @@ function onApplySync(oldValues, newValues) {
   const tables = [...newValues.keys()];
   if (tables.find(table => table.indexOf('mapping') !== -1)) {
     getRules().forEach(rule => {
+      // The indexes are keyed by condition values, which migrateIds
+      // rewrites in place.
+      firstcharIndexer.remove(rule);
+      payeeIndexer.remove(rule);
       migrateIds(rule, getMappings());
+      firstcharIndexer.index(rule);
+      payeeIndexer.index(rule);
     });
   }
 }
@@ -1362,7 +1368,12 @@ export async function finalizeTransactionForRules(
   }
 
   if (trans.subtransactions?.length) {
-    trans.subtransactions.forEach(stx => {
+    for (const stx of trans.subtransactions) {
+      if ('payee_name' in stx) {
+        await resolvePayeeNameForRules(stx, dryRun);
+        delete (stx as Record<string, unknown>).payee_name;
+      }
+
       if ('balance' in stx) {
         delete stx.balance;
       }
@@ -1382,7 +1393,7 @@ export async function finalizeTransactionForRules(
           delete stx[field];
         }
       }
-    });
+    }
   }
 
   return trans;

@@ -60,7 +60,10 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     const slug = pathSegments[slugIndex];
     const fileName =
       pathSegments.length > slugIndex + 1
-        ? pathSegments[slugIndex + 1].split('?')[0]
+        ? pathSegments
+            .slice(slugIndex + 1)
+            .join('/')
+            .split('?')[0]
         : '';
     event.respondWith(handlePlugin(slug, fileName.replace('?import', '')));
   } else {
@@ -69,14 +72,22 @@ self.addEventListener('fetch', (event: FetchEvent) => {
 });
 
 async function handlePlugin(slug: string, fileName: string): Promise<Response> {
+  const fileToCheck = fileName.length > 0 ? fileName : 'mf-manifest.json';
+
   for (const key of fileList.keys()) {
     if (key.startsWith(`${slug}/`)) {
-      if (key.endsWith(`/${fileName}`)) {
+      if (key === `${slug}/${fileToCheck}` || key.endsWith(`/${fileToCheck}`)) {
         const content = fileList.get(key);
-        const contentType = getContentType(fileName);
-        return new Response(content, {
-          headers: { 'Content-Type': contentType },
-        });
+        const contentType = getContentType(fileToCheck);
+        const headers: Record<string, string> = { 'Content-Type': contentType };
+
+        if (fileToCheck === 'mf-manifest.json') {
+          headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+          headers['Pragma'] = 'no-cache';
+          headers['Expires'] = '0';
+        }
+
+        return new Response(content, { headers });
       }
     }
   }
@@ -100,11 +111,13 @@ async function handlePlugin(slug: string, fileName: string): Promise<Response> {
 
       if (responseData && Array.isArray(responseData)) {
         responseData.forEach(({ name, content }) => {
-          fileList.set(`${slug}/${encodeURIComponent(name)}`, content);
+          const encodedPath = name
+            .split('/')
+            .map(segment => encodeURIComponent(segment))
+            .join('/');
+          fileList.set(`${slug}/${encodedPath}`, content);
         });
       }
-
-      const fileToCheck = fileName.length > 0 ? fileName : 'mf-manifest.json';
 
       if (fileList.has(`${slug}/${fileToCheck}`)) {
         let content = fileList.get(`${slug}/${fileToCheck}`)!;
@@ -117,6 +130,7 @@ async function handlePlugin(slug: string, fileName: string): Promise<Response> {
             if (manifest.metaData?.publicPath) {
               manifest.metaData.publicPath = `/plugin-data/${slug}/`;
               content = JSON.stringify(manifest);
+              fileList.set(`${slug}/${fileToCheck}`, content);
             }
           } catch (error) {
             console.error(

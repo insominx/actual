@@ -132,8 +132,8 @@ export async function loginWithPassword(password) {
     config.get('token_expiration') !== 'openid-provider' &&
     typeof config.get('token_expiration') === 'number'
   ) {
-    expiration =
-      Math.floor(Date.now() / 1000) + config.get('token_expiration') * 60;
+    // token_expiration is in seconds, as for OpenID logins.
+    expiration = Math.floor(Date.now() / 1000) + config.get('token_expiration');
   }
 
   if (!sessionRow) {

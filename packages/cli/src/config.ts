@@ -185,7 +185,10 @@ function validateNonNegativeInt(value: number, name: string): number {
 
 export async function resolveConfig(
   cliOpts: CliGlobalOpts,
-  { connectionOnly = false }: { connectionOnly?: boolean } = {},
+  {
+    connectionOnly = false,
+    localOnly = false,
+  }: { connectionOnly?: boolean; localOnly?: boolean } = {},
 ): Promise<CliConfig> {
   const fileConfig = await loadConfigFile();
   const profile = await selectedProfile(
@@ -200,12 +203,13 @@ export async function resolveConfig(
       'Choose --budget-id or --sync-id, not both.',
     );
   }
-  const budgetId = connectionOnly
-    ? undefined
-    : (cliOpts.budgetId ??
-      (!explicitRemote
-        ? (process.env.ACTUAL_BUDGET_ID ?? profile?.budgetId)
-        : undefined));
+  const budgetId =
+    connectionOnly || localOnly
+      ? undefined
+      : (cliOpts.budgetId ??
+        (!explicitRemote
+          ? (process.env.ACTUAL_BUDGET_ID ?? profile?.budgetId)
+          : undefined));
   const offline =
     cliOpts.offline ??
     parseBoolEnv(process.env.ACTUAL_OFFLINE, 'ACTUAL_OFFLINE') ??
@@ -234,7 +238,9 @@ export async function resolveConfig(
     fileConfig.serverUrl ??
     '';
 
-  const password = offline
+  const skipSecrets = offline || localOnly;
+
+  const password = skipSecrets
     ? undefined
     : (cliOpts.password ??
       readFileEnv('ACTUAL_PASSWORD_FILE') ??
@@ -242,7 +248,7 @@ export async function resolveConfig(
       (await readProfileSecret(profile?.passwordFile)) ??
       fileConfig.password);
 
-  const sessionToken = offline
+  const sessionToken = skipSecrets
     ? undefined
     : (cliOpts.sessionToken ??
       readFileEnv('ACTUAL_SESSION_TOKEN_FILE') ??
@@ -250,12 +256,13 @@ export async function resolveConfig(
       (await readProfileSecret(profile?.sessionTokenFile)) ??
       fileConfig.sessionToken);
 
-  const syncId = connectionOnly
-    ? undefined
-    : (cliOpts.syncId ??
-      (!budgetId
-        ? (process.env.ACTUAL_SYNC_ID ?? profile?.syncId ?? fileConfig.syncId)
-        : undefined));
+  const syncId =
+    connectionOnly || localOnly
+      ? undefined
+      : (cliOpts.syncId ??
+        (!budgetId
+          ? (process.env.ACTUAL_SYNC_ID ?? profile?.syncId ?? fileConfig.syncId)
+          : undefined));
 
   const dataDir =
     cliOpts.dataDir ??
@@ -264,7 +271,7 @@ export async function resolveConfig(
     fileConfig.dataDir ??
     join(homedir(), '.actual-cli', 'data');
 
-  const encryptionPassword = offline
+  const encryptionPassword = skipSecrets
     ? undefined
     : (cliOpts.encryptionPassword ??
       readFileEnv('ACTUAL_ENCRYPTION_PASSWORD_FILE') ??
@@ -272,18 +279,34 @@ export async function resolveConfig(
       (await readProfileSecret(profile?.encryptionPasswordFile)) ??
       fileConfig.encryptionPassword);
 
-  if (!serverUrl && !offline) {
-    throw new AgentError(
-      'MISSING_CONTEXT',
-      'Server URL is required. Set --server-url, ACTUAL_SERVER_URL env var, or serverUrl in config file.',
-    );
-  }
+  if (!skipSecrets) {
+    if (!serverUrl) {
+      throw new AgentError(
+        'MISSING_CONTEXT',
+        'Server URL is required. Set --server-url, ACTUAL_SERVER_URL env var, or serverUrl in config file.',
+      );
+    }
 
-  if (!password && !sessionToken && !offline) {
-    throw new AgentError(
-      'MISSING_CONTEXT',
-      'Authentication required. Set --password/--session-token, ACTUAL_PASSWORD/ACTUAL_SESSION_TOKEN env var, or password/sessionToken in config file.',
-    );
+    try {
+      const parsedUrl = new URL(serverUrl);
+      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+        throw new Error('unsupported protocol');
+      }
+    } catch {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Provide a valid HTTP or HTTPS server URL.',
+        false,
+        { field: 'serverUrl' },
+      );
+    }
+
+    if (!password && !sessionToken) {
+      throw new AgentError(
+        'MISSING_CONTEXT',
+        'Authentication required. Set --password/--session-token, ACTUAL_PASSWORD/ACTUAL_SESSION_TOKEN env var, or password/sessionToken in config file.',
+      );
+    }
   }
 
   const cacheTtl = validateNonNegativeInt(

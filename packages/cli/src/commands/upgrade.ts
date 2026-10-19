@@ -26,7 +26,9 @@ export function registerUpgradeCommand(program: Command, version: string) {
     .option('--server', 'Also compare the server version with this CLI')
     .action(async (cmdOpts: { server?: boolean }) => {
       const opts = program.opts();
-      const resolved = await resolveConfig(opts);
+      const resolved = await resolveConfig(opts, {
+        localOnly: !cmdOpts.server,
+      });
       const report = await upgradeCheck(
         resolved.dataDir,
         version,

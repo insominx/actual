@@ -476,6 +476,11 @@ export async function normalizeTransactions(
             `Subtransaction amount is invalid, must be an integer: ${sub.amount}`,
           );
         }
+        if (sub.amount != null && !isEngineAmount(sub.amount)) {
+          throw new TransactionError(
+            `Subtransaction amount is outside the supported range: ${sub.amount}`,
+          );
+        }
       }
     }
 

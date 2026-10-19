@@ -63,18 +63,19 @@ describe('exportToCSV', () => {
   });
 
   it('numbers split children by sort order, not query order', () => {
+    // Split children are created with sort_order -1, -2, ...
     const { childSplitOrder, parentsChildCount } = childSplitPositions([
       {
         Id: 'later',
         ParentId: 'parent',
         IsChild: true,
-        SortOrder: 2,
+        SortOrder: -2,
       },
       {
         Id: 'earlier',
         ParentId: 'parent',
         IsChild: true,
-        SortOrder: 1,
+        SortOrder: -1,
       },
     ]);
     expect(parentsChildCount.get('parent')).toBe(2);

@@ -488,7 +488,15 @@ async function runSetupStep(step: WorkflowStep, ctx: StepContext) {
       () => ({ name: spec.budgetName }),
       (id, payload) =>
         executeBudgetCreation(
-          { ...ctx.opts, syncId: undefined, budgetId: undefined },
+          {
+            ...ctx.opts,
+            syncId: undefined,
+            budgetId: undefined,
+            offline: true,
+            refresh: false,
+            requireFresh: false,
+            cache: true,
+          },
           id,
           payload as unknown as Api.BudgetCreationRequest,
         ),

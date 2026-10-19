@@ -7,10 +7,10 @@ import { resolveConfig } from '#config';
 import { withConnection } from '#connection';
 import { api } from '#engine';
 import { printOutput } from '#output';
-import { errorMessage } from '#utils';
+import { errorMessage, plainInteger } from '#utils';
 
-async function scope(program: Command) {
-  const resolved = await resolveConfig(program.opts());
+async function scope(program: Command, localOnly = false) {
+  const resolved = await resolveConfig(program.opts(), { localOnly });
   const budget = resolved.syncId ?? resolved.budgetId;
   if (!budget) {
     throw new AgentError(
@@ -138,13 +138,13 @@ export function registerBankSyncCommand(program: Command) {
     .option('--limit <count>', 'Maximum runs to list (1-100)', '10')
     .action(async (runId: string | undefined, cmdOpts: { limit: string }) => {
       const opts = program.opts();
-      const { dataDir, budget } = await scope(program);
+      const { dataDir, budget } = await scope(program, true);
       if (runId) {
         printOutput(await readRun(dataDir, runId), opts.format);
         return;
       }
-      const limit = Number(cmdOpts.limit);
-      if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) {
+      const limit = plainInteger(cmdOpts.limit);
+      if (limit === null || limit < 1 || limit > 100) {
         throw new AgentError(
           'INVALID_INPUT',
           'limit must be an integer from 1 to 100.',

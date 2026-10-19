@@ -328,6 +328,7 @@ const LAST_DEFAULT_SELECT = [
 function buildQueryFromFile(
   parsed: Record<string, unknown>,
   fallbackTable: string | undefined,
+  count?: boolean,
 ) {
   const table = typeof parsed.table === 'string' ? parsed.table : fallbackTable;
   if (!table) {
@@ -336,17 +337,84 @@ function buildQueryFromFile(
       '--table is required when the input file lacks a "table" field',
     );
   }
+  if (!coreTableNames().includes(table)) {
+    throw unknownTable(table);
+  }
   let queryObj = api.q(table);
-  if (Array.isArray(parsed.select)) queryObj = queryObj.select(parsed.select);
-  if (isRecord(parsed.filter)) queryObj = queryObj.filter(parsed.filter);
-  if (Array.isArray(parsed.orderBy)) {
+  if (count) {
+    queryObj = queryObj.calculate({ $count: '*' });
+  } else if (parsed.select !== undefined) {
+    if (!Array.isArray(parsed.select)) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Query "select" must be an array',
+        false,
+        { field: 'select' },
+      );
+    }
+    queryObj = queryObj.select(parsed.select);
+  }
+  if (parsed.filter !== undefined) {
+    if (!isRecord(parsed.filter)) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Query "filter" must be a JSON object',
+        false,
+        { field: 'filter' },
+      );
+    }
+    queryObj = queryObj.filter(parsed.filter);
+  }
+  if (parsed.orderBy !== undefined) {
+    if (!Array.isArray(parsed.orderBy)) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Query "orderBy" must be an array',
+        false,
+        { field: 'orderBy' },
+      );
+    }
     queryObj = queryObj.orderBy(parsed.orderBy);
   }
-  if (typeof parsed.limit === 'number') queryObj = queryObj.limit(parsed.limit);
-  if (typeof parsed.offset === 'number') {
+  if (parsed.limit !== undefined) {
+    if (
+      typeof parsed.limit !== 'number' ||
+      !Number.isSafeInteger(parsed.limit) ||
+      parsed.limit < 0
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Query "limit" must be a non-negative integer',
+        false,
+        { field: 'limit' },
+      );
+    }
+    queryObj = queryObj.limit(parsed.limit);
+  }
+  if (parsed.offset !== undefined) {
+    if (
+      typeof parsed.offset !== 'number' ||
+      !Number.isSafeInteger(parsed.offset) ||
+      parsed.offset < 0
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Query "offset" must be a non-negative integer',
+        false,
+        { field: 'offset' },
+      );
+    }
     queryObj = queryObj.offset(parsed.offset);
   }
-  if (Array.isArray(parsed.groupBy)) {
+  if (parsed.groupBy !== undefined) {
+    if (!Array.isArray(parsed.groupBy)) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Query "groupBy" must be an array',
+        false,
+        { field: 'groupBy' },
+      );
+    }
     queryObj = queryObj.groupBy(parsed.groupBy);
   }
   return queryObj;
@@ -537,7 +605,7 @@ export function registerQueryCommand(program: Command) {
         );
       }
       const queryObj = parsed
-        ? buildQueryFromFile(parsed, cmdOpts.table)
+        ? buildQueryFromFile(parsed, cmdOpts.table, Boolean(cmdOpts.count))
         : buildQueryFromFlags(cmdOpts);
       if (isVersion2(program)) {
         // Compile against the core schema before connecting.
@@ -549,6 +617,14 @@ export function registerQueryCommand(program: Command) {
           });
         }
         const state = queryObj.serialize();
+        if (state.calculation && cmdOpts.cursor) {
+          throw new AgentError(
+            'INVALID_INPUT',
+            '--cursor cannot be used with --count or calculation queries.',
+            false,
+            { field: 'cursor' },
+          );
+        }
         if (!state.calculation) {
           const table = api
             .getQuerySchema()

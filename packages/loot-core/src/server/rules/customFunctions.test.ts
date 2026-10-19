@@ -95,6 +95,12 @@ describe('CustomFunctionsPlugin formula query functions', () => {
 
     expect(evaluateFormula('=FIXED(10.5)', context)).toBe('10.50');
     expect(evaluateFormula('=FIXED(10.5, 0)', context)).toBe('11');
+    expect(evaluateFormula('=FIXED(10.5, -1)', context)).toMatchObject({
+      type: ErrorType.NUM,
+    });
+    expect(evaluateFormula('=FIXED(10.5, 101)', context)).toMatchObject({
+      type: ErrorType.NUM,
+    });
   });
 
   it('records QUERY and QUERY_COUNT requests and returns prefetched values', () => {

@@ -30,6 +30,18 @@ describe('merkle trie', () => {
     expect(trie).toMatchSnapshot();
   });
 
+  test('building a trie from timestamps inserts every timestamp', () => {
+    const ts1 = Timestamp.parse(
+      '2018-11-12T13:21:40.122Z-0000-0123456789ABCDEF',
+    )!;
+    const ts2 = Timestamp.parse(
+      '2018-11-13T13:21:40.122Z-0000-0123456789ABCDEF',
+    )!;
+
+    const expected = merkle.insert(merkle.insert(merkle.emptyTrie(), ts1), ts2);
+    expect(merkle.build([ts1, ts2])).toEqual(expected);
+  });
+
   test('diff returns the correct time difference', () => {
     let trie1 = merkle.emptyTrie();
     let trie2 = merkle.emptyTrie();

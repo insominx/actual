@@ -36,22 +36,35 @@ export class RuleIndexer {
   }
 
   getIndexes(rule: Rule): Set<Rule>[] {
-    const cond = rule.conditions.find(cond => cond.field === this.field);
+    const isNarrowing = cond =>
+      cond.field === this.field && (cond.op === 'oneOf' || cond.op === 'is');
+
+    // Only `is`/`oneOf` restrict a rule to specific values. Negative
+    // operators match everything except their value, and an `or` rule can
+    // match through any other condition, so those must always be run.
+    if (
+      rule.conditionsOp === 'or' &&
+      !(rule.conditions.length > 0 && rule.conditions.every(isNarrowing))
+    ) {
+      return [this.getIndex('*')];
+    }
+
+    // An `and` rule only runs when its first narrowing condition matches;
+    // an all-narrowing `or` rule runs when any of its conditions matches.
+    const conds =
+      rule.conditionsOp === 'or'
+        ? rule.conditions
+        : rule.conditions.filter(isNarrowing).slice(0, 1);
     const indexes = [];
 
-    if (
-      cond &&
-      (cond.op === 'oneOf' ||
-        cond.op === 'is' ||
-        cond.op === 'isNot' ||
-        cond.op === 'notOneOf')
-    ) {
-      if (cond.op === 'oneOf' || cond.op === 'notOneOf') {
+    for (const cond of conds) {
+      if (cond.op === 'oneOf') {
         cond.value.forEach(val => indexes.push(this.getIndexForValue(val)));
       } else {
         indexes.push(this.getIndexForValue(cond.value));
       }
-    } else {
+    }
+    if (conds.length === 0) {
       indexes.push(this.getIndex('*'));
     }
 

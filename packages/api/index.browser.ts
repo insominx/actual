@@ -12,6 +12,10 @@ let worker: Worker | null = null;
 export async function init(
   config: InitConfig = {},
 ): Promise<{ send: typeof send }> {
+  if (worker) {
+    worker.terminate();
+    worker = null;
+  }
   worker = new InlineWorker();
 
   try {

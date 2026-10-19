@@ -22,6 +22,7 @@ import { api } from '#engine';
 import { executeBudgetRestore } from '#guarded-changes';
 import { acquireExclusive } from '#lock';
 import { printOutput } from '#output';
+import { plainInteger } from '#utils';
 
 // Exports the selected budget into an atomic backup artifact. Shared by
 // backups create and the monthly-close workflow.
@@ -103,9 +104,9 @@ export function registerBackupsCommand(program: Command) {
         timeout: string;
         apply?: boolean;
       }) => {
-        const keep = Number(input.keep);
-        const limit = Number(input.limit);
-        const timeout = Number(input.timeout);
+        const keep = plainInteger(input.keep);
+        const limit = plainInteger(input.limit);
+        const timeout = plainInteger(input.timeout);
         if (
           !Number.isSafeInteger(keep) ||
           keep < 1 ||
@@ -155,7 +156,7 @@ export function registerBackupsCommand(program: Command) {
         input: { name: string; timeout: string; operationId?: string },
       ) => {
         const opts = program.opts();
-        const timeout = Number(input.timeout);
+        const timeout = plainInteger(input.timeout);
         if (!Number.isSafeInteger(timeout) || timeout < 1 || timeout > 120) {
           throw new AgentError(
             'INVALID_INPUT',
@@ -268,11 +269,7 @@ export function registerBackupsCommand(program: Command) {
                   );
                 }
               } finally {
-                try {
-                  await api.shutdown();
-                } finally {
-                  await release();
-                }
+                await release();
               }
             },
             { mutates: true, skipBudget: true },
@@ -288,7 +285,7 @@ export function registerBackupsCommand(program: Command) {
     .requiredOption('--directory <path>', 'Explicit backup directory')
     .option('--limit <count>', 'Maximum artifacts to return (1-1000)', '100')
     .action(async (input: { directory: string; limit: string }) => {
-      const limit = Number(input.limit);
+      const limit = plainInteger(input.limit);
       if (!Number.isSafeInteger(limit) || limit < 1 || limit > 1000) {
         throw new AgentError(
           'INVALID_INPUT',
@@ -311,7 +308,7 @@ export function registerBackupsCommand(program: Command) {
       '60',
     )
     .action(async (path: string, input: { timeout: string }) => {
-      const timeout = Number(input.timeout);
+      const timeout = plainInteger(input.timeout);
       if (!Number.isSafeInteger(timeout) || timeout < 1 || timeout > 120) {
         throw new AgentError(
           'INVALID_INPUT',

@@ -8,7 +8,13 @@ import type { CategoryEntity, CategoryGroupEntity } from '#types/models';
 import type { CleanupTemplate } from '#types/models/cleanup-templates';
 import type { Template } from '#types/models/templates';
 
-import { getSheetValue, isTrackingBudget, setBudget, setGoal } from './actions';
+import {
+  getSheetValue,
+  getSheetValueOrNull,
+  isTrackingBudget,
+  setBudget,
+  setGoal,
+} from './actions';
 import { CategoryTemplateContext } from './category-template-context';
 import { tombstoneOrphanCleanupGroups } from './cleanup-groups';
 import { checkTemplateNotes, storeNoteTemplates } from './template-notes';
@@ -243,7 +249,8 @@ export async function computeTemplates(
     const sheetName = monthUtils.sheetForMonth(month);
     const templates = categoryTemplates[id];
     const budgeted = await getSheetValue(sheetName, `budget-${id}`);
-    const existingGoal = await getSheetValue(sheetName, `goal-${id}`);
+    // Unset goals must stay null, or every untemplated category is reset.
+    const existingGoal = await getSheetValueOrNull(sheetName, `goal-${id}`);
 
     // only run categories that are unbudgeted or if we are forcing it
     if ((budgeted === 0 || force) && templates) {

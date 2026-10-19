@@ -8,7 +8,7 @@ import {
 import { operationPayloadSchema } from './json-schema';
 import type { JsonSchema } from './json-schema';
 import { REVERSIBLE_COMMANDS } from './reversal';
-import { isEngineAmount } from './utils';
+import { isEngineAmount, plainInteger } from './utils';
 
 type PropertySchema = {
   type: 'string' | 'integer' | 'boolean';
@@ -256,8 +256,8 @@ export function validateCommandInput(
       const number =
         typeof value === 'number'
           ? value
-          : typeof value === 'string' && value.trim()
-            ? Number(value)
+          : typeof value === 'string'
+            ? plainInteger(value)
             : NaN;
       if (!isEngineAmount(number) || (NONNEGATIVE.has(name) && number < 0)) {
         throw new AgentError(

@@ -19,6 +19,15 @@ export async function getSheetValue(
   return safeNumber(typeof node.value === 'number' ? node.value : 0);
 }
 
+// Like getSheetValue, but keeps an unset cell as null instead of 0.
+export async function getSheetValueOrNull(
+  sheetName: string,
+  cell: string,
+): Promise<number | null> {
+  const node = sheet.getCell(sheetName, cell);
+  return typeof node.value === 'number' ? safeNumber(node.value) : null;
+}
+
 export async function getSheetBoolean(
   sheetName: string,
   cell: string,

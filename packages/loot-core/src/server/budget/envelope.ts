@@ -8,13 +8,19 @@ import { safeNumber } from '#shared/util';
 import { createCategory as createCategoryFromBase } from './base';
 import { flatten2, number, sumAmounts, unflatten2 } from './util';
 
+// Callers pass either an array of months or the `createdMonths` Set,
+// which has no `length` or index access and no guaranteed order.
+function monthList(months: Iterable<string>): string[] {
+  return [...months].sort();
+}
+
 function getBlankSheet(months) {
-  const blankMonth = monthUtils.prevMonth(months[0]);
+  const blankMonth = monthUtils.prevMonth(monthList(months)[0]);
   return monthUtils.sheetForMonth(blankMonth);
 }
 
 export function createBlankCategory(cat, months) {
-  if (months.length > 0) {
+  if (monthList(months).length > 0) {
     const sheetName = getBlankSheet(months);
     sheet.get().createStatic(sheetName, `carryover-${cat.id}`, false);
     sheet.get().createStatic(sheetName, `leftover-${cat.id}`, 0);

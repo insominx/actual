@@ -149,7 +149,15 @@ export async function executeBudgetCreation(
     );
   }
   const identity = await withConnection(
-    { ...opts, budgetId: receipt.outcome.affectedIds[0], syncId: undefined },
+    {
+      ...opts,
+      budgetId: receipt.outcome.affectedIds[0],
+      syncId: undefined,
+      offline: true,
+      refresh: false,
+      requireFresh: false,
+      cache: true,
+    },
     async () => api.inspectBudget(),
     { mutates: false },
   );
@@ -191,7 +199,15 @@ export async function executeBudgetClone(
     );
   }
   const identity = await withConnection(
-    { ...opts, budgetId: receipt.outcome.affectedIds[0], syncId: undefined },
+    {
+      ...opts,
+      budgetId: receipt.outcome.affectedIds[0],
+      syncId: undefined,
+      offline: true,
+      refresh: false,
+      requireFresh: false,
+      cache: true,
+    },
     async () => api.inspectBudget(),
     { mutates: false },
   );
@@ -240,7 +256,15 @@ export async function executeBudgetRestore(
     );
   }
   const restored = await withConnection(
-    { ...opts, budgetId: receipt.outcome.affectedIds[0], syncId: undefined },
+    {
+      ...opts,
+      budgetId: receipt.outcome.affectedIds[0],
+      syncId: undefined,
+      offline: true,
+      refresh: false,
+      requireFresh: false,
+      cache: true,
+    },
     async () => ({
       ...(await api.inspectBudget()),
       snapshot: await captureBudgetSnapshot(),
@@ -1220,8 +1244,9 @@ export async function executeBudgetMetadata(
 export async function resolveGuardConfig(
   opts: CliGlobalOpts,
   connectionOnly = false,
+  localOnly = false,
 ) {
-  const resolved = await resolveConfig(opts, { connectionOnly });
+  const resolved = await resolveConfig(opts, { connectionOnly, localOnly });
   if (resolved.noLock) {
     throw new AgentError(
       'INVALID_INPUT',
@@ -2305,19 +2330,18 @@ export async function previewGuardedChange(
   }
   const payload = readJsonInput(input);
   const restore = restores ? restoreInput(payload) : undefined;
+  const localOnlyOp = [
+    'budgets.create',
+    'budgets.clone',
+    'budgets.archive',
+    'backups.restore',
+  ].includes(operation);
   const resolved = await resolveGuardConfig(
     operation === 'budgets.publish' ? { ...opts, offline: false } : opts,
     operation === 'budgets.publish',
+    localOnlyOp,
   );
-  if (
-    [
-      'budgets.create',
-      'budgets.clone',
-      'budgets.archive',
-      'backups.restore',
-    ].includes(operation) &&
-    !resolved.offline
-  ) {
+  if (localOnlyOp && !resolved.offline) {
     throw new AgentError(
       'INVALID_INPUT',
       'Local creation, cloning, archiving, and restoration require --offline.',
@@ -2413,7 +2437,7 @@ export async function applyGuardedChange(
   if (!/^[a-f0-9]{64}$/.test(input.token)) {
     throw new AgentError('INVALID_INPUT', 'Provide the exact preview token.');
   }
-  let resolved = await resolveGuardConfig(opts, true);
+  let resolved = await resolveGuardConfig(opts, true, true);
   return await withChangeJournal(
     resolved.dataDir,
     resolved.lockTimeout,
@@ -2425,8 +2449,14 @@ export async function applyGuardedChange(
           'Operation ID was not found in this local journal.',
         );
       }
+      const localOnlyOp = [
+        'budgets.create',
+        'budgets.clone',
+        'budgets.archive',
+        'backups.restore',
+      ].includes(receipt.proposal.operation);
       if (receipt.proposal.operation !== 'budgets.publish') {
-        resolved = await resolveGuardConfig(opts);
+        resolved = await resolveGuardConfig(opts, false, localOnlyOp);
       } else {
         resolved = await resolveGuardConfig({ ...opts, offline: false }, true);
       }

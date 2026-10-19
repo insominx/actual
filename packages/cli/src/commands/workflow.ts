@@ -7,6 +7,7 @@ import { AgentError } from '#agent-output';
 import { resolveConfig } from '#config';
 import type { CliGlobalOpts } from '#config';
 import { printOutput } from '#output';
+import { plainInteger } from '#utils';
 import {
   listRuns,
   newRunId,
@@ -61,7 +62,9 @@ async function start(
   { needsBudget = true } = {},
 ) {
   const opts: CliGlobalOpts = program.opts();
-  const resolved = await resolveConfig(opts);
+  const resolved = await resolveConfig(
+    needsBudget ? opts : { ...opts, offline: true },
+  );
   const budget = {
     syncId: resolved.syncId ?? null,
     budgetId: resolved.syncId ? null : (resolved.budgetId ?? null),
@@ -129,7 +132,10 @@ export function registerWorkflowCommand(program: Command) {
   ).action(
     async (cmdOpts: { spec: string; runId?: string; stopAfter?: string }) => {
       const spec = validateSetup(parseJson(cmdOpts.spec, 'spec'));
-      const resolved = await resolveConfig(program.opts());
+      const opts: CliGlobalOpts = program.opts();
+      const resolved = await resolveConfig(
+        spec.budgetName ? { ...opts, offline: true } : opts,
+      );
       if (spec.budgetName && (resolved.syncId || resolved.budgetId)) {
         throw new AgentError(
           'INVALID_INPUT',
@@ -318,14 +324,14 @@ export function registerWorkflowCommand(program: Command) {
     .option('--limit <count>', 'Maximum runs (1-100)', '20')
     .action(async (cmdOpts: { limit: string }) => {
       const opts = program.opts();
-      const limit = Number(cmdOpts.limit);
+      const limit = plainInteger(cmdOpts.limit);
       if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) {
         throw new AgentError(
           'INVALID_INPUT',
           'limit must be an integer from 1 to 100.',
         );
       }
-      const { dataDir } = await resolveConfig(opts);
+      const { dataDir } = await resolveConfig(opts, { localOnly: true });
       printOutput(await listRuns(dataDir, limit), opts.format);
     });
 
@@ -334,7 +340,7 @@ export function registerWorkflowCommand(program: Command) {
     .description('A run record: steps, operation IDs, unresolved items')
     .action(async (runId: string) => {
       const opts = program.opts();
-      const { dataDir } = await resolveConfig(opts);
+      const { dataDir } = await resolveConfig(opts, { localOnly: true });
       printOutput(output(await readRun(dataDir, runId)), opts.format);
     });
 
@@ -346,7 +352,7 @@ export function registerWorkflowCommand(program: Command) {
     .option('--stop-after <step>', 'Pause again after this step')
     .action(async (runId: string, cmdOpts: { stopAfter?: string }) => {
       const opts: CliGlobalOpts = program.opts();
-      const { dataDir } = await resolveConfig(opts);
+      const { dataDir } = await resolveConfig(opts, { localOnly: true });
       await withRunLock(dataDir, runId, async () => {
         const record = await readRun(dataDir, runId);
         if (!['running', 'paused', 'failed'].includes(record.status)) {
@@ -371,7 +377,7 @@ export function registerWorkflowCommand(program: Command) {
     )
     .action(async (runId: string) => {
       const opts = program.opts();
-      const { dataDir } = await resolveConfig(opts);
+      const { dataDir } = await resolveConfig(opts, { localOnly: true });
       await withRunLock(dataDir, runId, async () => {
         const record = cancelRun(await readRun(dataDir, runId));
         await writeRun(dataDir, record);

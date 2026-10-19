@@ -11,7 +11,7 @@ import {
 } from '#guarded-changes';
 import { readJsonInput } from '#input';
 import { printOutput } from '#output';
-import { errorMessage } from '#utils';
+import { errorMessage, plainInteger } from '#utils';
 
 export function registerRulesCommand(program: Command) {
   const rules = program
@@ -239,8 +239,8 @@ export function registerRulesCommand(program: Command) {
     .option('--limit <n>', 'Maximum IDs to return (1-500)', '500')
     .action(async (ruleId: string, cmdOpts: { limit: string }) => {
       const opts = program.opts();
-      const limit = Number(cmdOpts.limit);
-      if (!Number.isInteger(limit)) {
+      const limit = plainInteger(cmdOpts.limit);
+      if (limit === null) {
         throw new AgentError(
           'INVALID_INPUT',
           'limit must be an integer.',

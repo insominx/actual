@@ -276,8 +276,8 @@ export async function importBuffer(
   // out-of-date with a few keys
   meta = {
     ...meta,
-    cloudFileId: fileData.fileId,
-    groupId: fileData.groupId,
+    cloudFileId: fileData.fileId ?? fileData.cloudFileId ?? null,
+    groupId: fileData.groupId ?? null,
     lastUploaded: monthUtils.currentDay(),
     encryptKeyId: fileData.encryptMeta ? fileData.encryptMeta.keyId : null,
   };

@@ -16,6 +16,7 @@ import * as statements from './statements';
 
 vi.mock('./actions', () => ({
   getSheetValue: vi.fn(),
+  getSheetValueOrNull: vi.fn(),
   getSheetBoolean: vi.fn(),
   isTrackingBudget: vi.fn(),
   setBudget: vi.fn(),
@@ -54,6 +55,9 @@ const category: CategoryEntity = {
 function setupSheetMock(values: Record<string, number>) {
   vi.mocked(actions.getSheetValue).mockImplementation(
     async (_sheet: string, key: string) => values[key] ?? 0,
+  );
+  vi.mocked(actions.getSheetValueOrNull).mockImplementation(
+    async (_sheet: string, key: string) => values[key] ?? null,
   );
   vi.mocked(actions.getSheetBoolean).mockResolvedValue(false);
   vi.mocked(actions.isTrackingBudget).mockReturnValue(false);
@@ -440,6 +444,18 @@ describe('applyMultipleCategoryTemplates', () => {
     expect(goalCalls).toContainEqual(
       expect.objectContaining({ category: cat1.id, goal: null }),
     );
+  });
+
+  it('does not reset goals for untemplated categories that have none', async () => {
+    setupSheetMock({ 'to-budget': 0, 'budget-cat-1': 5000 });
+    setupAqlMultiCategory([cat1], {});
+
+    await applyMultipleCategoryTemplates({
+      month: '2024-01',
+      categoryIds: [cat1.id],
+    });
+
+    expect(actions.setGoal).not.toHaveBeenCalled();
   });
 
   it('distributes remainder funds across categories by weight', async () => {

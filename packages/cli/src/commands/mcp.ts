@@ -13,11 +13,15 @@ export function forwardedGlobalArgs(argv: string[]) {
   const forwarded: string[] = [];
   for (let i = 0; i < globals.length; i++) {
     const arg = globals[i];
-    if (arg === '--output-version' || arg === '--format') {
+    if (arg === '--output-version' || arg === '--format' || arg === '-f') {
       i++;
       continue;
     }
-    if (arg.startsWith('--output-version=') || arg.startsWith('--format=')) {
+    if (
+      arg.startsWith('--output-version=') ||
+      arg.startsWith('--format=') ||
+      arg.startsWith('-f=')
+    ) {
       continue;
     }
     forwarded.push(arg);

@@ -95,12 +95,12 @@ function sweepStaleReaders(dir: string) {
 async function waitForReadersEmpty(dir: string, timeoutMs: number) {
   const readers = readersDir(dir);
   const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
+  for (;;) {
     sweepStaleReaders(dir);
     if (readReaderNames(readers).length === 0) return;
+    if (Date.now() >= deadline) throw lockedError(timeoutMs);
     await new Promise(resolve => setTimeout(resolve, READER_POLL_INTERVAL_MS));
   }
-  throw lockedError(timeoutMs);
 }
 
 async function acquireGate(

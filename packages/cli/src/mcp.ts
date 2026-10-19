@@ -295,6 +295,8 @@ export function serveMcp(options: ServeOptions): Promise<void> {
           ...options.globalArgs,
           '--output-version',
           '2',
+          '--format',
+          'json',
           ...argv,
         ],
         { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },

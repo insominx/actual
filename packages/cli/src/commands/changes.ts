@@ -19,12 +19,13 @@ import {
   planReversal,
   reversalConflicts,
 } from '#reversal';
+import { plainInteger } from '#utils';
 
 export function registerChangesCommand(program: Command) {
   const changes = program
     .command('changes')
     .description('Preview guarded domain changes and inspect local receipts');
-  const config = () => resolveGuardConfig(program.opts());
+  const config = () => resolveGuardConfig(program.opts(), false, true);
   changes
     .command('preview <operation> [id]')
     .description(
@@ -215,8 +216,8 @@ export function registerChangesCommand(program: Command) {
     .description('List local receipts with disclosed truncation')
     .option('--limit <count>', 'Maximum receipts to return (1-500)', '100')
     .action(async (input: { limit: string }) => {
-      const limit = Number(input.limit);
-      if (!Number.isSafeInteger(limit) || limit < 1 || limit > 500) {
+      const limit = plainInteger(input.limit);
+      if (limit === null || limit < 1 || limit > 500) {
         throw new AgentError(
           'INVALID_INPUT',
           'limit must be an integer from 1 to 500.',

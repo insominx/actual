@@ -450,5 +450,37 @@ describe('query commands', () => {
         run(['query', 'run', '--table', 'transactions', '--filter', '{bad']),
       ).rejects.toMatchObject({ code: 'INVALID_INPUT' });
     });
+
+    it('rejects --cursor combined with --count in version 2', async () => {
+      const qObj = {
+        select: vi.fn().mockReturnThis(),
+        filter: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        offset: vi.fn().mockReturnThis(),
+        groupBy: vi.fn().mockReturnThis(),
+        calculate: vi.fn().mockReturnThis(),
+        serialize: vi
+          .fn()
+          .mockReturnValue({ table: 'transactions', calculation: true }),
+      };
+      vi.mocked(api.q).mockReturnValueOnce(qObj as never);
+
+      await expect(
+        run([
+          '--output-version',
+          '2',
+          'query',
+          'run',
+          '--table',
+          'transactions',
+          '--count',
+          '--cursor',
+          'eyJ2IjoxfQ',
+        ]),
+      ).rejects.toMatchObject({
+        code: 'INVALID_INPUT',
+      });
+    });
   });
 });

@@ -59,6 +59,12 @@ describe('agent command contract', () => {
       validateCommandInput(leaf, { start: '2024-02-29', limit: '-1' }),
     ).toThrow(AgentError);
     expect(() =>
+      validateCommandInput(leaf, { start: '2024-02-29', limit: '0x10' }),
+    ).toThrow(AgentError);
+    expect(() =>
+      validateCommandInput(leaf, { start: '2024-02-29', limit: '1e2' }),
+    ).toThrow(AgentError);
+    expect(() =>
       validateCommandInput(leaf, { start: '2024-02-29', limit: '10' }),
     ).not.toThrow();
   });

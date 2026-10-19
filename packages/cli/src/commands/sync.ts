@@ -12,6 +12,7 @@ import { api } from '#engine';
 import { acquireExclusive } from '#lock';
 import { printOutput } from '#output';
 import { watchSync } from '#sync-watch';
+import { plainInteger } from '#utils';
 
 type SyncCmdOpts = {
   status?: boolean;
@@ -22,7 +23,7 @@ async function requireSyncIdAndMeta(
   opts: Record<string, unknown>,
   flag: string,
 ): Promise<{ config: CliConfig; meta: string }> {
-  const config = await resolveConfig(opts);
+  const config = await resolveConfig(opts, { localOnly: true });
   if (!config.syncId) {
     throw new AgentError(
       'MISSING_CONTEXT',
@@ -155,11 +156,11 @@ export function registerSyncCommand(program: Command) {
         retries: string;
       }) => {
         const opts = program.opts();
-        const options = {
-          interval: Number(input.interval),
-          timeout: Number(input.timeout),
-          samples: Number(input.samples),
-          retries: Number(input.retries),
+        const rawOptions = {
+          interval: plainInteger(input.interval),
+          timeout: plainInteger(input.timeout),
+          samples: plainInteger(input.samples),
+          retries: plainInteger(input.retries),
         };
         for (const [key, min, max] of [
           ['interval', 1, 300],
@@ -167,17 +168,15 @@ export function registerSyncCommand(program: Command) {
           ['samples', 1, 1000],
           ['retries', 0, 20],
         ] as const) {
-          if (
-            !Number.isSafeInteger(options[key]) ||
-            options[key] < min ||
-            options[key] > max
-          ) {
+          const val = rawOptions[key];
+          if (val === null || val < min || val > max) {
             throw new AgentError(
               'INVALID_INPUT',
               `${key} must be an integer from ${min} to ${max}.`,
             );
           }
         }
+        const options = rawOptions as Record<keyof typeof rawOptions, number>;
         const config = await resolveConfig(opts);
         if (config.offline || !config.syncId) {
           throw new AgentError(

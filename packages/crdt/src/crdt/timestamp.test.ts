@@ -1,4 +1,4 @@
-import { Timestamp } from './timestamp';
+import { deserializeClock, Timestamp } from './timestamp';
 
 describe('Timestamp', function () {
   let now = 0;
@@ -41,6 +41,8 @@ describe('Timestamp', function () {
         '1969-01-01T00:00:00.000Z-0000-0000000000000000',
         '10000-01-01T00:00:00.000Z-FFFF-FFFFFFFFFFFFFFFF',
         '9999-12-31T23:59:59.999Z-10000-FFFFFFFFFFFFFFFF',
+        '9999-12-31T23:59:59.999Z-000G-FFFFFFFFFFFFFFFF',
+        '9999-12-31T23:59:59.999Z-+001-FFFFFFFFFFFFFFFF',
         '9999-12-31T23:59:59.999Z-FFFF-10000000000000000',
       ];
       for (const invalidInput of invalidInputs) {
@@ -65,6 +67,21 @@ describe('Timestamp', function () {
         expect(typeof parsed.node()).toBe('string');
         expect(parsed.toString()).toBe(validInput);
       }
+    });
+
+    it('should deserialize non-object or partial clock JSON safely', function () {
+      for (const raw of ['null', '123', '"str"', '[]']) {
+        const clock = deserializeClock(raw);
+        expect(clock.timestamp.millis()).toBe(0);
+        expect(clock.merkle).toEqual({});
+      }
+
+      const missingMerkle = deserializeClock(
+        JSON.stringify({
+          timestamp: '2015-04-24T22:23:42.123Z-1000-0123456789ABCDEF',
+        }),
+      );
+      expect(missingMerkle.merkle).toEqual({});
     });
   });
 

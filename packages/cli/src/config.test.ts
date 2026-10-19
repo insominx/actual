@@ -205,6 +205,29 @@ describe('resolveConfig', () => {
       expect(config.password).toBe('pw');
       expect(config.sessionToken).toBeUndefined();
     });
+
+    it('rejects malformed or non-HTTP serverUrl as INVALID_INPUT', async () => {
+      await expect(
+        resolveConfig({ serverUrl: 'not-a-valid-url', password: 'pw' }),
+      ).rejects.toMatchObject({
+        code: 'INVALID_INPUT',
+        message: 'Provide a valid HTTP or HTTPS server URL.',
+      });
+      await expect(
+        resolveConfig({ serverUrl: 'ftp://example.com', password: 'pw' }),
+      ).rejects.toMatchObject({
+        code: 'INVALID_INPUT',
+      });
+    });
+
+    it('resolves localOnly config without requiring serverUrl or credentials', async () => {
+      const config = await resolveConfig(
+        { dataDir: '/custom/local' },
+        { localOnly: true },
+      );
+      expect(config.dataDir).toBe('/custom/local');
+      expect(config.password).toBeUndefined();
+    });
   });
 
   describe('cache options', () => {

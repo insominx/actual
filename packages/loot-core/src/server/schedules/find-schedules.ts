@@ -222,7 +222,7 @@ async function monthly1stor3rd(startDate, accountId) {
 
 async function monthly2ndor4th(startDate, accountId) {
   return schedulesForPattern(
-    d.subMonths(parseDate(startDate), 8),
+    d.subWeeks(parseDate(startDate), 8),
     14,
     start => {
       // The weekday of the candidate start date, not of today

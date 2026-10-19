@@ -9,7 +9,7 @@ export async function resolveCleanupGroup(name: string): Promise<string> {
   }
   const key = trimmed.toLowerCase();
   const existing = await db.first<{ id: string; tombstone: 0 | 1 }>(
-    `SELECT id, tombstone FROM cleanup_groups WHERE lower(name) = ? LIMIT 1`,
+    `SELECT id, tombstone FROM cleanup_groups WHERE UNICODE_LOWER(name) = ? LIMIT 1`,
     [key],
   );
   if (existing) {

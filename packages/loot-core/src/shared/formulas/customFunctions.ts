@@ -217,7 +217,11 @@ export class CustomFunctionsPlugin extends FunctionPlugin {
       (number: number, decimals: number = 2) => {
         // Excel and HyperFormula default FIXED to 2 places. Defaulting to 0
         // turned 10.50 into 11.
-        return Number(number).toFixed(decimals);
+        const count = decimalCount(decimals);
+        if (count === null) {
+          return new CellError(ErrorType.NUM);
+        }
+        return Number(number).toFixed(count);
       },
     );
   }
