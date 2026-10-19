@@ -338,7 +338,7 @@ describe('Condition', () => {
     expect(cond.eval({ cleared: true })).toBe(false);
   });
 
-  test('tag conditions keep the tag’s case', () => {
+  test('tag conditions keep the case of the tag', () => {
     const all = new Condition('hasTags', 'notes', '#Tag_1', null);
     expect(all.eval({ notes: 'Follow up #Tag_1 issue' })).toBe(true);
     expect(all.eval({ notes: 'Follow up #tag_1 issue' })).toBe(false);
@@ -395,7 +395,9 @@ describe('Action', () => {
       const action = new Action('set', 'notes', '', {
         template: '{{regex notes "/[/" "x"}}',
       });
-      const item = { notes: 'Sarah' };
+      const item: { notes: string; _ruleErrors?: string[] } = {
+        notes: 'Sarah',
+      };
       expect(() => action.exec(item)).not.toThrow();
       expect(item.notes).toBe('Sarah');
       expect(item._ruleErrors?.[0]).toContain('template');

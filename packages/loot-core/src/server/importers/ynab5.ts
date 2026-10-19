@@ -8,6 +8,7 @@ import { ruleModel } from '#server/transactions/transaction-rules';
 import { getCurrency } from '#shared/currencies';
 import * as monthUtils from '#shared/months';
 import { q } from '#shared/query';
+import { roundHalfAwayFromZero } from '#shared/schedules';
 import { groupBy, sortByKey } from '#shared/util';
 import type { RecurConfig, RecurPattern, RuleEntity } from '#types/models';
 
@@ -82,8 +83,9 @@ function budgetDecimalPlaces() {
 
 function amountFromYnab(amount: number, decimalPlaces = 2) {
   // YNAB stores milliunits (major units × 1000). Actual stores
-  // 10^decimalPlaces, so dollars divide by 10 and yen by 1000.
-  return Math.round(amount / 10 ** (3 - decimalPlaces));
+  // 10^decimalPlaces, so dollars divide by 10 and yen by 1000. Round half
+  // away from zero so a transfer's two legs stay equal and opposite.
+  return roundHalfAwayFromZero(amount / 10 ** (3 - decimalPlaces));
 }
 
 function getDayOfMonth(date: string) {

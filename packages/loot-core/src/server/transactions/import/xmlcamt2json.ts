@@ -238,7 +238,10 @@ export async function xmlCAMT2json(
         });
       }
     } else {
-      const detail = details?.[0] ?? entry.NtryDtls?.TxDtls;
+      const singleDetail = Array.isArray(entry.NtryDtls?.TxDtls)
+        ? undefined
+        : entry.NtryDtls?.TxDtls;
+      const detail = details?.[0] ?? singleDetail;
       let payee_name: string | null;
       let notes: string | null;
       payee_name = getPayeeNameFromTxDtls(detail, isDebit);

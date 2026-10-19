@@ -368,7 +368,8 @@ function estimateRecentness(str: string) {
   // increasing integers.
   return str.split(',').reduce((total, version) => {
     const [_, number] = version.split('-');
-    return total + parseInt(number);
+    // A malformed entry counts as zero changes instead of poisoning the sum
+    return total + (parseInt(number) || 0);
   }, 0);
 }
 

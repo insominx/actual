@@ -577,7 +577,10 @@ export function amountToInteger(
   decimalPlaces: number = 2,
 ): IntegerAmount {
   const multiplier = Math.pow(10, decimalPlaces);
-  return Math.round(amount * multiplier);
+  // Round half away from zero. Math.round sends -0.5 to 0 but 0.5 to 1, so
+  // an outflow and the matching inflow would differ by a unit.
+  const rounded = Math.round(Math.abs(amount * multiplier));
+  return amount < 0 && rounded !== 0 ? -rounded : rounded;
 }
 
 export function integerToAmount(

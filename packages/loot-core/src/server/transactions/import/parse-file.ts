@@ -70,6 +70,7 @@ export function parseOfxAmount(amount: string): number | null {
 
 type StructuredTransaction = {
   amount: number;
+  imported_id?: string;
   date: string;
   payee_name: string;
   imported_payee: string;
@@ -77,12 +78,6 @@ type StructuredTransaction = {
   category?: string | null;
 };
 
-/**
- * Decode raw CSV file bytes into a string. A user-provided encoding always
- * wins; otherwise the byte order mark selects UTF-16 LE/BE and everything
- * else decodes as UTF-8. Files in other encodings can be selected manually
- * in the import dialog.
- */
 // `split` on a file that ends with a newline yields a final empty string.
 // That phantom line is not a row, and counting it made "skip the last line"
 // drop the blank instead of the footer.
@@ -94,6 +89,12 @@ export function csvLinesWithoutTrailingBlank(contents: string): string[] {
   return lines;
 }
 
+/**
+ * Decode raw CSV file bytes into a string. A user-provided encoding always
+ * wins; otherwise the byte order mark selects UTF-16 LE/BE and everything
+ * else decodes as UTF-8. Files in other encodings can be selected manually
+ * in the import dialog.
+ */
 function decodeCsvBytes(bytes: Uint8Array, encoding = 'auto'): string {
   if (encoding !== 'auto') {
     // Per the WHATWG encoding spec, the iso-8859-1 label resolves to the

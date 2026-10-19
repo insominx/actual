@@ -2,6 +2,7 @@ import { enUS } from 'date-fns/locale';
 
 import {
   amountToCurrencyInteger,
+  amountToInteger,
   applyChanges,
   applyFindReplace,
   currencyToAmount,
@@ -16,6 +17,21 @@ import {
 } from './util';
 
 describe('utility functions', () => {
+  test('amountToInteger rounds half away from zero so outflows mirror inflows', () => {
+    expect(amountToInteger(12.34)).toBe(1234);
+    expect(amountToInteger(-12.34)).toBe(-1234);
+    // Exactly representable halves must round the same size in both directions
+    expect(amountToInteger(0.125)).toBe(13);
+    expect(amountToInteger(-0.125)).toBe(-13);
+    expect(amountToInteger(2.5, 0)).toBe(3);
+    expect(amountToInteger(-2.5, 0)).toBe(-3);
+  });
+
+  test('amountToInteger never returns negative zero', () => {
+    expect(Object.is(amountToInteger(-0.001), 0)).toBe(true);
+    expect(Object.is(amountToInteger(0), 0)).toBe(true);
+  });
+
   test('tsToRelativeTime returns Unknown instead of throwing on a malformed timestamp', () => {
     expect(tsToRelativeTime(null, enUS)).toBe('Unknown');
     expect(tsToRelativeTime('not-a-number', enUS)).toBe('Unknown');
