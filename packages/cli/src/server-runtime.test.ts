@@ -1,8 +1,11 @@
 import type * as ChildProcess from 'node:child_process';
 import type * as Crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AgentError } from './agent-output';
 import type * as RuntimeState from './runtime-state';
@@ -46,7 +49,7 @@ vi.mock('./runtime-state', async importOriginal => ({
   readRuntimeState: mocks.readRuntimeState,
 }));
 
-const { startRuntime } = await import('./server-runtime');
+const { runtimeLogs, startRuntime } = await import('./server-runtime');
 
 async function startupError() {
   try {
@@ -103,6 +106,43 @@ describe('startRuntime failure reporting', () => {
     expect((error as AgentError).details).toEqual({
       issue: 'startup-failed',
       stopConfirmed: false,
+    });
+  });
+});
+
+describe('runtimeLogs', () => {
+  let dir: string;
+
+  function writeEvents(content: string) {
+    mkdirSync(join(dir, '.actual-runtime'), { recursive: true });
+    writeFileSync(join(dir, '.actual-runtime', 'events.jsonl'), content);
+  }
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'actual-cli-runtime-logs-'));
+  });
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('returns the recorded lifecycle events', async () => {
+    writeEvents(
+      '{"at":"2026-01-01T00:00:00.000Z","event":"starting"}\n' +
+        '{"at":"2026-01-01T00:00:01.000Z","event":"healthy"}\n',
+    );
+    const logs = await runtimeLogs(dir);
+    expect(logs.events.map(event => event.event)).toEqual([
+      'starting',
+      'healthy',
+    ]);
+  });
+
+  it('reports a malformed line as an invalid event log', async () => {
+    writeEvents('{"at":"2026-01-01T00:00:00.000Z","ev\n');
+    await expect(runtimeLogs(dir)).rejects.toMatchObject({
+      code: 'ENGINE_FAILURE',
+      message: 'Invalid supervisor event log.',
     });
   });
 });

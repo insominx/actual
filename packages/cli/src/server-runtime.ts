@@ -280,7 +280,16 @@ export async function runtimeLogs(dir: string) {
       .filter(Boolean)
       .slice(-100)
       .map(line => {
-        const value: unknown = JSON.parse(line);
+        let value: unknown;
+        try {
+          value = JSON.parse(line);
+        } catch {
+          // A partially written line should read as an invalid log
+          throw new AgentError(
+            'ENGINE_FAILURE',
+            'Invalid supervisor event log.',
+          );
+        }
         if (
           !isRecord(value) ||
           typeof value.at !== 'string' ||

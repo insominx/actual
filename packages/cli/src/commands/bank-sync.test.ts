@@ -1,11 +1,11 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { Command } from 'commander';
 
 import { AgentError } from '#agent-output';
-import { listRuns } from '#bank-sync-runs';
+import { listRuns, newRunId, readRun } from '#bank-sync-runs';
 import { resolveConfig } from '#config';
 
 import { registerBankSyncCommand } from './bank-sync';
@@ -76,5 +76,22 @@ describe('bank-sync refresh', () => {
     expect(runs[0].runId).toBe(details.runId);
     expect(runs[0].commit).toBe('committed-local');
     expect(runs[0].result).toMatchObject({ attempted: 1 });
+  });
+});
+
+describe('bank sync run records', () => {
+  it('reports a missing record as MISSING_CONTEXT', async () => {
+    await expect(readRun(dataDir, newRunId())).rejects.toMatchObject({
+      code: 'MISSING_CONTEXT',
+    });
+  });
+
+  it('reports a truncated record as INVALID_INPUT, not an engine failure', async () => {
+    const runId = newRunId();
+    mkdirSync(join(dataDir, 'bank-sync-runs'), { recursive: true });
+    writeFileSync(join(dataDir, 'bank-sync-runs', `${runId}.json`), '{"sche');
+    await expect(readRun(dataDir, runId)).rejects.toMatchObject({
+      code: 'INVALID_INPUT',
+    });
   });
 });
