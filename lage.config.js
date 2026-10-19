@@ -7,6 +7,13 @@ module.exports = {
       type: 'npmScript',
       dependsOn: ['^typecheck'],
     },
+    // api and web both rebuild the shared loot-core declarations through
+    // `tsgo -b`. Run together after a declaration change, api can read them
+    // half written and report bogus "not a module" and implicit-any errors.
+    '@actual-app/api#typecheck': {
+      type: 'npmScript',
+      dependsOn: ['^typecheck', '@actual-app/web#typecheck'],
+    },
     test: {
       type: 'npmScript',
       options: {
