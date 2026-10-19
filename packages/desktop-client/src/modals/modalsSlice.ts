@@ -369,6 +369,12 @@ export type Modal =
       };
     }
   | {
+      name: 'all-accounts-menu';
+      options: {
+        onClose?: () => void;
+      };
+    }
+  | {
       name: 'account-reconcile';
       options: {
         accountId: AccountEntity['id'];
