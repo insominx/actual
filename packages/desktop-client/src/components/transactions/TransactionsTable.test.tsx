@@ -991,8 +991,7 @@ describe('Transactions', () => {
     ]);
   });
 
-  // TODO: fix this test
-  test.skip('dropdown invalid value resets correctly', async () => {
+  test('dropdown invalid value resets correctly', async () => {
     const { container, getTransactions } = renderTransactions();
 
     // Invalid values should be rejected and nullified

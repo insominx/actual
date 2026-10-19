@@ -242,6 +242,7 @@ function Footer({
   onEditField,
   isFuture,
 }: FooterProps) {
+  const currencyCode = useFormat().currency.code;
   const [transaction, ...childTransactions] = transactions;
   const emptySplitTransaction = childTransactions.find(t => t.amount === 0);
   const onClickRemainingSplit = () => {
@@ -632,7 +633,6 @@ const TransactionEditInner = memo<TransactionEditInnerProps>(
     const { t } = useTranslation();
     const format = useFormat();
     const decimalPlaces = format.currency.decimalPlaces;
-    const currencyCode = format.currency.code;
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [showHiddenCategories] = useLocalPref('budget.showHiddenCategories');

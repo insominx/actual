@@ -35,8 +35,8 @@ import { TransferDirectionIcon } from '#components/common/TransferDirectionIcon'
 import { useAccount } from '#hooks/useAccount';
 import { useCachedSchedules } from '#hooks/useCachedSchedules';
 import { useCategories } from '#hooks/useCategories';
-import { useFormat } from '#hooks/useFormat';
 import { useDisplayPayee } from '#hooks/useDisplayPayee';
+import { useFormat } from '#hooks/useFormat';
 import { usePayee } from '#hooks/usePayee';
 import { NotesTagFormatter } from '#notes/NotesTagFormatter';
 import { useSelector } from '#redux';

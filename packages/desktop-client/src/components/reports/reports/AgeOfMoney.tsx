@@ -24,7 +24,6 @@ import type {
   AgeOfMoneyWidget,
   TimeFrame,
 } from '@actual-app/core/types/models';
-import * as d from 'date-fns';
 
 import { EditablePageHeaderTitle } from '#components/EditablePageHeaderTitle';
 import { MobileBackButton } from '#components/mobile/MobileBackButton';

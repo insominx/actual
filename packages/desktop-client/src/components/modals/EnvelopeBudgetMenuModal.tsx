@@ -26,8 +26,8 @@ import {
 import { AmountInput } from '#components/mobile/transactions/AmountInput';
 import { Notes } from '#components/Notes';
 import { useCategory } from '#hooks/useCategory';
-import { useFormat } from '#hooks/useFormat';
 import { useFeatureFlag } from '#hooks/useFeatureFlag';
+import { useFormat } from '#hooks/useFormat';
 import { useNotes } from '#hooks/useNotes';
 import type { Modal as ModalType } from '#modals/modalsSlice';
 import { envelopeBudget } from '#spreadsheet/bindings';

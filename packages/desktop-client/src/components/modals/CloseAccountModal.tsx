@@ -22,8 +22,8 @@ import { CategoryAutocomplete } from '#components/autocomplete/CategoryAutocompl
 import { Link } from '#components/common/Link';
 import { Modal, ModalCloseButton, ModalHeader } from '#components/common/Modal';
 import { useAccounts } from '#hooks/useAccounts';
-import { useFormat } from '#hooks/useFormat';
 import { useCategories } from '#hooks/useCategories';
+import { useFormat } from '#hooks/useFormat';
 import { pushModal } from '#modals/modalsSlice';
 import type { Modal as ModalType } from '#modals/modalsSlice';
 import { useDispatch } from '#redux';
@@ -180,7 +180,10 @@ export function CloseAccountModal({
                       <strong>
                         {
                           {
-                            balance: integerToCurrencyScaled(balance, currencyCode),
+                            balance: integerToCurrencyScaled(
+                              balance,
+                              currencyCode,
+                            ),
                           } as TransObjectLiteral
                         }
                       </strong>

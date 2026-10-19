@@ -21,7 +21,6 @@ import type {
   RuleConditionEntity,
   SpendingWidget,
 } from '@actual-app/core/types/models';
-import * as d from 'date-fns';
 
 import { EditablePageHeaderTitle } from '#components/EditablePageHeaderTitle';
 import { AppliedFilters } from '#components/filters/AppliedFilters';

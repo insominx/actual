@@ -45,11 +45,11 @@ import type {
 import { FloatingActionBar } from '#components/mobile/FloatingActionBar';
 import { useAccounts } from '#hooks/useAccounts';
 import { useCategoriesById } from '#hooks/useCategories';
+import { useFormat } from '#hooks/useFormat';
 import { useLocale } from '#hooks/useLocale';
 import { useNavigate } from '#hooks/useNavigate';
 import { usePayees } from '#hooks/usePayees';
 import { useScrollListener } from '#hooks/useScrollListener';
-import { useFormat } from '#hooks/useFormat';
 import { useSelectedDispatch, useSelectedItems } from '#hooks/useSelected';
 import { useTransactionBatchActions } from '#hooks/useTransactionBatchActions';
 import { useUndo } from '#hooks/useUndo';
@@ -516,7 +516,10 @@ function SelectedTransactionsFloatingActionBar({
                       case 'amount':
                         displayValue = Number.isNaN(Number(value))
                           ? value
-                          : integerToCurrencyScaled(Number(value), currencyCode);
+                          : integerToCurrencyScaled(
+                              Number(value),
+                              currencyCode,
+                            );
                         break;
                       case 'notes':
                         displayValue = `${mode} with ${String(value)}`;
