@@ -41,7 +41,7 @@ percentOrNumber
   / value:$(d+ ('.' (d+)?)?) { return { value: value, type: 'fixed' } }
 
 repeat 'repeat interval'
-  = 'month'i { return { annual: false, repeat: 1 }}
+  = 'month'i { return { annual: false }}
   / months: positive _ 'months'i { return { annual: false, repeat: +months }}
   / 'year'i { return { annual: true }}
   / years: positive _ 'years'i { return { annual: true, repeat: +years }}
@@ -57,7 +57,7 @@ percentOf = percent:percent _ of _ 'previous'i _ { return { percent: percent, pr
 		/ percent:percent _ of _ { return { percent: percent, prev: false}}
 
 periodCount = 'day'i { return {period: 'day', amount: 1 }}
-           / n: positive _ 'days'i _ { return { period: 'day', amount: +n }} 
+           / n: positive _ 'days'i _ { return { period: 'day', amount: +n }}
            / week _ { return {period: 'week', amount: 1 }}
            / n: positive _ weeks { return {period: 'week', amount: +n }}
            / n: positive _ 'months'i _ {return {period: 'month', amount: +n }}
