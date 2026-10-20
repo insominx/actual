@@ -58,8 +58,9 @@ export function HoldBufferModal({ onSubmit }: HoldBufferModalProps) {
                   height: styles.mobileMinHeight,
                 }}
                 onUpdate={setAmount}
-                onEnter={() => {
-                  _onSubmit(amount);
+                onEnter={(_, enteredAmount) => {
+                  // `amount` state still holds the previous render's value
+                  _onSubmit(enteredAmount ?? amount);
                   state.close();
                 }}
               />

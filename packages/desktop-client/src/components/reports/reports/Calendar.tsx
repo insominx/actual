@@ -75,12 +75,12 @@ const SUMMARY_HEIGHT = 140;
 export function Calendar() {
   const params = useParams();
   const [searchParams] = useSearchParams();
-  const { data: widget, isPending } = useDashboardWidget<CalendarWidget>({
+  const { data: widget, isLoading } = useDashboardWidget<CalendarWidget>({
     id: params.id,
     type: 'calendar-card',
   });
 
-  if (isPending) {
+  if (isLoading) {
     return <LoadingIndicator />;
   }
 

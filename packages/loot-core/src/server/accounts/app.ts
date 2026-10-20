@@ -878,14 +878,17 @@ async function setSecret({
       );
     }
 
+    // Pasted credentials often carry a trailing space or newline, which
+    // makes the provider reject them
+    const trimmed = value.trim();
+    // A blank secret would mark the provider as configured
+    if (!trimmed) {
+      return { error: 'failed', reason: 'empty' };
+    }
+
     return await post(
       serverConfig.BASE_SERVER + '/secret',
-      {
-        name,
-        // Pasted credentials often carry a trailing space or newline, which
-        // makes the provider reject them
-        value: value.trim(),
-      },
+      { name, value: trimmed },
       headers,
     );
   } catch (error) {

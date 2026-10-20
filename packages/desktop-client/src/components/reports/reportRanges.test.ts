@@ -62,6 +62,24 @@ describe('calculateTimeRange', () => {
     expect(mode).toBe('sliding-window');
   });
 
+  it('ends a day-shaped full range on a day, not a month', () => {
+    expect(
+      calculateTimeRange(
+        { start: '2016-12-15', end: '2016-12-29', mode: 'full' },
+        undefined,
+        '2016-12-20',
+      ),
+    ).toEqual(['2016-12-15', '2017-01-01', 'full']);
+    // A future-dated latest transaction extends the range to that day
+    expect(
+      calculateTimeRange(
+        { start: '2016-12-15', end: '2016-12-29', mode: 'full' },
+        undefined,
+        '2017-01-09',
+      ),
+    ).toEqual(['2016-12-15', '2017-01-09', 'full']);
+  });
+
   it('keeps current quarter as a live time range when restoring a saved widget', () => {
     const [start, end, mode] = calculateTimeRange({
       start: '2016-10',

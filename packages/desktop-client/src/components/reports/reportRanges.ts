@@ -261,6 +261,18 @@ export function calculateTimeRange(
   const mode = timeFrame?.mode ?? defaultTimeFrame?.mode ?? 'sliding-window';
 
   if (mode === 'full') {
+    // Day-shaped ranges end on a day: today, or a later transaction's date
+    if (monthUtils.isValidYearMonthDay(start)) {
+      const today = monthUtils.currentDay();
+      const latestDay =
+        latestTransaction && monthUtils.isValidYearMonthDay(latestTransaction)
+          ? latestTransaction
+          : null;
+      return getFullRange(
+        start,
+        latestDay && latestDay > today ? latestDay : today,
+      );
+    }
     const latestTransactionMonth = latestTransaction
       ? monthUtils.monthFromDate(latestTransaction)
       : null;

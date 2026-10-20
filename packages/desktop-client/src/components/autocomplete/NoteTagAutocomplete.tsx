@@ -96,8 +96,8 @@ export function NoteTagAutocomplete({ inputRef }: NoteTagAutocompleteProps) {
   });
 
   const hideScrollbar = css({
-    'scrollbar-width': 'none',
-    '-ms-overflow-style': 'none',
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none',
     '&::-webkit-scrollbar': {
       display: 'none',
     },

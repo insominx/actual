@@ -224,6 +224,8 @@ export function getSecretsError(error: string, reason: string) {
       return t('You are not logged in.');
     case 'not-admin':
       return t('You have to be admin to set secrets');
+    case 'empty':
+      return t('The value cannot be blank.');
     default:
       return t(
         'An error occurred while setting the secret. Please try again. (ref: {{error}})',

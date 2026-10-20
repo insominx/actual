@@ -102,6 +102,7 @@ export function SidebarCategory({
       <View style={{ flexShrink: 0, marginLeft: 5 }}>
         <Button
           variant="bare"
+          aria-label={t('Menu')}
           className="hover-visible"
           style={{ color: 'currentColor', padding: 3 }}
           onPress={handleContextMenu}

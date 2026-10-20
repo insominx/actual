@@ -37,12 +37,12 @@ const FormulaEditor = lazy(() =>
 
 export function Formula() {
   const params = useParams();
-  const { data: widget, isPending } = useDashboardWidget<FormulaWidget>({
+  const { data: widget, isLoading } = useDashboardWidget<FormulaWidget>({
     id: params.id,
     type: 'formula-card',
   });
 
-  if (isPending) {
+  if (isLoading) {
     return <LoadingIndicator />;
   }
 

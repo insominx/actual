@@ -1241,7 +1241,7 @@ const TransactionEditInner = memo<TransactionEditInnerProps>(
                 !transaction.payee &&
                 !shouldShowSaveLocation
               }
-              rightContent={
+              rightAction={
                 shouldShowSaveLocation ? (
                   <Button
                     variant="bare"

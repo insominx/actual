@@ -35,7 +35,7 @@ export const SimpleFinInitialiseModal = ({
   const [error, setError] = useState(t('It is required to provide a token.'));
 
   const submit = async (close: () => void) => {
-    if (!token) {
+    if (!token.trim()) {
       setIsValid(false);
       return;
     }

@@ -7,6 +7,7 @@ import {
   applyFindReplace,
   currencyToAmount,
   getNumberFormat,
+  integerToCurrency,
   integerToCurrencyScaled,
   integerToCurrencyWithDecimal,
   looselyParseAmount,
@@ -189,6 +190,18 @@ describe('utility functions', () => {
     setNumberFormat({ format: 'apostrophe-dot', hideFraction: true });
     formatter = getNumberFormat().formatter;
     expect(formatter.format(Number('1234.56'))).toBe(`1\u2019235`);
+  });
+
+  test('number formatting never shows negative zero with decimal places', () => {
+    setNumberFormat({ format: 'comma-dot', hideFraction: false });
+    const formatter = getNumberFormat().formatter;
+    expect(formatter.format(-0)).toBe('0.00');
+    expect(formatter.format(Number('-0.001'))).toBe('0.00');
+    expect(formatter.format(Number('-0.01'))).toBe('-0.01');
+    expect(integerToCurrency(-0)).toBe('0.00');
+
+    setNumberFormat({ format: 'dot-comma', hideFraction: false });
+    expect(getNumberFormat().formatter.format(-0)).toBe('0,00');
   });
 
   test('number formatting works with small negative numbers with 0 decimal places', () => {

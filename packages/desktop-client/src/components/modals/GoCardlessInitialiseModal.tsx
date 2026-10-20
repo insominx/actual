@@ -39,7 +39,7 @@ export const GoCardlessInitialiseModal = ({
   );
 
   const submit = async (close: () => void) => {
-    if (!secretId || !secretKey) {
+    if (!secretId.trim() || !secretKey.trim()) {
       setIsValid(false);
       setError(
         t('It is required to provide both the secret id and secret key.'),

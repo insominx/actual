@@ -389,7 +389,11 @@ export function getNumberFormat({
       if (currentFormat === 'apostrophe-dot') {
         formatted = formatted.replace(/'/g, '\u2019');
       }
-      return formatted === '-0' ? '0' : formatted;
+      // A value that rounds to zero (including -0) prints without a sign,
+      // whatever the decimals or the locale's minus character
+      return /^[-−]/.test(formatted) && !/[1-9]/.test(formatted)
+        ? formatted.slice(1)
+        : formatted;
     },
   };
 

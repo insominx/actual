@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import type { ComponentPropsWithoutRef } from 'react';
 import { GridListItem } from 'react-aria-components';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@actual-app/components/button';
 import { Card } from '@actual-app/components/card';
@@ -184,6 +185,7 @@ function ExpenseGroupName({
   onToggleCollapse,
   show3Columns,
 }: ExpenseGroupNameProps) {
+  const { t } = useTranslation();
   const sidebarColumnWidth = getColumnWidth({
     show3Columns,
     isSidebar: true,
@@ -219,6 +221,8 @@ function ExpenseGroupName({
           },
           marginLeft: -5,
         })}
+        aria-label={isCollapsed(group.id) ? t('Expand') : t('Collapse')}
+        aria-expanded={!isCollapsed(group.id)}
         onPress={() => onToggleCollapse(group.id)}
       >
         <SvgExpandArrow

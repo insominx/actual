@@ -1,12 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode, RefObject } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import { Button } from '@actual-app/components/button';
 import { useResponsive } from '@actual-app/components/hooks/useResponsive';
 import { SvgDotsHorizontalTriple } from '@actual-app/components/icons/v1';
+import { styles } from '@actual-app/components/styles';
+import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
+import { css } from '@emotion/css';
 
 import { useContextMenu } from '#hooks/useContextMenu';
 import { useIsInViewport } from '#hooks/useIsInViewport';
@@ -25,6 +28,9 @@ type ReportCardProps = {
   isEditing?: boolean;
   disableClick?: boolean;
   to?: string;
+  // Set when the card renders its own buttons: buttons can't nest, so the
+  // card navigates on a plain container click instead of wrapping a button
+  hasInteractiveContent?: boolean;
   children: ReactNode;
   size?: number;
   style?: CSSProperties;
@@ -37,6 +43,7 @@ export function ReportCard({
   isEditing,
   disableClick,
   to,
+  hasInteractiveContent,
   children,
   size = 1,
   style,
@@ -101,9 +108,52 @@ export function ReportCard({
       {/* we render the content only if it is in the viewport
       this reduces the amount of concurrent server api calls and thus
       has a better performance */}
-      {isInViewport || hasRendered ? children : null}
+      {isInViewport || hasRendered ? (
+        children
+      ) : (
+        // Until the card renders, its button would otherwise have no name
+        <Text style={styles.visuallyHidden}>
+          <Trans>Open report</Trans>
+        </Text>
+      )}
     </View>
   );
+
+  if (to && !isEditing && !disableClick && hasInteractiveContent) {
+    return (
+      <Layout {...layoutProps}>
+        <View
+          onClick={() => navigate(to, { state: { goBack: true } })}
+          style={{ height: '100%', width: '100%', cursor: 'pointer' }}
+        >
+          {/* Keyboard access: a sibling of the content, so it doesn't nest
+          its buttons; hidden until focused */}
+          <Button
+            variant="bare"
+            onPress={() => navigate(to, { state: { goBack: true } })}
+            // A class, not `style`: inline styles can't target :focus-visible
+            className={css({
+              ...styles.visuallyHidden,
+              '&:focus-visible': {
+                width: 'auto',
+                height: 'auto',
+                margin: 0,
+                padding: '2px 6px',
+                clip: 'auto',
+                top: 4,
+                left: 4,
+                zIndex: 1,
+                backgroundColor: theme.tableBackground,
+              },
+            })}
+          >
+            <Trans>Open report</Trans>
+          </Button>
+          {content}
+        </View>
+      </Layout>
+    );
+  }
 
   if (to && !isEditing && !disableClick) {
     return (

@@ -173,6 +173,7 @@ export function CalendarCard({
       isEditing={isEditing}
       disableClick={nameMenuOpen}
       to={`/reports/calendar/${widgetId}`}
+      hasInteractiveContent
       onRename={() => setNameMenuOpen(true)}
     >
       <View

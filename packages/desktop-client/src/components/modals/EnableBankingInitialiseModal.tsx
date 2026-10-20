@@ -59,7 +59,7 @@ export function EnableBankingInitialiseModal({
   }
 
   async function onSubmit(close: () => void) {
-    if (!applicationId || !secretKey) {
+    if (!applicationId.trim() || !secretKey.trim()) {
       setIsValid(false);
       setError(
         t(

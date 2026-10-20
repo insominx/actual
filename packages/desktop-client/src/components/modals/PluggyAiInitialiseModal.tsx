@@ -49,7 +49,7 @@ export const PluggyAiInitialiseModal = ({
   );
 
   const submit = async (close: () => void) => {
-    if (!clientId || !clientSecret || !itemIds) {
+    if (!clientId.trim() || !clientSecret.trim() || !itemIds.trim()) {
       setIsValid(false);
       setError(
         t(

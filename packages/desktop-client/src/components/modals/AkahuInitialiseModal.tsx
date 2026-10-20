@@ -37,7 +37,7 @@ export const AkahuInitialiseModal = ({
   );
 
   const submit = async (close: () => void) => {
-    if (!userToken || !appToken) {
+    if (!userToken.trim() || !appToken.trim()) {
       setIsValid(false);
       return;
     }

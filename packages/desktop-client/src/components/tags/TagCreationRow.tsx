@@ -145,7 +145,9 @@ export const TagCreationRow = ({ onClose, tags }: TagCreationRowProps) => {
           }
           inputProps={{
             value: description || '',
-            onUpdate: setDescription,
+            // Kept current on every keystroke: Enter adds the tag before
+            // the field blurs, so an update-on-blur value would be lost
+            onChange: e => setDescription(e.target.value),
             onKeyDownCapture: onKeyDown,
             placeholder: t('Tag description'),
           }}

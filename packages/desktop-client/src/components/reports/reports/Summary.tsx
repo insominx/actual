@@ -49,12 +49,12 @@ import { useUpdateDashboardWidgetMutation } from '#reports/mutations';
 
 export function Summary() {
   const params = useParams();
-  const { data: widget, isPending } = useDashboardWidget<SummaryWidget>({
+  const { data: widget, isLoading } = useDashboardWidget<SummaryWidget>({
     id: params.id,
     type: 'summary-card',
   });
 
-  if (isPending) {
+  if (isLoading) {
     return <LoadingIndicator />;
   }
 

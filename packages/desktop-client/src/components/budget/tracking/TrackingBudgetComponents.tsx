@@ -293,6 +293,7 @@ export const CategoryMonth = memo(function CategoryMonth({
               <Button
                 ref={triggerRef}
                 variant="bare"
+                aria-label={t('Menu')}
                 onPress={() => setMenuOpen(true)}
                 style={{
                   padding: 3,

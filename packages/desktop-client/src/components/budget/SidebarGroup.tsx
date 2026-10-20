@@ -159,6 +159,7 @@ export function SidebarGroup({
           <View style={{ marginLeft: 5, flexShrink: 0 }}>
             <Button
               variant="bare"
+              aria-label={t('Menu')}
               className="hover-visible"
               style={{ padding: 3 }}
               onPress={handleContextMenu}

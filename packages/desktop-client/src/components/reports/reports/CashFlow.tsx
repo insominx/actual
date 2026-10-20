@@ -51,12 +51,12 @@ export const defaultTimeFrame = {
 
 export function CashFlow() {
   const params = useParams();
-  const { data: widget, isPending } = useDashboardWidget<CashFlowWidget>({
+  const { data: widget, isLoading } = useDashboardWidget<CashFlowWidget>({
     id: params.id,
     type: 'cash-flow-card',
   });
 
-  if (isPending) {
+  if (isLoading) {
     return <LoadingIndicator />;
   }
 

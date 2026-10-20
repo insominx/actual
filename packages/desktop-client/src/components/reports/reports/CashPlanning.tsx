@@ -343,7 +343,13 @@ function CashPlanningInner() {
                 <ul style={{ paddingLeft: 20 }}>
                   {summary.accounts.map(account => (
                     <li key={account.id} style={{ marginBottom: 8 }}>
-                      {account.name} {account.closed && <Trans>(closed)</Trans>}
+                      {account.name}
+                      {account.closed && (
+                        <>
+                          {' '}
+                          <Trans>(closed)</Trans>
+                        </>
+                      )}
                       : <CashPlanningMoney amount={account.balance} />
                     </li>
                   ))}

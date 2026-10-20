@@ -163,6 +163,10 @@ type TapFieldProps = ComponentPropsWithRef<typeof Button> & {
   icon?: ReactNode;
   placeholder?: string;
   rightContent?: ReactNode;
+  // An interactive control (e.g. a button) shown at the right edge of the
+  // field. Unlike `rightContent` it renders outside the field's own button,
+  // since buttons can't nest.
+  rightAction?: ReactNode;
   alwaysShowRightContent?: boolean;
   textStyle?: CSSProperties;
 };
@@ -192,13 +196,15 @@ export function TapField({
   icon,
   placeholder,
   rightContent,
+  rightAction,
   alwaysShowRightContent,
   textStyle,
   ref,
   ...props
 }: TapFieldProps) {
   const showPlaceholder = !value && !!placeholder;
-  return (
+  const showRight = !props.isDisabled || alwaysShowRightContent;
+  const field = (
     <Button
       ref={ref}
       bounce={false}
@@ -240,8 +246,29 @@ export function TapField({
           </Text>
         </>
       )}
-      {(!props.isDisabled || alwaysShowRightContent) && rightContent}
+      {showRight && rightContent}
     </Button>
+  );
+
+  if (!rightAction || !showRight) {
+    return field;
+  }
+
+  return (
+    <View style={{ position: 'relative', justifyContent: 'center' }}>
+      {field}
+      <View
+        style={{
+          position: 'absolute',
+          right: 8,
+          top: 0,
+          bottom: 0,
+          justifyContent: 'center',
+        }}
+      >
+        {rightAction}
+      </View>
+    </View>
   );
 }
 

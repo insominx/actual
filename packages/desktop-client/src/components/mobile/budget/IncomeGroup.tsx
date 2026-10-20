@@ -163,6 +163,7 @@ function IncomeGroupName({
   isCollapsed,
   onToggleCollapse,
 }: IncomeGroupNameProps) {
+  const { t } = useTranslation();
   const sidebarColumnWidth = getColumnWidth({
     isSidebar: true,
     offset: -13.5,
@@ -186,6 +187,8 @@ function IncomeGroupName({
           },
           marginLeft: -5,
         })}
+        aria-label={isCollapsed(group.id) ? t('Expand') : t('Collapse')}
+        aria-expanded={!isCollapsed(group.id)}
         onPress={() => onToggleCollapse(group.id)}
       >
         <SvgExpandArrow
