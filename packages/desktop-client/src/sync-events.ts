@@ -18,6 +18,7 @@ import type { Notification } from './notifications/notificationsSlice';
 import { payeeQueries } from './payees';
 import { loadPrefs } from './prefs/prefsSlice';
 import type { AppStore } from './redux/store';
+import { dashboardQueries, reportQueries } from './reports';
 import { tagQueries } from './tags/queries';
 import { signOut } from './users/usersSlice';
 
@@ -164,6 +165,18 @@ export function listenForSyncEvent(store: AppStore, queryClient: QueryClient) {
       if (tables.includes('tags')) {
         void queryClient.invalidateQueries({
           queryKey: tagQueries.lists(),
+        });
+      }
+
+      if (tables.includes('dashboard') || tables.includes('dashboard_pages')) {
+        void queryClient.invalidateQueries({
+          queryKey: dashboardQueries.lists(),
+        });
+      }
+
+      if (tables.includes('custom_reports')) {
+        void queryClient.invalidateQueries({
+          queryKey: reportQueries.lists(),
         });
       }
     } else if (event.type === 'error') {
