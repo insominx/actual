@@ -1,0 +1,29 @@
+{
+  "profiles": {
+    "default": {
+      "commands": [
+        { "id": "typecheck", "command": "yarn typecheck" },
+        {
+          "id": "core-tests",
+          "command": "yarn workspace @actual-app/core run test"
+        },
+        {
+          "id": "web-tests",
+          "command": "yarn workspace @actual-app/web run test"
+        },
+        {
+          "id": "sync-server-tests",
+          "command": "yarn workspace @actual-app/sync-server run test"
+        },
+        {
+          "id": "cli-tests",
+          "command": "yarn workspace @actual-app/cli run test"
+        },
+        {
+          "id": "api-tests",
+          "command": "yarn workspace @actual-app/api run test"
+        }
+      ]
+    }
+  }
+}

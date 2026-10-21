@@ -10,6 +10,7 @@ The CLI roadmap has 30 tasks. Tasks 0007-0013 are implemented and verified local
 | [Transaction column resizing](tasks/0004-transaction-column-resizing/progress.md) | Complete         | Committed in `5475cef91`; device-local widths; pointer, keyboard, reset and mobile checks passed             |
 | [Pay-period compatibility study](tasks/0005-pay-period-compatibility/progress.md) | Complete         | User selected no port on 2026-10-02; no follow-up feature queued                                             |
 | [Cash planning](tasks/0006-cash-planning/progress.md)                             | Complete locally | Committed in `68ffdbe3b`; locally verified; personal exports and remote-server sync remain unverified        |
+| [Upstream sync](tasks/0037-upstream-sync/progress.md)                             | Planned          | 126 upstream commits triaged (pin `80f7518c8`); waves 1–5 ready; D1–D10 await owner decisions                |
 
 The [fork adoption assessment](tasks/0001-actual-fork-recon/assessment.md) explains the ranking, sources and deferred candidates. [Original research](tasks/0001-actual-fork-recon/research.md) retains the broad fork scan. Deferred research candidates are not implementation tasks.
 
