@@ -365,7 +365,12 @@ export async function updateCategory(
   category: Pick<CategoryEntity, 'id'> & Partial<CategoryEntity>,
 ): Promise<void> {
   try {
-    await db.updateCategory(prepareCategoryUpdate(category));
+    // Ignored and underscore fields are dropped first, so { id, _ignored }`n    // has nothing left to write
+    const update = prepareCategoryUpdate(category);
+    if (!Object.keys(update).some(key => key !== 'id')) {
+      throw APIError('No fields to update');
+    }
+    await db.updateCategory(update);
   } catch (e) {
     if (
       e instanceof Error &&
