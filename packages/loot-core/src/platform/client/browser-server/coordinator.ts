@@ -936,6 +936,11 @@ export function createCoordinator({
           msg.name === 'create-demo-budget' ||
           msg.name === 'import-budget' ||
           msg.name === 'duplicate-budget' ||
+          // These replace the loaded budget too; routing them to another
+          // tab's worker would swap that tab's budget underneath it
+          msg.name === 'download-budget' ||
+          (msg.name === 'upload-budget' &&
+            (msg.args as Record<string, unknown> | undefined)?.id) ||
           msg.name === 'delete-budget'
         ) {
           if (msg.name === 'create-demo-budget') {

@@ -1,5 +1,7 @@
+import { unicodeLike } from '#platform/server/sqlite/unicodeLike';
 import { aqlQuery } from '#server/aql';
 import { conditionsToAQL } from '#server/transactions/transaction-rules';
+import { getNormalisedString } from '#shared/normalisation';
 import { q } from '#shared/query';
 import type { RuleConditionEntity, TransactionEntity } from '#types/models';
 
@@ -98,10 +100,6 @@ export async function getTransactions(
   return data;
 }
 
-function escapeRegex(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 function getValueByPath(
   object: Record<string, unknown> | null | undefined,
   path: string,
@@ -151,12 +149,6 @@ function applyTransform(value: unknown, transform: unknown) {
   }
 
   return value;
-}
-
-function likeToRegex(pattern: string) {
-  const regex = '^' + escapeRegex(pattern).replace(/%/g, '.*') + '$';
-  // `s` so `%` also spans newlines, as SQLite's LIKE does
-  return new RegExp(regex, 'is');
 }
 
 function evaluateClause(actualValue: unknown, clause: unknown): boolean {
@@ -233,17 +225,26 @@ function evaluateClause(actualValue: unknown, clause: unknown): boolean {
               equalComparableFilterValues(normalizedActualValue, expectedItem),
             )
           );
+        // Same LIKE as the SQL path for posted transactions: escaped
+        // wildcards, accent folding, and a null value counts as not-like
         case '$like':
           return (
-            typeof normalizedActualValue === 'string' &&
             typeof expectedValue === 'string' &&
-            likeToRegex(expectedValue).test(normalizedActualValue)
+            unicodeLike(
+              getNormalisedString(expectedValue),
+              typeof normalizedActualValue === 'string'
+                ? getNormalisedString(normalizedActualValue)
+                : null,
+            ) === 1
           );
         case '$notlike':
           return (
-            typeof normalizedActualValue === 'string' &&
             typeof expectedValue === 'string' &&
-            !likeToRegex(expectedValue).test(normalizedActualValue)
+            (normalizedActualValue == null ||
+              unicodeLike(
+                getNormalisedString(expectedValue),
+                getNormalisedString(String(normalizedActualValue)),
+              ) === 0)
           );
         case '$regexp':
           if (

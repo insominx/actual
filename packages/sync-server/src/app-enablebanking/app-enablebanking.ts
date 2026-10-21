@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 
+import { isAdmin } from '#account-db';
 import { handleError } from '#app-gocardless/util/handle-error';
 import { SecretName, secretsService } from '#services/secrets-service';
 import {
@@ -216,6 +217,17 @@ app.post(
 app.post(
   '/configure',
   handleError(async (req: Request, res: Response) => {
+    // The credentials are a server-wide secret, so only an admin may
+    // change them (same rule as app-secrets)
+    if (!isAdmin(res.locals.user_id)) {
+      res.status(403).send({
+        status: 'error',
+        reason: 'not-admin',
+        details: 'You have to be admin to manage global secrets',
+      });
+      return;
+    }
+
     const { applicationId, secretKey } = req.body || {};
 
     if (!applicationId || !secretKey) {

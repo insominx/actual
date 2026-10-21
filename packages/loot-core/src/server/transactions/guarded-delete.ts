@@ -52,7 +52,7 @@ export async function prepareTransactionDeletion(
   }
   // Same expansion as the batch owner: the target and its live children.
   const children = await db.all<{ id: string }>(
-    'SELECT id FROM v_transactions_internal WHERE parent_id = ? ORDER BY id',
+    'SELECT id FROM v_transactions_internal WHERE parent_id = ? AND tombstone = 0 ORDER BY id',
     [request.id],
   );
   const deletedIds = [request.id, ...children.map(row => row.id)].sort();

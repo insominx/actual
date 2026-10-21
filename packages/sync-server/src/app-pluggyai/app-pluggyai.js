@@ -223,12 +223,20 @@ app.post(
           trans.amount *= -1;
         }
 
-        let amountInCurrency = trans.amountInAccountCurrency ?? trans.amount;
+        // `currencyCode` is the transaction's own currency; a foreign
+        // purchase converted to the account currency must be tagged with the
+        // account currency, or the client scales it by the wrong decimals
+        const inAccountCurrency = trans.amountInAccountCurrency != null;
+        let amountInCurrency = inAccountCurrency
+          ? trans.amountInAccountCurrency
+          : trans.amount;
         amountInCurrency = Math.round(amountInCurrency * 100) / 100;
 
         newTrans.transactionAmount = {
           amount: amountInCurrency,
-          currency: trans.currencyCode,
+          currency: inAccountCurrency
+            ? (account.currencyCode ?? trans.currencyCode)
+            : trans.currencyCode,
         };
 
         newTrans.transactionId = trans.id;

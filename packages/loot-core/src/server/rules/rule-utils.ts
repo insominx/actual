@@ -217,9 +217,30 @@ export function iterateIds(
   }
 }
 
+// A monthly config that mixes day-of-month and weekday patterns becomes
+// several rrules. Each would carry the full occurrence count, so "after N
+// occurrences" would produce N per rule; bound them by the date of the Nth
+// combined occurrence instead.
+export function recurConfigToBoundedRRules(desc) {
+  const rules = recurConfigToRSchedule(desc);
+  if (
+    rules.length <= 1 ||
+    desc.endMode !== 'after_n_occurrences' ||
+    !(desc.endOccurrences > 0)
+  ) {
+    return rules;
+  }
+  const unbounded = rules.map(({ count: _count, ...rule }) => rule);
+  const occurrences = new RSchedule({ rrules: unbounded })
+    .occurrences({ take: desc.endOccurrences })
+    .toArray();
+  const last = occurrences[occurrences.length - 1];
+  return last ? unbounded.map(rule => ({ ...rule, end: last.date })) : rules;
+}
+
 export function parseRecurDate(desc) {
   try {
-    const rules = recurConfigToRSchedule(desc);
+    const rules = recurConfigToBoundedRRules(desc);
 
     return {
       type: 'recur',

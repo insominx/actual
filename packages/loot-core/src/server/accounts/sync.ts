@@ -538,6 +538,24 @@ function storedBankAmount(
   );
 }
 
+// Custom mappings may name nested fields like `merchant.name`. Providers
+// that flatten objects (Pluggy) store those as literal dotted keys.
+function getSyncField(trans, path: string | undefined) {
+  if (path == null) {
+    return undefined;
+  }
+  if (path in trans) {
+    return trans[path];
+  }
+  return path
+    .split('.')
+    .reduce(
+      (value, key) =>
+        value != null && typeof value === 'object' ? value[key] : undefined,
+      trans,
+    );
+}
+
 async function normalizeBankSyncTransactions(transactions, acctId) {
   const payeesToCreate = new Map();
   const fallbackDecimalPlaces = await budgetAmountDecimalPlaces();
@@ -583,9 +601,10 @@ async function normalizeBankSyncTransactions(transactions, acctId) {
     const direction = trans.amount <= 0 ? 'payment' : 'deposit';
     const mapping = mappings.get(direction) ?? defaultMappings.get(direction);
 
-    const date = trans[mapping.get('date')] ?? trans.date;
-    const payeeName = trans[mapping.get('payee')] ?? trans.payeeName;
-    const notes = trans[mapping.get('notes')];
+    const date = getSyncField(trans, mapping.get('date')) ?? trans.date;
+    const payeeName =
+      getSyncField(trans, mapping.get('payee')) ?? trans.payeeName;
+    const notes = getSyncField(trans, mapping.get('notes'));
 
     // Validate the date because we do some stuff with it. The db
     // layer does better validation, but this will give nicer errors
@@ -615,7 +634,8 @@ async function normalizeBankSyncTransactions(transactions, acctId) {
 
     let imported_id = trans.transactionId;
     if (trans.cleared && !trans.transactionId && trans.internalTransactionId) {
-      imported_id = `${trans.account}-${trans.internalTransactionId}`;
+      // trans.account is not set yet on a first sync; use the target account
+      imported_id = `${acctId}-${trans.internalTransactionId}`;
     }
 
     // It's important to resolve both the account and payee early so
@@ -1273,14 +1293,21 @@ async function processBankSyncDownload(
       balanceToUse = Math.round(previousBalance);
     }
 
-    const oldestTransaction = transactions[transactions.length - 1];
+    // Providers don't all return newest first, so take the earliest date
+    // instead of trusting the last row
+    let oldestDate: string | null = null;
+    for (const trans of await getImportableTransactions()) {
+      if (trans.date && (oldestDate == null || trans.date < oldestDate)) {
+        oldestDate = trans.date;
+      }
+    }
 
     // Use custom starting date if provided, otherwise use oldest transaction date or current day
     let startingBalanceDate: string;
     if (customStartingDate) {
       startingBalanceDate = customStartingDate;
-    } else if (transactions.length > 0) {
-      startingBalanceDate = oldestTransaction.date;
+    } else if (oldestDate) {
+      startingBalanceDate = oldestDate;
     } else {
       startingBalanceDate = monthUtils.currentDay();
     }

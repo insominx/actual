@@ -360,7 +360,9 @@ describe('read-only category insertion planning', () => {
       name: 'compact sibling shoves',
       compact: true,
       atEnd: false,
-      order: 0.5,
+      // The shoved first sibling moves to 16385, so the new category lands
+      // halfway between 0 and it instead of tying with the old value
+      order: 8192.5,
       updates: 2,
     },
     {

@@ -359,20 +359,24 @@ export async function withChangeJournal<T>(
 ) {
   const directory = join(resolve(dataDir), '.actual-cli', 'changes');
   await mkdir(directory, { recursive: true });
-  if (
-    (await lstat(directory)).isSymbolicLink() ||
-    (await realpath(directory)) !== directory
-  ) {
+  // Windows and macOS paths are case-insensitive: realpath returns the
+  // on-disk spelling, which must not count as a redirect
+  const real = await realpath(directory);
+  const samePath =
+    process.platform === 'win32' || process.platform === 'darwin'
+      ? real.toLowerCase() === directory.toLowerCase()
+      : real === directory;
+  if ((await lstat(directory)).isSymbolicLink() || !samePath) {
     throw new AgentError(
       'INVALID_INPUT',
       'The change journal must use a direct local directory.',
     );
   }
-  const release = await acquireExclusive(directory, {
+  const release = await acquireExclusive(real, {
     timeoutMs: timeout * 1000,
   });
   try {
-    const journal = new ChangeJournal(directory);
+    const journal = new ChangeJournal(real);
     await journal.reconcileStaging();
     return await fn(journal);
   } finally {

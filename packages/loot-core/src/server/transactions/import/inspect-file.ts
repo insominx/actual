@@ -451,7 +451,8 @@ export async function inspectImportFile(
       }
     }
   }
-  const inOutMode = isOfx ? false : pick('inOutMode', false);
+  // In/Out is a CSV-only option; QIF and CAMT rows have no In/Out column
+  const inOutMode = isCsv ? pick('inOutMode', false) : false;
   const outValue = pick('outValue', '');
   const flipAmount =
     isCsv || file.format === 'qif' ? pick('flipAmount', false) : false;

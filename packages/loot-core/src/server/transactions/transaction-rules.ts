@@ -667,6 +667,13 @@ export function conditionsToAQL(
         }
         return apply(field, '$eq', value);
       case 'isNot':
+        // Like Condition.eval, an empty string field counts as '' so
+        // "is not empty" must not match a null field
+        if (type === 'string' && value === '') {
+          return {
+            $and: [apply(field, '$ne', ''), { [field]: { $ne: null } }],
+          };
+        }
         return apply(field, '$ne', value);
 
       case 'isbetween':
@@ -899,7 +906,9 @@ function* getIsSetterRules(
       rule.actions[0].field === actionField &&
       (actionValue === undefined || rule.actions[0].value === actionValue) &&
       rule.conditions.length === 1 &&
-      (rule.conditions[0].op === 'is' || rule.conditions[0].op === 'isNot') &&
+      // Only "is" rules set the category for this payee; rewriting a
+      // "payee is not X" rule would apply the category to every other payee
+      rule.conditions[0].op === 'is' &&
       rule.conditions[0].field === condField &&
       (condValue === undefined || rule.conditions[0].value === condValue)
     ) {

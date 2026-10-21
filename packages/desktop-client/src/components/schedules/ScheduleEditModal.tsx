@@ -63,7 +63,8 @@ export function ScheduleEditModal({ id, transaction }: ScheduleEditModalProps) {
           name: transaction.payee
             ? (payees?.[transaction.payee]?.name ?? '')
             : '',
-          _payee: transaction.payee ? transaction.payee : '',
+          // An id condition treats '' as a real value that matches nothing
+          _payee: transaction.payee || null,
           _date: {
             ...date,
             frequency: 'monthly',

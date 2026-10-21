@@ -80,6 +80,10 @@ export class CategoryTemplateContext {
     }
 
     // run all checks
+    const malformed = templates.find(t => t.type === 'error');
+    if (malformed) {
+      throw new Error(`Invalid template: ${malformed.line}`);
+    }
     await CategoryTemplateContext.checkByAndScheduleAndSpend(templates, month);
     await CategoryTemplateContext.checkPercentage(templates);
 
@@ -577,6 +581,7 @@ export class CategoryTemplateContext {
       t =>
         t.type === 'simple' ||
         t.type === 'periodic' ||
+        t.type === 'copy' ||
         t.type === 'limit' ||
         t.type === 'remainder',
     )) {
@@ -608,6 +613,11 @@ export class CategoryTemplateContext {
           throw new Error('Weekly limit requires a start date (YYYY-MM-DD)');
         }
         const nextMonth = monthUtils.nextMonth(this.month);
+        if (limitDef.start >= nextMonth) {
+          // The limit has not started yet; a zero limit would strip the
+          // whole balance
+          continue;
+        }
         let week = limitDef.start;
         const baseLimit = amountToInteger(
           limitDef.amount,
@@ -976,8 +986,10 @@ export class CategoryTemplateContext {
       const numMonths = savedInfo[i].numMonths;
       const period = savedInfo[i].period;
       let amount;
-      // back interpolate what is needed in the short window
-      if (numMonths > shortNumMonths && period) {
+      // back interpolate what is needed in the short window. Only valid
+      // once the first occurrence is within one period, or the multiplier
+      // goes negative
+      if (numMonths > shortNumMonths && period && numMonths < period) {
         amount = Math.round(
           (amountToInteger(
             template.amount,

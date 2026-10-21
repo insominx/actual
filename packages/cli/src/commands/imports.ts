@@ -575,6 +575,15 @@ export function registerImportsCommand(program: Command) {
           files,
           transferReview: review,
         };
+        // Nothing committed: report the real failure, not a partial one
+        if (failed && !files.some(f => f.status === 'committed')) {
+          throw new AgentError(
+            failed.code,
+            failed.message,
+            failed.retryable,
+            result,
+          );
+        }
         if (failed) {
           throw new AgentError(
             'PARTIAL_COMPLETION',

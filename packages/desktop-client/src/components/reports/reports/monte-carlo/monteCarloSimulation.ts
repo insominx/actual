@@ -2437,14 +2437,17 @@ export function runMonteCarloSimulation(
       survivedCount++;
     }
 
+    // Rank by the balance the chart and runs table show (deflated when
+    // today's-money is on), not the nominal total
+    const finalDisplayed = balancesByYear[horizonYears][simulationIndex];
     if (
       simulationDepletionYear < worstDepletionYear ||
       (simulationDepletionYear === worstDepletionYear &&
-        total < worstFinalBalance)
+        finalDisplayed < worstFinalBalance)
     ) {
       worstSimIndex = simulationIndex;
       worstDepletionYear = simulationDepletionYear;
-      worstFinalBalance = total;
+      worstFinalBalance = finalDisplayed;
     }
   }
 

@@ -66,6 +66,7 @@ export type SyncedPrefs = Partial<
     | `qif-swap-payee-memo-${string}`
     | `camt-swap-payee-memo-${string}`
     | `flip-amount-${string}-${'csv' | 'qif'}`
+    | `import-notes-${string}-${string}`
     | `flags.${FeatureFlag}`
     | `learn-categories`
     | `show-hidden-tags`,

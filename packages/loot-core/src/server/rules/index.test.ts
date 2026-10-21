@@ -474,7 +474,8 @@ describe('Action', () => {
       testHelper('{{mul amount 5 10}}', 500);
       testHelper('{{div amount 5}}', 2);
       testHelper('{{div amount 0}}', 0);
-      testHelper('{{div amount 5 10}}', 0.2);
+      // Amounts are stored as whole minor units, so 0.2 rounds to 0
+      testHelper('{{div amount 5 10}}', 0);
       testHelper('{{mod amount 3}}', 1);
       testHelper('{{mod amount 6 5}}', 4);
       testHelper('{{floor (div amount 3)}}', 3);

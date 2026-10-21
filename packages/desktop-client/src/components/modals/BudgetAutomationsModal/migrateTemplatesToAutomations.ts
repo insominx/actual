@@ -1,8 +1,3 @@
-import {
-  currentDate,
-  dayFromDate,
-  firstDayOfMonth,
-} from '@actual-app/core/shared/months';
 import type { ScheduleEntity } from '@actual-app/core/types/models';
 import type {
   ScheduleTemplate,
@@ -133,7 +128,9 @@ export function migrateTemplatesToAutomations(
               type: 'periodic',
               amount: contribution,
               period: { period: 'month', amount: 1 },
-              starting: dayFromDate(firstDayOfMonth(currentDate())),
+              // A plain monthly template applies to every month, so the
+              // start must not be after any month it is applied to
+              starting: '2000-01-01',
               directive: 'template',
               priority: template.priority,
               ...(description ? { description } : {}),
@@ -150,7 +147,9 @@ export function migrateTemplatesToAutomations(
     }
 
     if (
-      (template.type === 'periodic' || template.type === 'remainder') &&
+      (template.type === 'periodic' ||
+        template.type === 'remainder' ||
+        template.type === 'copy') &&
       template.limit
     ) {
       const { limit, ...base } = template;

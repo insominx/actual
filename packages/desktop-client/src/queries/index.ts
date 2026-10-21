@@ -86,7 +86,9 @@ export function transactionsSearch(
   dateFormat: SyncedPrefs['dateFormat'],
   decimalPlaces = 2,
 ) {
-  const amount = currencyToAmount(search);
+  // Amounts are matched by magnitude, so "-50" must find -50.00 too
+  const parsedAmount = currencyToAmount(search);
+  const amount = parsedAmount == null ? null : Math.abs(parsedAmount);
   const amountScale = 10 ** decimalPlaces;
   const escapedSearch = search.replace(/[\\%?]/g, '\\$&');
 

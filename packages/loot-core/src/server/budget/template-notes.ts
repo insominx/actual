@@ -202,7 +202,11 @@ function templateToLine(
     }
     case 'copy': {
       // #template copy from <lookBack> months ago [limit]
-      return `${prefix} copy from ${template.lookBack} months ago`;
+      let result = `${prefix} copy from ${template.lookBack} months ago`;
+      if (template.limit) {
+        result += ` ${limitToString(template.limit)}`;
+      }
+      return result;
     }
     case 'limit': {
       if (!refill) {

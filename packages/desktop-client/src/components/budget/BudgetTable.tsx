@@ -118,8 +118,12 @@ export function BudgetTable(props: BudgetTableProps) {
     const isGroup = !!categoryGroups.find(g => g.id === targetId);
 
     if (isGroup) {
+      // A drop above a visible header must not land in a hidden group
+      const visibleGroups = categoryGroups.filter(
+        g => showHiddenCategories || !g.hidden || g.id === targetId,
+      );
       const { targetId: groupId } = findSortUp(
-        categoryGroups,
+        visibleGroups,
         dropPos,
         targetId,
       );

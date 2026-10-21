@@ -260,8 +260,8 @@ describe('Formula-based rule actions', () => {
     const transaction = { notes: 'original' };
     action.exec(transaction);
 
-    // Should convert number to string
-    expect(transaction.notes).toBe('75000');
+    // Should convert number to string, unscaled: only amounts are minor units
+    expect(transaction.notes).toBe('750');
   });
 
   it('should format numbers with thousands separators using FORMATNUMBER', () => {

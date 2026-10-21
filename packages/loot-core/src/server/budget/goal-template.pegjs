@@ -41,7 +41,7 @@ percentOrNumber
   / value:$(d+ ('.' (d+)?)?) { return { value: value, type: 'fixed' } }
 
 repeat 'repeat interval'
-  = 'month'i { return { annual: false }}
+  = 'month'i { return { annual: false, repeat: 1 }}
   / months: positive _ 'months'i { return { annual: false, repeat: +months }}
   / 'year'i { return { annual: true }}
   / years: positive _ 'years'i { return { annual: true, repeat: +years }}

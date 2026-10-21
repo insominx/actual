@@ -67,7 +67,9 @@ async function saveDiff(diff, learnCategories) {
   });
 
   if (remoteUpdates && remoteUpdates.updated.length > 0) {
-    return { updates: remoteUpdates };
+    // Server-side transfer handling can change fields like transfer_id or
+    // category; applyChanges reads `updated`, not `updates`
+    return { updated: remoteUpdates.updated };
   }
   return {};
 }

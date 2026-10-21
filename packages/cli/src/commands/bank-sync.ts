@@ -144,7 +144,7 @@ export function registerBankSyncCommand(program: Command) {
         return;
       }
       const limit = plainInteger(cmdOpts.limit);
-      if (limit === null || limit < 1 || limit > 100) {
+      if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
         throw new AgentError(
           'INVALID_INPUT',
           'limit must be an integer from 1 to 100.',

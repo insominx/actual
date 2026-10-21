@@ -240,7 +240,8 @@ function getAccountResponse(results, accountId, startDate) {
 
     if (trans.pending ?? trans.posted === 0) {
       newTrans.booked = false;
-      dateToUse = trans.transacted_at;
+      // `transacted_at` is optional in the SimpleFIN spec
+      dateToUse = trans.transacted_at || trans.posted;
     } else {
       newTrans.booked = true;
       dateToUse = trans.posted;
@@ -248,7 +249,12 @@ function getAccountResponse(results, accountId, startDate) {
 
     const transactionDate = new Date(dateToUse * 1000);
 
-    if (transactionDate < startDate) {
+    // An undated row would throw on formatting and fail the whole sync
+    if (
+      !dateToUse ||
+      Number.isNaN(transactionDate.getTime()) ||
+      transactionDate < startDate
+    ) {
       continue;
     }
 

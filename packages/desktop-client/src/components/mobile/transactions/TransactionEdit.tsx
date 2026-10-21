@@ -1367,10 +1367,16 @@ const TransactionEditInner = memo<TransactionEditInnerProps>(
                 <FillRemainingButton
                   remaining={remaining}
                   onPress={() => {
+                    // `remaining` already counts this line's amount, so add
+                    // to it rather than replacing it
                     void onUpdateInner(
                       childTrans,
                       'amount',
-                      integerToAmount(remaining, decimalPlaces),
+                      integerToAmount(
+                        amountToInteger(childTrans.amount, decimalPlaces) +
+                          remaining,
+                        decimalPlaces,
+                      ),
                     );
                   }}
                 />
@@ -1834,8 +1840,12 @@ function TransactionEditUnconnected({
       const changes = deleteTransaction(transactions, id);
 
       if (isAdding.current) {
-        // Adding a new transactions, this disables saving when the component unmounts
-        isDeleted.current = true;
+        // Deleting the parent of an unsaved transaction disables saving;
+        // deleting one split line must not
+        const deleted = transactions.find(t => t.id === id);
+        if (deleted && !deleted.is_child) {
+          isDeleted.current = true;
+        }
       } else {
         const _remoteUpdates = await send('transactions-batch-update', {
           deleted: changes.diff.deleted,

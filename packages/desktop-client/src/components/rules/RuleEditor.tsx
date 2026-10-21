@@ -328,6 +328,7 @@ function ConditionEditor({
         type={type}
         value={value ?? ''}
         op={op}
+        options={options}
         multi={op === 'oneOf' || op === 'notOneOf'}
         onChange={v => onChange('value', v)}
         numberFormatType="currency"
@@ -894,7 +895,15 @@ function ConditionsList({
             // the type hasn't changed
             // @ts-expect-error fix this
             newCond.op = cond.op;
-            return newInput(makeValue(cond.value, newCond));
+            // Inflow/outflow conditions compare a positive magnitude, so a
+            // kept negative amount could never match
+            // @ts-expect-error fix this
+            const isFlowCondition = !!newCond.options;
+            const keptValue =
+              isFlowCondition && typeof cond.value === 'number'
+                ? Math.abs(cond.value)
+                : cond.value;
+            return newInput(makeValue(keptValue, newCond));
           } else {
             // @ts-expect-error fix this
             newCond.op = getValidOps(newCond.field)[0];
@@ -1197,7 +1206,11 @@ export function RuleEditor({
                 ...a.options,
                 formula: value,
               };
-            } else if (a.options?.template !== undefined) {
+            } else if (
+              a.options?.template !== undefined &&
+              field !== 'field' &&
+              field !== 'op'
+            ) {
               // Only update template, not the value field
               a.options = {
                 ...a.options,

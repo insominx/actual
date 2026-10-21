@@ -1701,9 +1701,17 @@ class AccountInternal extends PureComponent<
           filterConditions: conditions,
         },
         () => {
-          this.fetchTransactions();
+          // Re-sort after the filter state is cleared; sorting before the
+          // state update would be overwritten by the unsorted root query
+          if (this.state.sort !== null) {
+            this.currentQuery = this.rootQuery;
+            this.applySort();
+          } else {
+            this.fetchTransactions();
+          }
         },
       );
+      return;
     }
 
     if (this.state.sort !== null) {

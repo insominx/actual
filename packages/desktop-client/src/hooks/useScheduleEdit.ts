@@ -182,18 +182,24 @@ function createScheduleEditReducer(useGetScheduledAmount: boolean = false) {
       }
 
       case 'set-repeats': {
+        // Keep the date the user already chose when toggling repeats
+        const currentDate = state.fields.date;
+        const chosenDay =
+          typeof currentDate === 'string'
+            ? currentDate
+            : (currentDate?.start ?? monthUtils.currentDay());
         if (!action.repeats) {
           return {
             ...state,
             fields: {
               ...state.fields,
-              date: monthUtils.currentDay(),
+              date: chosenDay,
             },
           };
         }
 
         const date = {
-          start: monthUtils.currentDay(),
+          start: chosenDay,
           frequency: 'monthly',
           patterns: [],
           skipWeekend: false,

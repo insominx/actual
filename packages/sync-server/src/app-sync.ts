@@ -416,9 +416,17 @@ app.post('/upload-user-file', async (req, res) => {
     }
   }
 
+  // A soft-deleted file keeps its row, so treating it as new would skip the
+  // access check, write the blob, and then fail on the INSERT. Resurrect it
+  // for a user who may access it; refuse everyone else before writing.
+  const deletedRaw = currentFile ? null : filesService.getRaw(fileId);
+  const deletedFile = deletedRaw ? filesService.validate(deletedRaw) : null;
+
   const fileAccessError = currentFile
     ? requireFileAccess(currentFile, res.locals.user_id)
-    : null;
+    : deletedFile
+      ? requireFileAccess(deletedFile, res.locals.user_id)
+      : null;
   if (fileAccessError) {
     res.status(403);
     res.send(fileAccessError);
@@ -440,6 +448,32 @@ app.post('/upload-user-file', async (req, res) => {
   } catch (err) {
     console.log('Error writing file', err);
     res.status(500).send({ status: 'error' });
+    return;
+  }
+
+  if (!currentFile && deletedFile) {
+    // resurrect the deleted file under a fresh sync group
+    const newGroupId = generateGroupId();
+    groupId = newGroupId;
+    filesService.update(
+      fileId,
+      new FileUpdate({
+        deleted: false,
+        groupId: newGroupId,
+        syncVersion: syncFormatVersion,
+        name,
+        encryptMeta,
+        ...(initialKey
+          ? {
+              encryptKeyId: keyId,
+              encryptSalt: initialKey.salt,
+              encryptTest: initialKey.testContent,
+            }
+          : {}),
+      }),
+    );
+
+    res.send({ status: 'ok', groupId });
     return;
   }
 

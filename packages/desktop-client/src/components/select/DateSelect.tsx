@@ -582,7 +582,10 @@ function DateSelectMobile(props: DateSelectProps) {
         type="date"
         value={props.value ?? ''}
         onChange={event => {
-          props.onSelect(event.target.value);
+          // A cleared native picker reports '', which the server rejects
+          if (event.target.value) {
+            props.onSelect(event.target.value);
+          }
         }}
         style={{ height: 28, ...inputStyle }}
         {...restInputProps}

@@ -44,9 +44,14 @@ export function shoveSortOrders<T extends { id: string; sort_order: number }>(
 
     return { updates, sort_order: order };
   } else {
+    // When items get shoved up, the target's new order, so the moved item
+    // lands between its lower neighbour and the shoved target instead of
+    // tying with the lower neighbour
+    let shovedTargetOrder: number | null = null;
     if (target.sort_order - (before ? before.sort_order : 0) <= 2) {
       let next = to;
       let order = Math.floor(items[next].sort_order) + sortIncrement;
+      shovedTargetOrder = order;
       while (next < items.length) {
         // No need to update it if it's already greater than the current
         // order. This can happen because there may already be large
@@ -62,6 +67,10 @@ export function shoveSortOrders<T extends { id: string; sort_order: number }>(
       }
     }
 
+    if (shovedTargetOrder != null) {
+      const below = before ? before.sort_order : 0;
+      return { updates, sort_order: (below + shovedTargetOrder) / 2 };
+    }
     return { updates, sort_order: midpoint(items, to, sortIncrement) };
   }
 }

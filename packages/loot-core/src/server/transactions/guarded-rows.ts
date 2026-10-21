@@ -94,6 +94,13 @@ export async function assertPlannableTransactionRows(
   const amounts: number[] = [];
   for (const [index, row] of rows.entries()) {
     const label = `Row ${index + 1}`;
+    if (row.id !== undefined) {
+      // A caller-supplied id would overwrite that existing transaction
+      // field by field instead of inserting a new one
+      throw APIError(
+        `${label}: id cannot be set; new transactions get generated ids`,
+      );
+    }
     if (row.date !== undefined && !validDate(row.date)) {
       throw APIError(
         `${label}: date must be a real YYYY-MM-DD date on or after ${MINIMUM_TRANSACTION_DATE}`,
@@ -120,6 +127,9 @@ export async function assertPlannableTransactionRows(
         for (const child of row.subtransactions) {
           if (!isRecord(child)) {
             throw APIError(`${label}: each subtransaction must be an object`);
+          }
+          if (child.id !== undefined) {
+            throw APIError(`${label}: subtransaction id cannot be set`);
           }
           if (!isEngineAmount(child.amount)) {
             throw APIError(

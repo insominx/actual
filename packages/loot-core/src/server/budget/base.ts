@@ -100,8 +100,9 @@ function handleAccountChange(months, oldValue, newValue) {
   if (!oldValue || oldValue.offbudget !== newValue.offbudget) {
     const rows = db.runQuery<Pick<db.DbTransaction, 'category'>>(
       `
-        SELECT DISTINCT(category) as category FROM transactions
-        WHERE acct = ?
+        SELECT DISTINCT(cm.transferId) as category FROM transactions t
+        LEFT JOIN category_mapping cm ON cm.id = t.category
+        WHERE t.acct = ?
       `,
       [newValue.id],
       true,
@@ -180,6 +181,7 @@ function handleBudgetChange(budget) {
 export function triggerBudgetChanges(oldValues, newValues) {
   const { createdMonths = new Set() } = sheet.get().meta();
   const budgetType = getBudgetType();
+  const tracking = budgetActions.isTrackingBudget();
   sheet.startTransaction();
 
   try {
@@ -189,9 +191,17 @@ export function triggerBudgetChanges(oldValues, newValues) {
       items.forEach(newValue => {
         const oldValue = old && old.get(newValue.id);
 
+        // Rows of the other budget type (e.g. from a device that was still
+        // on envelope) must not overwrite the live sheet cells. The stored
+        // preference decides, as it does for which table setBudget writes.
         if (table === 'zero_budget_months') {
-          handleBudgetMonthChange(newValue);
-        } else if (table === 'zero_budgets' || table === 'reflect_budgets') {
+          if (!tracking) {
+            handleBudgetMonthChange(newValue);
+          }
+        } else if (
+          (table === 'zero_budgets' && !tracking) ||
+          (table === 'reflect_budgets' && tracking)
+        ) {
           handleBudgetChange(newValue);
         } else if (table === 'transactions') {
           const changed = new Set(

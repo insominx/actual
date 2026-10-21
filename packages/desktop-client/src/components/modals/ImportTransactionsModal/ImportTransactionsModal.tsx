@@ -105,7 +105,7 @@ function shouldPreserveImportSettingsForParse(
   options: ParseFileOptions,
 ) {
   return (
-    fileType === 'csv' &&
+    (fileType === 'csv' || fileType === 'qif') &&
     lastParse?.filename === filename &&
     lastParse.fileType === fileType &&
     parseOptionKeys.every(key =>
@@ -147,7 +147,12 @@ export function ImportTransactionsModal({
   const [flipAmount, setFlipAmount] = useState(false);
   const [multiplierEnabled, setMultiplierEnabled] = useState(false);
   const [reconcile, setReconcile] = useState(true);
-  const [importNotes, setImportNotes] = useState(true);
+  const [importNotes, setImportNotes] = useState(
+    String(
+      prefs[`import-notes-${accountId}-${getFileType(originalFileName)}`] ??
+        'true',
+    ) === 'true',
+  );
 
   // This cannot be set after parsing the file, because changing it
   // requires re-parsing the file. This is different from the other
@@ -213,9 +218,12 @@ export function ImportTransactionsModal({
       multiplierAmount: string,
     ) => {
       const previewTransactions = [];
-      const inOutModeEnabled = isOfxFile(filetype) ? false : inOutMode;
+      // In/Out is a CSV-only option; the saved CSV preference must not be
+      // applied to QIF or CAMT rows, which have no In/Out column and would
+      // all be read as inflows
+      const inOutModeEnabled = filetype === 'csv' ? inOutMode : false;
       const getTransDate: (trans: ImportTransaction) => string | null =
-        isOfxFile(filetype)
+        isOfxFile(filetype) || isCamtFile(filetype)
           ? trans => trans.date ?? null
           : trans => parseDate(trans.date, parseDateFormat);
 
@@ -588,7 +596,7 @@ export function ImportTransactionsModal({
       const { amount } = parseAmountFields(
         trans,
         splitMode,
-        isOfxFile(filetype) ? false : inOutMode,
+        filetype === 'csv' ? inOutMode : false,
         outValue,
         flipAmount,
         multiplierAmount,
@@ -673,6 +681,11 @@ export function ImportTransactionsModal({
     if (filetype === 'csv' || filetype === 'qif') {
       savePrefs({
         [`flip-amount-${accountId}-${filetype}`]: String(flipAmount),
+      });
+    }
+
+    if (filetype !== 'csv') {
+      savePrefs({
         [`import-notes-${accountId}-${filetype}`]: String(importNotes),
       });
     }
@@ -921,7 +934,7 @@ export function ImportTransactionsModal({
                       dateFormat={dateFormat}
                       fieldMappings={fieldMappings}
                       splitMode={splitMode}
-                      inOutMode={inOutMode}
+                      inOutMode={filetype === 'csv' && inOutMode}
                       outValue={outValue}
                       flipAmount={flipAmount}
                       multiplierAmount={multiplierAmount}

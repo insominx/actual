@@ -526,22 +526,39 @@ export function PayeeAutocomplete({
         .map(result => result.item);
     }
 
-    // Re-prepend 'new' when the user has typed something
-    const showNew = newItem && value && value !== '' && !focusTransferPayees;
-    const results = showNew ? [newItem, ...filtered] : filtered;
+    // Return items in the order PayeeList renders them (nearby, suggested,
+    // payees, transfers), so the highlighted row, Enter and Tab all refer
+    // to the same item. The sort is stable, so fuzzy order holds per group.
+    const groupRank = (item: PayeeAutocompleteItem) =>
+      item.itemType === 'common_payee'
+        ? 1
+        : item.itemType === 'payee'
+          ? 2
+          : item.itemType === 'account'
+            ? 3
+            : 0;
+    const ordered = [
+      ...(focusTransferPayees ? [] : filteredNearbyPayees),
+      ...filtered,
+    ].sort((a, b) => groupRank(a) - groupRank(b));
 
-    if (results.length >= 2 && results[0].id === 'new') {
-      const firstFiltered = results[1];
-      if (
-        getNormalisedString(firstFiltered.name) ===
-          getNormalisedString(value) &&
-        !firstFiltered.transfer_acct
-      ) {
-        // Exact match found, remove the 'Create payee' option.
-        return results.slice(1);
-      }
-    }
-    return results;
+    const hasExactMatch =
+      !!value &&
+      filtered.some(
+        item =>
+          !item.transfer_acct &&
+          getNormalisedString(item.name ?? '') === getNormalisedString(value),
+      );
+
+    // Re-prepend 'new' when the user has typed something that is not
+    // already an exact payee name
+    const showNew =
+      newItem &&
+      value &&
+      value !== '' &&
+      !focusTransferPayees &&
+      !hasExactMatch;
+    return showNew ? [newItem, ...ordered] : ordered;
   };
 
   return (
@@ -576,12 +593,20 @@ export function PayeeAutocomplete({
       onUpdate={(id, inputValue) => onUpdate?.(id, makeNew(id, inputValue))}
       onSelect={handleSelect}
       getHighlightedIndex={suggestions => {
-        // If we have nearby payees, highlight the first nearby payee
-        if (filteredNearbyPayees.length > 0) {
-          return 0;
+        // An exact name match wins over any fuzzier or nearby result
+        if (rawPayee) {
+          const exact = suggestions.findIndex(
+            s =>
+              s.id !== 'new' &&
+              !s.transfer_acct &&
+              getNormalisedString(s.name ?? '') ===
+                getNormalisedString(rawPayee),
+          );
+          if (exact !== -1) {
+            return exact;
+          }
         }
 
-        // Otherwise use original logic for suggestions
         if (suggestions.length === 0) {
           return null;
         } else if (suggestions[0].id === 'new') {
@@ -593,7 +618,13 @@ export function PayeeAutocomplete({
       filterSuggestions={filterSuggestions}
       renderItems={(items, getItemProps, highlightedIndex, inputValue) => (
         <PayeeList
-          items={[...filteredNearbyPayees, ...items]}
+          items={
+            // Filtered suggestions already include nearby payees; before the
+            // user types, the autocomplete renders the raw list without them
+            items.some(item => item.itemType === 'nearby_payee')
+              ? items
+              : [...filteredNearbyPayees, ...items]
+          }
           commonPayees={commonPayees}
           getItemProps={getItemProps}
           highlightedIndex={highlightedIndex}

@@ -330,10 +330,9 @@ export async function withConnection<T>(
       lastSyncedAt: state.lastSyncedAt,
       freshness: 'observed',
     });
-    if (globalOpts.outputVersion === '2') {
-      const prefs = await api.getPreferences();
-      updateAgentContext({ currency: prefs.defaultCurrencyCode ?? null });
-    }
+    // Every output version formats amounts with the budget currency scale
+    const prefs = await api.getPreferences();
+    updateAgentContext({ currency: prefs.defaultCurrencyCode ?? null });
     const result = await fn(config);
 
     if (mutates) {

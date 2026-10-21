@@ -232,20 +232,17 @@ export function useFormat(): UseFormatResult {
   const forEdit = useCallback(
     (value: IntegerAmount) => {
       const amount = toAmount(value);
-      const decimalPlaces =
-        hideFractionPref === 'true' ? 0 : activeCurrency.decimalPlaces;
+      // Hiding the fraction is display only: the editable text must keep
+      // every stored decimal, or focusing and leaving a field rounds the
+      // stored amount
+      const decimalPlaces = activeCurrency.decimalPlaces;
       const editFormatter = getNumberFormat({
         format: numberFormatConfig.format,
         decimalPlaces,
       }).formatter;
       return editFormatter.format(amount);
     },
-    [
-      toAmount,
-      hideFractionPref,
-      activeCurrency.decimalPlaces,
-      numberFormatConfig.format,
-    ],
+    [toAmount, activeCurrency.decimalPlaces, numberFormatConfig.format],
   );
 
   const fromEdit = useCallback(

@@ -192,8 +192,15 @@ function undoMessage(message, oldData) {
         if (['buffered', 'amount', 'carryover'].includes(message.column)) {
           return { ...message, value: 0 };
         }
+        if (['goal', 'long_goal'].includes(message.column)) {
+          return { ...message, value: null };
+        }
         return null;
-      } else if (message.dataset === 'notes') {
+      } else if (
+        // Neither table has a tombstone column
+        message.dataset === 'notes' ||
+        message.dataset === 'preferences'
+      ) {
         return { ...message, value: null };
       }
 
@@ -227,9 +234,11 @@ export async function redo() {
 
   if (entries.length > 0) {
     const toApply = entries.reduce((acc, entry) => {
+      // Resurrect first so a row created and deleted in the same entry
+      // keeps its final tombstone from the entry's own later messages
       return acc
-        .concat(entry.messages)
-        .concat(redoResurrections(entry.messages, entry.oldData));
+        .concat(redoResurrections(entry.messages, entry.oldData))
+        .concat(entry.messages);
     }, []);
 
     await applyUndoAction(toApply, meta, entries[entries.length - 1].undoTag);
@@ -250,6 +259,7 @@ function redoResurrections(messages, oldData): Message[] {
         'zero_budgets',
         'reflect_budgets',
         'notes',
+        'preferences',
         'category_mapping',
         'payee_mapping',
       ].includes(message.dataset)

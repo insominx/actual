@@ -11,6 +11,7 @@ import {
   subDays,
   yearFromDate,
 } from '#shared/months';
+import { getNormalisedString } from '#shared/normalisation';
 import { hasNestedRepeat } from '#shared/regex-safety';
 import {
   FIELD_TYPES,
@@ -263,14 +264,15 @@ export class Condition {
     }
 
     if (type === 'number' && this.options) {
+      // Zero is neither inflow nor outflow, as in the SQL filter
       if (this.options.outflow) {
-        if (fieldValue > 0) {
+        if (fieldValue >= 0) {
           return false;
         }
 
         fieldValue = -fieldValue;
       } else if (this.options.inflow) {
-        if (fieldValue < 0) {
+        if (fieldValue <= 0) {
           return false;
         }
       }
@@ -339,16 +341,21 @@ export class Condition {
         const [low, high] = sortNumbers(this.value.num1, this.value.num2);
         return fieldValue >= low && fieldValue <= high;
       }
+      // Accent-insensitive, matching the SQL LIKE used by conditionsToAQL
       case 'contains':
         if (fieldValue === null) {
           return false;
         }
-        return String(fieldValue).indexOf(this.value) !== -1;
+        return getNormalisedString(String(fieldValue)).includes(
+          getNormalisedString(this.value),
+        );
       case 'doesNotContain':
         if (fieldValue === null) {
           return false;
         }
-        return String(fieldValue).indexOf(this.value) === -1;
+        return !getNormalisedString(String(fieldValue)).includes(
+          getNormalisedString(this.value),
+        );
       case 'oneOf':
         if (fieldValue === null) {
           return false;
@@ -381,9 +388,7 @@ export class Condition {
       }
 
       case 'notOneOf':
-        if (fieldValue === null) {
-          return false;
-        }
+        // A null field is not one of the values, as `isNot` and SQL agree
         return this.value.indexOf(fieldValue) === -1;
       case 'gt':
         if (fieldValue === null) {

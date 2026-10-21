@@ -172,6 +172,14 @@ export async function prepareTransactionSplit(
     );
   }
   const previous = target.isParent ? await liveChildren(target.id) : [];
+  // Replacing the children deletes them, and deleting a transfer child
+  // cascades to its counterpart in the other account
+  const transferChild = previous.find(row => row.transferred_id);
+  if (transferChild) {
+    throw APIError(
+      `Split child ${transferChild.id} is a transfer; replacing it would delete its counterpart. Edit transfer splits through the client`,
+    );
+  }
   return {
     schemaVersion: 1,
     operation: 'transactions.split',

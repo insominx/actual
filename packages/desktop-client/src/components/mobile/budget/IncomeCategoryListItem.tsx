@@ -200,6 +200,10 @@ export function IncomeCategoryListItem({
       if (!category) {
         return;
       }
+      // A manual hold overrides auto hold, as on desktop
+      if (carryover) {
+        onBudgetAction(month, 'reset-hold', undefined);
+      }
       onBudgetAction(month, 'carryover', {
         category: category.id,
         flag: carryover,

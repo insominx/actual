@@ -101,6 +101,7 @@ export class Action {
             const result = this.executeFormulaSync(
               this.options.formula,
               object,
+              this.type === 'number',
             );
 
             switch (this.type) {
@@ -119,7 +120,16 @@ export class Action {
                 break;
               }
               case 'date': {
-                const parsed = parseDate(String(result));
+                // Spreadsheet date functions return a serial day number
+                // counted from 1899-12-30
+                const parsed =
+                  typeof result === 'number'
+                    ? parseDate(
+                        new Date(Date.UTC(1899, 11, 30) + result * 86400000)
+                          .toISOString()
+                          .slice(0, 10),
+                      )
+                    : parseDate(String(result));
                 if (parsed && dateFns.isValid(parsed)) {
                   object[this.field] = format(parsed, 'yyyy-MM-dd');
                 } else {
@@ -171,7 +181,10 @@ export class Action {
             case 'number': {
               const numValue = parseFloat(object[this.field]);
               // NaN and Infinity cannot be stored. Division by zero is Infinity.
-              object[this.field] = Number.isFinite(numValue) ? numValue : 0;
+              // Amounts are stored as whole minor units
+              object[this.field] = Number.isFinite(numValue)
+                ? Math.round(numValue)
+                : 0;
               break;
             }
             case 'date': {
@@ -222,6 +235,7 @@ export class Action {
               const result = this.executeFormulaSync(
                 this.options.formula,
                 object,
+                true,
               );
               const numValue =
                 typeof result === 'number'
@@ -307,6 +321,9 @@ export class Action {
   executeFormulaSync(
     formula: string,
     transaction: Partial<TransactionForRules>,
+    // Only amount results are scaled to minor units; a year or a length
+    // written to notes must stay as computed
+    asAmount = true,
   ): unknown {
     let hfInstance: ReturnType<typeof HyperFormula.buildEmpty> | null = null;
 
@@ -374,7 +391,7 @@ export class Action {
         throw new Error(`Formula error: ${cellValue.message}`);
       }
 
-      if (typeof cellValue === 'number') {
+      if (typeof cellValue === 'number' && asAmount) {
         // Formula results are in major units. Zero-decimal currencies store
         // that number as-is; multiplying by 100 would record 100 yen as 10,000.
         const decimalPlaces = getCachedCurrencyDecimalPlaces();

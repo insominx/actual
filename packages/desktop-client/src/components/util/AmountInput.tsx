@@ -144,7 +144,7 @@ export function AmountInput({
     onChangeValue?.(newText);
   }
 
-  function fireUpdate(amount) {
+  function fireUpdate(amount, keepEditing = false) {
     onUpdate?.(amount);
 
     if (sign) {
@@ -156,7 +156,13 @@ export function AmountInput({
         setSymbol('-');
       }
     }
-    setValue(format(Math.abs(amount), 'financial'));
+    // While the field stays focused, keep the editable text: the display
+    // format may hide decimals, and the blur would re-read the rounded text
+    setValue(
+      keepEditing
+        ? format.forEdit(Math.abs(amount))
+        : format(Math.abs(amount), 'financial'),
+    );
   }
 
   function onInputAmountBlur(e) {
@@ -229,7 +235,7 @@ export function AmountInput({
         }}
         onEnter={(_, e) => {
           const amount = getAmount();
-          fireUpdate(amount);
+          fireUpdate(amount, true);
           onEnter?.(e, amount);
         }}
         onChangeValue={onInputTextChange}

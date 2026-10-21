@@ -520,7 +520,13 @@ handlers['api/download-budget'] = async function ({ syncId, password }) {
 
   // Sync the local budget file
   if (localBudget) {
-    await handlers['load-budget']({ id: localBudget.id });
+    const loaded = await handlers['load-budget']({ id: localBudget.id });
+    if (loaded.error) {
+      throw withErrorCode(
+        new Error(getSyncError(loaded.error, localBudget.id)),
+        loaded.error,
+      );
+    }
     const result = await handlers['sync-budget']();
     if (result.error) {
       throw withErrorCode(
@@ -544,7 +550,13 @@ handlers['api/download-budget'] = async function ({ syncId, password }) {
       result.error.reason,
     );
   }
-  await handlers['load-budget']({ id: result.id });
+  const loaded = await handlers['load-budget']({ id: result.id });
+  if (loaded.error) {
+    throw withErrorCode(
+      new Error(getSyncError(loaded.error, result.id)),
+      loaded.error,
+    );
+  }
 };
 
 handlers['api/get-budgets'] = async function () {
@@ -1813,6 +1825,7 @@ handlers['api/budget-set-amount'] = withMutation(async function ({
   amount,
 }) {
   checkFileOpen();
+  await validateMonth(month);
   if (typeof amount === 'number' && Number.isFinite(amount)) {
     await assertEngineHeadroom(
       [amount],

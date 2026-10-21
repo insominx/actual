@@ -14,6 +14,7 @@ vi.mock('@actual-app/api', () => ({
   downloadBudget: vi.fn().mockResolvedValue(undefined),
   loadBudget: vi.fn().mockResolvedValue(undefined),
   sync: vi.fn().mockResolvedValue(undefined),
+  getPreferences: vi.fn().mockResolvedValue({}),
   shutdown: vi.fn().mockResolvedValue(undefined),
   getBudgets: vi
     .fn()

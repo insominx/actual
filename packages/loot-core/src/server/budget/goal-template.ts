@@ -264,7 +264,9 @@ export async function computeTemplates(
         );
         // don't use the funds that are not from templates
         if (!templateContext.isGoalOnly()) {
-          availBudget += budgeted;
+          // A budgeted income amount already counts positively in the
+          // available total; releasing it reduces availability instead
+          availBudget += category.is_income ? -budgeted : budgeted;
         }
         availBudget += templateContext.getLimitExcess();
         templateContext.getPriorities().forEach(p => prioritiesSet.add(p));

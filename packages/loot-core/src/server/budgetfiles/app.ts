@@ -217,7 +217,10 @@ async function downloadBudget({
 
   const id = result.id;
   await closeBudget();
-  await loadBudget({ id });
+  const loaded = await loadBudget({ id });
+  if (loaded.error) {
+    return { error: { reason: loaded.error } };
+  }
   result = await syncBudget();
 
   if (result.error) {

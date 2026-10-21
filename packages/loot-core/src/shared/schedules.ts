@@ -295,7 +295,21 @@ export function getNextDate(
   if (value.type === 'date') {
     return value.date;
   } else if (value.type === 'recur') {
-    let dates = value.schedule.occurrences({ start, take: 1 }).toArray();
+    const skipWeekend = value.schedule.data.skipWeekend && !noSkipWeekend;
+    // A weekend occurrence moved to Monday can land on or after `start`
+    // even though the raw occurrence is up to two days before it
+    const lookBack =
+      skipWeekend && value.schedule.data.weekendSolve === 'after';
+    let dates = lookBack
+      ? value.schedule
+          .occurrences({ start: d.subDays(start, 2), take: 3 })
+          .toArray()
+          .filter(
+            occurrence =>
+              getDateWithSkippedWeekend(occurrence.date, 'after') >= start,
+          )
+          .slice(0, 1)
+      : value.schedule.occurrences({ start, take: 1 }).toArray();
 
     if (dates.length === 0) {
       // Could be a schedule with limited occurrences, so we try to

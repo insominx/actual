@@ -14,6 +14,11 @@ vi.mock('../../services/secrets-service', () => ({
   },
 }));
 
+const mockIsAdmin = vi.fn((_userId: string) => true);
+vi.mock('../../account-db', () => ({
+  isAdmin: (userId: string) => mockIsAdmin(userId),
+}));
+
 vi.mock('../utils/jwt', () => ({
   getJWT: vi.fn(() => 'mock-jwt-token'),
 }));
@@ -83,6 +88,18 @@ describe('Enable Banking Express routes', () => {
   });
 
   describe('POST /configure', () => {
+    it('refuses a non-admin user without touching the secrets', async () => {
+      mockIsAdmin.mockReturnValueOnce(false);
+
+      const res = await request(app)
+        .post('/configure')
+        .send({ applicationId: 'evil-id', secretKey: 'evil-key' });
+
+      expect(res.status).toBe(403);
+      expect(res.body.reason).toBe('not-admin');
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
     it('returns error when applicationId is missing', async () => {
       const res = await request(app)
         .post('/configure')

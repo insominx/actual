@@ -310,18 +310,19 @@ function recalculate(
   if (historicalBalances.length >= 2) {
     // Use the starting balance (end of first month) and final balance (end of last month) for CAGR calculation
     // The starting balance represents the account balance at the end of the first month
-    let startingBalance = historicalBalances[0];
-    const finalBalance = historicalBalances[historicalBalances.length - 1];
-    const n = historicalBalances.length - 1; // Number of months between start and end
-
-    if (startingBalance === 0) {
-      for (let i = 1; i < historicalBalances.length; i++) {
-        if (historicalBalances[i] !== 0) {
-          startingBalance = historicalBalances[i];
-          break;
-        }
-      }
+    // Skip leading months with no money; the growth period starts at the
+    // first month that has a balance, so the exponent must shrink with it
+    let startIndex = 0;
+    while (
+      startIndex < historicalBalances.length - 1 &&
+      historicalBalances[startIndex] === 0
+    ) {
+      startIndex++;
     }
+    const startingBalance = historicalBalances[startIndex];
+    const finalBalance = historicalBalances[historicalBalances.length - 1];
+    // Number of months between start and end
+    const n = historicalBalances.length - 1 - startIndex;
 
     if (startingBalance > 0 && finalBalance > 0 && n > 0) {
       // Calculate monthly CAGR: (final/starting)^(1/n) - 1

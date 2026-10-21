@@ -71,15 +71,22 @@ function amountScale(currency: string | null | undefined): number {
   return 100;
 }
 
+// Version-1 output has no invocation context, but tables, CSV and exports
+// still need the open budget's currency scale
+let fallbackScale = 100;
+
 export function currentAmountScale(): number {
-  return invocation?.context.scale ?? 100;
+  return invocation?.context.scale ?? fallbackScale;
 }
 
 export function updateAgentContext(context: Partial<AgentContext>) {
-  if (!invocation) return;
   const next = { ...context };
   if ('currency' in next) {
     next.scale = amountScale(next.currency);
+  }
+  if (!invocation) {
+    if (next.scale !== undefined) fallbackScale = next.scale;
+    return;
   }
   Object.assign(invocation.context, next);
 }

@@ -573,7 +573,6 @@ describe('budget/get-reservations', () => {
       ['invalid-template', '#template broken template'],
       ['missing-schedule', '#template schedule Nope'],
       ['unsupported-template', '#template schedule full Insurance'],
-      ['unsupported-template', '#template 100 by 2026-12 repeat every month'],
       ['unsupported-template', '#template 100 by 2026-12'],
       ['unsupported-template', '#template up to 100'],
       ['unsupported-template', '#goal 100'],

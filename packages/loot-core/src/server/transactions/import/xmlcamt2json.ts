@@ -211,10 +211,17 @@ export async function xmlCAMT2json(
       ? entry.NtryDtls.TxDtls
       : null;
     const detailed = details?.map(tx => {
-      const amounts = findKeys(tx, 'Amt') as Amt[];
+      // Prefer the amount booked in the account currency. A depth-first
+      // search would find `AmtDtls/InstdAmt` (the instructed, possibly
+      // foreign-currency amount) before `TxAmt`.
+      const direct = (tx as { Amt?: Amt }).Amt;
+      const txAmt = (tx as { AmtDtls?: { TxAmt?: { Amt?: Amt } } }).AmtDtls
+        ?.TxAmt?.Amt;
+      const fallback = findKeys(tx, 'Amt')[0] as Amt | undefined;
+      const amt = direct ?? txAmt ?? fallback;
       return {
         tx,
-        amount: amounts.length > 0 ? readAmount(amounts[0]) : null,
+        amount: amt != null ? readAmount(amt) : null,
       };
     });
     // Several detail rows often carry only the payee. Their amounts live on

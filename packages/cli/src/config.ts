@@ -208,7 +208,11 @@ export async function resolveConfig(
       ? undefined
       : (cliOpts.budgetId ??
         (!explicitRemote
-          ? (process.env.ACTUAL_BUDGET_ID ?? profile?.budgetId)
+          ? (process.env.ACTUAL_BUDGET_ID ??
+            // An environment sync ID overrides the profile's local budget
+            (process.env.ACTUAL_SYNC_ID !== undefined
+              ? undefined
+              : profile?.budgetId))
           : undefined));
   const offline =
     cliOpts.offline ??

@@ -202,7 +202,10 @@ export function handleCategoryChange(months, oldValue, newValue) {
       const id = newValue.id;
       const groupId = newValue.cat_group;
 
-      addDeps(sheetName, groupId, id);
+      // Hidden categories stay out of group totals, as in a fresh build
+      if (!newValue.hidden) {
+        addDeps(sheetName, groupId, id);
+      }
     });
   } else if (oldValue && oldValue.cat_group !== newValue.cat_group) {
     // The category moved so we need to update the dependencies
@@ -211,7 +214,9 @@ export function handleCategoryChange(months, oldValue, newValue) {
     months.forEach(month => {
       const sheetName = monthUtils.sheetForMonth(month);
       removeDeps(sheetName, oldValue.cat_group, id);
-      addDeps(sheetName, newValue.cat_group, id);
+      if (!newValue.hidden) {
+        addDeps(sheetName, newValue.cat_group, id);
+      }
     });
   } else if (oldValue && oldValue.hidden !== newValue.hidden) {
     const id = newValue.id;
@@ -291,7 +296,9 @@ export function handleCategoryGroupChange(months, oldValue, newValue) {
       );
       createCategoryGroup({ ...group, categories }, sheetName);
 
-      addDeps(sheetName, group.id);
+      if (!group.hidden) {
+        addDeps(sheetName, group.id);
+      }
     });
   } else if (oldValue && oldValue.hidden !== newValue.hidden) {
     const group = newValue;

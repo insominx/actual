@@ -176,7 +176,7 @@ const PATTERN_KEYS: Array<{
 }> = [
   {
     pattern:
-      /^(csv-|parse-date-|flip-amount-|import-reimport-deleted-|ofx-|qif-|camt-)/,
+      /^(csv-|parse-date-|flip-amount-|import-notes-|import-reimport-deleted-|ofx-|qif-|camt-)/,
     authority: 'import-mapping',
     description: 'Per-account import mapping',
     owner: '0020-cli-file-parsing',

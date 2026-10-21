@@ -21,6 +21,7 @@ import {
 import { css } from '@emotion/css';
 
 import { makeAmountFullStyle } from '#components/budget/util';
+import { useFormat } from '#hooks/useFormat';
 import { useMergedRefs } from '#hooks/useMergedRefs';
 import { useSyncedPref } from '#hooks/useSyncedPref';
 
@@ -49,6 +50,7 @@ const AmountInput = memo(function AmountInput({
   const [value, setValue] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const [hideFraction] = useSyncedPref('hideFraction');
+  const decimalPlaces = useFormat().currency.decimalPlaces;
 
   const mergedInputRef = useMergedRefs<HTMLInputElement>(
     props.inputRef,
@@ -118,7 +120,11 @@ const AmountInput = memo(function AmountInput({
 
   const onChangeText = (text: string) => {
     text = reapplyThousandSeparators(text);
-    text = appendDecimals(text, String(hideFraction) === 'true');
+    // Zero-decimal currencies (yen, won) must not shift in implied cents
+    text = appendDecimals(
+      text,
+      String(hideFraction) === 'true' || decimalPlaces === 0,
+    );
     setEditing(true);
     setText(text);
     props.onChangeValue?.(text);

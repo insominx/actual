@@ -74,20 +74,18 @@ function getDefaultWeeklyStart(entries: AutomationEntry[]): string {
   const starts: string[] = [];
 
   for (const { template } of entries) {
+    // A by/spend month is a deadline, not a start; using it would leave
+    // the cap inactive until that month
     if (template.type === 'periodic' && template.starting) {
       starts.push(template.starting);
-    } else if (
-      (template.type === 'by' || template.type === 'spend') &&
-      template.month
-    ) {
-      starts.push(`${template.month}-01`);
     }
   }
 
+  const thisMonth = dayFromDate(firstDayOfMonth(new Date()));
   const earliest =
     starts.length > 0 ? starts.reduce((a, b) => (a < b ? a : b)) : null;
 
-  return earliest ?? dayFromDate(firstDayOfMonth(new Date()));
+  return earliest && earliest <= thisMonth ? earliest : thisMonth;
 }
 
 type AutomationEditorPaneProps = {

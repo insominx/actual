@@ -1,3 +1,5 @@
+import { resolve } from 'node:path';
+
 import type { Command } from 'commander';
 
 import { AgentError } from '#agent-output';
@@ -183,11 +185,20 @@ export function registerJobsCommand(program: Command) {
         if (minutes < 1 || minutes > 59) {
           throw new AgentError('INVALID_INPUT', '--every must be 1-59.');
         }
+        // cron and systemd step values restart every hour, so only a divisor
+        // of 60 gives evenly spaced runs that match the Windows recipe
+        if (60 % minutes !== 0) {
+          throw new AgentError(
+            'INVALID_INPUT',
+            '--every must divide 60 evenly (1, 2, 3, 4, 5, 6, 10, 12, 15, 20 or 30).',
+          );
+        }
         printOutput(
           schedulerRecipes(await readJob(dataDir, name), {
             executable: cmdOpts.executable,
             minutes,
-            dataDir,
+            // Schedulers start in another working directory
+            dataDir: resolve(dataDir),
           }),
           opts.format,
         );

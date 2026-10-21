@@ -148,7 +148,8 @@ export function ReconcileMenu({
   // to use a button to update inputValue we can't use defaultValue in the input form below
   useEffect(() => {
     if (clearedBalance != null) {
-      setInputValue(format(clearedBalance, 'financial'));
+      // forEdit keeps the decimals that the display format may hide
+      setInputValue(format.forEdit(clearedBalance));
     }
   }, [clearedBalance, format]);
 
@@ -193,9 +194,7 @@ export function ReconcileMenu({
               {format(lastSyncedBalance, 'financial')}
             </Text>
             <Button
-              onPress={() =>
-                setInputValue(format(lastSyncedBalance, 'financial'))
-              }
+              onPress={() => setInputValue(format.forEdit(lastSyncedBalance))}
               style={{ marginBottom: 7 }}
             >
               <Trans>Use last synced total</Trans>

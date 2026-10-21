@@ -29,7 +29,7 @@ async function live(id: string) {
 
 async function childIds(parentId: string) {
   const rows = await db.all<{ id: string }>(
-    'SELECT id FROM v_transactions_internal WHERE parent_id = ? ORDER BY id',
+    'SELECT id FROM v_transactions_internal WHERE parent_id = ? AND tombstone = 0 ORDER BY id',
     [parentId],
   );
   return rows.map(row => row.id);

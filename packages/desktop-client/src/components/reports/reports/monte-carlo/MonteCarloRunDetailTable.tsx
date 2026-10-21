@@ -87,7 +87,10 @@ export function MonteCarloRunDetailTable({
   const surplusPotName = getMonteCarloSurplusPotLabel(pots, t);
   const hasSurplusPot = pots.some(pot => pot.isSurplus);
   const lastRow = rows[rows.length - 1];
-  const hasSurvived = lastRow != null && lastRow.endBalance > 0;
+  // A run only fails when a year's spending could not be fully funded;
+  // ending at exactly zero (or living off income) is a survival
+  const hasSurvived =
+    lastRow != null && lastRow.spent >= lastRow.plannedSpending;
   // Present whenever the plan has inflation enabled
   const showInflation = rows.some(row => row.inflation != null);
   const allExpanded = rows.length > 0 && expandedYears.size === rows.length;

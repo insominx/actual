@@ -13,6 +13,7 @@ import { toDateRepr } from '#server/models';
 import { mutator, runMutator } from '#server/mutators';
 import * as prefs from '#server/prefs';
 import { Rule } from '#server/rules';
+import { recurConfigToBoundedRRules } from '#server/rules/rule-utils';
 import { addSyncListener, batchMessages } from '#server/sync';
 import {
   getRules,
@@ -33,7 +34,6 @@ import {
   getNextDateAfter,
   getScheduledAmount,
   getStatus,
-  recurConfigToRSchedule,
 } from '#shared/schedules';
 import type {
   RuleActionEntity,
@@ -475,7 +475,7 @@ function discoverSchedules() {
 }
 
 async function getUpcomingDates({ config, count }) {
-  const rules = recurConfigToRSchedule(config);
+  const rules = recurConfigToBoundedRRules(config);
 
   try {
     const schedule = new RSchedule({ rrules: rules });

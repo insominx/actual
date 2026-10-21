@@ -165,6 +165,18 @@ export async function makeBackup(id: string) {
 }
 
 export async function loadBackup(id: string, backupId: string) {
+  try {
+    await loadBackupInner(id, backupId);
+  } catch (e) {
+    // Prefs loaded here would make a later load-budget think the budget is
+    // already open, and the backup service would keep running for it
+    prefs.unloadPrefs();
+    stopBackupService();
+    throw e;
+  }
+}
+
+async function loadBackupInner(id: string, backupId: string) {
   const budgetDir = fs.getBudgetDir(id);
 
   if (!(await fs.exists(fs.join(budgetDir, LATEST_BACKUP_FILENAME)))) {
@@ -203,6 +215,10 @@ export async function loadBackup(id: string, backupId: string) {
     );
     await fs.removeFile(fs.join(budgetDir, LATEST_BACKUP_FILENAME));
     await fs.removeFile(fs.join(budgetDir, 'metadata.latest.json'));
+
+    // Prefs are only loaded above on the first backup load; the upload
+    // needs them, and an empty catch would hide the failure
+    await prefs.loadPrefs(id);
 
     // Re-upload the new file
     try {
