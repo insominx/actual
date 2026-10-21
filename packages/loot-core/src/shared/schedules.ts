@@ -352,7 +352,19 @@ export function getNextDateAfter(dateCond, afterDate: string): string | null {
       return nextDate;
     }
 
-    start = d.addDays(monthUtils.parseDate(occurrence), 1);
+    // A weekend move can push an earlier occurrence (the 1st, a Saturday)
+    // onto or past `start` (Monday the 3rd), so `nextDate` may belong to an
+    // occurrence before `occurrence`. Step past `nextDate` first; jumping
+    // straight past `occurrence` would skip it.
+    const afterOccurrence = d.addDays(monthUtils.parseDate(occurrence), 1);
+    const afterNextDate =
+      nextDate != null ? d.addDays(monthUtils.parseDate(nextDate), 1) : null;
+    start =
+      afterNextDate != null &&
+      afterNextDate > start &&
+      afterNextDate <= afterOccurrence
+        ? afterNextDate
+        : afterOccurrence;
   }
 
   return null;

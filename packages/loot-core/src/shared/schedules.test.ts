@@ -555,6 +555,23 @@ describe('schedules', () => {
       expect(getNextDateAfter(dateCond, '2020-12-07')).toBe('2020-12-14');
     });
 
+    it('does not skip the occurrence after one moved `after` the weekend', () => {
+      // 2024-06-01 is a Saturday and moves to Monday 2024-06-03; the next
+      // occurrence, Monday 2024-07-01, must not be skipped.
+      const dateCond = {
+        op: 'is',
+        value: {
+          start: '2024-06-01',
+          frequency: 'monthly',
+          skipWeekend: true,
+          weekendSolveMode: 'after',
+        },
+      };
+
+      expect(getNextDateAfter(dateCond, '2024-06-03')).toBe('2024-07-01');
+      expect(getNextDateAfter(dateCond, '2024-09-02')).toBe('2024-10-01');
+    });
+
     it('includes a weekend occurrence moved `after` the given date', () => {
       const dateCond = weeklyOnSaturday({
         skipWeekend: true,
