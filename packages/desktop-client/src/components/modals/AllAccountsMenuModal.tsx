@@ -1,8 +1,17 @@
+import React from 'react';
+import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { MobileSheet } from '#components/mobile/MobileSheet';
-import { MobileSheetRow } from '#components/mobile/MobileSheetRow';
-import { MobileSheetSection } from '#components/mobile/MobileSheetSection';
+import { Menu } from '@actual-app/components/menu';
+import { styles } from '@actual-app/components/styles';
+import { theme } from '@actual-app/components/theme';
+
+import {
+  Modal,
+  ModalCloseButton,
+  ModalHeader,
+  ModalTitle,
+} from '#components/common/Modal';
 import { useSyncedPref } from '#hooks/useSyncedPref';
 import type { Modal as ModalType } from '#modals/modalsSlice';
 
@@ -17,26 +26,41 @@ export function AllAccountsMenuModal({ onClose }: AllAccountsMenuModalProps) {
     'hide-reconciled-all',
   );
 
+  const defaultMenuItemStyle: CSSProperties = {
+    ...styles.mobileMenuItem,
+    color: theme.menuItemText,
+    borderRadius: 0,
+    borderTop: `1px solid ${theme.pillBorder}`,
+  };
+
   return (
-    <MobileSheet
-      name="all-accounts-menu"
-      title={t('All Accounts')}
-      onClose={onClose}
-    >
-      {() => (
-        <MobileSheetSection>
-          <MobileSheetRow
-            label={
-              hideReconciled !== 'true'
-                ? t('Hide reconciled transactions')
-                : t('Show reconciled transactions')
-            }
-            onPress={() => {
-              setHideReconciled(hideReconciled === 'true' ? 'false' : 'true');
-            }}
+    <Modal name="all-accounts-menu" onClose={onClose}>
+      {({ state }) => (
+        <>
+          <ModalHeader
+            title={<ModalTitle title={t('All Accounts')} shrinkOnOverflow />}
+            rightContent={<ModalCloseButton onPress={() => state.close()} />}
           />
-        </MobileSheetSection>
+          <Menu
+            getItemStyle={() => defaultMenuItemStyle}
+            onMenuSelect={name => {
+              if (name === 'toggle-reconciled') {
+                setHideReconciled(hideReconciled === 'true' ? 'false' : 'true');
+              }
+              state.close();
+            }}
+            items={[
+              {
+                name: 'toggle-reconciled',
+                text:
+                  hideReconciled !== 'true'
+                    ? t('Hide reconciled transactions')
+                    : t('Show reconciled transactions'),
+              },
+            ]}
+          />
+        </>
       )}
-    </MobileSheet>
+    </Modal>
   );
 }

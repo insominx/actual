@@ -204,6 +204,9 @@ const entityIdMap = new Map([
 ]);
 
 describe('doImport', () => {
+  // The fork's import reads the budget currency from the preferences table
+  beforeEach(global.emptyDatabase());
+
   it('preserves group notes alongside month and category budget notes', async () => {
     const data = {
       accounts: [],
