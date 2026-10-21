@@ -102,7 +102,7 @@ describe('Enable Banking Express routes', () => {
         .send({ applicationId: 'evil-id', secretKey: 'evil-key' });
 
       expect(res.status).toBe(403);
-      expect(res.body.reason).toBe('not-admin');
+      expect(res.body.reason).toBe('forbidden');
       expect(mockFetch).not.toHaveBeenCalled();
     });
 

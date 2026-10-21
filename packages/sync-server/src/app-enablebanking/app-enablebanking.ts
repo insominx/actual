@@ -237,13 +237,11 @@ app.post(
 app.post(
   '/configure',
   handleError(async (req: Request, res: Response) => {
-    // The credentials are a server-wide secret, so only an admin may
-    // change them (same rule as app-secrets)
     if (!isAdmin(res.locals.user_id)) {
       res.status(403).send({
         status: 'error',
-        reason: 'not-admin',
-        details: 'You have to be admin to manage global secrets',
+        reason: 'forbidden',
+        details: 'permission-not-found',
       });
       return;
     }
