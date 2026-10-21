@@ -25,6 +25,7 @@ import {
 import type { DisplayTemplateType } from '#components/budget/goals/constants';
 import { getDisplayTemplateMeta } from '#components/budget/goals/displayTemplateMeta';
 import {
+  alignSchedulePriority,
   getInitialState,
   templateReducer,
 } from '#components/budget/goals/reducer';
@@ -124,10 +125,20 @@ export function AutomationEditorPane({
         if (i !== activeIdx) return entry;
         const current = getInitialState(entry.template);
         const next = templateReducer(current, action);
+        // switching to schedule/by must not clash with the priority of the
+        // category's other schedule/by templates
+        const template =
+          action.type === 'set-type' &&
+          next.template.type !== current.template.type
+            ? alignSchedulePriority(
+                next.template,
+                prev.filter((_, j) => j !== i).map(e => e.template),
+              )
+            : next.template;
         return {
           id: entry.id,
           template: {
-            ...next.template,
+            ...template,
             description: entry.template.description,
           },
           displayType: next.displayType,

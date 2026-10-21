@@ -156,6 +156,10 @@ export async function performTransactionClearing(
           ? { id, cleared, reconciled: false }
           : { id, cleared },
       ),
+      // Cleared and reconciled state belong to one leg. The transfer owner
+      // would resync the counterpart's notes, schedule and amount from this
+      // leg, which the proposal neither requests nor discloses.
+      runTransfers: false,
     });
   }
   for (const before of current.before.transactions) {

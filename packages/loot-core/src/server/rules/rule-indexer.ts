@@ -28,7 +28,9 @@ export class RuleIndexer {
   getKey(value: unknown): string | null {
     if (typeof value === 'string' && value !== '') {
       if (this.method === 'firstchar') {
-        return value[0].toLowerCase();
+        // Lowercase before taking the first char, exactly like condition
+        // values are lowercased whole (lowercasing can change the length)
+        return value.toLowerCase()[0];
       }
       return value.toLowerCase();
     }

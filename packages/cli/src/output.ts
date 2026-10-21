@@ -26,6 +26,10 @@ function formatCellValue(key: string, value: unknown): string {
     const digits = scale <= 1 ? 0 : Math.round(Math.log10(scale));
     return (value / scale).toFixed(digits);
   }
+  // Nested objects/arrays would otherwise render as "[object Object]".
+  if (value !== null && typeof value === 'object') {
+    return JSON.stringify(value);
+  }
   return String(value ?? '');
 }
 

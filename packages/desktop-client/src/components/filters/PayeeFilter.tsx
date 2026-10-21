@@ -48,6 +48,8 @@ export const PayeeFilter = ({ value, op, onChange }: PayeeFilterProps) => {
       type={multi ? 'multi' : 'single'}
       showInactivePayees
       showMakeTransfer={false}
+      // Filtering must never create a payee
+      showCreatePayee={false}
       openOnFocus
       value={coercedValue}
       inputProps={{ placeholder }}

@@ -405,6 +405,23 @@ async function _applyMessages(messages: Message[], deferUnknownSchema = false) {
     return undefined;
   }
 
+  // Hold the cache barrier until the messages are fully applied, and
+  // always release it (even if applying throws) so the cache can become
+  // clean again. Barriers nest, so this doesn't release a barrier held
+  // by a flow started from here (like a budget type switch)
+  const barrierSheet = sheet.get();
+  barrierSheet?.startCacheBarrier();
+  try {
+    return applyMessagesWithinCacheBarrier(messages, deferUnknownSchema);
+  } finally {
+    barrierSheet?.endCacheBarrier();
+  }
+}
+
+function applyMessagesWithinCacheBarrier(
+  messages: Message[],
+  deferUnknownSchema: boolean,
+) {
   // It's important to not mutate the clock while processing the
   // messages. We only want to mutate it if the transaction succeeds.
   // The merkle variable will be updated while applying the messages and
@@ -414,10 +431,6 @@ async function _applyMessages(messages: Message[], deferUnknownSchema = false) {
   if (checkSyncingMode('enabled')) {
     clock = getClock();
     currentMerkle = clock.merkle;
-  }
-
-  if (sheet.get()) {
-    sheet.get().startCacheBarrier();
   }
 
   const prefsToSet: MetadataPrefs = {};
@@ -596,10 +609,6 @@ async function _applyMessages(messages: Message[], deferUnknownSchema = false) {
         s.recompute(name);
       }
     }
-
-    // Allow the cache to be used in the future. At this point it's guaranteed
-    // to be up-to-date because we are done mutating any other data
-    sheet.get().endCacheBarrier();
   }
 
   _syncListeners.forEach(func => func(oldData, newData));

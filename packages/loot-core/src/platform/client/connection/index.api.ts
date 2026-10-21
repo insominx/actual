@@ -18,3 +18,7 @@ export const send = (async <K extends keyof Handlers>(
   }
   return lib.send(name, args);
 }) as T.Send;
+
+export const disconnect: T.Disconnect = function () {
+  // The api/node backend runs in-process, so there is no connection to drop.
+};

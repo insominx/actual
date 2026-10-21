@@ -1262,6 +1262,38 @@ describe('runMonteCarloSimulation', () => {
     );
   });
 
+  it("ratcheting measures the balance threshold in today's money", () => {
+    // Returns only keep pace with inflation: the nominal balance passes
+    // 1.5x the start after ~9 years, but its real value never grows, so
+    // the ratchet must never raise spending
+    const result = runMonteCarloSimulation(
+      makeParams(
+        {
+          annualWithdrawal: 1,
+          horizonYears: 30,
+          inflationMean: 0.05,
+          simulationCount: 1,
+          withdrawalRule: { ...WITHDRAWAL_RULE_DEFAULTS, type: 'ratcheting' },
+          captureRunDetail: 0,
+        },
+        {
+          startingBalance: 100_000,
+          expectedReturnMean: 0.05,
+          returnStdDev: 0,
+        },
+      ),
+    );
+
+    const factorRows = result.runDetail!.flatMap(row =>
+      row.ruleExplanation?.kind === 'factor' ? [row.ruleExplanation] : [],
+    );
+    expect(factorRows.length).toBeGreaterThan(20);
+    for (const explanation of factorRows) {
+      expect(explanation.action).toBe('none');
+      expect(explanation.factor).toBe(1);
+    }
+  });
+
   it('keeps the spending floor on the unfunded tail after a failure', () => {
     // A small pot under guardrails: repeated cuts would take the rule's
     // plan below the 1,800 floor, so the post-failure rows must still

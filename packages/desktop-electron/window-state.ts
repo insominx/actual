@@ -33,12 +33,13 @@ async function loadState() {
 
 function updateState(win: BrowserWindow, state: WindowState) {
   const screen = electron.screen;
-  const bounds = win.getBounds();
-  if (!win.isMaximized() && !win.isMinimized() && !win.isFullScreen()) {
-    state.width = bounds.width;
-    state.height = bounds.height;
-  }
-
+  // getBounds() on a minimized window reports the off-screen placeholder
+  // position (-32000, -32000 on Windows), and on a maximized or full-screen
+  // window the enlarged size. getNormalBounds() always returns the restored
+  // window's position and size, which is what we want to reopen with.
+  const bounds = win.getNormalBounds();
+  state.width = bounds.width;
+  state.height = bounds.height;
   state.x = bounds.x;
   state.y = bounds.y;
   state.isMaximized = win.isMaximized();

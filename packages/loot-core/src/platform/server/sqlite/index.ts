@@ -265,6 +265,16 @@ export function closeDatabase(db: Database) {
   db.close();
 }
 
+// sql.js has no online backup, and `export()` resets the live connection
+// (prepared statements, custom functions), so callers fall back to copying
+// the file. Writes in the browser are flushed whole, so a copy is safe there.
+export async function backupDatabase(
+  _db: Database,
+  _path: string,
+): Promise<boolean> {
+  return false;
+}
+
 export async function exportDatabase(db: Database) {
   return db.export();
 }

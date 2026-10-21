@@ -20,6 +20,7 @@ import {
   isCleanupConfigured,
 } from '#components/budget/goals/cleanupModel';
 import type { CleanupConfig } from '#components/budget/goals/cleanupModel';
+import { alignSchedulePriority } from '#components/budget/goals/reducer';
 import {
   validateAutomation,
   validatePercentageAllocation,
@@ -91,7 +92,16 @@ export function useBudgetAutomationsEditor({
     const entry = (create ?? fallback?.create)?.();
     if (!entry) return;
     setEntries(prev => {
-      const next = [...prev, entry];
+      const next = [
+        ...prev,
+        {
+          ...entry,
+          template: alignSchedulePriority(
+            entry.template,
+            prev.map(e => e.template),
+          ),
+        },
+      ];
       setActive({ kind: 'entry', idx: next.length - 1 });
       return next;
     });

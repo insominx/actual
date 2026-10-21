@@ -53,6 +53,8 @@ async function applyGroupCleanups(
 ) {
   const sheetName = monthUtils.sheetForMonth(month);
   const warnings = [];
+  let sourceCount = 0;
+  let sinkCount = 0;
   const db_month = parseInt(month.replace('-', ''));
   let groupLength = sourceGroups.length;
   while (groupLength > 0) {
@@ -91,6 +93,9 @@ async function applyGroupCleanups(
           amount: budgeted - balance,
         });
         available_amount += balance;
+        if (balance > 0) {
+          sourceCount += 1;
+        }
       }
 
       //fill underfunded categories within the group first
@@ -161,6 +166,7 @@ async function applyGroupCleanups(
           month,
           amount: budgeted + sinkShares[ii],
         });
+        sinkCount += 1;
       }
     } else {
       const groupName = groupNamesById.get(groupId) ?? groupId;
@@ -171,7 +177,7 @@ async function applyGroupCleanups(
     sourceGroups = sourceGroups.filter(c => c.groupId !== groupId);
     groupLength = sourceGroups.length;
   }
-  return warnings;
+  return { warnings, sourceCount, sinkCount };
 }
 
 async function processCleanup(month: string): Promise<TemplateNotification> {
@@ -220,7 +226,7 @@ async function processCleanup(month: string): Promise<TemplateNotification> {
   const categoryNamesById = new Map(categories.map(c => [c.id, c.name]));
 
   //run category groups
-  const newWarnings = await applyGroupCleanups(
+  const groupResult = await applyGroupCleanups(
     month,
     groupSource,
     groupSink,
@@ -228,7 +234,11 @@ async function processCleanup(month: string): Promise<TemplateNotification> {
     groupNamesById,
     categoryNamesById,
   );
-  warnings.splice(1, 0, ...newWarnings);
+  warnings.splice(1, 0, ...groupResult.warnings);
+  // Named pools move money between their own categories without touching
+  // To Budget, so their sources and sinks count toward the result too.
+  num_sources += groupResult.sourceCount;
+  num_sinks += groupResult.sinkCount;
 
   for (const category of categories) {
     const def = parseCleanupDef(category.cleanup_def);
@@ -365,7 +375,7 @@ async function processCleanup(month: string): Promise<TemplateNotification> {
         message: 'cleanup-no-funds',
         pre: warnings.join('\n\n'),
       };
-    } else if (budgetAvailable === 0) {
+    } else if (budgetAvailable === 0 && groupResult.sourceCount === 0) {
       return {
         type: 'message',
         message: 'cleanup-up-to-date',

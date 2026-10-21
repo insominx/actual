@@ -5,6 +5,7 @@ import { Button } from '@actual-app/components/button';
 import type { CSSProperties } from '@actual-app/components/styles';
 import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
+import { getNumberFormat } from '@actual-app/core/shared/util';
 
 export function CalculatorButtons({
   inputRef,
@@ -18,6 +19,10 @@ export function CalculatorButtons({
   readonly onInteractionStart?: () => void;
   readonly style?: CSSProperties;
 }) {
+  // evalArithmetic parses with the active number format, where '.' may be
+  // the thousands separator (e.g. dot-comma)
+  const { decimalSeparator } = getNumberFormat();
+
   const focusInputAt = (position: number) => {
     const input = inputRef.current;
 
@@ -243,10 +248,10 @@ export function CalculatorButtons({
         <CalculatorButton
           onInteractionStart={onInteractionStart}
           onPress={() => {
-            insertExpression('.');
+            insertExpression(decimalSeparator);
           }}
         >
-          .
+          {decimalSeparator}
         </CalculatorButton>
         <CalculatorButton
           onInteractionStart={onInteractionStart}

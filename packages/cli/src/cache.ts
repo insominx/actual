@@ -1,5 +1,11 @@
 import { randomBytes } from 'node:crypto';
-import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
 
 import { isRecord } from './utils';
@@ -19,6 +25,54 @@ export type CacheState = {
 
 export function getMetaDir(dataDir: string, syncId: string): string {
   return join(dataDir, META_ROOT_DIR, syncId);
+}
+
+function localGroupId(dataDir: string, budgetId: string): string | null {
+  if (!budgetId || budgetId === '.' || budgetId === '..') return null;
+  if (/[\\/]/.test(budgetId)) return null;
+  try {
+    const metadata: unknown = JSON.parse(
+      readFileSync(join(dataDir, budgetId, 'metadata.json'), 'utf8'),
+    );
+    return isRecord(metadata) &&
+      typeof metadata.groupId === 'string' &&
+      metadata.groupId
+      ? metadata.groupId
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Key for device-local per-budget stores (statement evidence, bank sync
+ * runs). A synced budget is keyed by its sync ID whether it is opened online
+ * or offline by local ID; a local-only budget keeps its local ID. `aliases`
+ * lists keys older versions used for the same budget (the local ID of a
+ * synced budget opened with --offline --budget-id) so stored data stays
+ * readable.
+ */
+export function budgetStoreKeys(
+  dataDir: string,
+  { syncId, budgetId }: { syncId?: string | null; budgetId?: string | null },
+): { key: string; aliases: string[] } | null {
+  if (syncId) {
+    let names: string[] = [];
+    try {
+      names = readdirSync(dataDir);
+    } catch {
+      // No data directory yet: nothing was stored under a local ID.
+    }
+    const aliases = names.filter(
+      name => name !== syncId && localGroupId(dataDir, name) === syncId,
+    );
+    return { key: syncId, aliases };
+  }
+  if (!budgetId) return null;
+  const groupId = localGroupId(dataDir, budgetId);
+  return groupId
+    ? { key: groupId, aliases: [budgetId] }
+    : { key: budgetId, aliases: [] };
 }
 
 function cachePath(metaDir: string): string {

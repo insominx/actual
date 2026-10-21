@@ -235,15 +235,14 @@ function ConfigureField<T extends RuleConditionEntity>({
         value: resolveIdToText(field, subfield, value),
       });
     }
-    // Text -> Single ID: Only convert if there is a single exact match
+    // Text -> Single ID: Only convert if there is a single exact match;
+    // otherwise clear the value, as the raw text is not a valid ID
     if (isIdField && isTextOp(op) && isSingleIdOp(nextOp)) {
       const resolvedValue = resolveTextToId(field, subfield, value);
-      if (resolvedValue) {
-        dispatch({
-          type: 'set-value',
-          value: resolvedValue,
-        });
-      }
+      dispatch({
+        type: 'set-value',
+        value: resolvedValue ?? '',
+      });
     }
     // Multi ID -> Text: If there is exactly one selected ID, convert it to text; otherwise clear the value
     if (isIdField && isMultiIdOp(op) && isTextOp(nextOp)) {
@@ -259,15 +258,14 @@ function ConfigureField<T extends RuleConditionEntity>({
         });
       }
     }
-    // Text -> Multi ID: Only convert if there is a single exact match and wrap in array
+    // Text -> Multi ID: Only convert if there is a single exact match and wrap
+    // in array; otherwise clear the value
     if (isIdField && isTextOp(op) && isMultiIdOp(nextOp)) {
       const resolvedValue = resolveTextToId(field, subfield, value);
-      if (resolvedValue) {
-        dispatch({
-          type: 'set-value',
-          value: resolvedValue ? [resolvedValue] : [],
-        });
-      }
+      dispatch({
+        type: 'set-value',
+        value: resolvedValue ? [resolvedValue] : [],
+      });
     }
     // No-value Account -> Text: Preserve the old value while the no-value op is selected,
     // then convert when switching back to text

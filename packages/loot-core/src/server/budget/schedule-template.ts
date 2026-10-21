@@ -197,9 +197,17 @@ async function createScheduleList(
               ),
             );
           };
+          // A weekend occurrence moved to Monday is paid up to two days
+          // after its raw date, so start two days early and count each
+          // occurrence by the date it is paid.
+          const monthStart = monthUtils.firstDayOfMonth(current_month);
           let nextBaseDate = getNextDate(
             dateConditions,
-            monthUtils._parse(current_month),
+            monthUtils._parse(
+              dateConditions.value.skipWeekend
+                ? monthUtils.subDays(monthStart, 2)
+                : current_month,
+            ),
             true,
           );
           let nextDate = occurrenceDate(nextBaseDate);
@@ -208,7 +216,9 @@ async function createScheduleList(
             nextDate != null &&
             nextDate < nextMonth
           ) {
-            monthlyTarget += -target;
+            if (nextDate >= monthStart) {
+              monthlyTarget += -target;
+            }
             const currentDate = nextBaseDate;
             const oneDayLater = monthUtils.addDays(nextBaseDate, 1);
             nextBaseDate = getNextDate(

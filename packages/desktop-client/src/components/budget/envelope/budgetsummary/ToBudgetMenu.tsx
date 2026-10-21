@@ -92,8 +92,9 @@ export function ToBudgetMenu({
             onCover?.();
             break;
           case 'buffer':
+            // Auto hold is reset when the hold is submitted, not on open,
+            // so cancelling leaves it as it was
             onHoldBuffer?.();
-            onBudgetAction?.(month, 'reset-income-carryover', {});
             break;
           case 'reset-buffer':
             onResetHoldBuffer?.();

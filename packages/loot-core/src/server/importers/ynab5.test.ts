@@ -9,7 +9,7 @@ import {
   importTransactions,
   parseFile,
 } from './ynab5';
-import type { Payee, Transaction } from './ynab5-types';
+import type { Payee, Subtransaction, Transaction } from './ynab5-types';
 
 vi.mock('#server/main-app', () => ({
   send: vi.fn(),
@@ -201,6 +201,84 @@ describe('importTransactions', () => {
       .mock.calls.filter(([name]) => name === 'api/transactions-add')
       .flatMap(([, args]) => args.transactions);
     expect(imported[0].amount).toBe(-1000);
+  });
+
+  it('skips deleted subtransactions of a split', async () => {
+    const entityIdMap = new Map<string, string>([
+      ['ynab-account-1', 'actual-account-1'],
+      ['ynab-account-2', 'actual-account-2'],
+    ]);
+
+    vi.mocked(send).mockImplementation(async (name: string) => {
+      if (name === 'api/payees-get') {
+        return [
+          {
+            id: 'actual-payee-for-account-1',
+            transfer_acct: 'actual-account-1',
+          },
+          {
+            id: 'actual-payee-for-account-2',
+            transfer_acct: 'actual-account-2',
+          },
+        ];
+      }
+      if (name === 'api/categories-get') return [];
+      if (name === 'api/transactions-add') return null;
+      throw new Error(`Unexpected send call: ${name}`);
+    });
+
+    const subtransaction = (
+      overrides: Partial<Subtransaction> & Pick<Subtransaction, 'id'>,
+    ): Subtransaction => ({
+      transaction_id: 'split',
+      amount: -5000,
+      deleted: false,
+      ...overrides,
+    });
+
+    await importTransactions(
+      {
+        payees: [],
+        accounts: [],
+        transactions: [
+          makeTransaction({ id: 'split', amount: -10000 }),
+          // A live transfer in another account whose orphan counterpart was
+          // only ever a deleted subtransaction.
+          makeTransaction({
+            id: 'transfer-in',
+            account_id: 'ynab-account-2',
+            amount: 3000,
+            transfer_account_id: 'ynab-account-1',
+          }),
+        ],
+        subtransactions: [
+          subtransaction({ id: 'live-1' }),
+          subtransaction({ id: 'live-2' }),
+          subtransaction({
+            id: 'deleted-transfer',
+            amount: -3000,
+            transfer_account_id: 'ynab-account-2',
+            deleted: true,
+          }),
+        ],
+      } as unknown as Parameters<typeof importTransactions>[0],
+      entityIdMap,
+      new Set(),
+    );
+
+    const imported = vi
+      .mocked(send)
+      .mock.calls.filter(([name]) => name === 'api/transactions-add')
+      .flatMap(([, args]) => args.transactions);
+    const split = imported.find(t => t.id === entityIdMap.get('split'));
+    expect(split.subtransactions.map((t: { id: string }) => t.id)).toEqual([
+      entityIdMap.get('live-1'),
+      entityIdMap.get('live-2'),
+    ]);
+    const transferIn = imported.find(
+      t => t.id === entityIdMap.get('transfer-in'),
+    );
+    expect(transferIn.transfer_id).toBeNull();
   });
 });
 

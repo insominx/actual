@@ -445,10 +445,12 @@ export async function setType(type) {
     }
   });
 
-  sheet.get().startCacheBarrier();
-  void sheet.loadUserBudgets(db);
-  const bounds = await createAllBudgets();
-  sheet.get().endCacheBarrier();
-
-  return bounds;
+  const barrierSheet = sheet.get();
+  barrierSheet.startCacheBarrier();
+  try {
+    void sheet.loadUserBudgets(db);
+    return await createAllBudgets();
+  } finally {
+    barrierSheet.endCacheBarrier();
+  }
 }

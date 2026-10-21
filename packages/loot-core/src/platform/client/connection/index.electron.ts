@@ -15,6 +15,18 @@ let socketClient = null;
 // surfaces it (via the FatalError modal) instead of waiting forever.
 let appInitFailure = null;
 
+// Set by `disconnect` and cleared by `init`: while set, requests are rejected
+// with this error instead of waiting on a backend that can no longer answer.
+let disconnectedError: T.ConnectionError | null = null;
+
+function settleWithError(handler, error: T.ConnectionError) {
+  if (handler.catchErrors) {
+    handler.resolve({ data: undefined, error });
+  } else {
+    handler.reject(error);
+  }
+}
+
 function rejectAllPendingRequests(failure) {
   for (const handler of replyHandlers.values()) {
     handler.reject(failure);
@@ -97,6 +109,7 @@ function connectSocket(onOpen) {
 }
 
 export const init: T.Init = async function () {
+  disconnectedError = null;
   return new Promise(connectSocket);
 };
 
@@ -109,9 +122,13 @@ export const send: T.Send = function (
       reject(appInitFailure);
       return;
     }
+    if (disconnectedError) {
+      settleWithError({ resolve, reject, catchErrors }, disconnectedError);
+      return;
+    }
 
     const id = uuidv4();
-    replyHandlers.set(id, { resolve, reject });
+    replyHandlers.set(id, { resolve, reject, catchErrors });
 
     if (socketClient) {
       socketClient.emit('message', {
@@ -166,6 +183,23 @@ async function closeSocket(onClose) {
 
   await socketClient.close();
 }
+
+export const disconnect: T.Disconnect = function (
+  reason = 'Disconnected from the backend',
+) {
+  socketClient = null;
+  messageQueue = [];
+  disconnectedError = {
+    type: 'ServerError',
+    code: 'disconnected',
+    message: reason,
+  };
+  const pending = [...replyHandlers.values()];
+  replyHandlers.clear();
+  for (const handler of pending) {
+    settleWithError(handler, disconnectedError);
+  }
+};
 
 export const clearServer: T.ClearServer = async function () {
   if (socketClient != null) {

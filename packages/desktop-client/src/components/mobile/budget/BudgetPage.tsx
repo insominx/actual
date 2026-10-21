@@ -1063,7 +1063,7 @@ function OverspendingBanner({ month, onBudgetAction, budgetType, ...props }) {
   );
 }
 
-function MonthSelector({
+export function MonthSelector({
   month,
   monthBounds,
   onOpenMonthMenu,
@@ -1073,7 +1073,8 @@ function MonthSelector({
   const locale = useLocale();
   const { t } = useTranslation();
   const prevEnabled = month > monthBounds.start;
-  const nextEnabled = month < monthUtils.subMonths(monthBounds.end, 1);
+  // the bounds are inclusive, matching the desktop month picker
+  const nextEnabled = month < monthBounds.end;
 
   const arrowButtonStyle = {
     padding: 10,

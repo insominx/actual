@@ -1903,9 +1903,14 @@ export function runMonteCarloSimulation(
                 ruleAction = 'raise';
               }
             } else if (rule.type === 'ratcheting') {
+              // The threshold is "N times the starting balance" in today's
+              // money: inflate the start so inflation alone (which already
+              // raises the planned spending) can't trigger a real raise
               if (
                 accessibleTotal >
-                accessibleStartByYear[year] * rule.balanceThresholdMultiple
+                accessibleStartByYear[year] *
+                  cumulativeInflation *
+                  rule.balanceThresholdMultiple
               ) {
                 ratchetStreak++;
                 if (ratchetStreak >= rule.consecutiveYears) {

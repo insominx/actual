@@ -7,6 +7,7 @@ import * as fs from '#platform/server/fs';
 import { logger } from '#platform/server/log';
 import * as sqlite from '#platform/server/sqlite';
 import * as cloudStorage from '#server/cloud-storage';
+import * as db from '#server/db';
 import * as prefs from '#server/prefs';
 import { safeUnzip, safeZip } from '#server/util/zip';
 import * as monthUtils from '#shared/months';
@@ -127,15 +128,25 @@ export async function makeBackup(id: string) {
     `db.${Date.now()}.sqlite.tmp`,
   );
 
-  await fs.copyFile(fs.join(budgetDir, 'db.sqlite'), tempDbPath);
+  // Copying the live file can capture a commit half written. Snapshot the
+  // open connection when this is the loaded budget; otherwise copy the file.
+  const sourcePath = fs.join(budgetDir, 'db.sqlite');
+  const openDb = db.getDatabase();
+  const snapshotted =
+    openDb != null &&
+    db.getDatabasePath() === sourcePath &&
+    (await sqlite.backupDatabase(openDb, tempDbPath));
+  if (!snapshotted) {
+    await fs.copyFile(sourcePath, tempDbPath);
+  }
 
-  let db: Database | undefined;
+  let backupDb: Database | undefined;
 
   try {
     // Remove all the messages from the backup
-    db = await sqlite.openDatabase(tempDbPath);
-    sqlite.runQuery(db, 'DELETE FROM messages_crdt');
-    sqlite.runQuery(db, 'DELETE FROM messages_clock');
+    backupDb = await sqlite.openDatabase(tempDbPath);
+    sqlite.runQuery(backupDb, 'DELETE FROM messages_crdt');
+    sqlite.runQuery(backupDb, 'DELETE FROM messages_clock');
     // Zip up the cleaned db and metadata into a single backup file
     const dbContent = await fs.readFile(tempDbPath, 'binary');
     const metaContent = await fs.readFile(
@@ -148,8 +159,8 @@ export async function makeBackup(id: string) {
     });
     await fs.writeFile(backupPath, zipped);
   } finally {
-    if (db) {
-      sqlite.closeDatabase(db);
+    if (backupDb) {
+      sqlite.closeDatabase(backupDb);
     }
     if (await fs.exists(tempDbPath)) {
       await fs.removeFile(tempDbPath);

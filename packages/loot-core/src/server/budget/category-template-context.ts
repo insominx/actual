@@ -274,6 +274,7 @@ export class CategoryTemplateContext {
     });
 
     let scale = 1;
+    let limitClamped = false;
     //check limit
     if (this.limitCheck) {
       if (
@@ -283,6 +284,7 @@ export class CategoryTemplateContext {
         const orig = toBudget;
         toBudget = this.limitAmount - this.toBudgetAmount - this.fromLastMonth;
         this.limitMet = true;
+        limitClamped = true;
         available = available + orig - toBudget;
         if (orig > 0) scale *= toBudget / orig;
       }
@@ -294,7 +296,11 @@ export class CategoryTemplateContext {
       // rounding delta as toBudget; otherwise perTemplateContribution would
       // sum to slightly more/less than the engine's actual budgeted amount.
       const preRound = toBudget;
-      toBudget = this.removeFraction(toBudget);
+      // A clamped amount sits exactly at the limit, so rounding it up would
+      // go over the limit.
+      toBudget = limitClamped
+        ? this.removeFractionDown(toBudget)
+        : this.removeFraction(toBudget);
       if (preRound !== 0) scale *= toBudget / preRound;
     }
 
@@ -365,6 +371,9 @@ export class CategoryTemplateContext {
       ) {
         toBudget = this.limitAmount - this.toBudgetAmount - this.fromLastMonth;
         this.limitMet = true;
+        if (this.hideDecimal) {
+          toBudget = this.removeFractionDown(toBudget);
+        }
       }
     }
 
@@ -673,6 +682,13 @@ export class CategoryTemplateContext {
   private removeFraction(amount: number): number {
     return amountToInteger(
       Math.round(integerToAmount(amount, this.currency.decimalPlaces)),
+      this.currency.decimalPlaces,
+    );
+  }
+
+  private removeFractionDown(amount: number): number {
+    return amountToInteger(
+      Math.floor(integerToAmount(amount, this.currency.decimalPlaces)),
       this.currency.decimalPlaces,
     );
   }

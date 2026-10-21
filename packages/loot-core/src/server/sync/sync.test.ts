@@ -188,6 +188,24 @@ describe('Sync', () => {
     expect(getClock().timestamp.toString() > latest).toBe(true);
   });
 
+  it('should release the cache barrier when applying messages fails', async () => {
+    await sheet.loadSpreadsheet(db);
+
+    await expect(
+      applyMessages([
+        {
+          dataset: 'no_such_table',
+          row: 'foo',
+          column: 'amount',
+          value: 3200,
+          timestamp: Timestamp.send(),
+        },
+      ]),
+    ).rejects.toThrow();
+
+    expect(sheet.get().cacheBarrierDepth).toBe(0);
+  });
+
   it('should reject a batch holding a far-future timestamp', () => {
     // `toISOString` writes years above 9999 as `+010000-…`, which sorts below
     // every normal timestamp. The batch maximum must not rank it last, which

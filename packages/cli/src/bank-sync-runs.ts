@@ -73,7 +73,14 @@ export async function readRun(dataDir: string, runId: string) {
   return parsed;
 }
 
-export async function listRuns(dataDir: string, budget: string, limit: number) {
+export async function listRuns(
+  dataDir: string,
+  budget: string,
+  limit: number,
+  // Older keys for the same budget (see budgetStoreKeys).
+  aliases: string[] = [],
+) {
+  const keys = new Set([budget, ...aliases]);
   let names: string[] = [];
   try {
     names = await readdir(dir(dataDir));
@@ -86,7 +93,7 @@ export async function listRuns(dataDir: string, budget: string, limit: number) {
       const parsed: unknown = JSON.parse(
         await readFile(join(dir(dataDir), name), 'utf8'),
       );
-      if (isRun(parsed) && parsed.budget === budget) runs.push(parsed);
+      if (isRun(parsed) && keys.has(parsed.budget)) runs.push(parsed);
     } catch {
       // Skip unreadable records.
     }

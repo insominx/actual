@@ -124,6 +124,14 @@ export async function runtimeStatus(dir: string) {
       serverUrl: `http://127.0.0.1:${config.port}`,
     };
   }
+  if (supervisorIsGone(state.pid)) {
+    return {
+      running: false,
+      serverDir: config.serverDir,
+      serverUrl: `http://127.0.0.1:${config.port}`,
+      staleState: true,
+    };
+  }
   if (
     state.configHash !== (await fileHash(runtimePaths(dir).config)) ||
     state.entryHash !== config.entryHash
@@ -151,7 +159,13 @@ export async function startRuntime(dir: string) {
   await verifyRuntimeEntry(config);
   const release = await acquireExclusive(paths.root, { timeoutMs: 1000 });
   try {
-    if (await readRuntimeState(dir)) {
+    const previous = await readRuntimeState(dir);
+    // Metadata left by a supervisor that no longer exists (crash, reboot,
+    // forced kill) is cleared; the port check below still refuses to start
+    // while an orphaned server child holds the port. Nothing is killed.
+    if (previous && supervisorIsGone(previous.pid)) {
+      await removeStaleState(dir, previous);
+    } else if (previous) {
       const existing = await runtimeStatus(dir);
       if (existing.running) return existing;
       throw new AgentError(
@@ -236,6 +250,25 @@ export async function stopRuntime(dir: string) {
     if (!state) {
       return { stopped: true, alreadyStopped: true };
     }
+    if (supervisorIsGone(state.pid)) {
+      await removeStaleState(dir, state);
+      // An orphaned server child may outlive its supervisor. It has no
+      // control channel, so report it instead of killing anything.
+      await assertFreePort(config.port).catch(() => {
+        throw new AgentError(
+          'ENGINE_FAILURE',
+          'The recorded supervisor is gone, but the server port is still in use. No process was stopped. Stop the port owner manually.',
+          false,
+          { issue: 'port-unavailable', staleStateRemoved: true },
+        );
+      });
+      return {
+        stopped: true,
+        alreadyStopped: true,
+        staleStateRemoved: true,
+        serverDir: config.serverDir,
+      };
+    }
     await runtimeStatus(dir);
     await controlRequest(state, 'stop');
     // The supervisor acknowledges only after its original child exits.
@@ -245,6 +278,26 @@ export async function stopRuntime(dir: string) {
   } finally {
     await release();
   }
+}
+
+// Signal 0 only checks existence. Only ESRCH proves the recorded supervisor
+// is gone; EPERM or success may be a reused PID, so the state is kept.
+function supervisorIsGone(pid: number) {
+  if (pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return false;
+  } catch (error) {
+    return isRecord(error) && error.code === 'ESRCH';
+  }
+}
+
+async function removeStaleState(dir: string, stale: { owner: string }) {
+  const current = await readRuntimeState(dir);
+  if (current?.owner !== stale.owner) return;
+  await unlink(runtimePaths(dir).state).catch(error => {
+    if (!isRecord(error) || error.code !== 'ENOENT') throw error;
+  });
 }
 
 export async function runtimeLogs(dir: string) {

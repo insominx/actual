@@ -296,17 +296,22 @@ export function getNextDate(
     return value.date;
   } else if (value.type === 'recur') {
     const skipWeekend = value.schedule.data.skipWeekend && !noSkipWeekend;
+    const weekendSolve = value.schedule.data.weekendSolve;
     // A weekend occurrence moved to Monday can land on or after `start`
-    // even though the raw occurrence is up to two days before it
-    const lookBack =
-      skipWeekend && value.schedule.data.weekendSolve === 'after';
-    let dates = lookBack
+    // even though the raw occurrence is up to two days before it, and one
+    // moved back to Friday can land before `start` even though the raw
+    // occurrence is on or after it. Look at a few candidates and keep the
+    // first whose shifted date is on or after `start`
+    let dates = skipWeekend
       ? value.schedule
-          .occurrences({ start: d.subDays(start, 2), take: 3 })
+          .occurrences({
+            start: weekendSolve === 'after' ? d.subDays(start, 2) : start,
+            take: 3,
+          })
           .toArray()
           .filter(
             occurrence =>
-              getDateWithSkippedWeekend(occurrence.date, 'after') >= start,
+              getDateWithSkippedWeekend(occurrence.date, weekendSolve) >= start,
           )
           .slice(0, 1)
       : value.schedule.occurrences({ start, take: 1 }).toArray();

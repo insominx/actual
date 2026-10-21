@@ -105,10 +105,11 @@ function validate(request: ImportFileRequest) {
   }
 }
 
+// The file import dialog's per-account choice, not the bank sync one
 async function accountReimportsDeleted(accountId: string) {
   const row = await db.first<{ value: string }>(
     'SELECT value FROM preferences WHERE id = ?',
-    [`sync-reimport-deleted-${accountId}`],
+    [`import-reimport-deleted-${accountId}`],
   );
   return String(row?.value ?? 'true') === 'true';
 }

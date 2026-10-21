@@ -295,6 +295,42 @@ const DatePicker = forwardRef<DatePickerForwardedRef, DatePickerProps>(
 
 DatePicker.displayName = 'DatePicker';
 
+// Same floor as the AQL date type, which rejects earlier dates on save. It
+// also stops a partially typed year (1/5/202) from saving as year 0202.
+const MINIMUM_DATE = '1995-01-01';
+
+export function parseTypedDate(
+  value: string,
+  dateFormat: string,
+): { date: string; displayValue: string } | null {
+  let test: Date;
+  let keepTypedValue = false;
+  if (getDayMonthRegex(dateFormat).test(value)) {
+    // Support only entering the month and day (4/5). This is complex
+    // because of the various date formats - we need to derive
+    // the right day/month format from it
+    test = parse(value, getDayMonthFormat(dateFormat), new Date());
+  } else if (getShortYearRegex(dateFormat).test(value)) {
+    // Support entering the year as only two digits (4/5/19)
+    test = parse(value, getShortYearFormat(dateFormat), new Date());
+  } else {
+    test = parse(value, dateFormat, new Date());
+    keepTypedValue = true;
+  }
+
+  if (!isValid(test)) {
+    return null;
+  }
+  const date = format(test, 'yyyy-MM-dd');
+  if (date < MINIMUM_DATE) {
+    return null;
+  }
+  return {
+    date,
+    displayValue: keepTypedValue ? value : format(test, dateFormat),
+  };
+}
+
 function defaultShouldSaveFromKey(e: KeyboardEvent<HTMLInputElement>) {
   return e.key === 'Enter';
 }
@@ -362,29 +398,10 @@ function DateSelectDesktop({
   useEffect(() => setValue(parsedDefaultValue), [parsedDefaultValue]);
 
   const onUpdateEffect = useEffectEvent((newValue: string) => {
-    if (getDayMonthRegex(dateFormat).test(newValue)) {
-      // Support only entering the month and day (4/5). This is complex
-      // because of the various date formats - we need to derive
-      // the right day/month format from it
-      const test = parse(newValue, getDayMonthFormat(dateFormat), new Date());
-      if (isValid(test)) {
-        onUpdate?.(format(test, 'yyyy-MM-dd'));
-        setSelectedValue(format(test, dateFormat));
-      }
-    } else if (getShortYearRegex(dateFormat).test(newValue)) {
-      // Support entering the year as only two digits (4/5/19)
-      const test = parse(newValue, getShortYearFormat(dateFormat), new Date());
-      if (isValid(test)) {
-        onUpdate?.(format(test, 'yyyy-MM-dd'));
-        setSelectedValue(format(test, dateFormat));
-      }
-    } else {
-      const test = parse(newValue, dateFormat, new Date());
-      if (isValid(test)) {
-        const date = format(test, 'yyyy-MM-dd');
-        onUpdate?.(date);
-        setSelectedValue(newValue);
-      }
+    const parsed = parseTypedDate(newValue, dateFormat);
+    if (parsed) {
+      onUpdate?.(parsed.date);
+      setSelectedValue(parsed.displayValue);
     }
   });
 

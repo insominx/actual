@@ -35,14 +35,21 @@ async function livePayee(id: string, label: string) {
   return row;
 }
 
+// Transactions resolve their payee through payee_mapping (as the views do),
+// so rows still storing an earlier merged payee's id count too. A row whose
+// stored id has no mapping counts by that id.
 async function referencingTransactions(ids: string[]) {
   if (!ids.length) {
     return 0;
   }
+  const placeholders = ids.map(() => '?').join(',');
   const row = await db.first<{ count: number }>(
-    `SELECT COUNT(*) AS count FROM transactions
-     WHERE tombstone = 0 AND description IN (${ids.map(() => '?').join(',')})`,
-    ids,
+    `SELECT COUNT(*) AS count FROM transactions t
+     LEFT JOIN payee_mapping pm ON pm.id = t.description
+     WHERE t.tombstone = 0
+       AND (pm.targetId IN (${placeholders})
+         OR (pm.id IS NULL AND t.description IN (${placeholders})))`,
+    [...ids, ...ids],
   );
   return row?.count ?? 0;
 }

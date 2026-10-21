@@ -130,6 +130,16 @@ export function closeDatabase(db: SQL.Database) {
   db.close();
 }
 
+// Writes a consistent snapshot of an open database to `path` using SQLite's
+// online backup, so concurrent writes can't leave a torn copy.
+export async function backupDatabase(
+  db: SQL.Database,
+  path: string,
+): Promise<boolean> {
+  await db.backup(path);
+  return true;
+}
+
 export async function exportDatabase(db: SQL.Database) {
   // electron does not support better-sqlite serialize since v21
   // save to file and read in the raw data.

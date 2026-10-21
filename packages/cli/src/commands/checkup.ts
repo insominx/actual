@@ -2,6 +2,7 @@ import type * as Api from '@actual-app/api';
 import type { Command } from 'commander';
 
 import { AgentError } from '#agent-output';
+import { budgetStoreKeys } from '#cache';
 import { resolveConfig } from '#config';
 import { withConnection } from '#connection';
 import { api } from '#engine';
@@ -15,14 +16,15 @@ import { errorMessage, parseIntFlag } from '#utils';
 
 async function budgetKey(program: Command) {
   const resolved = await resolveConfig(program.opts());
-  const budget = resolved.syncId ?? resolved.budgetId;
-  if (!budget) {
+  // A synced budget opened offline by local ID shares its sync ID's evidence.
+  const keys = budgetStoreKeys(resolved.dataDir, resolved);
+  if (!keys) {
     throw new AgentError(
       'MISSING_CONTEXT',
       'Statement evidence is stored per budget. Select a budget with --sync-id or --budget-id.',
     );
   }
-  return { dataDir: resolved.dataDir, budget };
+  return { dataDir: resolved.dataDir, budget: keys.key, aliases: keys.aliases };
 }
 
 export function registerCheckupCommand(program: Command) {
@@ -61,14 +63,16 @@ export function registerCheckupCommand(program: Command) {
         limit: string;
       }) => {
         const opts = program.opts();
-        const { dataDir, budget } = await budgetKey(program);
-        const statements = (await listStatements(dataDir, budget)).map(s => ({
-          accountId: s.accountId,
-          month: s.month,
-          endingBalance: s.endingBalance,
-          noActivity: s.noActivity,
-          source: s.source,
-        }));
+        const { dataDir, budget, aliases } = await budgetKey(program);
+        const statements = (await listStatements(dataDir, budget, aliases)).map(
+          s => ({
+            accountId: s.accountId,
+            month: s.month,
+            endingBalance: s.endingBalance,
+            noActivity: s.noActivity,
+            source: s.source,
+          }),
+        );
         const request: Api.DataQualityRequest = {
           start: cmdOpts.fromMonth,
           end: cmdOpts.toMonth,
@@ -138,7 +142,7 @@ export function registerCheckupCommand(program: Command) {
         replace?: boolean;
       }) => {
         const opts = program.opts();
-        const { dataDir, budget } = await budgetKey(program);
+        const { dataDir, budget, aliases } = await budgetKey(program);
         const result = await addStatement(
           dataDir,
           budget,
@@ -154,6 +158,7 @@ export function registerCheckupCommand(program: Command) {
             importOperationId: cmdOpts.importOperation ?? null,
           },
           Boolean(cmdOpts.replace),
+          aliases,
         );
         printOutput(result, opts.format);
       },
@@ -164,9 +169,9 @@ export function registerCheckupCommand(program: Command) {
     .description('List recorded statement evidence for the selected budget')
     .action(async () => {
       const opts = program.opts();
-      const { dataDir, budget } = await budgetKey(program);
+      const { dataDir, budget, aliases } = await budgetKey(program);
       printOutput(
-        { statements: await listStatements(dataDir, budget) },
+        { statements: await listStatements(dataDir, budget, aliases) },
         opts.format,
       );
     });
@@ -178,9 +183,15 @@ export function registerCheckupCommand(program: Command) {
     .requiredOption('--month <month>', 'Statement month YYYY-MM')
     .action(async (cmdOpts: { account: string; month: string }) => {
       const opts = program.opts();
-      const { dataDir, budget } = await budgetKey(program);
+      const { dataDir, budget, aliases } = await budgetKey(program);
       printOutput(
-        await removeStatement(dataDir, budget, cmdOpts.account, cmdOpts.month),
+        await removeStatement(
+          dataDir,
+          budget,
+          cmdOpts.account,
+          cmdOpts.month,
+          aliases,
+        ),
         opts.format,
       );
     });

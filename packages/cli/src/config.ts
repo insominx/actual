@@ -203,23 +203,24 @@ export async function resolveConfig(
       'Choose --budget-id or --sync-id, not both.',
     );
   }
-  const budgetId =
-    connectionOnly || localOnly
-      ? undefined
-      : (cliOpts.budgetId ??
-        (!explicitRemote
-          ? (process.env.ACTUAL_BUDGET_ID ??
-            // An environment sync ID overrides the profile's local budget
-            (process.env.ACTUAL_SYNC_ID !== undefined
-              ? undefined
-              : profile?.budgetId))
-          : undefined));
+  // Local-only commands skip credentials but keep the budget selection: some
+  // read device-local per-budget records (sync --status, bank-sync results).
+  const budgetId = connectionOnly
+    ? undefined
+    : (cliOpts.budgetId ??
+      (!explicitRemote
+        ? (process.env.ACTUAL_BUDGET_ID ??
+          // An environment sync ID overrides the profile's local budget
+          (process.env.ACTUAL_SYNC_ID !== undefined
+            ? undefined
+            : profile?.budgetId))
+        : undefined));
   const offline =
     cliOpts.offline ??
     parseBoolEnv(process.env.ACTUAL_OFFLINE, 'ACTUAL_OFFLINE') ??
     profile?.offline ??
     false;
-  if (budgetId && !offline) {
+  if (budgetId && !offline && !localOnly) {
     throw new AgentError(
       'INVALID_INPUT',
       'Local --budget-id selection requires --offline. Use a sync ID for online access.',
@@ -260,13 +261,12 @@ export async function resolveConfig(
       (await readProfileSecret(profile?.sessionTokenFile)) ??
       fileConfig.sessionToken);
 
-  const syncId =
-    connectionOnly || localOnly
-      ? undefined
-      : (cliOpts.syncId ??
-        (!budgetId
-          ? (process.env.ACTUAL_SYNC_ID ?? profile?.syncId ?? fileConfig.syncId)
-          : undefined));
+  const syncId = connectionOnly
+    ? undefined
+    : (cliOpts.syncId ??
+      (!budgetId
+        ? (process.env.ACTUAL_SYNC_ID ?? profile?.syncId ?? fileConfig.syncId)
+        : undefined));
 
   const dataDir =
     cliOpts.dataDir ??

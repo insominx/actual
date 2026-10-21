@@ -86,6 +86,17 @@ export type Listen = typeof listen;
 export declare function unlisten(name: string): void;
 export type Unlisten = typeof unlisten;
 
+/**
+ * Drop the connection to the backend: every pending request settles (rejects,
+ * or resolves with `error` for `catchErrors` requests) and later requests do
+ * the same until `init` connects again. Call it before terminating the
+ * backend, since messages to a terminated worker are silently dropped.
+ *
+ * @param reason Message for the error pending and later requests settle with.
+ */
+export declare function disconnect(reason?: string): void;
+export type Disconnect = typeof disconnect;
+
 /** Mock functions */
 export declare function initServer(handlers: Partial<Handlers>): void;
 export type InitServer = typeof initServer;

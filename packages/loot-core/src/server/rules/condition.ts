@@ -23,6 +23,7 @@ import { extractTagsForFilter } from '#shared/tags';
 
 import {
   assert,
+  getWeekendShiftedOccurrence,
   parseBetweenAmount,
   parseDateString,
   parseRecurDate,
@@ -297,7 +298,30 @@ export class Condition {
                 dateFns.addDays(fieldDate, 2),
               );
             } else {
-              return schedule.occursOn({ date: parseDate(fieldValue) });
+              const fieldDate = parseDate(fieldValue);
+              if (schedule.occursOn({ date: fieldDate })) {
+                return true;
+              }
+              if (!schedule.data?.skipWeekend) {
+                return false;
+              }
+              // A skip-weekend schedule also falls on the weekday its
+              // weekend occurrences move to (at most two days away)
+              return schedule
+                .occurrences({
+                  start: dateFns.subDays(fieldDate, 2),
+                  end: dateFns.addDays(fieldDate, 2),
+                })
+                .toArray()
+                .some(({ date }) => {
+                  const shifted = getWeekendShiftedOccurrence(
+                    date,
+                    schedule.data,
+                  );
+                  return (
+                    shifted != null && dateFns.isSameDay(shifted, fieldDate)
+                  );
+                });
             }
           } else {
             const { date } = this.value;

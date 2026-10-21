@@ -190,6 +190,10 @@ export async function performTransactionCategorization(
       updated: changedIds.map(
         id => ({ id, category }) as unknown as Partial<TransactionEntity>,
       ),
+      // A category belongs to one leg. The transfer owner would resync the
+      // counterpart's notes, schedule and amount (and could clear its
+      // category), which the proposal neither requests nor discloses.
+      runTransfers: false,
     });
   }
   for (const before of current.before.transactions) {

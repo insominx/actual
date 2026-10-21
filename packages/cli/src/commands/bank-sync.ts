@@ -3,6 +3,7 @@ import type { Command } from 'commander';
 import { AgentError } from '#agent-output';
 import { listRuns, newRunId, readRun, writeRun } from '#bank-sync-runs';
 import type { BankSyncRun } from '#bank-sync-runs';
+import { budgetStoreKeys } from '#cache';
 import { resolveConfig } from '#config';
 import { withConnection } from '#connection';
 import { api } from '#engine';
@@ -11,14 +12,15 @@ import { errorMessage, plainInteger } from '#utils';
 
 async function scope(program: Command, localOnly = false) {
   const resolved = await resolveConfig(program.opts(), { localOnly });
-  const budget = resolved.syncId ?? resolved.budgetId;
-  if (!budget) {
+  // A synced budget opened offline by local ID shares its sync ID's runs.
+  const keys = budgetStoreKeys(resolved.dataDir, resolved);
+  if (!keys) {
     throw new AgentError(
       'MISSING_CONTEXT',
       'Select a budget with --sync-id or --budget-id.',
     );
   }
-  return { dataDir: resolved.dataDir, budget };
+  return { dataDir: resolved.dataDir, budget: keys.key, aliases: keys.aliases };
 }
 
 function engineError(error: unknown): never {
@@ -138,7 +140,7 @@ export function registerBankSyncCommand(program: Command) {
     .option('--limit <count>', 'Maximum runs to list (1-100)', '10')
     .action(async (runId: string | undefined, cmdOpts: { limit: string }) => {
       const opts = program.opts();
-      const { dataDir, budget } = await scope(program, true);
+      const { dataDir, budget, aliases } = await scope(program, true);
       if (runId) {
         printOutput(await readRun(dataDir, runId), opts.format);
         return;
@@ -150,6 +152,6 @@ export function registerBankSyncCommand(program: Command) {
           'limit must be an integer from 1 to 100.',
         );
       }
-      printOutput(await listRuns(dataDir, budget, limit), opts.format);
+      printOutput(await listRuns(dataDir, budget, limit, aliases), opts.format);
     });
 }

@@ -31,7 +31,9 @@ export class Spreadsheet {
     createdMonths: Set<string>;
     budgetType: BudgetType;
   };
-  cacheBarrier;
+  // Depth of nested cache barriers: overlapping flows (e.g. a sync
+  // apply that switches the budget type) each hold their own barrier
+  cacheBarrierDepth = 0;
   computeQueue;
   dirtyCells;
   events;
@@ -185,11 +187,13 @@ export class Spreadsheet {
           continue;
         }
       } catch (e) {
+        // Skip the failing cell (it keeps its previous value) and keep
+        // computing the rest, like a rejected async cell does. Bailing
+        // out here would leave every queued cell stale and never emit
+        // 'change', so onFinish waiters would hang
         logger.log('Error while evaluating ' + name + ':', e);
-        // If an error happens, bail on the rest of the computations
-        this.running = false;
-        this.computeQueue = [];
-        return;
+        idx++;
+        continue;
       }
 
       if (result instanceof Promise) {
@@ -236,7 +240,7 @@ export class Spreadsheet {
   }
 
   markCacheSafe() {
-    if (!this.cacheBarrier) {
+    if (this.cacheBarrierDepth === 0) {
       if (this.setCacheStatus) {
         this.setCacheStatus({ clean: true });
       }
@@ -250,12 +254,15 @@ export class Spreadsheet {
   }
 
   startCacheBarrier() {
-    this.cacheBarrier = true;
+    this.cacheBarrierDepth++;
     this.markCacheDirty();
   }
 
   endCacheBarrier() {
-    this.cacheBarrier = false;
+    this.cacheBarrierDepth = Math.max(0, this.cacheBarrierDepth - 1);
+    if (this.cacheBarrierDepth > 0) {
+      return;
+    }
 
     const pendingChange = this.running || this.computeQueue.length > 0;
     if (!pendingChange) {

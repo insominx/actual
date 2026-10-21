@@ -11,6 +11,7 @@ import type * as Api from '@actual-app/api';
 import { api } from '#engine';
 
 import { AgentError } from './agent-output';
+import { budgetStoreKeys } from './cache';
 import { createBudgetBackup } from './commands/backups';
 import type { CliGlobalOpts } from './config';
 import { withConnection } from './connection';
@@ -388,9 +389,10 @@ function stepResult(run: WorkflowRun, id: string) {
 }
 
 async function readStatements(ctx: StepContext) {
-  const key = ctx.run.budget.syncId ?? ctx.run.budget.budgetId;
-  if (!key) return [];
-  return (await listStatements(ctx.dataDir, key)).map(s => ({
+  // Same key as `checkup statement` for this budget, online or offline.
+  const keys = budgetStoreKeys(ctx.dataDir, ctx.run.budget);
+  if (!keys) return [];
+  return (await listStatements(ctx.dataDir, keys.key, keys.aliases)).map(s => ({
     accountId: s.accountId,
     month: s.month,
     endingBalance: s.endingBalance,

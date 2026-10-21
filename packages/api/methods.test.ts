@@ -1964,6 +1964,25 @@ describe('guarded transaction changes', () => {
     ).toMatchObject({ amount: -222, notes: 'after' });
   });
 
+  test('reports a no-op edit of a simple transaction as unchanged', async () => {
+    const account = await api.createAccount({ name: 'Guarded no-op' }, 0);
+    await api.addTransactions(account, [
+      { date: '2026-08-02', amount: -100, notes: 'same' },
+    ]);
+    const id = (
+      await api.getTransactions(account, '2026-08-01', '2026-08-31')
+    )[0].id;
+    const proposal = await api.previewTransactionUpdate({
+      id,
+      fields: { notes: 'same', amount: -100 },
+    });
+    expect(proposal.after).toEqual(proposal.before);
+    expect(await api.applyTransactionUpdate(proposal)).toMatchObject({
+      status: 'committed-local',
+      changed: false,
+    });
+  });
+
   test('rejects edited state, another budget, and invalid fields before a write', async () => {
     const account = await api.createAccount({ name: 'Guarded isolation' }, 0);
     await api.addTransactions(account, [
@@ -4586,6 +4605,25 @@ describe('guarded payee updates, deletions and merges', () => {
       code: 'STALE_PREVIEW',
     });
     expect((await api.getPayees()).length).toBe(before.length);
+  });
+  test('legacy merge leaves the budget unchanged when the target is deleted', async () => {
+    const target = await api.createPayee({ name: 'Deleted target' });
+    const source = await api.createPayee({ name: 'Live source' });
+    const account = await api.createAccount({ name: 'Merge tombstone' }, 0);
+    await api.addTransactions(account, [
+      { date: '2026-08-02', amount: -100, payee: source },
+    ]);
+    await api.deletePayee(target);
+
+    await api.mergePayees(target, [source]);
+
+    expect((await api.getPayees()).some(row => row.id === source)).toBe(true);
+    const [transaction] = await api.getTransactions(
+      account,
+      '2026-08-01',
+      '2026-08-31',
+    );
+    expect(transaction.payee).toBe(source);
   });
 });
 

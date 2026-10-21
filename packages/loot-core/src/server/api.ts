@@ -2483,7 +2483,12 @@ async function prepareTransactionUpdate(
     ...request.fields,
   });
   let before = observed;
-  let after = planned.data;
+  // A simple transaction is observed in grouped form (`subtransactions: []`)
+  // but planned ungrouped; compare like with like so a no-op stays unchanged.
+  let after =
+    observed === data && planned.newTransaction
+      ? [planned.newTransaction]
+      : planned.data;
   const reference = splitReferences.find(row => row.id === request.id)!;
   let references: unknown =
     transactions.length > 1

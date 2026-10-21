@@ -415,7 +415,11 @@ function isInvalidAccessKey(accessKey) {
 async function getTransactions(accessKey, accounts, startDate, endDate) {
   const now = new Date();
   startDate = startDate || new Date(now.getFullYear(), now.getMonth(), 1);
-  endDate = endDate || new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  // UTC midnight of the next UTC month: SimpleFIN timestamps are UTC, and a
+  // local month boundary on a server behind UTC can already be in the past
+  endDate =
+    endDate ||
+    new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
   console.log(`${getDate(startDate)} - ${getDate(endDate)}`);
   return await getAccounts(accessKey, accounts, startDate, endDate);
 }

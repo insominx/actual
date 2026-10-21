@@ -659,8 +659,13 @@ export async function mergePayees(
   const dbPayees: DbPayee[] = await all<DbPayee>('SELECT * FROM payees');
   const payees = groupById(dbPayees);
 
-  // Filter out any transfer payees
-  if (payees[target] == null || payees[target].transfer_acct != null) {
+  // Filter out any transfer payees, and refuse a deleted target: merging into
+  // it would remap transactions onto a payee that no longer exists
+  if (
+    payees[target] == null ||
+    payees[target].tombstone ||
+    payees[target].transfer_acct != null
+  ) {
     return;
   }
   // Merging a payee into itself would delete the target, and unknown ids
@@ -836,7 +841,7 @@ export async function moveAccount(
   let accounts;
   if (account.closed) {
     accounts = await all<Pick<DbAccount, 'id' | 'sort_order'>>(
-      `SELECT id, sort_order FROM accounts WHERE closed = 1 ORDER BY sort_order, name`,
+      `SELECT id, sort_order FROM accounts WHERE tombstone = 0 AND closed = 1 ORDER BY sort_order, name`,
     );
   } else {
     accounts = await all<Pick<DbAccount, 'id' | 'sort_order'>>(
@@ -1008,51 +1013,121 @@ export async function moveTransaction(
     // Convert date string (YYYY-MM-DD) to integer format (YYYYMMDD) for SQL query
     const dateInt = parseInt(transaction.date.replace(/-/g, ''), 10);
 
-    // Get transactions to reorder against.
-    // If this is a child transaction, scope to siblings with the same parent_id.
-    // Otherwise, get all parent transactions for the same date (excluding children).
-    // Query in DESC order to match UI display order.
-    const isChild = transaction.is_child && transaction.parent_id;
-    const transactions = await all<{ id: string; sort_order: number }>(
-      isChild
-        ? `SELECT vt.id, vt.sort_order
-           FROM v_transactions vt
-           WHERE vt.parent_id = ?
-           ORDER BY sort_order DESC, id`
-        : `SELECT vt.id, vt.sort_order
-           FROM v_transactions vt
-           WHERE vt.account = ?
-             AND vt.date = ?
-             AND vt.is_child = 0
-           ORDER BY sort_order DESC, id`,
-      isChild ? [transaction.parent_id] : [accountId, dateInt],
+    // A child transaction is reordered among the siblings sharing its
+    // parent. Query in DESC order to match UI display order.
+    if (transaction.is_child && transaction.parent_id) {
+      const siblings = await all<{ id: string; sort_order: number }>(
+        `SELECT vt.id, vt.sort_order
+         FROM v_transactions vt
+         WHERE vt.parent_id = ?
+         ORDER BY sort_order DESC, id`,
+        [transaction.parent_id],
+      );
+
+      const { sort_order: newSortOrder, updates } = shoveSortOrdersDescending(
+        siblings,
+        targetId,
+        id,
+        TRANSACTION_SORT_INCREMENT,
+      );
+      for (const info of updates) {
+        await update('transactions', info);
+      }
+      await update('transactions', { id, sort_order: newSortOrder });
+      return;
+    }
+
+    // Otherwise reorder among the parent-level transactions of the same
+    // date, in the order the UI lists them: starting balances come after
+    // every other transaction of the date regardless of their sort_order
+    const transactions = await all<{
+      id: string;
+      sort_order: number;
+      starting_balance_flag: number | null;
+    }>(
+      `SELECT vt.id, vt.sort_order, vt.starting_balance_flag
+       FROM v_transactions vt
+       WHERE vt.account = ?
+         AND vt.date = ?
+         AND vt.is_child = 0
+       ORDER BY starting_balance_flag, sort_order DESC, id`,
+      [accountId, dateInt],
     );
+
+    // Position the transaction within its own section (regular or
+    // starting balance), where sort_order decides the display order
+    const isStartingBalance = !!transaction.starting_balance_flag;
+    const section = transactions.filter(
+      t => !!t.starting_balance_flag === isStartingBalance,
+    );
+    let sectionTargetId = targetId;
+    if (
+      targetId != null &&
+      !section.some(t => t.id === targetId) &&
+      transactions.some(t => t.id === targetId)
+    ) {
+      if (isStartingBalance) {
+        // Dropped after a regular transaction: regular transactions
+        // are all listed above, so this is the top of its section
+        sectionTargetId = null;
+      } else {
+        // Dropped after a starting balance: the closest this can be
+        // listed is right after the last regular transaction
+        const others = section.filter(t => t.id !== id);
+        sectionTargetId =
+          others.length > 0 ? others[others.length - 1].id : null;
+      }
+    }
 
     // Calculate new sort_order using the descending shove algorithm
     // - If targetId is null, place at TOP (highest sort_order)
     // - Otherwise, place AFTER target (sort_order between target and next)
     const { sort_order: newSortOrder, updates } = shoveSortOrdersDescending(
-      transactions,
-      targetId,
+      section,
+      sectionTargetId,
       id,
       TRANSACTION_SORT_INCREMENT,
     );
 
+    // Messages are batched, so the database still holds the old
+    // sort_orders until the batch ends. Track the final ones here so
+    // children are spread against the post-move neighbours
+    const finalSortOrders = new Map(
+      transactions.map(t => [t.id, t.sort_order]),
+    );
+    for (const info of updates) {
+      finalSortOrders.set(info.id, info.sort_order);
+    }
+    finalSortOrders.set(id, newSortOrder);
+
+    const nextSortOrderBelow = (parentId: string) => {
+      const parentSortOrder = finalSortOrders.get(parentId);
+      let next: number | null = null;
+      for (const [otherId, sortOrder] of finalSortOrders) {
+        if (
+          otherId !== parentId &&
+          sortOrder < parentSortOrder &&
+          (next === null || sortOrder > next)
+        ) {
+          next = sortOrder;
+        }
+      }
+      return next;
+    };
+
     // Apply updates to shuffle other transactions if needed
     for (const info of updates) {
       await update('transactions', info);
-      // Only move subtransactions for parent transactions
-      if (!isChild) {
-        await moveSubtransactions(info.id, info.sort_order, accountId, dateInt);
-      }
+      await moveSubtransactions(
+        info.id,
+        info.sort_order,
+        nextSortOrderBelow(info.id),
+      );
     }
 
     // Update the moved transaction
     await update('transactions', { id, sort_order: newSortOrder });
-    // Only move subtransactions for parent transactions
-    if (!isChild) {
-      await moveSubtransactions(id, newSortOrder, accountId, dateInt);
-    }
+    await moveSubtransactions(id, newSortOrder, nextSortOrderBelow(id));
   });
 }
 
@@ -1102,14 +1177,13 @@ export async function moveSchedule(id: string, targetId: string | null) {
  *
  * @param parentId - The ID of the parent transaction
  * @param parentSortOrder - The sort_order of the parent transaction
- * @param accountId - The account ID to scope the next sibling lookup
- * @param txnDate - The transaction date (as integer YYYYMMDD) to scope the next sibling lookup
+ * @param nextSiblingSortOrder - The post-move sort_order of the next
+ *   parent-level transaction of the same account and date, or null if none
  */
 async function moveSubtransactions(
   parentId: string,
   parentSortOrder: number,
-  accountId: string,
-  txnDate: number,
+  nextSiblingSortOrder: number | null,
 ) {
   const subtransactions = await all<{ id: string }>(
     'SELECT id FROM v_transactions WHERE parent_id = ? ORDER BY sort_order DESC',
@@ -1120,25 +1194,11 @@ async function moveSubtransactions(
     return;
   }
 
-  // Find the next sibling's sort_order (transaction with lower sort_order that isn't a child)
-  // Scoped to the same account and date to avoid picking transactions from other contexts
-  const nextSibling = await first<{ sort_order: number }>(
-    `SELECT sort_order FROM v_transactions
-     WHERE parent_id IS NULL
-       AND is_child = 0
-       AND sort_order < ?
-       AND account = ?
-       AND date = ?
-     ORDER BY sort_order DESC
-     LIMIT 1`,
-    [parentSortOrder, accountId, txnDate],
-  );
-
   // Calculate the available gap for distributing children
   // Use a sensible fallback if no next sibling exists
-  const nextSiblingSortOrder =
-    nextSibling?.sort_order ?? parentSortOrder - TRANSACTION_SORT_INCREMENT;
-  const gap = parentSortOrder - nextSiblingSortOrder;
+  const gap =
+    parentSortOrder -
+    (nextSiblingSortOrder ?? parentSortOrder - TRANSACTION_SORT_INCREMENT);
 
   // Distribute children evenly within the gap
   // Avoid rounding to prevent duplicate sort_order values in tight gaps

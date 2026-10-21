@@ -836,6 +836,30 @@ describe('sankey-spreadsheet', () => {
       expect(graph.has('group1')).toBe(true);
       expect(graph.has('cat2')).toBe(false);
     });
+
+    it('drops links that point at removed nodes', () => {
+      const graph: Graph = new Map();
+      addNode(graph, 'acc1', GraphLayers.Account, 'Account 1');
+      addNode(graph, 'group1', GraphLayers.CategoryGroup, 'Group 1');
+      addNode(graph, 'cat1', GraphLayers.Category, 'Category 1');
+      addValueToLink(graph, 'acc1', 'group1', 100);
+      addValueToLink(graph, 'group1', 'cat1', 100);
+
+      filterGraphByLayers(
+        graph,
+        GraphLayers.Account,
+        GraphLayers.CategoryGroup,
+      );
+
+      expect(graph.get('group1')?.to.has('cat1')).toBe(false);
+      expect(graph.get('acc1')?.to.get('group1')).toBe(100);
+
+      const { links } = convertToSankeyData(graph, new Map());
+      expect(links).toHaveLength(1);
+      expect(links.every(link => link.source >= 0 && link.target >= 0)).toBe(
+        true,
+      );
+    });
   });
 
   describe('cleanUpNodes', () => {

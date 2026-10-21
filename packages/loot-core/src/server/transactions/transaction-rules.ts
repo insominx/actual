@@ -29,7 +29,10 @@ import {
   extractBalanceOfLiterals,
   resolveAccountIdForBalanceOf,
 } from '#server/rules/balanceOfFormula';
-import { lowerCaseRegexSource } from '#server/rules/rule-utils';
+import {
+  getWeekendShiftedOccurrence,
+  lowerCaseRegexSource,
+} from '#server/rules/rule-utils';
 import { addSyncListener, batchMessages } from '#server/sync';
 import {
   addDays,
@@ -504,9 +507,91 @@ function escapeLikeValue(value: string) {
   return value.replace(/[\\%?]/g, '\\$&');
 }
 
+// A recurring date expands into one SQL clause per (merged) occurrence
+// range, and SQLite caps the expression depth, so the expansion is bounded
+const MAX_RECUR_DATE_RANGES = 500;
+// Always cover at least this many occurrences (the original fixed bound)
+const MIN_RECUR_OCCURRENCES = 100;
+// Guards the expansion of a daily schedule starting far in the past
+const MAX_RECUR_OCCURRENCES = 100000;
+
+/**
+ * Build the filter for a recurring date `is`/`isapprox` condition. Without
+ * an explicit `take`, occurrences are expanded up to a year from today (and
+ * at least the first `MIN_RECUR_OCCURRENCES`), so the filter agrees with
+ * `Condition.eval` for every realistic transaction date. When there are
+ * more ranges than SQLite can take, the most recent ones are kept.
+ */
+function recurDateFilter(schedule, op: string, take?: number) {
+  let occurrences: Date[] = [];
+  if (take != null) {
+    occurrences = schedule
+      .occurrences({ take })
+      .toArray()
+      .map(o => o.date);
+  } else {
+    const horizon = addDays(currentDay(), 365);
+    for (const { date } of schedule.occurrences({
+      take: MAX_RECUR_OCCURRENCES,
+    })) {
+      if (
+        occurrences.length >= MIN_RECUR_OCCURRENCES &&
+        dayFromDate(date) > horizon
+      ) {
+        break;
+      }
+      occurrences.push(date);
+    }
+  }
+
+  const ranges: Array<[string, string]> = [];
+  for (const date of occurrences) {
+    const days = [dayFromDate(date)];
+    if (op === 'is') {
+      // Matches Condition.eval: a skip-weekend schedule also falls on the
+      // weekday its weekend occurrences move to
+      const shifted = getWeekendShiftedOccurrence(date, schedule.data);
+      if (shifted) {
+        days.push(dayFromDate(shifted));
+      }
+    }
+    for (const day of days) {
+      ranges.push(
+        op === 'isapprox' ? [subDays(day, 2), addDays(day, 2)] : [day, day],
+      );
+    }
+  }
+
+  ranges.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  const merged: Array<[string, string]> = [];
+  for (const [low, high] of ranges) {
+    const last = merged[merged.length - 1];
+    if (last && low <= addDays(last[1], 1)) {
+      if (high > last[1]) {
+        last[1] = high;
+      }
+    } else {
+      merged.push([low, high]);
+    }
+  }
+
+  return {
+    $or: merged
+      .slice(-MAX_RECUR_DATE_RANGES)
+      .map(([low, high]) =>
+        low === high
+          ? { date: low }
+          : { $and: [{ date: { $gte: low } }, { date: { $lte: high } }] },
+      ),
+  };
+}
+
 export function conditionsToAQL(
   conditions,
-  { recurDateBounds = 100, applySpecialCases = true } = {},
+  {
+    recurDateBounds = undefined,
+    applySpecialCases = true,
+  }: { recurDateBounds?: number; applySpecialCases?: boolean } = {},
 ) {
   const errors = [];
 
@@ -596,24 +681,7 @@ export function conditionsToAQL(
       case 'is':
         if (type === 'date') {
           if (value.type === 'recur') {
-            const dates = value.schedule
-              .occurrences({ take: recurDateBounds })
-              .toArray()
-              .map(d => dayFromDate(d.date));
-
-            return {
-              $or: dates.map(d => {
-                if (op === 'isapprox') {
-                  return {
-                    $and: [
-                      { date: { $gte: subDays(d, 2) } },
-                      { date: { $lte: addDays(d, 2) } },
-                    ],
-                  };
-                }
-                return { date: d };
-              }),
-            };
+            return recurDateFilter(value.schedule, op, recurDateBounds);
           } else {
             if (op === 'isapprox') {
               const fullDate = parseDate(value.date);

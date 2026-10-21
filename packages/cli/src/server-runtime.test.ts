@@ -1,7 +1,13 @@
 import type * as ChildProcess from 'node:child_process';
 import type * as Crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -49,7 +55,8 @@ vi.mock('./runtime-state', async importOriginal => ({
   readRuntimeState: mocks.readRuntimeState,
 }));
 
-const { runtimeLogs, startRuntime } = await import('./server-runtime');
+const { runtimeLogs, runtimeStatus, startRuntime, stopRuntime } =
+  await import('./server-runtime');
 
 async function startupError() {
   try {
@@ -107,6 +114,89 @@ describe('startRuntime failure reporting', () => {
       issue: 'startup-failed',
       stopConfirmed: false,
     });
+  });
+});
+
+describe('stale runtime state', () => {
+  let dir: string;
+  let statePath: string;
+  let kill: ReturnType<typeof vi.spyOn>;
+  const stale = {
+    owner: 'dead-owner',
+    token: 'ab'.repeat(32),
+    pid: 424242,
+    controlPort: 1,
+  };
+
+  function processExists(exists: boolean) {
+    kill.mockImplementation(() => {
+      if (exists) return true;
+      throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
+    });
+  }
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'actual-cli-runtime-stale-'));
+    mkdirSync(join(dir, '.actual-runtime'), { recursive: true });
+    statePath = join(dir, '.actual-runtime', 'state.json');
+    writeFileSync(statePath, '{}');
+    kill = vi.spyOn(process, 'kill');
+    mocks.controlRequest.mockReset();
+    mocks.controlRequest.mockRejectedValue(
+      new AgentError('ENGINE_FAILURE', 'unreachable'),
+    );
+    mocks.exitCode = 1;
+    mocks.readRuntimeState.mockReset();
+    mocks.readRuntimeState.mockResolvedValue(stale);
+  });
+
+  afterEach(() => {
+    kill.mockRestore();
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('start clears metadata of a supervisor that no longer exists', async () => {
+    processExists(false);
+    mocks.readRuntimeState
+      .mockReset()
+      .mockResolvedValueOnce(stale)
+      .mockResolvedValueOnce(stale)
+      .mockResolvedValue(undefined);
+    const error = await startRuntime(dir).catch(caught => caught);
+    // It got past the stale state and launched (the mocked child exits).
+    expect((error as AgentError).details).toMatchObject({
+      issue: 'startup-failed',
+    });
+    expect(existsSync(statePath)).toBe(false);
+    expect(kill.mock.calls).toEqual([[stale.pid, 0]]);
+  });
+
+  it('stop clears metadata of a supervisor that no longer exists', async () => {
+    processExists(false);
+    await expect(stopRuntime(dir)).resolves.toMatchObject({
+      stopped: true,
+      alreadyStopped: true,
+      staleStateRemoved: true,
+    });
+    expect(existsSync(statePath)).toBe(false);
+    expect(mocks.controlRequest).not.toHaveBeenCalled();
+    expect(kill.mock.calls).toEqual([[stale.pid, 0]]);
+  });
+
+  it('status reports stale metadata without contacting the supervisor', async () => {
+    processExists(false);
+    await expect(runtimeStatus(dir)).resolves.toMatchObject({
+      running: false,
+      staleState: true,
+    });
+    expect(existsSync(statePath)).toBe(true);
+  });
+
+  it('keeps the metadata when the recorded PID still exists', async () => {
+    processExists(true);
+    await expect(startRuntime(dir)).rejects.toThrow();
+    await expect(stopRuntime(dir)).rejects.toThrow();
+    expect(existsSync(statePath)).toBe(true);
   });
 });
 

@@ -98,6 +98,16 @@ describe('formatOutput', () => {
       expect(result).toContain('-321.50');
     });
 
+    it('serializes nested values instead of printing [object Object]', () => {
+      const result = formatOutput(
+        { summary: { count: 2 }, items: [{ id: 'a' }] },
+        'table',
+      );
+      expect(result).not.toContain('[object Object]');
+      expect(result).toContain('{"count":2}');
+      expect(result).toContain('[{"id":"a"}]');
+    });
+
     it('does not format non-amount numeric fields', () => {
       const data = [{ id: 12345, sort_order: 100 }];
       const result = formatOutput(data, 'table');
@@ -163,6 +173,12 @@ describe('formatOutput', () => {
       const lines = result.split('\n');
       expect(lines[0]).toBe('name,amount');
       expect(lines[1]).toBe('Coffee,-25.00');
+    });
+
+    it('serializes nested values as JSON cells', () => {
+      const data = [{ id: 'a', tags: ['x', 'y'], meta: { ok: true } }];
+      const result = formatOutput(data, 'csv');
+      expect(result).toBe('id,tags,meta\na,"[""x"",""y""]","{""ok"":true}"');
     });
 
     it('does not format amount fields in json output', () => {

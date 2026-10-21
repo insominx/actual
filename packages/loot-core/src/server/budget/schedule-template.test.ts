@@ -37,6 +37,7 @@ type RuleSpec = {
   endMode?: 'never' | 'on_date' | 'after_n_occurrences';
   endDate?: string;
   skipWeekend?: boolean;
+  weekendSolveMode?: 'before' | 'after';
 };
 
 function makeRule({
@@ -48,6 +49,7 @@ function makeRule({
   endMode = 'never',
   endDate = '2099-01-01',
   skipWeekend = false,
+  weekendSolveMode = 'before',
 }: RuleSpec): Rule {
   return new Rule({
     id,
@@ -63,7 +65,7 @@ function makeRule({
           frequency,
           patterns: [],
           skipWeekend,
-          weekendSolveMode: 'before',
+          weekendSolveMode,
           endMode,
           endOccurrences: 1,
           endDate,
@@ -730,5 +732,50 @@ describe('runSchedule', () => {
       defaultCurrency,
     );
     expect(result.to_budget).toBe(0);
+  });
+
+  describe('weekend occurrences moved into the next month', () => {
+    // Saturdays from 2025-05-03, moved to the following Monday. Saturday
+    // 2025-05-31 is paid on Monday 2025-06-02, so it belongs to June.
+    const weeklySaturdays: RuleSpec = {
+      start: '2025-05-03',
+      amount: -1000,
+      frequency: 'weekly',
+      skipWeekend: true,
+      weekendSolveMode: 'after',
+    };
+    const template_lines = [
+      {
+        type: 'schedule',
+        name: 'Weekly Bill',
+        directive: 'template',
+        priority: 0,
+      } as const,
+    ];
+
+    async function budgetFor(month: string) {
+      mockSingleSchedule(weeklySaturdays);
+      return runSchedule(
+        template_lines,
+        month,
+        0,
+        0,
+        0,
+        0,
+        [],
+        defaultCategory,
+        defaultCurrency,
+      );
+    }
+
+    it('counts the moved occurrence in the month it is paid', async () => {
+      // Jun 2, 9, 16, 23, 30
+      expect((await budgetFor('2025-06-01')).to_budget).toBe(5000);
+    });
+
+    it('does not count the moved occurrence in the month it was scheduled', async () => {
+      // May 5, 12, 19, 26 (May 31 is paid on Jun 2)
+      expect((await budgetFor('2025-05-01')).to_budget).toBe(4000);
+    });
   });
 });

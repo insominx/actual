@@ -159,6 +159,47 @@ describe('Spreadsheet', () => {
     expect(spreadsheet.getValue('foo!x')).toBe(1);
   });
 
+  test('a failing cell does not stop the other computations', async () => {
+    const spreadsheet = new Spreadsheet();
+
+    spreadsheet.transaction(() => {
+      spreadsheet.createDynamic('foo', 'broken', {
+        initialValue: 1,
+        run: () => {
+          throw new Error('boom');
+        },
+      });
+      spreadsheet.createDynamic('foo', 'ok', {
+        initialValue: 2,
+        run: () => 10,
+      });
+    });
+
+    // onFinish must still resolve, with the healthy cell computed
+    await new Promise(resolve => spreadsheet.onFinish(resolve));
+    expect(spreadsheet.getValue('foo!broken')).toBe(1);
+    expect(spreadsheet.getValue('foo!ok')).toBe(10);
+  });
+
+  test('nested cache barriers keep the cache dirty until the last one ends', () => {
+    const setCacheStatus = vi.fn();
+    const spreadsheet = new Spreadsheet(undefined, setCacheStatus);
+
+    spreadsheet.startCacheBarrier();
+    spreadsheet.startCacheBarrier();
+    spreadsheet.endCacheBarrier();
+    expect(setCacheStatus).not.toHaveBeenCalledWith({ clean: true });
+
+    spreadsheet.endCacheBarrier();
+    expect(setCacheStatus).toHaveBeenLastCalledWith({ clean: true });
+
+    // Unbalanced ends don't leave a negative depth behind
+    spreadsheet.endCacheBarrier();
+    spreadsheet.startCacheBarrier();
+    spreadsheet.markCacheSafe();
+    expect(setCacheStatus).toHaveBeenLastCalledWith({ clean: false });
+  });
+
   test('async cells work2', () => {
     const spreadsheet = new Spreadsheet();
 

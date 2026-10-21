@@ -816,6 +816,21 @@ function newInput(item) {
   return { ...item, inputKey: uuidv4() };
 }
 
+// A fixed amount is stored in cents and a percentage as a whole number, so a
+// value can't carry over from one allocation method to another.
+export function changeSplitAmountMethod<
+  T extends { value?: unknown; options?: { method?: string } },
+>(action: T, method: string): T {
+  if (action.options?.method === method) {
+    return action;
+  }
+  return newInput({
+    ...action,
+    value: null,
+    options: { ...action.options, method },
+  });
+}
+
 function ConditionsList({
   conditionsOp,
   conditions,
@@ -1181,7 +1196,7 @@ export function RuleEditor({
           const a = { ...action };
 
           if (field === 'method') {
-            a.options = { ...a.options, method: value };
+            return changeSplitAmountMethod(a, value);
           } else if (field === 'template') {
             if (value) {
               a.options = { ...a.options, template: a.value };

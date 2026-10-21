@@ -632,7 +632,9 @@ async function normalizeBankSyncTransactions(transactions, acctId) {
       trans.imported_payee = trans.imported_payee.trim();
     }
 
-    let imported_id = trans.transactionId;
+    // A provider may send an empty id; store it as null so strict id
+    // checking (`imported_id IS NULL`) can still fuzzy-match the row later
+    let imported_id = trans.transactionId || null;
     if (trans.cleared && !trans.transactionId && trans.internalTransactionId) {
       // trans.account is not set yet on a first sync; use the target account
       imported_id = `${acctId}-${trans.internalTransactionId}`;

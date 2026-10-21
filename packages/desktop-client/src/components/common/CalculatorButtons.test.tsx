@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 
 import { evalArithmetic } from '@actual-app/core/shared/arithmetic';
+import { setNumberFormat } from '@actual-app/core/shared/util';
 import { fireEvent, render, screen } from '@testing-library/react';
 
 import { CalculatorButtons } from './CalculatorButtons';
@@ -130,5 +131,25 @@ describe('CalculatorButtons', () => {
 
     expect(input).toHaveValue('');
     expect(input).toHaveFocus();
+  });
+
+  it('inserts the locale decimal separator', () => {
+    setNumberFormat({ format: 'dot-comma', hideFraction: false });
+    try {
+      render(<TestCalculator />);
+
+      const input = screen.getByLabelText('Expression');
+      input.focus();
+
+      for (const key of ['1', '2', '×', '0', ',', '1', '2', '5']) {
+        fireEvent.click(screen.getByRole('button', { name: key }));
+      }
+      expect(input).toHaveValue('12*0,125');
+
+      fireEvent.click(screen.getByRole('button', { name: '=' }));
+      expect(input).toHaveValue('1.5');
+    } finally {
+      setNumberFormat({ format: 'comma-dot', hideFraction: false });
+    }
   });
 });

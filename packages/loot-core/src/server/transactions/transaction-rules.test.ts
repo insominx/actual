@@ -1,6 +1,7 @@
 import { aqlQuery } from '#server/aql';
 import * as db from '#server/db';
 import { loadMappings } from '#server/db/mappings';
+import { Condition } from '#server/rules';
 // @ts-strict-ignore
 import { q } from '#shared/query';
 
@@ -886,6 +887,79 @@ describe('Transaction rules', () => {
     ]);
 
     expect(transactions.map(t => t.id)).toEqual(['2']);
+  });
+
+  test('recurring date conditions match past the first 100 occurrences', async () => {
+    const account = await db.insertAccount({ name: 'bank' });
+    const dates = ['2016-05-31', '2016-06-02', '2016-12-31'];
+    for (const [i, date] of dates.entries()) {
+      await db.insertTransaction({
+        id: String(i + 1),
+        date,
+        account,
+        amount: 1,
+      });
+    }
+
+    // `currentDay()` is 2017-01-01 in tests, so day 214 is in the past
+    const value = { start: '2016-06-01', frequency: 'daily' };
+    for (const op of ['is', 'isapprox']) {
+      const cond = { field: 'date', op, value };
+      const ids = (await getMatchingTransactions([cond])).map(t => t.id);
+      const evaluated = dates
+        .map((date, i) => ({ id: String(i + 1), date }))
+        .filter(t => new Condition(op, 'date', value, null).eval(t))
+        .map(t => t.id);
+
+      expect(ids.sort()).toEqual(evaluated);
+    }
+    expect(
+      (await getMatchingTransactions([{ field: 'date', op: 'is', value }])).map(
+        t => t.id,
+      ),
+    ).toEqual(expect.arrayContaining(['2', '3']));
+
+    // Long-running schedules stay within SQLite's expression limits and
+    // keep matching recent transactions (2016-12-31 is a Saturday)
+    for (const op of ['is', 'isapprox']) {
+      const weekly = {
+        field: 'date',
+        op,
+        value: { start: '1990-01-06', frequency: 'weekly' },
+      };
+      const ids = (await getMatchingTransactions([weekly])).map(t => t.id);
+      expect(ids).toContain('3');
+    }
+  });
+
+  test('recurring `is` date conditions match the weekend-shifted date', async () => {
+    const account = await db.insertAccount({ name: 'bank' });
+    // 2016-10-15 is a Saturday, moved to Monday 2016-10-17
+    const dates = ['2016-09-15', '2016-10-16', '2016-10-17'];
+    for (const [i, date] of dates.entries()) {
+      await db.insertTransaction({
+        id: String(i + 1),
+        date,
+        account,
+        amount: 1,
+      });
+    }
+
+    const value = {
+      start: '2016-01-15',
+      frequency: 'monthly',
+      skipWeekend: true,
+      weekendSolveMode: 'after',
+    };
+    const cond = new Condition('is', 'date', value, null);
+    expect(cond.eval({ date: '2016-10-17' })).toBe(true);
+    expect(cond.eval({ date: '2016-10-16' })).toBe(false);
+    expect(cond.eval({ date: '2016-09-15' })).toBe(true);
+
+    const ids = (
+      await getMatchingTransactions([{ field: 'date', op: 'is', value }])
+    ).map(t => t.id);
+    expect(ids.sort()).toEqual(['1', '3']);
   });
 
   test('and sub expression builds $and condition', async () => {

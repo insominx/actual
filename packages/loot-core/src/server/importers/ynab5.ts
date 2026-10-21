@@ -612,10 +612,12 @@ export async function importTransactions(
   const startingPayeeYNAB = findIdByName(data.payees, 'Starting Balance');
 
   const transactionsGrouped = groupBy(data.transactions, 'account_id');
-  const subtransactionsGrouped = groupBy(
-    data.subtransactions,
-    'transaction_id',
+  // YNAB keeps the subtransactions of an edited split as `deleted` rows; they
+  // must neither be imported as children nor be matched as transfers.
+  const liveSubtransactions = data.subtransactions.filter(
+    subtransaction => !subtransaction.deleted,
   );
+  const subtransactionsGrouped = groupBy(liveSubtransactions, 'transaction_id');
 
   const payeesByTransferAcct = payees
     .filter(payee => payee?.transfer_acct)
@@ -630,7 +632,7 @@ export async function importTransactions(
   // Go ahead and generate ids for all of the transactions so we can
   // reliably resolve transfers
   // Also identify orphan transfer transactions and subtransactions.
-  for (const transaction of data.subtransactions) {
+  for (const transaction of liveSubtransactions) {
     entityIdMap.set(transaction.id, uuidv4());
 
     if (transaction.transfer_account_id) {

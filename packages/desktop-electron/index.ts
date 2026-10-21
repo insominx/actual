@@ -11,6 +11,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import path from 'path';
+import { pathToFileURL } from 'url';
 
 import type { GlobalPrefsJson } from '@actual-app/core/types/prefs';
 import {
@@ -610,7 +611,17 @@ app.on('ready', async () => {
       });
     }
 
-    const pathname = parsedUrl.pathname;
+    let pathname: string;
+    try {
+      // The URL pathname is percent-encoded; decode it so it maps to the real
+      // file name (pathToFileURL below re-encodes it for the file: URL)
+      pathname = decodeURIComponent(parsedUrl.pathname);
+    } catch {
+      return new Response(null, {
+        status: 400,
+        statusText: 'Bad Request',
+      });
+    }
 
     let filePath = path.normalize(`${BUILD_ROOT}/client-build/index.html`); // default web path
 
@@ -621,7 +632,7 @@ app.on('ready', async () => {
       const clientBuildPath = path.resolve(BUILD_ROOT, 'client-build');
 
       // Ensure filePath is within client-build directory - prevents directory traversal vulnerability
-      if (!resolvedPath.startsWith(clientBuildPath)) {
+      if (!resolvedPath.startsWith(clientBuildPath + path.sep)) {
         return new Response(null, {
           status: 403,
           statusText: 'Forbidden',
@@ -629,7 +640,9 @@ app.on('ready', async () => {
       }
     }
 
-    return net.fetch(`file:///${filePath}`);
+    // pathToFileURL escapes characters such as '#', '?' and '%' that would
+    // otherwise be read as URL syntax if the install path contains them
+    return net.fetch(pathToFileURL(filePath).href);
   });
 
   if (process.argv[1] !== '--server') {

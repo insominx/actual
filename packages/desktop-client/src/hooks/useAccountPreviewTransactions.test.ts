@@ -10,6 +10,7 @@ import {
   inverseBasedOnAccount,
   isScheduleRelevantToAccount,
 } from './useAccountPreviewTransactions';
+import { calculateRunningBalancesBottomUp } from './useTransactions';
 
 function makeAccount(id: string): AccountEntity {
   return {
@@ -192,5 +193,47 @@ describe('inverseBasedOnAccount', () => {
       parent_id: parentId,
     });
     expect(result.runningBalances).toBe(runningBalances);
+  });
+
+  test("recalculates running balances when another account's schedule yields no rows", () => {
+    // A split schedule from checking whose split payee is set by a formula is
+    // kept as possibly relevant to savings, but none of its rows end up in
+    // savings - its amounts must not leak into savings' running balances
+    const ownId = 'preview/savings-own';
+    const withOwn: TransactionEntity[] = [
+      {
+        id: ownId,
+        account: savings.id,
+        amount: 10_000,
+        date: '2026-08-20',
+        payee: 'employer',
+        category: 'upcoming',
+        schedule: 'savings-schedule',
+      },
+      ...transactions.map(transaction =>
+        transaction.id === 'preview/savings-transfer'
+          ? { ...transaction, payee: 'insurance' }
+          : transaction,
+      ),
+    ];
+    const allRunningBalances = calculateRunningBalancesBottomUp(
+      withOwn,
+      'all',
+      500_000,
+    );
+
+    const result = inverseBasedOnAccount({
+      accountId: savings.id,
+      transactions: withOwn,
+      startingBalance: 500_000,
+      runningBalances: allRunningBalances,
+      getPayeeByTransferAccount,
+      getTransferAccountByPayee,
+    });
+
+    expect(result.transactions.map(transaction => transaction.id)).toEqual([
+      ownId,
+    ]);
+    expect(result.runningBalances.get(ownId)).toBe(510_000);
   });
 });

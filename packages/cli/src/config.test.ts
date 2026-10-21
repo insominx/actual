@@ -228,6 +228,19 @@ describe('resolveConfig', () => {
       expect(config.dataDir).toBe('/custom/local');
       expect(config.password).toBeUndefined();
     });
+
+    it('keeps the budget selection for local-only commands', async () => {
+      const remote = await resolveConfig(
+        { dataDir: '/custom/local', syncId: 'sync-1' },
+        { localOnly: true },
+      );
+      expect(remote.syncId).toBe('sync-1');
+      const local = await resolveConfig(
+        { dataDir: '/custom/local', budgetId: 'local-1' },
+        { localOnly: true },
+      );
+      expect(local.budgetId).toBe('local-1');
+    });
   });
 
   describe('cache options', () => {

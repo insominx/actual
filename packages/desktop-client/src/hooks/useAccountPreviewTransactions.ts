@@ -279,18 +279,22 @@ export function inverseBasedOnAccount({
     },
   );
 
-  // Recalculate running balances if any transaction was inversed.
+  // Recalculate running balances if any transaction was inversed or dropped.
   // This is necessary because the running balances are calculated based on the
   // original transaction amounts and accounts, and we need to adjust them
-  // based on the inversed transactions.
+  // based on the inversed transactions - and leave out amounts from other
+  // accounts' schedules that produced no rows for this account (e.g. a split
+  // whose payee is set by a formula that doesn't resolve to this account).
   const anyInversed = mappedTransactions.some(t => t.inversed);
-  const mappedRunningBalances = anyInversed
-    ? calculateRunningBalancesBottomUp(
-        mappedTransactions,
-        'all',
-        startingBalance ?? 0,
-      )
-    : runningBalances;
+  const anyDropped = mappedTransactions.length !== transactions.length;
+  const mappedRunningBalances =
+    anyInversed || anyDropped
+      ? calculateRunningBalancesBottomUp(
+          mappedTransactions,
+          'all',
+          startingBalance ?? 0,
+        )
+      : runningBalances;
 
   return {
     transactions: mappedTransactions,

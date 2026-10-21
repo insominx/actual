@@ -171,4 +171,69 @@ describe('cleanupTemplate - named pool sources', () => {
       'Category 2 does not have available funds.',
     );
   });
+
+  test('reports funds moved by a named pool instead of up to date', async () => {
+    setup({
+      categories: [
+        {
+          id: 'cat-1',
+          name: 'Category 1',
+          cleanup_def: [{ role: 'sink', groupId: GROUP_ID, weight: 1 }],
+        },
+        {
+          id: 'cat-2',
+          name: 'Category 2',
+          cleanup_def: [{ role: 'source', groupId: GROUP_ID }],
+        },
+      ],
+      sheetValues: {
+        'leftover-cat-1': 0,
+        'budget-cat-1': 6000,
+        'leftover-cat-2': 1000,
+        'budget-cat-2': 5000,
+        'to-budget': 0,
+      },
+    });
+
+    const result = await cleanupTemplate({ month: MONTH });
+
+    expect(budgetedFor('cat-1')).toContainEqual(
+      expect.objectContaining({ amount: 7000 }),
+    );
+    expect(result).toEqual(
+      expect.objectContaining({
+        message: 'cleanup-applied',
+        sourceCount: 1,
+        sinkCount: 1,
+      }),
+    );
+  });
+
+  test('reports up to date when a named pool source has nothing to move', async () => {
+    setup({
+      categories: [
+        {
+          id: 'cat-1',
+          name: 'Category 1',
+          cleanup_def: [{ role: 'sink', groupId: GROUP_ID, weight: 1 }],
+        },
+        {
+          id: 'cat-2',
+          name: 'Category 2',
+          cleanup_def: [{ role: 'source', groupId: GROUP_ID }],
+        },
+      ],
+      sheetValues: {
+        'leftover-cat-1': 0,
+        'budget-cat-1': 6000,
+        'leftover-cat-2': 0,
+        'budget-cat-2': 5000,
+        'to-budget': 0,
+      },
+    });
+
+    const result = await cleanupTemplate({ month: MONTH });
+
+    expect(result.message).toBe('cleanup-up-to-date');
+  });
 });

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { Command } from 'commander';
 
 import { AgentError } from '#agent-output';
-import { listRuns, newRunId, readRun } from '#bank-sync-runs';
+import { listRuns, newRunId, readRun, writeRun } from '#bank-sync-runs';
 import { resolveConfig } from '#config';
 
 import { registerBankSyncCommand } from './bank-sync';
@@ -93,5 +93,22 @@ describe('bank sync run records', () => {
     await expect(readRun(dataDir, runId)).rejects.toMatchObject({
       code: 'INVALID_INPUT',
     });
+  });
+
+  it('lists runs recorded under an older key for the same budget', async () => {
+    const run = (budget: string, createdAt: string) => ({
+      schemaVersion: 1 as const,
+      runId: newRunId(),
+      budget,
+      createdAt,
+      updatedAt: createdAt,
+      commit: 'synced' as const,
+      result: null,
+    });
+    await writeRun(dataDir, run('local-id', '2026-01-01T00:00:00.000Z'));
+    await writeRun(dataDir, run('sync-1', '2026-01-02T00:00:00.000Z'));
+    await writeRun(dataDir, run('other', '2026-01-03T00:00:00.000Z'));
+    const { runs } = await listRuns(dataDir, 'sync-1', 10, ['local-id']);
+    expect(runs.map(r => r.budget)).toEqual(['sync-1', 'local-id']);
   });
 });

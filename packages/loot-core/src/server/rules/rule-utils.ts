@@ -4,7 +4,10 @@ import * as dateFns from 'date-fns';
 import { logger } from '#platform/server/log';
 import { RuleError } from '#server/errors';
 import { RSchedule } from '#server/util/rschedule';
-import { recurConfigToRSchedule } from '#shared/schedules';
+import {
+  getDateWithSkippedWeekend,
+  recurConfigToRSchedule,
+} from '#shared/schedules';
 import type { RuleConditionEntity } from '#types/models';
 
 import type { Rule } from './rule';
@@ -236,6 +239,25 @@ export function recurConfigToBoundedRRules(desc) {
     .toArray();
   const last = occurrences[occurrences.length - 1];
   return last ? unbounded.map(rule => ({ ...rule, end: last.date })) : rules;
+}
+
+/**
+ * The day a skip-weekend recurring date actually falls on for a weekend
+ * occurrence (the schedule data comes from `parseRecurDate`), or null when
+ * the occurrence isn't moved.
+ */
+export function getWeekendShiftedOccurrence(
+  date: Date,
+  data: { skipWeekend?: boolean; weekendSolve?: string } | undefined,
+): Date | null {
+  if (
+    !data?.skipWeekend ||
+    (data.weekendSolve !== 'after' && data.weekendSolve !== 'before')
+  ) {
+    return null;
+  }
+  const shifted = getDateWithSkippedWeekend(date, data.weekendSolve);
+  return shifted === date ? null : shifted;
 }
 
 export function parseRecurDate(desc) {

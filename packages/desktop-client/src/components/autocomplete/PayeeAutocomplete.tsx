@@ -345,6 +345,8 @@ export type PayeeAutocompleteProps = ComponentProps<
   showInactivePayees?: boolean;
   showMakeTransfer?: boolean;
   showManagePayees?: boolean;
+  /** Offer a "Create payee" row for typed names (off for filters). */
+  showCreatePayee?: boolean;
   embedded?: boolean;
   onManagePayees?: () => void;
   renderCreatePayeeButton?: (
@@ -367,6 +369,7 @@ export function PayeeAutocomplete({
   showInactivePayees = false,
   showMakeTransfer = true,
   showManagePayees = false,
+  showCreatePayee = true,
   clearOnBlur = true,
   closeOnBlur,
   embedded,
@@ -419,7 +422,7 @@ export function PayeeAutocomplete({
       filteredSuggestions = filterTransferPayees(filteredSuggestions);
     }
 
-    if (!hasPayeeInput) {
+    if (!hasPayeeInput || !showCreatePayee) {
       return filteredSuggestions;
     }
 
@@ -433,6 +436,7 @@ export function PayeeAutocomplete({
     focusTransferPayees,
     accounts,
     hasPayeeInput,
+    showCreatePayee,
     showInactivePayees,
   ]);
 

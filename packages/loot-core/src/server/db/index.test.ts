@@ -172,6 +172,153 @@ describe('Database', () => {
     );
   });
 
+  test('moving a transaction after a starting balance places it last among regular transactions', async () => {
+    // The starting balance has the highest sort_order but is listed
+    // after every other transaction of its date
+    await insertTransactions([
+      {
+        id: 'sb',
+        date: '2018-01-03',
+        account: 'foo',
+        amount: 100,
+        sort_order: 4000,
+        starting_balance_flag: 1,
+      },
+      {
+        id: 'a',
+        date: '2018-01-03',
+        account: 'foo',
+        amount: 1,
+        sort_order: 3000,
+      },
+      {
+        id: 'b',
+        date: '2018-01-03',
+        account: 'foo',
+        amount: 2,
+        sort_order: 2000,
+      },
+      {
+        id: 'm',
+        date: '2018-01-03',
+        account: 'foo',
+        amount: 3,
+        sort_order: 2500,
+      },
+    ]);
+
+    await db.moveTransaction('m', 'foo', 'sb');
+
+    const rows = await getTransactions('2018-01-03');
+    expect(rows.map(r => r.id)).toEqual(['a', 'b', 'm', 'sb']);
+  });
+
+  test('moving a split transaction keeps every child between its parent and the next transaction', async () => {
+    await insertTransactions([
+      {
+        id: 't',
+        date: '2018-01-03',
+        account: 'foo',
+        amount: 1,
+        sort_order: 1000,
+      },
+      {
+        id: 'p',
+        date: '2018-01-03',
+        account: 'foo',
+        amount: 2,
+        sort_order: 999,
+        is_parent: true,
+      },
+      {
+        id: 'p-child',
+        date: '2018-01-03',
+        account: 'foo',
+        amount: 2,
+        sort_order: 998.5,
+        is_child: true,
+        parent_id: 'p',
+      },
+      {
+        id: 'b',
+        date: '2018-01-03',
+        account: 'foo',
+        amount: 3,
+        sort_order: 998,
+      },
+      {
+        id: 'm',
+        date: '2018-01-03',
+        account: 'foo',
+        amount: 4,
+        sort_order: -5000,
+        is_parent: true,
+      },
+      {
+        id: 'm-child',
+        date: '2018-01-03',
+        account: 'foo',
+        amount: 4,
+        sort_order: -5001,
+        is_child: true,
+        parent_id: 'm',
+      },
+      {
+        id: 'c',
+        date: '2018-01-03',
+        account: 'foo',
+        amount: 5,
+        sort_order: -9000,
+      },
+    ]);
+
+    // The gap after `t` is too tight, so `p` and `b` get shoved down
+    await db.moveTransaction('m', 'foo', 't');
+
+    const rows = await db.all<{ id: string }>(
+      `SELECT id FROM v_transactions WHERE account = 'foo'
+       ORDER BY sort_order DESC, id`,
+    );
+    expect(rows.map(r => r.id)).toEqual([
+      't',
+      'm',
+      'm-child',
+      'p',
+      'p-child',
+      'b',
+      'c',
+    ]);
+  });
+
+  test('moving a closed account leaves deleted accounts untouched', async () => {
+    await db.insertAccount({ id: 'closed1', name: 'closed1', closed: 1 });
+    await db.insertAccount({ id: 'closed2', name: 'closed2', closed: 1 });
+    await db.insertAccount({ id: 'deleted', name: 'deleted', closed: 1 });
+    db.runQuery('UPDATE accounts SET sort_order = ? WHERE id = ?', [
+      1,
+      'closed1',
+    ]);
+    db.runQuery('UPDATE accounts SET sort_order = ? WHERE id = ?', [
+      2,
+      'deleted',
+    ]);
+    db.runQuery('UPDATE accounts SET sort_order = ? WHERE id = ?', [
+      3,
+      'closed2',
+    ]);
+    await db.deleteAccount({ id: 'deleted' });
+
+    // The tight gap before closed1 forces a shove, which must only
+    // touch the closed accounts that still exist
+    await db.moveAccount('closed2', 'closed1');
+
+    const deleted = await db.first<{ sort_order: number }>(
+      'SELECT sort_order FROM accounts WHERE id = ?',
+      ['deleted'],
+    );
+    expect(deleted.sort_order).toBe(2);
+  });
+
   test('transactions get child transactions in the right order', async () => {
     // Transactions on the same day should sort by sort order descending
     await insertTransactions([

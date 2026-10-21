@@ -12,6 +12,21 @@ let messageQueue = [];
 
 let globalWorker = null;
 
+// Set by `disconnect` and cleared by `init`: while set, requests settle with
+// this error instead of being posted to a backend that can no longer answer.
+let disconnectedError: T.ConnectionError | null = null;
+
+// Rejects the `init` promise still waiting for the backend's 'connect'.
+let rejectPendingInit: ((error: unknown) => void) | null = null;
+
+function settleWithError(handler, error: T.ConnectionError) {
+  if (handler.catchErrors) {
+    handler.resolve({ data: undefined, error });
+  } else {
+    handler.reject(error);
+  }
+}
+
 class ReconstructedError extends Error {
   url: string;
   line: string;
@@ -92,6 +107,8 @@ function handleMessage(msg) {
 // I don't think a worker should ever die due to a system error.
 function connectWorker(worker, onOpen, onError) {
   globalWorker = worker;
+  disconnectedError = null;
+  rejectPendingInit = onError;
 
   worker.onmessage = event => {
     const msg = event.data;
@@ -109,11 +126,13 @@ function connectWorker(worker, onOpen, onError) {
       globalWorker.postMessage({
         name: 'client-connected-to-backend',
       });
+      rejectPendingInit = null;
       onOpen();
     } else if (msg.type === 'app-init-failure') {
       globalWorker.postMessage({
         name: '__app-init-failure-acknowledged',
       });
+      rejectPendingInit = null;
       onError(msg);
     } else if (msg.type === 'capture-exception') {
       captureException(
@@ -161,9 +180,14 @@ export const send: T.Send = function (
 ): ReturnType<T.Send> {
   const [name, args, { catchErrors = false } = {}] = params;
   return new Promise((resolve, reject) => {
+    if (disconnectedError) {
+      settleWithError({ resolve, reject, catchErrors }, disconnectedError);
+      return;
+    }
+
     const id = uuidv4();
 
-    replyHandlers.set(id, { resolve, reject });
+    replyHandlers.set(id, { resolve, reject, catchErrors });
     const message = {
       id,
       name,
@@ -200,6 +224,35 @@ export const listen: T.Listen = function (name, cb) {
 
 export const unlisten: T.Unlisten = function (name) {
   listeners.set(name, []);
+};
+
+export const disconnect: T.Disconnect = function (
+  reason = 'Disconnected from the backend',
+) {
+  if (globalWorker) {
+    globalWorker.onmessage = null;
+  }
+  globalWorker = null;
+  // Queue again so requests sent while the next `init` waits for the new
+  // backend's 'connect' are flushed to it rather than posted too early.
+  messageQueue = [];
+  disconnectedError = {
+    type: 'ServerError',
+    code: 'disconnected',
+    message: reason,
+  };
+
+  if (rejectPendingInit) {
+    const rejectInit = rejectPendingInit;
+    rejectPendingInit = null;
+    rejectInit(disconnectedError);
+  }
+
+  const pending = [...replyHandlers.values()];
+  replyHandlers.clear();
+  for (const handler of pending) {
+    settleWithError(handler, disconnectedError);
+  }
 };
 
 export const initServer: T.InitServer = async function () {

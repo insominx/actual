@@ -116,6 +116,7 @@ export function ToBudget({
             <HoldMenu
               onClose={closeMenu}
               onSubmit={amount => {
+                onBudgetAction(month, 'reset-income-carryover', {});
                 onBudgetAction(month, 'hold', { amount });
               }}
             />

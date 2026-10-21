@@ -737,6 +737,36 @@ describe('Account sync', () => {
       expect(transactions[0].amount).toBe(-1239);
     },
   );
+
+  test('bank sync stores a missing provider transaction id as null', async () => {
+    const { id } = await prepareDatabase();
+
+    const bankTx = {
+      date: '2017-10-05',
+      payeeName: 'Acme Inc.',
+      transactionAmount: { amount: '-12.39', currency: 'EUR' },
+      transactionId: '',
+      booked: true,
+    };
+
+    await reconcileTransactions(id, [{ ...bankTx }], {
+      isBankSyncAccount: true,
+    });
+
+    let transactions = await getAllTransactions();
+    expect(transactions.length).toBe(1);
+    expect(transactions[0].imported_id).toBeNull();
+
+    // A later copy that now carries an id must still dedupe against it
+    await reconcileTransactions(
+      id,
+      [{ ...bankTx, date: '2017-10-06', transactionId: 'provider-tx-1' }],
+      { isBankSyncAccount: true },
+    );
+
+    transactions = await getAllTransactions();
+    expect(transactions.length).toBe(1);
+  });
 });
 
 describe('SimpleFin batch sync', () => {

@@ -1360,6 +1360,26 @@ describe('RuleIndexer', () => {
     );
   });
 
+  test('firstchar keys match when lowercasing changes the length', () => {
+    const indexer = new RuleIndexer({
+      field: 'imported_payee',
+      method: 'firstchar',
+    });
+
+    // 'İ' lowercases to two code units ('i' + combining dot), so the
+    // key has to come from the lowercased string, like the condition value
+    const rule = new Rule({
+      conditionsOp: 'and',
+      conditions: [{ op: 'is', field: 'imported_payee', value: 'İstanbul' }],
+      actions: [{ op: 'set', field: 'category', value: 'Food' }],
+    });
+    indexer.index(rule);
+
+    const trans = { imported_payee: 'İstanbul' };
+    expect(rule.evalConditions(trans)).toBe(true);
+    expect(indexer.getApplicableRules(trans)).toEqual(new Set([rule]));
+  });
+
   test('negative operators are always applicable', () => {
     const indexer = new RuleIndexer({ field: 'payee' });
     const isNot = new Rule({

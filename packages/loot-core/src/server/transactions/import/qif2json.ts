@@ -25,7 +25,21 @@ export function qif2json(qif, options: { dateFormat?: string } = {}) {
   // made a 40,000-record file take 20+ seconds.
   let next = 0;
   let line = lines[next++];
-  const type = /!Type:([^$]*)$/.exec(line.trim());
+  // Quicken prefixes exports with option switches and `!Account` blocks
+  // (account name/type/description records) before the `!Type:` section; skip
+  // them rather than reject the file or misread them as transactions.
+  while (line !== undefined && !line.trim().startsWith('!Type:')) {
+    const header = line.trim();
+    if (header === '!Account') {
+      while (next < lines.length && !lines[next].trim().startsWith('!')) {
+        next++;
+      }
+    } else if (header && !/^!(Option|Clear):/.test(header)) {
+      break;
+    }
+    line = lines[next++];
+  }
+  const type = /!Type:([^$]*)$/.exec((line ?? '').trim());
   const data: {
     dateFormat: string | undefined;
     type?;
@@ -55,12 +69,23 @@ export function qif2json(qif, options: { dateFormat?: string } = {}) {
       transaction = {};
       continue;
     }
+    if (line[0] === '!') {
+      throw new Error(
+        'QIF files with more than one account or section are not supported: ' +
+          line,
+      );
+    }
     switch (line[0]) {
       case 'D':
         transaction.date = line.substring(1);
         break;
       case 'T':
         transaction.amount = line.substring(1);
+        break;
+      case 'U':
+        // Quicken repeats the amount in a (higher precision) `U` line next to
+        // `T`; use it only when there is no `T` amount.
+        transaction.amount ??= line.substring(1);
         break;
       case 'N':
         transaction.number = line.substring(1);

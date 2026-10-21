@@ -11,6 +11,32 @@ import type { DisplayTemplateType, ReducerState } from './constants';
 
 export const DEFAULT_PRIORITY = 1;
 
+type SchedulePriorityTemplate = Extract<Template, { type: 'schedule' | 'by' }>;
+
+function isSchedulePriorityTemplate(
+  template: Template,
+): template is SchedulePriorityTemplate {
+  return template.type === 'schedule' || template.type === 'by';
+}
+
+// The engine requires every schedule and by-date template in a category to
+// share one priority. A new schedule/by template would otherwise get
+// DEFAULT_PRIORITY, which conflicts with templates parsed from notes without a
+// `-N` suffix (priority 0), so adopt the priority already in use instead.
+export function alignSchedulePriority(
+  template: Template,
+  otherTemplates: readonly Template[],
+): Template {
+  if (!isSchedulePriorityTemplate(template)) {
+    return template;
+  }
+  const existing = otherTemplates.find(isSchedulePriorityTemplate);
+  if (!existing || existing.priority === template.priority) {
+    return template;
+  }
+  return { ...template, priority: existing.priority };
+}
+
 export const getInitialState = (template: Template | null): ReducerState => {
   if (!template) {
     throw new Error('Template cannot be null');
@@ -29,6 +55,7 @@ export const getInitialState = (template: Template | null): ReducerState => {
           starting: firstDayOfMonth(new Date()),
           priority: template.priority,
           directive: template.directive,
+          ...(template.limit ? { limit: template.limit } : {}),
         },
         displayType: 'fixed',
       };

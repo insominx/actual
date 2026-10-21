@@ -89,8 +89,50 @@ async function save(dataDir: string, file: EvidenceFile) {
   await rename(temporary, evidencePath(dataDir));
 }
 
-export async function listStatements(dataDir: string, budget: string) {
-  return (await load(dataDir)).budgets[budget] ?? [];
+function sortStatements(list: StoredStatement[]) {
+  return list.sort(
+    (a, b) =>
+      a.accountId.localeCompare(b.accountId) || a.month.localeCompare(b.month),
+  );
+}
+
+// Entries stored under an alias key (an older key for the same budget) are
+// merged into the canonical list; a canonical entry wins for the same
+// account and month.
+function mergedList(file: EvidenceFile, budget: string, aliases: string[]) {
+  const list = [...(file.budgets[budget] ?? [])];
+  for (const alias of aliases) {
+    if (alias === budget) continue;
+    for (const entry of file.budgets[alias] ?? []) {
+      if (
+        !list.some(
+          s => s.accountId === entry.accountId && s.month === entry.month,
+        )
+      ) {
+        list.push(entry);
+      }
+    }
+  }
+  return aliases.some(alias => alias !== budget && file.budgets[alias])
+    ? sortStatements(list)
+    : list;
+}
+
+// Writes move alias entries under the canonical key.
+function migrateAliases(file: EvidenceFile, budget: string, aliases: string[]) {
+  const list = mergedList(file, budget, aliases);
+  for (const alias of aliases) {
+    if (alias !== budget) delete file.budgets[alias];
+  }
+  return list;
+}
+
+export async function listStatements(
+  dataDir: string,
+  budget: string,
+  aliases: string[] = [],
+) {
+  return mergedList(await load(dataDir), budget, aliases);
 }
 
 export async function addStatement(
@@ -98,6 +140,7 @@ export async function addStatement(
   budget: string,
   entry: Omit<StoredStatement, 'recordedAt'>,
   replace: boolean,
+  aliases: string[] = [],
 ) {
   if (!entry.accountId) {
     throw new AgentError('INVALID_INPUT', '--account is required.');
@@ -112,7 +155,7 @@ export async function addStatement(
     );
   }
   const file = await load(dataDir);
-  const list = file.budgets[budget] ?? [];
+  const list = migrateAliases(file, budget, aliases);
   const existing = list.findIndex(
     s => s.accountId === entry.accountId && s.month === entry.month,
   );
@@ -128,11 +171,7 @@ export async function addStatement(
   };
   const next = list.filter((_, i) => i !== existing);
   next.push(stored);
-  next.sort(
-    (a, b) =>
-      a.accountId.localeCompare(b.accountId) || a.month.localeCompare(b.month),
-  );
-  file.budgets[budget] = next;
+  file.budgets[budget] = sortStatements(next);
   await save(dataDir, file);
   return { statement: stored, replaced: existing >= 0 };
 }
@@ -142,9 +181,10 @@ export async function removeStatement(
   budget: string,
   accountId: string,
   month: string,
+  aliases: string[] = [],
 ) {
   const file = await load(dataDir);
-  const list = file.budgets[budget] ?? [];
+  const list = migrateAliases(file, budget, aliases);
   const next = list.filter(
     s => !(s.accountId === accountId && s.month === month),
   );

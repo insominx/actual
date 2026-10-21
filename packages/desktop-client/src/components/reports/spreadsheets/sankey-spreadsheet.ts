@@ -1896,6 +1896,15 @@ export function filterGraphByLayers(
     });
 
     keysToDelete.forEach(key => graph.delete(key));
+
+    // Drop links whose target was removed so no link points at a missing node.
+    for (const [, node] of graph) {
+      for (const target of node.to.keys()) {
+        if (!graph.has(target)) {
+          node.to.delete(target);
+        }
+      }
+    }
   }
 }
 

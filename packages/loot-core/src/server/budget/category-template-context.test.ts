@@ -2493,6 +2493,93 @@ describe('CategoryTemplateContext', () => {
       expect(result).toBe(12300);
     });
 
+    it('does not round a daily limit with cents above the limit when hideDecimal is set', async () => {
+      // $3.35 a day for 31 days caps the month at $103.85. Rounding to the
+      // nearest dollar would budget $104, which is over the limit.
+      const templates: Template[] = [
+        {
+          type: 'simple',
+          limit: { amount: 3.35, hold: false, period: 'daily' },
+          directive: 'template',
+          priority: 1,
+        },
+      ];
+      const instance = new TestCategoryTemplateContext(
+        templates,
+        category,
+        '2024-01',
+        0,
+        0,
+        'USD',
+        true,
+      );
+      const result = await instance.runTemplatesForPriority(
+        1,
+        1_000_000,
+        1_000_000,
+      );
+      expect(result).toBe(10300);
+    });
+
+    it('does not round a limit up past the cap when carryover has cents and hideDecimal is set', async () => {
+      // $100 limit with $10.40 carried over leaves room for $89.60.
+      const templates: Template[] = [
+        {
+          type: 'limit',
+          amount: 100,
+          hold: false,
+          period: 'monthly',
+          directive: 'template',
+          priority: null,
+        },
+        { type: 'refill', directive: 'template', priority: 1 },
+      ];
+      const instance = new TestCategoryTemplateContext(
+        templates,
+        category,
+        '2024-01',
+        1040,
+        0,
+        'USD',
+        true,
+      );
+      const result = await instance.runTemplatesForPriority(
+        1,
+        1_000_000,
+        1_000_000,
+      );
+      expect(result).toBe(8900);
+    });
+
+    it('keeps a remainder clamped by a limit whole when hideDecimal is set', () => {
+      const templates: Template[] = [
+        {
+          type: 'limit',
+          amount: 100,
+          hold: false,
+          period: 'monthly',
+          directive: 'template',
+          priority: null,
+        },
+        {
+          type: 'remainder',
+          weight: 1,
+          directive: 'template',
+          priority: null,
+        },
+      ];
+      const instance = new TestCategoryTemplateContext(
+        templates,
+        category,
+        '2024-01',
+        1040,
+        0,
+        'USD',
+        true,
+      );
+      expect(instance.runRemainder(20000, 15000)).toBe(8900);
+    });
+
     it('negates the budget for income categories at non-zero priority', async () => {
       // Income categories produce funds rather than consume them.
       const templates: Template[] = [

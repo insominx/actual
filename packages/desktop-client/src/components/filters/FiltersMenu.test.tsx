@@ -55,3 +55,39 @@ describe('FilterEditor amount sign', () => {
     );
   });
 });
+
+describe('FilterEditor text to ID op switch', () => {
+  const renderPayeeEditor = (op: 'contains' | 'matches', value: string) => {
+    const onSave = vi.fn();
+    render(
+      <FilterEditor
+        field="payee"
+        op={op}
+        value={value}
+        options={undefined}
+        onSave={onSave}
+        onClose={vi.fn()}
+      />,
+      { wrapper: TestProviders },
+    );
+    return { onSave };
+  };
+
+  it.each([
+    ['is', ''],
+    ['one of', []],
+  ] as const)(
+    'clears unresolved text when switching to "%s"',
+    async (opLabel, expectedValue) => {
+      const user = userEvent.setup();
+      const { onSave } = renderPayeeEditor('contains', 'Some text');
+
+      await user.click(screen.getByRole('button', { name: opLabel }));
+      await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+      expect(onSave).toHaveBeenCalledWith(
+        expect.objectContaining({ field: 'payee', value: expectedValue }),
+      );
+    },
+  );
+});

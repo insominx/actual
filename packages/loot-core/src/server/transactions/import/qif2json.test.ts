@@ -47,6 +47,77 @@ describe('qif2json', () => {
     expect(() => qif2json('!Type:Bank\nZ?')).toThrow(/Unknown Detail Code/);
   });
 
+  it('accepts Quicken `U` amount lines', () => {
+    const result = qif2json(
+      [
+        '!Type:Bank',
+        'D01/02/2026',
+        'U-1,234.56',
+        'T-1,234.56',
+        '^',
+        'D01/03/2026',
+        'U-7.00',
+        '^',
+      ].join('\n'),
+    );
+    expect(result.transactions.map(t => t.amount)).toEqual([
+      '-1,234.56',
+      '-7.00',
+    ]);
+  });
+
+  it('skips Quicken option switches and account headers', () => {
+    const result = qif2json(
+      [
+        '!Option:AutoSwitch',
+        '!Account',
+        'NChecking',
+        'TBank',
+        '^',
+        'NSavings',
+        'TBank',
+        '^',
+        '!Clear:AutoSwitch',
+        '!Account',
+        'NChecking',
+        'TBank',
+        '^',
+        '!Type:Bank',
+        'D01/02/2026',
+        'T-1.50',
+        'PShop',
+        '^',
+      ].join('\r\n'),
+    );
+    expect(result.type).toBe('Bank');
+    expect(result.transactions).toEqual([
+      { date: '01/02/2026', amount: '-1.50', payee: 'Shop' },
+    ]);
+  });
+
+  it('rejects a second account section instead of merging it', () => {
+    expect(() =>
+      qif2json(
+        [
+          '!Account',
+          'NChecking',
+          '^',
+          '!Type:Bank',
+          'D01/02/2026',
+          'T-1.50',
+          '^',
+          '!Account',
+          'NSavings',
+          '^',
+          '!Type:Bank',
+          'D01/03/2026',
+          'T-2.00',
+          '^',
+        ].join('\n'),
+      ),
+    ).toThrow(/more than one account/);
+  });
+
   it('parses a large file in linear time', () => {
     const records = 120000;
     const text =

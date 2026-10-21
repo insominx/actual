@@ -1,5 +1,6 @@
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -9,11 +10,60 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import {
+  budgetStoreKeys,
   CACHE_FILE_NAME,
   decideSyncAction,
   readCacheState,
   writeCacheState,
 } from './cache';
+
+describe('budgetStoreKeys', () => {
+  let dir: string;
+
+  function localBudget(id: string, metadata: Record<string, unknown>) {
+    mkdirSync(join(dir, id), { recursive: true });
+    writeFileSync(join(dir, id, 'metadata.json'), JSON.stringify(metadata));
+  }
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'actual-cli-store-keys-'));
+    localBudget('My-Budget-abc', { id: 'My-Budget-abc', groupId: 'sync-1' });
+    localBudget('Local-Only-def', { id: 'Local-Only-def' });
+  });
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('keys a synced budget by its sync ID online and offline', () => {
+    expect(budgetStoreKeys(dir, { syncId: 'sync-1' })).toEqual({
+      key: 'sync-1',
+      aliases: ['My-Budget-abc'],
+    });
+    expect(budgetStoreKeys(dir, { budgetId: 'My-Budget-abc' })).toEqual({
+      key: 'sync-1',
+      aliases: ['My-Budget-abc'],
+    });
+  });
+
+  it('keeps the local ID for a local-only budget', () => {
+    expect(budgetStoreKeys(dir, { budgetId: 'Local-Only-def' })).toEqual({
+      key: 'Local-Only-def',
+      aliases: [],
+    });
+  });
+
+  it('does not read metadata outside the data directory', () => {
+    expect(budgetStoreKeys(dir, { budgetId: '../My-Budget-abc' })).toEqual({
+      key: '../My-Budget-abc',
+      aliases: [],
+    });
+  });
+
+  it('returns null without a selected budget', () => {
+    expect(budgetStoreKeys(dir, {})).toBeNull();
+  });
+});
 
 describe('readCacheState', () => {
   let dir: string;

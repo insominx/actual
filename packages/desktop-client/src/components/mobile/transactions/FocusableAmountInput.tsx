@@ -16,6 +16,7 @@ import {
   amountToCurrency,
   appendDecimals,
   currencyToAmount,
+  getNumberFormat,
   reapplyThousandSeparators,
 } from '@actual-app/core/shared/util';
 import { css } from '@emotion/css';
@@ -118,13 +119,11 @@ const AmountInput = memo(function AmountInput({
     }
   };
 
-  const onChangeText = (text: string) => {
-    text = reapplyThousandSeparators(text);
-    // Zero-decimal currencies (yen, won) must not shift in implied cents
-    text = appendDecimals(
-      text,
-      String(hideFraction) === 'true' || decimalPlaces === 0,
-    );
+  const onChangeText = (rawText: string) => {
+    const text = formatTypedAmountText(rawText, {
+      hideFraction: String(hideFraction) === 'true',
+      decimalPlaces,
+    });
     setEditing(true);
     setText(text);
     props.onChangeValue?.(text);
@@ -322,3 +321,34 @@ export const FocusableAmountInput = memo(function FocusableAmountInput({
     </View>
   );
 });
+
+export function formatTypedAmountText(
+  rawText: string,
+  {
+    hideFraction,
+    decimalPlaces,
+  }: { hideFraction: boolean; decimalPlaces: number },
+): string {
+  if (hideFraction && decimalPlaces > 0) {
+    // Hiding the fraction is display only: typed decimals are kept as typed
+    // (up to the currency's precision) instead of being rounded away
+    const { decimalSeparator } = getNumberFormat();
+    const separatorIndex = rawText.indexOf(decimalSeparator);
+    if (separatorIndex === -1) {
+      return reapplyThousandSeparators(rawText);
+    }
+    const integerPart =
+      reapplyThousandSeparators(rawText.slice(0, separatorIndex)) || '0';
+    const fraction = rawText
+      .slice(separatorIndex + 1)
+      .replace(/\D/g, '')
+      .slice(0, decimalPlaces);
+    return integerPart + decimalSeparator + fraction;
+  }
+
+  // Zero-decimal currencies (yen, won) must not shift in implied cents
+  return appendDecimals(
+    reapplyThousandSeparators(rawText),
+    hideFraction || decimalPlaces === 0,
+  );
+}
