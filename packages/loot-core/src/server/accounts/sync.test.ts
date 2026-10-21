@@ -779,7 +779,7 @@ describe('Account sync', () => {
       id: 'split-parent',
       account: id,
       amount: -1000,
-      date: '2024-04-05',
+      date: '2017-10-05',
       imported_id: 'parent-provider-id',
       is_parent: true,
     });
@@ -787,7 +787,7 @@ describe('Account sync', () => {
       id: 'split-child-1',
       account: id,
       amount: -299,
-      date: '2024-04-05',
+      date: '2017-10-05',
       is_child: true,
       parent_id: 'split-parent',
     });
@@ -795,7 +795,7 @@ describe('Account sync', () => {
       id: 'split-child-2',
       account: id,
       amount: -701,
-      date: '2024-04-05',
+      date: '2017-10-05',
       is_child: true,
       parent_id: 'split-parent',
     });
@@ -806,14 +806,14 @@ describe('Account sync', () => {
         {
           transactionId: 'new-provider-id',
           transactionAmount: { amount: '-2.99' },
-          date: '2024-04-07',
+          date: '2017-10-07',
           payeeName: 'New merchant',
           booked: true,
         },
         {
           transactionId: 'parent-provider-id',
           transactionAmount: { amount: '-10.00' },
-          date: '2024-04-05',
+          date: '2017-10-05',
           payeeName: 'Split merchant',
           booked: true,
         },
@@ -842,14 +842,14 @@ describe('Account sync', () => {
       id: 'split-parent',
       account: id,
       amount: -1000,
-      date: '2024-04-05',
+      date: '2017-10-05',
       is_parent: true,
     });
     await db.insertTransaction({
       id: 'split-child-1',
       account: id,
       amount: -299,
-      date: '2024-04-05',
+      date: '2017-10-05',
       is_child: true,
       parent_id: 'split-parent',
     });
@@ -857,7 +857,7 @@ describe('Account sync', () => {
       id: 'split-child-2',
       account: id,
       amount: -701,
-      date: '2024-04-05',
+      date: '2017-10-05',
       is_child: true,
       parent_id: 'split-parent',
     });
@@ -868,7 +868,7 @@ describe('Account sync', () => {
         {
           transactionId: 'child-provider-id',
           transactionAmount: { amount: '-2.99' },
-          date: '2024-04-07',
+          date: '2017-10-07',
           payeeName: 'Child merchant',
           booked: true,
         },

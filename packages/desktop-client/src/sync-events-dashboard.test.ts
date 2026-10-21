@@ -34,7 +34,11 @@ function setup() {
   );
 
   const invalidateQueries = vi.fn();
-  const queryClient = { invalidateQueries } as unknown as QueryClient;
+  // The fork's reservation refresh also resets queries after a sync
+  const queryClient = {
+    invalidateQueries,
+    resetQueries: vi.fn(),
+  } as unknown as QueryClient;
 
   // A budget must be loaded for the table -> invalidate mapping to run
   const store = {
