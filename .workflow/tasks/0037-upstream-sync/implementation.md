@@ -54,3 +54,10 @@ See the per-wave gate results in `progress.md`. The final gate at `9ec589b24` pa
 
 - VRT screenshots were not regenerated: the Docker daemon was not running. Upstream PNGs from clean picks are upstream renders. For 8fba0e87c, the fork's balance-forecast PNGs were kept. Run `yarn vrt:docker` scoped to `reports.test.ts`, `onboarding`, and the touched mobile and settings tests before relying on VRT.
 - The Electron e2e suite (`yarn e2e:desktop`) was not run.
+
+## Owner decision D2 and the bank alignment (D21)
+
+- `3691b9011`: upstream 9732a4463 (automatic bank sync), taken as upstream ships it.
+- `c40f43656`: Enable Banking's admin 403 uses upstream's wording; pluggy-sdk ^0.92.0.
+- `eb3f7ef3b`: bank behaviour returned to upstream wherever the fork's change was a judgement call, or not clearly a bug. Verified fixes are listed in the commit body.
+- Gate after `eb3f7ef3b`: typecheck pass; core 1673 (3 skipped), web 1485, sync-server 793, cli 424, api 153, electron 7.

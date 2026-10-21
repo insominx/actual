@@ -1,7 +1,7 @@
 # Task Progress: Bring upstream actualbudget/actual changes into the fork
 
 Current status: waves 1–5 implemented and verified on branch `upstream-sync-2026-10`. The branch is not merged to `master` or pushed.
-Current phase: waiting for owner decisions D1–D10 and the VRT follow-up (D20).
+Current phase: waiting for owner decisions D1 and D3–D10 and the VRT follow-up (D20).
 
 ## Dependencies
 
@@ -9,7 +9,7 @@ None. Upstream scope pinned at `80f7518c8` (D12). Upstream had one newer commit,
 
 ## Human input required
 
-- Decisions D1–D10 in `execution-decisions.md`.
+- Decisions D1 and D3–D10 in `execution-decisions.md` (D2 adopted).
 - Whether to merge `upstream-sync-2026-10` into `master`, and whether to push it.
 - VRT regeneration needs the Docker daemon (D20).
 
@@ -22,7 +22,8 @@ None. Upstream scope pinned at `80f7518c8` (D12). Upstream had one newer commit,
 - [x] Wave 3: adapted data-correctness picks (A3).
 - [x] Wave 4: performance picks in order (A4).
 - [x] Wave 5: small UI fixes and extras (A5), except VRT regeneration.
-- [ ] Apply the approved D1–D10 items (A6).
+- [x] D2 auto bank sync applied as upstream; bank code aligned with upstream (D21).
+- [ ] Apply the remaining approved D1, D3–D10 items (A6).
 - [ ] Regenerate the affected VRT screenshots in docker (D20).
 - [ ] Merge to `master` when the owner approves; update the `.workflow/README.md` status.
 
