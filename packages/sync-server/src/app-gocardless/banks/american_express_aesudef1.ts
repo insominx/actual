@@ -9,14 +9,13 @@ export default {
   institutionIds: ['AMERICAN_EXPRESS_AESUDEF1'],
 
   normalizeAccount(account) {
-    // The `iban` field for these American Express cards is actually a masked
-    // version of the PAN.  No IBAN is provided.
-    const mask = (account.iban ?? '').slice(-5);
     return {
       ...Fallback.normalizeAccount(account),
-      mask,
+      // The `iban` field for these American Express cards is actually a masked
+      // version of the PAN.  No IBAN is provided.
+      mask: account.iban.slice(-5),
       iban: null,
-      name: [account.details, mask && `(${mask})`].filter(Boolean).join(' '),
+      name: [account.details, `(${account.iban.slice(-5)})`].join(' '),
       official_name: account.details ?? '',
     };
   },
@@ -36,18 +35,9 @@ export default {
 
     return sortedTransactions.reduce(
       (total, trans) => {
-        return (
-          total -
-          amountToInteger(
-            trans.transactionAmount.amount,
-            trans.transactionAmount.currency,
-          )
-        );
+        return total - amountToInteger(trans.transactionAmount.amount);
       },
-      amountToInteger(
-        currentBalance?.balanceAmount.amount || 0,
-        currentBalance?.balanceAmount.currency,
-      ),
+      amountToInteger(currentBalance?.balanceAmount.amount || 0),
     );
   },
 } satisfies IBank;

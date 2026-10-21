@@ -23,7 +23,6 @@ import {
   normalizeBalance,
   normalizeTransaction,
 } from './services/enablebanking-service';
-import { syncRangeEnd } from './sync-range';
 import { EnableBankingError } from './utils/errors';
 
 const debugSensitive = createDebug('actual-sensitive:enable-banking');
@@ -539,7 +538,7 @@ app.post(
     }
 
     try {
-      const dateTo = syncRangeEnd();
+      const dateTo = new Date().toISOString().split('T')[0];
       const dateFrom =
         typeof startDate === 'string'
           ? startDate

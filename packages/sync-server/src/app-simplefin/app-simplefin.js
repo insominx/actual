@@ -4,14 +4,11 @@ import express from 'express';
 import { handleError } from '#app-gocardless/util/handle-error';
 import { config } from '#load-config';
 import { SecretName, secretsService } from '#services/secrets-service';
-import { amountScale } from '#util/amount-scale';
 import {
   requestLoggerMiddleware,
   validateSessionMiddleware,
 } from '#util/middlewares';
 import { assertUrlAllowed, createSsrfDispatcher } from '#util/ssrf';
-
-import { simplefinUnixSeconds } from './simplefin-date';
 
 const debugSensitive = createDebug('actual-sensitive:simplefin');
 const networkOptions = {
@@ -134,8 +131,6 @@ app.post(
     } catch (e) {
       if (isForbidden(e.message)) {
         invalidToken(res);
-      } else if (e.message === 'Rate limited') {
-        rateLimited(res);
       } else {
         serverDown(e, res);
       }
@@ -198,7 +193,7 @@ function getAccountResponse(results, accountId, startDate) {
     return;
   }
 
-  const needsAttention = (results.sferrors || []).find(e =>
+  const needsAttention = results.sferrors.find(e =>
     e.startsWith(`Connection to ${account.org.name} may need attention`),
   );
   if (needsAttention) {
@@ -211,11 +206,8 @@ function getAccountResponse(results, accountId, startDate) {
   }
 
   // SimpleFIN balances are numeric strings with any number of decimals
-  // (e.g. "100", "12.5"). The scale comes from the account currency so a
-  // yen balance is not stored as cents.
-  const startingBalance = Math.round(
-    parseFloat(account.balance) * amountScale(account.currency),
-  );
+  // (e.g. "100", "12.5"), so stripping the dot does not give cents
+  const startingBalance = Math.round(parseFloat(account.balance) * 100);
   const date = getDate(new Date(account['balance-date'] * 1000));
 
   const balances = [
@@ -270,10 +262,7 @@ function getAccountResponse(results, accountId, startDate) {
     newTrans.date = getDate(transactionDate);
     newTrans.payeeName = trans.payee;
     newTrans.notes = trans.description;
-    newTrans.transactionAmount = {
-      amount: trans.amount,
-      currency: account.currency || 'USD',
-    };
+    newTrans.transactionAmount = { amount: trans.amount, currency: 'USD' };
     newTrans.transactionId = trans.id;
     newTrans.valueDate = newTrans.bookingDate;
 
@@ -319,18 +308,6 @@ function invalidToken(res) {
       status: 'rejected',
       reason:
         'Invalid SimpleFIN access token.  Reset the token and re-link any broken accounts.',
-    },
-  });
-}
-
-function rateLimited(res) {
-  res.send({
-    status: 'ok',
-    data: {
-      error_type: 'RATE_LIMIT_EXCEEDED',
-      error_code: 'RATE_LIMIT_EXCEEDED',
-      status: 'rejected',
-      reason: 'SimpleFIN rate limit exceeded. Try again later.',
     },
   });
 }
@@ -422,17 +399,17 @@ function isInvalidAccessKey(accessKey) {
 async function getTransactions(accessKey, accounts, startDate, endDate) {
   const now = new Date();
   startDate = startDate || new Date(now.getFullYear(), now.getMonth(), 1);
-  // UTC midnight of the next UTC month: SimpleFIN timestamps are UTC, and a
-  // local month boundary on a server behind UTC can already be in the past
-  endDate =
-    endDate ||
-    new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  endDate = endDate || new Date(now.getFullYear(), now.getMonth() + 1, 1);
   console.log(`${getDate(startDate)} - ${getDate(endDate)}`);
   return await getAccounts(accessKey, accounts, startDate, endDate);
 }
 
 function getDate(date) {
   return date.toISOString().split('T')[0];
+}
+
+function normalizeDate(date) {
+  return (date.valueOf() - date.getTimezoneOffset() * 60 * 1000) / 1000;
 }
 
 async function getAccounts(
@@ -453,10 +430,10 @@ async function getAccounts(
   const params = new URLSearchParams();
   if (!noTransactions) {
     if (startDate) {
-      params.append('start-date', simplefinUnixSeconds(startDate));
+      params.append('start-date', normalizeDate(startDate));
     }
     if (endDate) {
-      params.append('end-date', simplefinUnixSeconds(endDate));
+      params.append('end-date', normalizeDate(endDate));
     }
     params.append('pending', '1');
   } else {
@@ -507,10 +484,6 @@ async function getAccounts(
 
   if (response.status === 403) {
     throw new Error('Forbidden');
-  }
-
-  if (response.status === 429) {
-    throw new Error('Rate limited');
   }
 
   const text = await response.text();

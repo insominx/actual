@@ -29,7 +29,6 @@ import {
   amountToInteger,
   hasFieldsChanged,
   integerToAmount,
-  isEngineAmount,
 } from '#shared/util';
 import type {
   AccountEntity,
@@ -465,22 +464,12 @@ export async function normalizeTransactions(
         `Amount is invalid, must be an integer: ${trans.amount}`,
       );
     }
-    if (trans.amount != null && !isEngineAmount(trans.amount)) {
-      throw new TransactionError(
-        `Amount is outside the supported range: ${trans.amount}`,
-      );
-    }
 
     if (subtransactions) {
       for (const sub of subtransactions) {
         if (sub.amount != null && !Number.isInteger(sub.amount)) {
           throw new TransactionError(
             `Subtransaction amount is invalid, must be an integer: ${sub.amount}`,
-          );
-        }
-        if (sub.amount != null && !isEngineAmount(sub.amount)) {
-          throw new TransactionError(
-            `Subtransaction amount is outside the supported range: ${sub.amount}`,
           );
         }
       }
@@ -521,25 +510,6 @@ export async function normalizeTransactions(
   return { normalized, payeesToCreate };
 }
 
-async function budgetAmountDecimalPlaces(): Promise<number> {
-  const row = await db.first<{ value: string }>(
-    "SELECT value FROM preferences WHERE id = 'defaultCurrencyCode'",
-  );
-  return getDecimalPlaces(row?.value || '');
-}
-
-function storedBankAmount(
-  amount: string | number,
-  currency: string | null | undefined,
-  fallbackDecimalPlaces: number,
-): number {
-  const code = typeof currency === 'string' ? currency.trim() : '';
-  return amountToInteger(
-    Number(amount),
-    code ? getDecimalPlaces(code) : fallbackDecimalPlaces,
-  );
-}
-
 // Custom mappings may name nested fields like `merchant.name`. Providers
 // that flatten objects (Pluggy) store those as literal dotted keys.
 function getSyncField(trans, path: string | undefined) {
@@ -560,7 +530,6 @@ function getSyncField(trans, path: string | undefined) {
 
 async function normalizeBankSyncTransactions(transactions, acctId) {
   const payeesToCreate = new Map();
-  const fallbackDecimalPlaces = await budgetAmountDecimalPlaces();
 
   const [customMappingsRaw, importPending, importNotes] = await Promise.all([
     aqlQuery(
@@ -580,14 +549,9 @@ async function normalizeBankSyncTransactions(transactions, acctId) {
     ).then(data => String(data?.data?.[0]?.value ?? 'true') === 'true'),
   ]);
 
-  let mappings = defaultMappings;
-  if (customMappingsRaw) {
-    try {
-      mappings = mappingsFromString(customMappingsRaw);
-    } catch {
-      mappings = defaultMappings;
-    }
-  }
+  const mappings = customMappingsRaw
+    ? mappingsFromString(customMappingsRaw)
+    : defaultMappings;
 
   const categoryIds = new Set((await db.getCategories()).map(c => c.id));
   const normalized = [];
@@ -596,12 +560,11 @@ async function normalizeBankSyncTransactions(transactions, acctId) {
 
     if (!importPending && !trans.cleared) continue;
 
-    if (!trans.amount && trans.transactionAmount) {
+    if (!trans.amount) {
       trans.amount = trans.transactionAmount.amount;
     }
 
-    const direction = trans.amount <= 0 ? 'payment' : 'deposit';
-    const mapping = mappings.get(direction) ?? defaultMappings.get(direction);
+    const mapping = mappings.get(trans.amount <= 0 ? 'payment' : 'deposit');
 
     const date = getSyncField(trans, mapping.get('date')) ?? trans.date;
     const payeeName =
@@ -618,28 +581,14 @@ async function normalizeBankSyncTransactions(transactions, acctId) {
       throw new Error('`payeeName` is required when adding a transaction');
     }
 
-    if (
-      typeof date === 'string' &&
-      date > monthUtils.addDays(monthUtils.currentDay(), 366)
-    ) {
-      // Bank feeds do not post more than days ahead; a date years in the
-      // future is a provider fault that would distort every future report.
-      throw new TransactionError(
-        `Date from the bank is more than a year in the future: ${date}`,
-      );
-    }
-
     trans.imported_payee = trans.imported_payee || payeeName;
     if (trans.imported_payee) {
       trans.imported_payee = trans.imported_payee.trim();
     }
 
-    // A provider may send an empty id; store it as null so strict id
-    // checking (`imported_id IS NULL`) can still fuzzy-match the row later
-    let imported_id = trans.transactionId || null;
+    let imported_id = trans.transactionId;
     if (trans.cleared && !trans.transactionId && trans.internalTransactionId) {
-      // trans.account is not set yet on a first sync; use the target account
-      imported_id = `${acctId}-${trans.internalTransactionId}`;
+      imported_id = `${trans.account}-${trans.internalTransactionId}`;
     }
 
     // It's important to resolve both the account and payee early so
@@ -648,32 +597,10 @@ async function normalizeBankSyncTransactions(transactions, acctId) {
     trans.account = acctId;
     trans.payee = await resolvePayee(trans, payeeName, payeesToCreate);
 
-    if (
-      (typeof trans.amount === 'string' && trans.amount.trim() === '') ||
-      !Number.isFinite(Number(trans.amount))
-    ) {
-      // An empty amount would be stored as 0 and hide a malformed record.
-      throw new TransactionError(
-        `Amount from the bank is missing or not a number: ${String(trans.amount)}`,
-      );
-    }
-    const amount = storedBankAmount(
-      trans.amount,
-      trans.transactionAmount?.currency,
-      fallbackDecimalPlaces,
-    );
-    if (!isEngineAmount(amount)) {
-      // A single out-of-range amount would otherwise be stored and break every
-      // balance and budget sum that includes it.
-      throw new TransactionError(
-        `Amount from the bank is outside the supported range: ${String(trans.amount)}`,
-      );
-    }
-
     normalized.push({
       payee_name: payeeName,
       trans: {
-        amount,
+        amount: amountToInteger(trans.amount),
         payee: trans.payee,
         account: trans.account,
         date,
@@ -1258,75 +1185,42 @@ async function processBankSyncDownload(
   if (initialSync) {
     const { transactions } = download;
     let balanceToUse = currentBalance;
-    const fallbackDecimalPlaces = await budgetAmountDecimalPlaces();
-
-    // Pending transactions are skipped on import when the account is set not
-    // to import them, so they must not be walked back out of the balance
-    const getImportableTransactions = async () => {
-      const importPending = await aqlQuery(
-        q('preferences')
-          .filter({ id: `sync-import-pending-${id}` })
-          .select('value'),
-      ).then(data => String(data?.data?.[0]?.value ?? 'true') === 'true');
-      return importPending
-        ? transactions
-        : transactions.filter(trans => Boolean(trans.booked));
-    };
 
     // Use custom starting balance if provided, otherwise calculate it
     if (customStartingBalance !== undefined) {
       balanceToUse = customStartingBalance;
     } else if (acctRow.account_sync_source === 'simpleFin') {
-      const importable = await getImportableTransactions();
-      const previousBalance = importable.reduce((total, trans) => {
+      const previousBalance = transactions.reduce((total, trans) => {
         return (
-          total -
-          storedBankAmount(
-            trans.transactionAmount.amount,
-            trans.transactionAmount.currency,
-            fallbackDecimalPlaces,
-          )
+          total - Math.round(parseFloat(trans.transactionAmount.amount) * 100)
         );
       }, currentBalance);
       balanceToUse = previousBalance;
     } else if (acctRow.account_sync_source === 'pluggyai') {
       const currentBalance = download.startingBalance;
-      const importable = await getImportableTransactions();
-      const previousBalance = importable.reduce(
-        (total, trans) =>
-          total -
-          storedBankAmount(
-            trans.transactionAmount.amount,
-            trans.transactionAmount.currency,
-            fallbackDecimalPlaces,
-          ),
+      const previousBalance = transactions.reduce(
+        (total, trans) => total - trans.transactionAmount.amount * 100,
         currentBalance,
       );
       balanceToUse = Math.round(previousBalance);
     } else if (acctRow.account_sync_source === 'enableBanking') {
-      const importable = await getImportableTransactions();
+      const importPending = await aqlQuery(
+        q('preferences')
+          .filter({ id: `sync-import-pending-${id}` })
+          .select('value'),
+      ).then(data => String(data?.data?.[0]?.value ?? 'true') === 'true');
+      const importable = importPending
+        ? transactions
+        : transactions.filter(trans => Boolean(trans.booked));
       const previousBalance = importable.reduce((total, trans) => {
-        return (
-          total -
-          storedBankAmount(
-            trans.transactionAmount.amount,
-            trans.transactionAmount.currency,
-            fallbackDecimalPlaces,
-          )
-        );
+        return total - amountToInteger(trans.transactionAmount.amount);
       }, currentBalance);
       balanceToUse = previousBalance;
     } else if (acctRow.account_sync_source === 'akahu') {
       const currentBalance = download.startingBalance;
-      const importable = await getImportableTransactions();
-      const previousBalance = importable.reduce(
+      const previousBalance = transactions.reduce(
         (total, trans) =>
-          total -
-          storedBankAmount(
-            trans.transactionAmount.amount,
-            trans.transactionAmount.currency,
-            fallbackDecimalPlaces,
-          ),
+          total - amountToInteger(trans.transactionAmount.amount),
         currentBalance,
       );
       balanceToUse = Math.round(previousBalance);
@@ -1335,7 +1229,7 @@ async function processBankSyncDownload(
     // Providers don't all return newest first, so take the earliest date
     // instead of trusting the last row
     let oldestDate: string | null = null;
-    for (const trans of await getImportableTransactions()) {
+    for (const trans of transactions) {
       if (trans.date && (oldestDate == null || trans.date < oldestDate)) {
         oldestDate = trans.date;
       }

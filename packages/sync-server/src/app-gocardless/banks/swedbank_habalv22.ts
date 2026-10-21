@@ -34,13 +34,11 @@ export default {
       );
 
       if (dateMatch) {
-        const extractedDate = d.parse(dateMatch[1], 'dd.MM.yyyy', new Date());
+        const extractedDate = d
+          .parse(dateMatch[1], 'dd.MM.yyyy', new Date())
+          .toISOString();
 
-        // Format the calendar day itself: toISOString() converts local
-        // midnight to UTC, which is the previous day for servers ahead of UTC
-        if (d.isValid(extractedDate)) {
-          editedTrans.date = d.format(extractedDate, 'yyyy-MM-dd');
-        }
+        editedTrans.date = extractedDate;
       }
     }
 

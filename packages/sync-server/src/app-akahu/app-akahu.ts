@@ -12,14 +12,11 @@ import express from 'express';
 
 import { handleError } from '#app-gocardless/util/handle-error';
 import { SecretName, secretsService } from '#services/secrets-service';
-import { amountScale } from '#util/amount-scale';
 import {
   requestLoggerMiddleware,
   validateSessionMiddleware,
 } from '#util/middlewares';
 import { createMutex } from '#util/mutex';
-
-import { nzDayStart } from './nz-time';
 
 type AkahuTransaction = {
   booked: boolean;
@@ -171,7 +168,7 @@ app.post(
       do {
         const { items, cursor: nextCursor } =
           await akahu.accounts.listTransactions(userToken, accountId, {
-            start: nzDayStart(startDate).toISOString(),
+            start: new Date(startDate).toISOString(),
             end: endDate,
             cursor,
           });
@@ -190,10 +187,7 @@ app.post(
           ? new Date(account.refreshed.balance)
           : new Date(),
       );
-      const currentBalance = convertToCents(
-        account.balance.current,
-        account.balance.currency,
-      );
+      const currentBalance = convertToCents(account.balance.current);
 
       const balances = [
         {
@@ -209,10 +203,7 @@ app.post(
       if (account.balance.available) {
         balances.push({
           balanceAmount: {
-            amount: convertToCents(
-              account.balance.available,
-              account.balance.currency,
-            ),
+            amount: convertToCents(account.balance.available),
             currency: account.balance.currency,
           },
           balanceType: 'interimAvailable',
@@ -220,7 +211,7 @@ app.post(
         });
       }
 
-      const startDateObj = nzDayStart(startDate);
+      const startDateObj = new Date(startDate);
       const all = [];
       const booked = [];
       const pending = [];
@@ -326,8 +317,8 @@ const dateTimeFormatNZ = new Intl.DateTimeFormat('en-US', {
   day: '2-digit',
 });
 
-function convertToCents(amount: number, currency?: string): number {
-  return Math.round(amount * amountScale(currency));
+function convertToCents(amount: number): number {
+  return Math.round(amount * 100);
 }
 
 type AnyTransaction =

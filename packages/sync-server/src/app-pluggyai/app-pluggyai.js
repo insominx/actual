@@ -3,7 +3,6 @@ import express from 'express';
 import { handleError } from '#app-gocardless/util/handle-error';
 import { SecretName, secretsService } from '#services/secrets-service';
 import * as UserService from '#services/user-service';
-import { amountScale } from '#util/amount-scale';
 import {
   requestLoggerMiddleware,
   validateSessionMiddleware,
@@ -166,9 +165,7 @@ app.post(
       const account = await pluggyaiService.getAccountById(accountId, fileId);
 
       let startingBalance = parseInt(
-        Math.round(
-          account.balance * amountScale(account.currencyCode),
-        ).toString(),
+        Math.round(account.balance * 100).toString(),
       );
       if (account.type === 'CREDIT') {
         startingBalance = -startingBalance;
@@ -218,20 +215,12 @@ app.post(
           trans.amount *= -1;
         }
 
-        // `currencyCode` is the transaction's own currency; a foreign
-        // purchase converted to the account currency must be tagged with the
-        // account currency, or the client scales it by the wrong decimals
-        const inAccountCurrency = trans.amountInAccountCurrency != null;
-        let amountInCurrency = inAccountCurrency
-          ? trans.amountInAccountCurrency
-          : trans.amount;
+        let amountInCurrency = trans.amountInAccountCurrency ?? trans.amount;
         amountInCurrency = Math.round(amountInCurrency * 100) / 100;
 
         newTrans.transactionAmount = {
           amount: amountInCurrency,
-          currency: inAccountCurrency
-            ? (account.currencyCode ?? trans.currencyCode)
-            : trans.currencyCode,
+          currency: trans.currencyCode,
         };
 
         newTrans.transactionId = trans.id;

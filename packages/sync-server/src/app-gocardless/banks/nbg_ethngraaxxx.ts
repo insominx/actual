@@ -21,10 +21,7 @@ export default {
       (transaction.remittanceInformationUnstructured ?? '').startsWith('ΑΓΟΡΑ ')
     ) {
       transaction.transactionAmount = {
-        // Don't double the sign if the bank starts sending it
-        amount: transaction.transactionAmount.amount.startsWith('-')
-          ? transaction.transactionAmount.amount
-          : '-' + transaction.transactionAmount.amount,
+        amount: '-' + transaction.transactionAmount.amount,
         currency: transaction.transactionAmount.currency,
       };
       editedTrans.remittanceInformationUnstructured = (
@@ -50,18 +47,9 @@ export default {
 
     return sortedTransactions.reduce(
       (total, trans) => {
-        return (
-          total -
-          amountToInteger(
-            trans.transactionAmount.amount,
-            trans.transactionAmount.currency,
-          )
-        );
+        return total - amountToInteger(trans.transactionAmount.amount);
       },
-      amountToInteger(
-        currentBalance?.balanceAmount.amount || 0,
-        currentBalance?.balanceAmount.currency,
-      ),
+      amountToInteger(currentBalance?.balanceAmount.amount || 0),
     );
   },
 } satisfies IBank;

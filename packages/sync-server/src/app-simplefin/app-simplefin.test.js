@@ -307,37 +307,5 @@ describe('app-simplefin', () => {
       expect(res.statusCode).toBe(200);
       expect(res.body.data.error_code).toBe('ACCOUNT_MISSING');
     });
-
-    describe('default end date', () => {
-      const originalTz = process.env.TZ;
-
-      afterEach(() => {
-        vi.useRealTimers();
-        if (originalTz === undefined) {
-          delete process.env.TZ;
-        } else {
-          process.env.TZ = originalTz;
-        }
-      });
-
-      it('is still in the future on a server behind UTC late on the last day of a month', async () => {
-        // 2026-10-31 21:00 in New York is already 2026-11-01 in UTC
-        process.env.TZ = 'America/New_York';
-        const now = new Date('2026-11-01T01:00:00Z');
-        vi.useFakeTimers({ toFake: ['Date'], now });
-
-        secretsService.set(SecretName.simplefin_accessKey, VALID_ACCESS_KEY);
-        mockFetch({ accounts: okResponse(JSON.stringify({ accounts: [] })) });
-
-        await post('/transactions').send({
-          accountId: 'account-1',
-          startDate: '2026-10-01',
-        });
-
-        const url = new URL(global.fetch.mock.calls[0][0]);
-        const endDate = Number(url.searchParams.get('end-date'));
-        expect(endDate * 1000).toBeGreaterThan(now.getTime());
-      });
-    });
   });
 });

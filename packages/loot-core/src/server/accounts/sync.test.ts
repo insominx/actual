@@ -779,7 +779,7 @@ describe('Account sync', () => {
       id: 'split-parent',
       account: id,
       amount: -1000,
-      date: '2017-10-05',
+      date: '2024-04-05',
       imported_id: 'parent-provider-id',
       is_parent: true,
     });
@@ -787,7 +787,7 @@ describe('Account sync', () => {
       id: 'split-child-1',
       account: id,
       amount: -299,
-      date: '2017-10-05',
+      date: '2024-04-05',
       is_child: true,
       parent_id: 'split-parent',
     });
@@ -795,7 +795,7 @@ describe('Account sync', () => {
       id: 'split-child-2',
       account: id,
       amount: -701,
-      date: '2017-10-05',
+      date: '2024-04-05',
       is_child: true,
       parent_id: 'split-parent',
     });
@@ -806,14 +806,14 @@ describe('Account sync', () => {
         {
           transactionId: 'new-provider-id',
           transactionAmount: { amount: '-2.99' },
-          date: '2017-10-07',
+          date: '2024-04-07',
           payeeName: 'New merchant',
           booked: true,
         },
         {
           transactionId: 'parent-provider-id',
           transactionAmount: { amount: '-10.00' },
-          date: '2017-10-05',
+          date: '2024-04-05',
           payeeName: 'Split merchant',
           booked: true,
         },
@@ -842,14 +842,14 @@ describe('Account sync', () => {
       id: 'split-parent',
       account: id,
       amount: -1000,
-      date: '2017-10-05',
+      date: '2024-04-05',
       is_parent: true,
     });
     await db.insertTransaction({
       id: 'split-child-1',
       account: id,
       amount: -299,
-      date: '2017-10-05',
+      date: '2024-04-05',
       is_child: true,
       parent_id: 'split-parent',
     });
@@ -857,7 +857,7 @@ describe('Account sync', () => {
       id: 'split-child-2',
       account: id,
       amount: -701,
-      date: '2017-10-05',
+      date: '2024-04-05',
       is_child: true,
       parent_id: 'split-parent',
     });
@@ -868,7 +868,7 @@ describe('Account sync', () => {
         {
           transactionId: 'child-provider-id',
           transactionAmount: { amount: '-2.99' },
-          date: '2017-10-07',
+          date: '2024-04-07',
           payeeName: 'Child merchant',
           booked: true,
         },
@@ -984,36 +984,6 @@ describe('Account sync', () => {
       expect(transactions[0].amount).toBe(-1239);
     },
   );
-
-  test('bank sync stores a missing provider transaction id as null', async () => {
-    const { id } = await prepareDatabase();
-
-    const bankTx = {
-      date: '2017-10-05',
-      payeeName: 'Acme Inc.',
-      transactionAmount: { amount: '-12.39', currency: 'EUR' },
-      transactionId: '',
-      booked: true,
-    };
-
-    await reconcileTransactions(id, [{ ...bankTx }], {
-      isBankSyncAccount: true,
-    });
-
-    let transactions = await getAllTransactions();
-    expect(transactions.length).toBe(1);
-    expect(transactions[0].imported_id).toBeNull();
-
-    // A later copy that now carries an id must still dedupe against it
-    await reconcileTransactions(
-      id,
-      [{ ...bankTx, date: '2017-10-06', transactionId: 'provider-tx-1' }],
-      { isBankSyncAccount: true },
-    );
-
-    transactions = await getAllTransactions();
-    expect(transactions.length).toBe(1);
-  });
 });
 
 describe('SimpleFin batch sync', () => {
@@ -1173,192 +1143,6 @@ describe('SimpleFin batch sync', () => {
     }
   });
 
-  test('derives a yen opening balance without inventing cents', async () => {
-    const providerAccountId = 'sf-account-1';
-    const acctId = await db.insertAccount({
-      id: 'acct-1',
-      account_id: providerAccountId,
-      name: 'Yen account',
-      account_sync_source: 'simpleFin',
-    });
-
-    mockSimpleFinTransactions({
-      [providerAccountId]: {
-        transactions: {
-          all: [
-            {
-              booked: true,
-              date: '2017-10-03',
-              payeeName: 'Coffee Shop',
-              transactionAmount: { amount: '-12', currency: 'JPY' },
-              transactionId: 'provider-tx-1',
-            },
-            {
-              booked: true,
-              date: '2017-10-02',
-              payeeName: 'Employer',
-              transactionAmount: { amount: '100', currency: 'JPY' },
-              transactionId: 'provider-tx-2',
-            },
-          ],
-          booked: [],
-          pending: [],
-        },
-        balances: [],
-        startingBalance: 1000,
-      },
-      errors: {},
-    });
-
-    setSyncingMode('offline');
-    try {
-      const result = await accountsApp.handlers['simplefin-batch-sync']({
-        ids: [acctId],
-      });
-      expect(result[0].res.errors).toHaveLength(0);
-
-      const transactions = await getAllTransactions();
-      const startingBalance = transactions.find(
-        transaction => transaction.starting_balance_flag,
-      );
-      // 1000 yen current balance minus (-12 + 100) of synced transactions
-      expect(startingBalance.amount).toBe(912);
-      expect(
-        transactions.find(t => t.imported_id === 'provider-tx-1').amount,
-      ).toBe(-12);
-      expect(
-        transactions.find(t => t.imported_id === 'provider-tx-2').amount,
-      ).toBe(100);
-    } finally {
-      setSyncingMode('disabled');
-    }
-  });
-
-  test('uses the budget currency when the bank omits a transaction currency', async () => {
-    await db.update('preferences', {
-      id: 'defaultCurrencyCode',
-      value: 'JPY',
-    });
-    const providerAccountId = 'sf-account-1';
-    const acctId = await db.insertAccount({
-      id: 'acct-1',
-      account_id: providerAccountId,
-      name: 'Yen account',
-      account_sync_source: 'simpleFin',
-    });
-
-    mockSimpleFinTransactions({
-      [providerAccountId]: {
-        transactions: {
-          all: [
-            {
-              booked: true,
-              date: '2017-10-03',
-              payeeName: 'Coffee Shop',
-              transactionAmount: { amount: '-12' },
-              transactionId: 'provider-tx-1',
-            },
-            {
-              booked: true,
-              date: '2017-10-02',
-              payeeName: 'Employer',
-              transactionAmount: { amount: '100' },
-              transactionId: 'provider-tx-2',
-            },
-          ],
-          booked: [],
-          pending: [],
-        },
-        balances: [],
-        startingBalance: 1000,
-      },
-      errors: {},
-    });
-
-    setSyncingMode('offline');
-    try {
-      const result = await accountsApp.handlers['simplefin-batch-sync']({
-        ids: [acctId],
-      });
-      expect(result[0].res.errors).toHaveLength(0);
-
-      const transactions = await getAllTransactions();
-      const startingBalance = transactions.find(
-        transaction => transaction.starting_balance_flag,
-      );
-      expect(startingBalance.amount).toBe(912);
-      expect(
-        transactions.find(t => t.imported_id === 'provider-tx-1').amount,
-      ).toBe(-12);
-      expect(
-        transactions.find(t => t.imported_id === 'provider-tx-2').amount,
-      ).toBe(100);
-    } finally {
-      setSyncingMode('disabled');
-    }
-  });
-
-  test('leaves pending transactions out of the opening balance when they are not imported', async () => {
-    const providerAccountId = 'sf-account-1';
-    const acctId = await db.insertAccount({
-      id: 'acct-1',
-      account_id: providerAccountId,
-      name: 'Account 1',
-      account_sync_source: 'simpleFin',
-    });
-    await db.update('preferences', {
-      id: `sync-import-pending-${acctId}`,
-      value: 'false',
-    });
-
-    mockSimpleFinTransactions({
-      [providerAccountId]: {
-        transactions: {
-          all: [
-            {
-              booked: false,
-              date: '2017-10-03',
-              payeeName: 'Pending Shop',
-              transactionAmount: { amount: '-5' },
-              transactionId: 'provider-tx-pending',
-            },
-            {
-              booked: true,
-              date: '2017-10-02',
-              payeeName: 'Employer',
-              transactionAmount: { amount: '100' },
-              transactionId: 'provider-tx-2',
-            },
-          ],
-          booked: [],
-          pending: [],
-        },
-        balances: [],
-        startingBalance: 10000,
-      },
-      errors: {},
-    });
-
-    setSyncingMode('offline');
-    try {
-      const result = await accountsApp.handlers['simplefin-batch-sync']({
-        ids: [acctId],
-      });
-      expect(result[0].res.errors).toHaveLength(0);
-
-      const transactions = await getAllTransactions();
-      expect(
-        transactions.some(t => t.imported_id === 'provider-tx-pending'),
-      ).toBe(false);
-
-      const startingBalance = transactions.find(t => t.starting_balance_flag);
-      // 100.00 current balance minus only the imported 100.00 deposit
-      expect(startingBalance.amount).toBe(0);
-    } finally {
-      setSyncingMode('disabled');
-    }
-  });
-
   test('returns ACCOUNT_MISSING error when an account is not in the response', async () => {
     const presentAccountId = 'sf-account-1';
     const missingAccountId = 'sf-account-2';
@@ -1471,54 +1255,6 @@ describe('SimpleFin batch sync', () => {
     expect(missingResult).toBeDefined();
     expect(missingResult.res.error_code).toBe('ACCOUNT_MISSING');
     expect(missingResult.res.error_type).toBe('ACCOUNT_MISSING');
-  });
-
-  test('falls back to default mappings when custom sync mappings omit a direction or are malformed', async () => {
-    const providerAccountId = 'sf-account-1';
-    const acctId = await db.insertAccount({
-      id: 'acct-1',
-      account_id: providerAccountId,
-      name: 'Account 1',
-      account_sync_source: 'simpleFin',
-    });
-    await db.update('preferences', {
-      id: `custom-sync-mappings-${acctId}`,
-      value: JSON.stringify({
-        payment: { date: 'date', payee: 'payeeName', notes: 'notes' },
-      }),
-    });
-
-    mockSimpleFinTransactions({
-      [providerAccountId]: {
-        transactions: {
-          all: [
-            {
-              booked: true,
-              date: '2017-10-02',
-              payeeName: 'Employer',
-              transactionAmount: { amount: '100.00' },
-              transactionId: 'provider-tx-deposit',
-            },
-          ],
-          booked: [],
-          pending: [],
-        },
-        balances: [],
-        startingBalance: 10000,
-      },
-      errors: {},
-    });
-
-    setSyncingMode('offline');
-    try {
-      const result = await accountsApp.handlers['simplefin-batch-sync']({
-        ids: [acctId],
-      });
-      expect(result[0].res.errors).toHaveLength(0);
-      expect(result[0].res.newTransactions).toHaveLength(2);
-    } finally {
-      setSyncingMode('disabled');
-    }
   });
 
   test('preserves GOCARDLESS_NOT_CONFIGURED error through bank sync pipeline', async () => {

@@ -60,7 +60,6 @@ export function FieldMapping({
   const equalsIconWidth = 12;
 
   const calculatedSelectWidth = Math.max(
-    100,
     ...fields.flatMap(field =>
       field.syncFields.map(({ field }) => field.length * 8 + 30),
     ),

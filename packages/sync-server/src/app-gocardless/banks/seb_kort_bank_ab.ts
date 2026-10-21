@@ -70,22 +70,10 @@ export default {
 
     return sortedTransactions.reduce(
       (total, trans) => {
-        return (
-          total -
-          amountToInteger(
-            trans.transactionAmount.amount,
-            trans.transactionAmount.currency,
-          )
-        );
+        return total - amountToInteger(trans.transactionAmount.amount);
       },
-      -amountToInteger(
-        currentBalance?.balanceAmount.amount || 0,
-        currentBalance?.balanceAmount.currency,
-      ) +
-        amountToInteger(
-          nonInvoiced?.balanceAmount.amount || 0,
-          nonInvoiced?.balanceAmount.currency,
-        ),
+      -amountToInteger(currentBalance?.balanceAmount.amount || 0) +
+        amountToInteger(nonInvoiced?.balanceAmount.amount || 0),
     );
   },
 } satisfies IBank;

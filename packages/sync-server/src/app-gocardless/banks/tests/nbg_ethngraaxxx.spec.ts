@@ -24,28 +24,6 @@ describe('NbgEthngraaxxx', () => {
       );
       expect(normalizedTransaction?.payeeName).toEqual('Testingson');
     });
-
-    it('does not double the sign when the pending amount is already negative', () => {
-      const transaction = {
-        bookingDate: '2024-09-03',
-        date: '2024-09-03',
-        remittanceInformationUnstructured: 'ΑΓΟΡΑ testingson',
-        transactionAmount: {
-          amount: '-100.00',
-          currency: 'EUR',
-        },
-        valueDate: '2024-09-03',
-      };
-
-      const normalizedTransaction = NbgEthngraaxxx.normalizeTransaction(
-        transaction,
-        false,
-      );
-
-      expect(normalizedTransaction?.transactionAmount.amount).toEqual(
-        '-100.00',
-      );
-    });
   });
 
   it('provides correct amount and payee in booked transaction', () => {

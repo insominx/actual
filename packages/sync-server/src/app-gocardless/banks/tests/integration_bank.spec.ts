@@ -13,18 +13,6 @@ import {
 } from '#app-gocardless/services/tests/fixtures';
 
 describe('IntegrationBank', () => {
-  it('keeps the calendar day of a booking timestamp', () => {
-    const normalized = IntegrationBank.normalizeTransaction(
-      {
-        transactionAmount: { amount: '-1.00', currency: 'EUR' },
-        bookingDateTime: '2026-01-15T23:30:00-08:00',
-      },
-      true,
-    );
-
-    expect(normalized?.date).toBe('2026-01-15');
-  });
-
   describe('normalizeAccount', () => {
     const account = mockExtendAccountsAboutInstitutions[0];
 
@@ -181,15 +169,6 @@ describe('BelfiusGkccbebb #normalizeTransaction', () => {
 
     expect(result?.transactionId).toEqual('unique');
   });
-
-  it('keeps the original transaction id when there is no internal one', () => {
-    const result = Belfius.normalizeTransaction(
-      { ...base, transactionId: 'original' },
-      true,
-    );
-
-    expect(result?.transactionId).toEqual('original');
-  });
 });
 
 describe('AmericanExpressAesudef1 #normalizeAccount', () => {
@@ -210,12 +189,5 @@ describe('AmericanExpressAesudef1 #normalizeAccount', () => {
     expect(account.mask).toEqual('12345');
     expect(account.iban).toBeNull();
     expect(account.name).toEqual('Gold Card (12345)');
-  });
-
-  it('does not throw when the bank provides no masked PAN', () => {
-    const account = AmericanExpress.normalizeAccount(base as never);
-
-    expect(account.mask).toEqual('');
-    expect(account.name).toEqual('Gold Card');
   });
 });

@@ -43,4 +43,5 @@ export const sortByBookingDateOrValueDate = <T extends Transaction>(
     return 0;
   });
 
-export { amountToInteger } from '#util/amount-scale';
+export const amountToInteger = (n: string | number): number =>
+  Math.round(Number(n) * 100);

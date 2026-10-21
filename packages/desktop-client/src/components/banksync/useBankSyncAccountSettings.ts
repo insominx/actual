@@ -47,13 +47,9 @@ export function useBankSyncAccountSettings(accountId: string) {
   const [reimportDeleted, setReimportDeleted] = useState(
     String(savedReimportDeleted) === 'true',
   );
-  const [mappings, setMappings] = useState<Mappings>(() => {
-    try {
-      return mappingsFromString(savedMappings);
-    } catch {
-      return defaultMappings;
-    }
-  });
+  const [mappings, setMappings] = useState<Mappings>(
+    mappingsFromString(savedMappings),
+  );
   const [importTransactions, setImportTransactions] = useState(
     String(savedImportTransactions) === 'true',
   );
@@ -101,12 +97,12 @@ export function useBankSyncAccountSettings(accountId: string) {
   const setMapping = (field: string, value: string) => {
     setMappings(prev => {
       const updated = new Map(prev);
-      const directionMap =
-        updated.get(transactionDirection) ??
-        defaultMappings.get(transactionDirection);
-      const newDirectionMap = new Map(directionMap);
-      newDirectionMap.set(field, value);
-      updated.set(transactionDirection, newDirectionMap);
+      const directionMap = updated.get(transactionDirection);
+      if (directionMap) {
+        const newDirectionMap = new Map(directionMap);
+        newDirectionMap.set(field, value);
+        updated.set(transactionDirection, newDirectionMap);
+      }
       return updated;
     });
   };
