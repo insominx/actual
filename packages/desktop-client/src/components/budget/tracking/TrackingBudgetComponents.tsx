@@ -23,6 +23,7 @@ import type {
   CategoryMonthProps,
 } from '#components/budget';
 import { BalanceWithCarryover } from '#components/budget/BalanceWithCarryover';
+import { GoalStatus } from '#components/budget/GoalStatus';
 import { makeAmountGrey } from '#components/budget/util';
 import { NotesButton } from '#components/NotesButton';
 import { CellValue, CellValueText } from '#components/spreadsheet/CellValue';
@@ -496,6 +497,18 @@ export const CategoryMonth = memo(function CategoryMonth({
           >
             <BalanceMenu
               categoryId={category.id}
+              header={
+                <GoalStatus
+                  balance={trackingBudget.catBalance(category.id)}
+                  goal={trackingBudget.catGoal(category.id)}
+                  budgeted={trackingBudget.catBudgeted(category.id)}
+                  longGoal={trackingBudget.catLongGoal(category.id)}
+                  style={{
+                    padding: 10,
+                    borderBottom: '1px solid ' + theme.menuBorder,
+                  }}
+                />
+              }
               onCarryover={carryover => {
                 onMenuAction(month, 'carryover', {
                   category: category.id,

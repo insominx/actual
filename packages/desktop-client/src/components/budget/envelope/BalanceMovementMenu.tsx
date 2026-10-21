@@ -1,5 +1,8 @@
 import React, { useCallback, useRef, useState } from 'react';
 
+import { theme } from '@actual-app/components/theme';
+
+import { GoalStatus } from '#components/budget/GoalStatus';
 import { ReservationBreakdown } from '#components/budget/ReservationBreakdown';
 import { useFormat } from '#hooks/useFormat';
 import { envelopeBudget } from '#spreadsheet/bindings';
@@ -42,25 +45,44 @@ export function BalanceMovementMenu({
   return (
     <span tabIndex={-1} ref={ref}>
       {menu === 'menu' && (
-        <>
-          <ReservationBreakdown
-            categoryId={categoryId}
-            month={month}
-            style={{ minWidth: 260 }}
-          />
-          <BalanceMenu
-            categoryId={categoryId}
-            onCarryover={carryover => {
-              onBudgetAction(month, 'carryover', {
-                category: categoryId,
-                flag: carryover,
-              });
-              onClose();
-            }}
-            onTransfer={() => setMenu('transfer')}
-            onCover={() => setMenu('cover')}
-          />
-        </>
+        <BalanceMenu
+          categoryId={categoryId}
+          header={
+            <>
+              <GoalStatus
+                balance={envelopeBudget.catBalance(categoryId)}
+                goal={envelopeBudget.catGoal(categoryId)}
+                budgeted={envelopeBudget.catBudgeted(categoryId)}
+                longGoal={envelopeBudget.catLongGoal(categoryId)}
+                style={{
+                  padding: 10,
+                  borderBottom: '1px solid ' + theme.menuBorder,
+                }}
+              />
+              <ReservationBreakdown
+                categoryId={categoryId}
+                month={month}
+                style={{ minWidth: 260 }}
+              />
+            </>
+          }
+          onCarryover={carryover => {
+            onBudgetAction(month, 'carryover', {
+              category: categoryId,
+              flag: carryover,
+            });
+            onClose();
+          }}
+          onTransfer={() => setMenu('transfer')}
+          onCover={() => setMenu('cover')}
+          onFundGoal={amount => {
+            onBudgetAction(month, 'transfer-available', {
+              amount,
+              category: categoryId,
+            });
+            onClose();
+          }}
+        />
       )}
 
       {menu === 'transfer' && (

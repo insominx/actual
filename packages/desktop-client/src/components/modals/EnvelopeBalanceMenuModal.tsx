@@ -21,6 +21,7 @@ export function EnvelopeBalanceMenuModal({
   onCarryover,
   onTransfer,
   onCover,
+  onFundGoal,
 }: EnvelopeBalanceMenuModalProps) {
   const { data: category } = useCategory(categoryId);
   const { items, onMenuSelect } = useBalanceMenu({
@@ -28,6 +29,7 @@ export function EnvelopeBalanceMenuModal({
     onCarryover,
     onTransfer,
     onCover,
+    onFundGoal,
   });
 
   if (!category) {

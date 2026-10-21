@@ -1,15 +1,14 @@
-import React from 'react';
-
 import { initServer } from '@actual-app/core/platform/client/connection';
-import type { ReservationsResult } from '@actual-app/core/types/models/reservations';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
+import { SheetNameProvider } from '#hooks/useSheetName';
 import {
   configureTestAppStore,
   createTestQueryClient,
   TestProviders,
 } from '#mocks';
-import { mergeLocalPrefs, mergeSyncedPrefs } from '#prefs/prefsSlice';
+import { mergeSyncedPrefs } from '#prefs/prefsSlice';
 
 import { BalanceMovementMenu } from './BalanceMovementMenu';
 
@@ -18,98 +17,82 @@ vi.mock(
   () => import('#mocks/connection'),
 );
 
-vi.mock('#hooks/useSheetValue', () => ({
-  useSheetValue: () => 120000,
-}));
+// Values are keyed by the fully qualified cell name, so a menu that reads
+// another month's sheet than the one it acts on would find nothing
+let sheetValues: Record<string, number | null> = {};
 
-let originalCurrentMonth: string | null;
-
-beforeEach(() => {
-  originalCurrentMonth = global.currentMonth;
-  global.currentMonth = '2026-09';
+vi.mock('#hooks/useSheetValue', async () => {
+  const { useSheetName } = await import('#hooks/useSheetName');
+  return {
+    useSheetValue: (binding: Parameters<typeof useSheetName>[0]) => {
+      const { fullSheetName } = useSheetName(binding);
+      return sheetValues[fullSheetName] ?? null;
+    },
+  };
 });
 
-afterEach(() => {
-  global.currentMonth = originalCurrentMonth;
-});
-
-function renderMenu(flag: boolean) {
-  const getReservations = vi.fn(
-    async (): Promise<ReservationsResult> => ({
-      month: '2026-09',
-      categories: [
-        {
-          categoryId: 'bills',
-          state: 'ready',
-          balance: 120000,
-          reserved: 60000,
-          allowance: 50000,
-          allowanceTotal: 50000,
-          spare: 10000,
-          shortfall: 0,
-          claims: [
-            {
-              key: 'insurance',
-              kind: 'schedule',
-              label: 'Insurance',
-              nextDate: '2027-03-15',
-              target: 120000,
-              accrued: 60000,
-            },
-          ],
-        },
-      ],
-    }),
-  );
-  initServer({ 'budget/get-reservations': getReservations });
-
-  const queryClient = createTestQueryClient();
-  const store = configureTestAppStore({ queryClient });
-  store.dispatch(mergeLocalPrefs({ id: 'budget-1' }));
-  store.dispatch(
-    mergeSyncedPrefs({ 'flags.budgetReservations': String(flag) }),
-  );
-
+function renderMenu() {
+  const onBudgetAction =
+    vi.fn<(month: string, action: string, arg?: unknown) => void>();
+  const onClose = vi.fn<() => void>();
+  const client = createTestQueryClient();
+  const store = configureTestAppStore({ queryClient: client });
+  store.dispatch(mergeSyncedPrefs({ 'flags.goalTemplatesEnabled': 'true' }));
+  initServer({
+    'get-categories': async () => ({ grouped: [], list: [] }),
+    query: async () => ({ data: [], dependencies: [] }),
+  });
   render(
-    <TestProviders store={store} queryClient={queryClient}>
-      <BalanceMovementMenu
-        categoryId="bills"
-        month="2026-09"
-        onBudgetAction={vi.fn()}
-        onClose={vi.fn()}
-      />
+    <TestProviders queryClient={client} store={store}>
+      <SheetNameProvider name="budget202401">
+        <BalanceMovementMenu
+          categoryId="groceries"
+          month="2024-01"
+          onBudgetAction={onBudgetAction}
+          onClose={onClose}
+        />
+      </SheetNameProvider>
     </TestProviders>,
   );
-
-  return { getReservations };
+  return { onBudgetAction, onClose };
 }
 
 describe('BalanceMovementMenu', () => {
-  it('shows the reservation breakdown above the balance menu', async () => {
-    const { getReservations } = renderMenu(true);
-
-    const panel = await screen.findByTestId('reservation-breakdown');
-    expect(await screen.findByText('Reserved')).toBeInTheDocument();
-    const transfer = screen.getByText('Transfer to another category');
-    expect(
-      panel.compareDocumentPosition(transfer) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-    expect(getReservations).toHaveBeenCalledTimes(1);
+  beforeEach(() => {
+    sheetValues = {
+      'budget202401!goal-groceries': 65000,
+      'budget202401!budget-groceries': 40000,
+      'budget202401!leftover-groceries': 40000,
+      'budget202401!long-goal-groceries': null,
+      'budget202401!to-budget': 50000,
+    };
   });
 
-  it('leaves the balance menu unchanged when the flag is off', async () => {
-    const { getReservations } = renderMenu(false);
+  it('shows the goal status and funds the goal from To Budget for that month', async () => {
+    const { onBudgetAction, onClose } = renderMenu();
 
     expect(
-      await screen.findByText('Transfer to another category'),
+      await screen.findByText('Underfunded (-250.00)'),
+    ).toBeInTheDocument();
+    await userEvent.click(screen.getByText('Fund goal from To Budget'));
+
+    expect(onBudgetAction).toHaveBeenCalledExactlyOnceWith(
+      '2024-01',
+      'transfer-available',
+      { amount: 25000, category: 'groceries' },
+    );
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('does not offer funding when To Budget is empty', async () => {
+    sheetValues['budget202401!to-budget'] = 0;
+    renderMenu();
+
+    expect(
+      await screen.findByText('Underfunded (-250.00)'),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Remove overspending rollover'),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByTestId('reservation-breakdown'),
+      screen.queryByText('Fund goal from To Budget'),
     ).not.toBeInTheDocument();
-    expect(getReservations).not.toHaveBeenCalled();
   });
 });
