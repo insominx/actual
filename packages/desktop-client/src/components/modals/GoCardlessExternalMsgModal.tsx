@@ -15,6 +15,7 @@ import type {
 
 import { Error, Warning } from '#components/alerts';
 import { Autocomplete } from '#components/autocomplete/Autocomplete';
+import { getBankSyncErrorReason } from '#components/banksync/bankSyncErrors';
 import { Link } from '#components/common/Link';
 import { Modal, ModalCloseButton, ModalHeader } from '#components/common/Modal';
 import { FormField, FormLabel } from '#components/forms';
@@ -30,13 +31,16 @@ function useAvailableBanks(country: string) {
   const [banks, setBanks] = useState<GoCardlessInstitution[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
+  const [errorReason, setErrorReason] = useState<string | null>(null);
 
   useEffect(() => {
-    // Ignore a slow response for a country the user has already left
-    let cancelled = false;
+    // Requests for a country the user has already moved on from must not
+    // overwrite the state of the request that replaced them.
+    let isCurrentRequest = true;
 
     async function fetch() {
       setIsError(false);
+      setErrorReason(null);
 
       if (!country) {
         setBanks([]);
@@ -48,10 +52,13 @@ function useAvailableBanks(country: string) {
 
       const { data, error } = await sendCatch('gocardless-get-banks', country);
 
-      if (cancelled) return;
+      if (!isCurrentRequest) {
+        return;
+      }
 
       if (error || !Array.isArray(data)) {
         setIsError(true);
+        setErrorReason(getBankSyncErrorReason(data) ?? null);
         setBanks([]);
       } else {
         setBanks(data);
@@ -61,8 +68,9 @@ function useAvailableBanks(country: string) {
     }
 
     void fetch();
+
     return () => {
-      cancelled = true;
+      isCurrentRequest = false;
     };
   }, [setBanks, setIsLoading, country]);
 
@@ -70,6 +78,7 @@ function useAvailableBanks(country: string) {
     data: banks,
     isLoading,
     isError,
+    errorReason,
   };
 }
 
@@ -130,6 +139,7 @@ export function GoCardlessExternalMsgModal({
     data: bankOptions,
     isLoading: isBankOptionsLoading,
     isError: isBankOptionError,
+    errorReason: bankOptionErrorReason,
   } = useAvailableBanks(country);
   const {
     configuredGoCardless: isConfigured,
@@ -201,18 +211,34 @@ export function GoCardlessExternalMsgModal({
 
         {isBankOptionError ? (
           <Error>
-            <Trans>
-              Failed loading available banks: GoCardless access credentials
-              might be misconfigured. Please{' '}
-              <Link
-                variant="text"
-                onClick={onGoCardlessInit}
-                style={{ color: theme.formLabelText, display: 'inline' }}
-              >
-                set them up
-              </Link>{' '}
-              again.
-            </Trans>
+            {bankOptionErrorReason ? (
+              <Trans>
+                Failed loading available banks:{' '}
+                {{ reason: bankOptionErrorReason }}. If this is a credentials
+                problem, you can{' '}
+                <Link
+                  variant="text"
+                  onClick={onGoCardlessInit}
+                  style={{ color: theme.formLabelText, display: 'inline' }}
+                >
+                  set them up
+                </Link>{' '}
+                again.
+              </Trans>
+            ) : (
+              <Trans>
+                Failed loading available banks: GoCardless access credentials
+                might be misconfigured. Please{' '}
+                <Link
+                  variant="text"
+                  onClick={onGoCardlessInit}
+                  style={{ color: theme.formLabelText, display: 'inline' }}
+                >
+                  set them up
+                </Link>{' '}
+                again.
+              </Trans>
+            )}
           </Error>
         ) : (
           country &&
