@@ -124,8 +124,7 @@ export async function loginWithPassword(password) {
     } else {
       // `first` returns null when no password-login user exists
       const { id: userIdFromDb } =
-        accountDb.first('SELECT id FROM users WHERE user_name = ?', ['']) ||
-        {};
+        accountDb.first('SELECT id FROM users WHERE user_name = ?', ['']) || {};
 
       userId = userIdFromDb;
 

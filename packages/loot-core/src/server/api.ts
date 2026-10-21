@@ -102,6 +102,7 @@ import {
   makeAccountClosingTransaction,
   performAccountClosure,
 } from './accounts/app';
+import type { SyncResponse } from './accounts/app';
 import { bankSyncRefresh, bankSyncStatus } from './accounts/bank-sync-status';
 import type { BankSyncRunners } from './accounts/bank-sync-status';
 import { inspectAccounts } from './accounts/inspect';
@@ -113,7 +114,6 @@ import {
   prepareReconcileFinish,
   reconciliationStatus,
 } from './accounts/reconcile';
-import type { SyncResponse } from './accounts/app';
 import { addTransactions } from './accounts/sync';
 import {
   accountGroupModel,
@@ -235,8 +235,8 @@ import {
   prepareScheduleSkip,
 } from './schedules/guarded-occurrence';
 import { inspectSchedules } from './schedules/inspect';
-import { getServer } from './server-config';
 import { getScheduleDates } from './schedules/occurrences';
+import { getServer } from './server-config';
 import * as sheet from './sheet';
 import {
   batchMessages,
