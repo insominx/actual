@@ -215,6 +215,11 @@ yarn test:debug
 
 # Run tests for a specific package
 yarn workspace @actual-app/core run test
+
+# desktop-client: pass file filters through the workspace script.
+# `npx vitest --root packages/desktop-client` from the root fails, because
+# vite.config.mts resolves paths against the current directory.
+yarn workspace @actual-app/web run test src/components/autocomplete
 ```
 
 **E2E Tests (Playwright)**
@@ -592,6 +597,11 @@ All storage is **SQLite** (file-based via `better-sqlite3`). No external databas
 Standard commands documented in `package.json` scripts and the Quick Start section above:
 
 - `yarn lint` / `yarn lint:fix` (uses oxlint + oxfmt)
+- On Windows checkouts with `core.autocrlf=true`, don't run `yarn lint:fix`
+  repo-wide: it rewrites hundreds of untouched files. Format and lint only
+  what you changed:
+  `git diff --name-only | xargs npx oxfmt` and
+  `git diff --name-only | grep -E '\.(ts|tsx|js)$' | xargs npx oxlint --type-aware`
 - `yarn test` (lage across all workspaces)
 - `yarn typecheck` (tsgo + lage typecheck)
 

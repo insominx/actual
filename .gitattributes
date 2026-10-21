@@ -11,6 +11,7 @@
 *.ts text eol=lf
 *.sh text eol=lf
 *.tsx text eol=lf
+*.snap text eol=lf
 
 **/bin/* text eol=lf
 
