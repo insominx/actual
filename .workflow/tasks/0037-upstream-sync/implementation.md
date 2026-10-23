@@ -61,3 +61,10 @@ See the per-wave gate results in `progress.md`. The final gate at `9ec589b24` pa
 - `c40f43656`: Enable Banking's admin 403 uses upstream's wording; pluggy-sdk ^0.92.0.
 - `eb3f7ef3b`: bank behaviour returned to upstream wherever the fork's change was a judgement call, or not clearly a bug. Verified fixes are listed in the commit body.
 - Gate after `eb3f7ef3b`: typecheck pass; core 1673 (3 skipped), web 1485, sync-server 793, cli 424, api 153, electron 7.
+
+## Follow-up sync to `d1a536f35` (2026-10-22)
+
+Upstream had two commits after the pin.
+
+- `2db402384`: upstream d1a536f35 (Node 24.22.1, Electron 43.8.0), clean. `yarn install` left the lockfile unchanged. Typecheck and electron 7 pass.
+- 6ef6d303d (goal status in balance menus, "Fund goal from To Budget") is not applied: it builds on `useBalanceMenu` and the mobile sheets from 18cc7da0d (D5). See D22.
