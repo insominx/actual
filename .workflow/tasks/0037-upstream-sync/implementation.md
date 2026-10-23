@@ -62,9 +62,29 @@ See the per-wave gate results in `progress.md`. The final gate at `9ec589b24` pa
 - `eb3f7ef3b`: bank behaviour returned to upstream wherever the fork's change was a judgement call, or not clearly a bug. Verified fixes are listed in the commit body.
 - Gate after `eb3f7ef3b`: typecheck pass; core 1673 (3 skipped), web 1485, sync-server 793, cli 424, api 153, electron 7.
 
-## Follow-up sync to `d1a536f35` (2026-10-22)
+## Full alignment with upstream (2026-10-22, owner rule D23)
 
-Upstream had two commits after the pin.
+Every upstream commit from the fork point to `6ef6d303d` is now on the branch, including the former skip list (D13 no longer applies). Upstream head at the end: `d1a536f35`.
 
-- `2db402384`: upstream d1a536f35 (Node 24.22.1, Electron 43.8.0), clean. `yarn install` left the lockfile unchanged. Typecheck and electron 7 pass.
-- 6ef6d303d (goal status in balance menus, "Fund goal from To Budget") is not applied: it builds on `useBalanceMenu` and the mobile sheets from 18cc7da0d (D5). See D22.
+- `2db402384`: d1a536f35 (Node 24.22.1, Electron 43.8.0), clean.
+- Clean picks: docs and community-project additions, the CodeRabbit and stale-PR workflows (both skip forks), 26.10.0 release bump, yarn publish fix, calendar e2e, brace-expansion CVE bump, docs screenshot regeneration, configurable sidebar (D4), cache pruning, flatpak release asset, and dd224f6df (schedules weekend date, applied on top of the fork's own fix; schedule tests pass).
+- Adapted picks (each commit body has an `Adapted:` line):
+  - `2a072a661` tag-split calculations (D7): fork tests kept; dashboard import test writes to the OS temp dir.
+  - `60a5c85c3` standard sizes (D3): KeyboardShortcutModal keeps translated `t()` strings.
+  - `1a299f1d3` sidebar dropdown removal (D6): keeps the budget-name trim.
+  - `c2fcd6df4` formulas use amounts (D1): conversions use the budget currency's decimal places. **Saved formulas that divided by 100 now read 100 times too small and must be edited** (upstream documents the break).
+  - `82d82dc87` mobile running balance: same fix as the fork; fork's agreement test kept.
+  - `6c6b54ac0`, `43e755248` settings redesign (D4): `budgetReservations` toggle re-added.
+  - `e33e0ae91` tag scope in custom reports (D7): translated placeholder and saved condition operator kept.
+  - `dde178d80` Windows backend build: replaces the fork's `cmd.exe` workaround.
+  - `31b17748f` October bump (D9): lockfile rebuilt with `yarn install` plus `yarn dedupe '@codemirror/*'`; no downgrades.
+  - `3ad2aa177` Monte Carlo phases (D8): keeps `decimalPlaces` threading.
+  - `0501bfbe8` mobile sheets (D5): fork fixes re-applied (currency decimals, scaled close-account balance, auto-hold reset only on submit); expense-view toggle and reservation breakdown re-attached.
+  - `05d00f893` lint rules (D9): App init keeps `cloudFileId` out of its dependencies (Electron crash on budget close).
+  - `9941180be` periodic intervals: both template checks kept.
+  - `4371a919a` partial category updates: fork's prepare/inspect split kept, plus upstream's "No fields to update".
+  - `cfb344192` Sankey payee name: fork's per-category label kept; only the release note applies.
+  - `41d9ab6b5` goal status (D22): reservation breakdown sits under the goal status; fork reservation tests split into `*.reservations.test.tsx`.
+- Fork commit `caffb3336`: fork code fitted to the new lint rules without suppressions.
+- Fork commit `3b2ce78b5`: closing-transfer tests expect amounts after D1.
+- Gate after `3b2ce78b5`: typecheck, repo-wide oxlint and every lage test task pass. VRT screenshots are upstream renders and still need regenerating (D20).
