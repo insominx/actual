@@ -76,9 +76,14 @@ export function useSchedules({
     statusLabels: new Map(),
   });
   const [upcomingLength] = useSyncedPref('upcomingScheduledTransactionLength');
-  // Equivalent queries may be recreated by callers on every render. Depend on
-  // their contents so setData does not restart the subscription in a loop.
+  // Equivalent queries may be recreated by callers on every render. Keep the
+  // first of each so setData does not restart the subscription in a loop.
   const queryKey = query?.serializeAsString();
+  const [stableQuery, setStableQuery] = useState({ key: queryKey, query });
+  if (stableQuery.key !== queryKey) {
+    setStableQuery({ key: queryKey, query });
+  }
+  const currentQuery = stableQuery.query;
 
   const scheduleQueryRef = useRef<LiveQuery<ScheduleEntity> | null>(null);
   const statusQueryRef = useRef<LiveQuery<TransactionEntity> | null>(null);
@@ -88,7 +93,7 @@ export function useSchedules({
 
     setError(undefined);
 
-    if (!query) {
+    if (!currentQuery) {
       // This usually means query is not yet set on this render cycle.
       return;
     }
@@ -100,14 +105,14 @@ export function useSchedules({
       }
     }
 
-    if (query.state.table !== 'schedules') {
+    if (currentQuery.state.table !== 'schedules') {
       onError(new Error('Query must be a schedules query.'));
       return;
     }
 
     setIsLoading(true);
 
-    scheduleQueryRef.current = liveQuery<ScheduleEntity>(query, {
+    scheduleQueryRef.current = liveQuery<ScheduleEntity>(currentQuery, {
       onData: async schedules => {
         // `onData` fires again whenever the schedules change, so tear down the
         // previous status query first. Otherwise each refresh orphans a live
@@ -142,8 +147,7 @@ export function useSchedules({
       scheduleQueryRef.current?.unsubscribe();
       statusQueryRef.current?.unsubscribe();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queryKey, upcomingLength]);
+  }, [currentQuery, upcomingLength]);
 
   return {
     isLoading,

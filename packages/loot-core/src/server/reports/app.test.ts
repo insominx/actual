@@ -12,8 +12,8 @@ import { runMutator } from '#server/mutators';
 import type { CustomReportEntity, CustomReportTagScope } from '#types/models';
 
 import {
-  app as reportApp,
   createReport,
+  app as reportApp,
   reportModel,
   updateReport,
 } from './app';

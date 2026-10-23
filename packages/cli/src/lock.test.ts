@@ -73,6 +73,7 @@ describe('acquireExclusive', () => {
 
   it('succeeds with timeoutMs: 0 when no readers or writers hold the lock', async () => {
     const release = await acquireExclusive(dir, { timeoutMs: 0 });
+    expect(release).toBeTypeOf('function');
     await release();
   });
 

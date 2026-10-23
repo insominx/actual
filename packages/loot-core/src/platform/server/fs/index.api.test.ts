@@ -23,31 +23,31 @@ describe('writeFileAtomic (node)', () => {
 
   // Windows refuses to rename over a file a reader has open, so writeFileAtomic
   // falls back to an in-place write there and readers can see partial content.
-  it.skipIf(process.platform === 'win32')(
-    'never exposes a truncated file to a concurrent reader',
-    async () => {
-      const file = path.join(dir, 'metadata.json');
-      const body = JSON.stringify({ id: 'x', pad: 'p'.repeat(4000) });
-      await writeFileAtomic(file, body);
-      let writing = true;
-      const writer = (async () => {
-        for (let i = 0; i < 300; i++) await writeFileAtomic(file, body);
-        writing = false;
-      })();
-      let torn = 0;
-      let reads = 0;
-      while (writing) {
-        reads++;
-        try {
-          JSON.parse(nodeFs.readFileSync(file, 'utf8'));
-        } catch {
-          torn++;
-        }
-        await new Promise(resolve => setImmediate(resolve));
+  it('never exposes a truncated file to a concurrent reader', async ({
+    skip,
+  }) => {
+    skip(process.platform === 'win32');
+    const file = path.join(dir, 'metadata.json');
+    const body = JSON.stringify({ id: 'x', pad: 'p'.repeat(4000) });
+    await writeFileAtomic(file, body);
+    let writing = true;
+    const writer = (async () => {
+      for (let i = 0; i < 300; i++) await writeFileAtomic(file, body);
+      writing = false;
+    })();
+    let torn = 0;
+    let reads = 0;
+    while (writing) {
+      reads++;
+      try {
+        JSON.parse(nodeFs.readFileSync(file, 'utf8'));
+      } catch {
+        torn++;
       }
-      await writer;
-      expect(reads).toBeGreaterThan(0);
-      expect(torn).toBe(0);
-    },
-  );
+      await new Promise(resolve => setImmediate(resolve));
+    }
+    await writer;
+    expect(reads).toBeGreaterThan(0);
+    expect(torn).toBe(0);
+  });
 });

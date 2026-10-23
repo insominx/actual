@@ -58,6 +58,8 @@ describe('useDrop', () => {
       await user.click(view.getByRole('button', { name: 'Next page' }));
     }
 
+    // Still rendered after paging, so no update loop tore the tree down
+    expect(view.getByRole('button', { name: 'Next page' })).toBeTruthy();
     view.unmount();
   });
 });

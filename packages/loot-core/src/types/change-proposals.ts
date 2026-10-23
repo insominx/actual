@@ -158,7 +158,7 @@ export type AccountGroupCreationRequest = { name: string };
 export type AccountGroupCreationProposal = CatalogProposal<
   'account-groups.create',
   AccountGroupCreationRequest,
-  Record<never, never>,
+  object,
   { group: Record<string, unknown> }
 >;
 export type AccountGroupCreationOutcome = CatalogCommit<{
