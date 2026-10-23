@@ -309,6 +309,7 @@ async function linkSimpleFinAccount({
     bank.bank_id,
     startingDate,
     startingBalance,
+    getPrefs()?.cloudFileId,
   );
 
   await handleSyncResponse(syncRes, id);
@@ -1026,7 +1027,7 @@ async function goCardlessStatus() {
   );
 }
 
-async function simpleFinStatus() {
+async function simpleFinStatus(): Promise<BankSyncProviderStatus> {
   const userToken = await asyncStorage.getItem('user-token');
 
   if (!userToken) {
@@ -1038,11 +1039,13 @@ async function simpleFinStatus() {
     throw new Error('Failed to get server config.');
   }
 
+  const fileId = getPrefs()?.cloudFileId;
   return post(
     serverConfig.SIMPLEFIN_SERVER + '/status',
     {},
     {
       'X-ACTUAL-TOKEN': userToken,
+      ...(fileId ? { 'X-Actual-File-Id': fileId } : {}),
     },
   );
 }
@@ -1103,12 +1106,14 @@ async function simpleFinAccounts() {
     throw new Error('Failed to get server config.');
   }
 
+  const fileId = getPrefs()?.cloudFileId;
   try {
     return await post(
       serverConfig.SIMPLEFIN_SERVER + '/accounts',
       {},
       {
         'X-ACTUAL-TOKEN': userToken,
+        ...(fileId ? { 'X-Actual-File-Id': fileId } : {}),
       },
       60000,
     );
@@ -1696,6 +1701,7 @@ async function simpleFinBatchSync({
         id: a.id,
         account_id: a.account_id || null,
       })),
+      getPrefs()?.cloudFileId,
     );
     for (const syncResponse of syncResponses) {
       const account = accounts.find(a => a.id === syncResponse.accountId);
