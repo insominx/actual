@@ -347,7 +347,7 @@ test('prepares a closing counterpart without writes and persists the same rule-o
     account: 'two',
     amount: 500,
     date: '2026-10-04',
-    notes: 'source=500;destination=200',
+    notes: 'source=5;destination=2',
     cleared: true,
     transfer_id: source.id,
   });

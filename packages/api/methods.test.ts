@@ -3,6 +3,7 @@ import * as path from 'path';
 
 import { safeZip } from '@actual-app/core/server/util/zip';
 import * as monthUtils from '@actual-app/core/shared/months';
+import { integerToAmount } from '@actual-app/core/shared/util';
 import type { RuleEntity } from '@actual-app/core/types/models';
 import { getClock } from '@actual-app/crdt';
 import { vi } from 'vitest';
@@ -3509,7 +3510,7 @@ describe('guarded account closure', () => {
       expect(proposal.after.action).toBe('closed');
       expect(proposal.after.counterpart).toMatchObject({
         amount: before.reduce((total, row) => total + row.amount, 0),
-        notes: `source=0;destination=${destinationBefore.reduce((total, row) => total + row.amount, 0)}`,
+        notes: `source=0;destination=${integerToAmount(destinationBefore.reduce((total, row) => total + row.amount, 0))}`,
         cleared: true,
       });
       expect(proposal.after.source?.category).toBe(
