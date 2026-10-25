@@ -120,3 +120,6 @@ actual.config.js
 
 # vitest json reporter output
 .vitest/
+
+# Mac App Store provisioning profiles, downloaded per machine
+packages/desktop-electron/mas/*.provisionprofile
