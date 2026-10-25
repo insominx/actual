@@ -29,6 +29,7 @@ import { config } from './load-config';
 import { SecretName, secretsService } from './services/secrets-service';
 import * as UserService from './services/user-service';
 import * as simpleSync from './sync-simple';
+import { atomicWriteFile } from './util/atomic-write';
 import {
   errorMiddleware,
   requestLoggerMiddleware,
@@ -449,7 +450,7 @@ app.post('/upload-user-file', async (req, res) => {
   }
 
   try {
-    await fs.writeFile(getPathForUserFile(fileId), req.body);
+    await atomicWriteFile(getPathForUserFile(fileId), req.body);
   } catch (err) {
     console.log('Error writing file', err);
     res.status(500).send({ status: 'error' });
