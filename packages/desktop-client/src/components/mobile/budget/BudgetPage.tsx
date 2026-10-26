@@ -30,9 +30,11 @@ import { send } from '@actual-app/core/platform/client/connection';
 import * as monthUtils from '@actual-app/core/shared/months';
 import { groupById } from '@actual-app/core/shared/util';
 import type { TransObjectLiteral } from '@actual-app/core/types/util';
+import { useQuery } from '@tanstack/react-query';
 
 import { sync } from '#app/appSlice';
 import {
+  budgetBoundsQueries,
   useBudgetActions,
   useCreateCategoryGroupMutation,
   useCreateCategoryMutation,
@@ -45,6 +47,7 @@ import {
 import { closeBudget } from '#budgetfiles/budgetfilesSlice';
 import { parseDisplayMode } from '#components/budget/expense-view/expenseData';
 import { ExpenseView } from '#components/budget/expense-view/ExpenseView';
+import { clampMonth } from '#components/budget/MonthsContext';
 import { prewarmMonth } from '#components/budget/util';
 import { FinancialText } from '#components/FinancialText';
 import { MobilePageHeader, Page } from '#components/Page';
@@ -94,10 +97,11 @@ export function BudgetPage() {
     useLocalPref('budget.startMonth');
   const [displayModePref] = useLocalPref('budget.displayMode');
   const [budgetId] = useMetadataPref('id');
-  const [monthBounds, setMonthBounds] = useState({
+  const { data: loadedBounds } = useQuery(budgetBoundsQueries.bounds());
+  const monthBounds = loadedBounds ?? {
     start: startMonth,
     end: startMonth,
-  });
+  };
   // const [editMode, setEditMode] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [_numberFormat] = useSyncedPref('numberFormat');
@@ -117,15 +121,20 @@ export function BudgetPage() {
     let cancelled = false;
 
     async function init() {
+      if (!loadedBounds) {
+        return;
+      }
       try {
-        const { start, end } = await send('get-budget-bounds');
-        if (!cancelled) {
-          setMonthBounds({ start, end });
+        // Reopening the budget or switching budget type can leave the
+        // selected month out of range.
+        const validMonth = clampMonth(startMonth, loadedBounds);
+        if (validMonth !== startMonth) {
+          setStartMonthPref(validMonth);
         }
 
         // Prewarming only speeds up the first paint; a failure here must not
         // keep the whole page from rendering
-        await prewarmMonth(budgetType, spreadsheet, startMonth);
+        await prewarmMonth(budgetType, spreadsheet, validMonth);
       } catch (e) {
         console.error('Failed to initialize the budget page:', e);
       } finally {
@@ -139,7 +148,7 @@ export function BudgetPage() {
     return () => {
       cancelled = true;
     };
-  }, [budgetType, startMonth, dispatch, spreadsheet]);
+  }, [budgetType, startMonth, spreadsheet, loadedBounds, setStartMonthPref]);
 
   const onBudgetAction = useCallback(
     async (month, type, args) => {
