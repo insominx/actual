@@ -551,11 +551,7 @@ export async function getScheduleClaims(
 
   let list: Awaited<ReturnType<typeof createScheduleList>>;
   try {
-    list = await createScheduleList(
-      [...uniqueById.values()],
-      month,
-      category,
-    );
+    list = await createScheduleList([...uniqueById.values()], month, category);
   } catch {
     return { ok: false, reason: 'inactive-schedule' };
   }

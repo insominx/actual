@@ -668,12 +668,7 @@ export function MonteCarloConfiguration({
             <Button
               onPress={() =>
                 onConfigChange({
-                  pots: [
-                    ...config.pots,
-                    createMonteCarloPot(
-                      uuidv4()
-                    ),
-                  ],
+                  pots: [...config.pots, createMonteCarloPot(uuidv4())],
                 })
               }
             >

@@ -79,10 +79,7 @@ export function MonteCarloSpendingPhases({
     onPhasesChange(
       sortMonteCarloSpendingPhases([
         ...phases,
-        createMonteCarloSpendingPhase(
-          uuidv4(),
-          fromAge
-        ),
+        createMonteCarloSpendingPhase(uuidv4(), fromAge),
       ]),
     );
   }

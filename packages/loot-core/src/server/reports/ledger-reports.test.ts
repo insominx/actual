@@ -7,4 +7,3 @@ describe('reportAmountUnit', () => {
     expect(reportAmountUnit()).toBe('integer cents');
   });
 });
-

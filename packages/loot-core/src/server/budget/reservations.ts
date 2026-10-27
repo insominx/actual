@@ -372,16 +372,12 @@ async function getCategoryRow(
     }
   });
 
-  const scheduleResult = await getScheduleClaims(
-    scheduleTemplates,
-    month,
-    {
-      id: category.id,
-      name: category.name,
-      is_income: false,
-      group: category.cat_group,
-    } satisfies CategoryEntity,
-  );
+  const scheduleResult = await getScheduleClaims(scheduleTemplates, month, {
+    id: category.id,
+    name: category.name,
+    is_income: false,
+    group: category.cat_group,
+  } satisfies CategoryEntity);
   if (scheduleResult.ok === false) {
     reasons.add(scheduleResult.reason);
   } else {

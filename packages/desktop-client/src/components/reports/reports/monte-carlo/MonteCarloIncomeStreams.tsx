@@ -75,10 +75,7 @@ export function MonteCarloIncomeStreams({
 
   function addIncomeStream() {
     onConfigChange({
-      incomeStreams: [
-        ...incomeStreams,
-        createMonteCarloIncomeStream(uuidv4()),
-      ],
+      incomeStreams: [...incomeStreams, createMonteCarloIncomeStream(uuidv4())],
     });
   }
 

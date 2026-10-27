@@ -200,12 +200,10 @@ describe('getAllowanceAmount', () => {
   it('rejects negative amounts and limits', () => {
     expect(getAllowanceAmount(simpleTemplate(-5))).toBeNull();
     expect(
-      getAllowanceAmount(
-        {
-          ...simpleTemplate(5),
-          limit: { amount: 10, hold: false, period: 'monthly' },
-        },
-      ),
+      getAllowanceAmount({
+        ...simpleTemplate(5),
+        limit: { amount: 10, hold: false, period: 'monthly' },
+      }),
     ).toBeNull();
   });
 });

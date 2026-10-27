@@ -8,4 +8,3 @@ describe('amountOverflowsCell', () => {
     expect(amountOverflowsCell(10_000_001)).toBe(true);
   });
 });
-

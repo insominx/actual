@@ -47,10 +47,7 @@ export function MonteCarloCard({
 
   // Memoised by hand so hovering the card (which toggles state) doesn't
   // re-run thousands of simulations
-  const config = useMemo(
-    () => monteCarloConfigFromMeta(meta),
-    [meta],
-  );
+  const config = useMemo(() => monteCarloConfigFromMeta(meta), [meta]);
   const { resolvedConfig, hasLiveBalances } =
     useResolvedMonteCarloConfig(config);
 

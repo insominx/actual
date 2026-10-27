@@ -175,9 +175,7 @@ export async function exportQueryToCSV(query) {
         : trans.Amount == null
           ? 0
           : integerToAmount(trans.Amount),
-      Split_Amount: trans.IsParent
-        ? integerToAmount(trans.Amount)
-        : 0,
+      Split_Amount: trans.IsParent ? integerToAmount(trans.Amount) : 0,
       Cleared:
         trans.Reconciled === true
           ? 'Reconciled'

@@ -281,10 +281,7 @@ async function prefetchFormulaQueries(
     }
 
     const data = await fetchQuerySum(queryConfig);
-    formulaQueryContext.querySumPrefetch.set(
-      queryName,
-      integerToAmount(data),
-    );
+    formulaQueryContext.querySumPrefetch.set(queryName, integerToAmount(data));
   }
 
   for (const queryName of formulaQueryContext.queryCountNames) {

@@ -235,16 +235,8 @@ export function AreaGraph({
   const absDataMax = Math.max(Math.abs(dataMax), Math.abs(dataMin));
   //Calculate how much to add to max and min values for graph range
   const extendRangeAmount = Math.floor(dataDiff / 20);
-  const labelsMin = areaChartDomainEdge(
-    dataMin,
-    extendRangeAmount,
-    'min',
-  );
-  const labelsMax = areaChartDomainEdge(
-    dataMax,
-    extendRangeAmount,
-    'max',
-  );
+  const labelsMin = areaChartDomainEdge(dataMin, extendRangeAmount, 'min');
+  const labelsMax = areaChartDomainEdge(dataMax, extendRangeAmount, 'max');
   const lastLabel = data.intervalData.length - 1;
 
   const tickFormatter = (tick: number) => {

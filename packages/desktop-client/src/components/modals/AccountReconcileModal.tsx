@@ -96,11 +96,7 @@ export function AccountReconcileModal({
                 <AmountInput
                   key={amountInputKey}
                   value={integerToAmount(amount)}
-                  onChange={newAmount =>
-                    setAmount(
-                      amountToInteger(newAmount),
-                    )
-                  }
+                  onChange={newAmount => setAmount(amountToInteger(newAmount))}
                   autoFocus
                   autoFocusDelay={150}
                   variant="large"

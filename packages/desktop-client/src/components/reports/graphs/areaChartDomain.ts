@@ -13,4 +13,3 @@ export function areaChartDomainEdge(
   }
   return Math.ceil((value + extendRangeAmount) / unit) * unit;
 }
-

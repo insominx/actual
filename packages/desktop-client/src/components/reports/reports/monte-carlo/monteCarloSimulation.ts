@@ -616,9 +616,7 @@ export function createMonteCarloInvestmentPhase(
   };
 }
 
-export function createMonteCarloPot(
-  id: string,
-): MonteCarloPot {
+export function createMonteCarloPot(id: string): MonteCarloPot {
   return {
     id,
     name: '',
@@ -845,13 +843,8 @@ function investmentPhaseFromMeta(
   };
 }
 
-function potFromMeta(
-  potMeta: MonteCarloPotMeta,
-  index: number,
-): MonteCarloPot {
-  const defaults = createMonteCarloPot(
-    potMeta.id || `pot-${index + 1}`
-  );
+function potFromMeta(potMeta: MonteCarloPotMeta, index: number): MonteCarloPot {
+  const defaults = createMonteCarloPot(potMeta.id || `pot-${index + 1}`);
   const pot: MonteCarloPot = {
     ...defaults,
     name: potMeta.name ?? defaults.name,
@@ -904,7 +897,7 @@ function spendingPhaseFromMeta(
 ): MonteCarloSpendingPhase {
   const defaults = createMonteCarloSpendingPhase(
     phaseMeta.id || `phase-${index + 1}`,
-    null
+    null,
   );
   return {
     ...defaults,
@@ -920,7 +913,7 @@ function contributionFromMeta(
 ): MonteCarloContribution {
   const defaults = createMonteCarloContribution(
     contributionMeta.id || `contribution-${index + 1}`,
-    contributionMeta.potId ?? ''
+    contributionMeta.potId ?? '',
   );
   return {
     ...defaults,
@@ -940,7 +933,7 @@ function incomeStreamFromMeta(
   index: number,
 ): MonteCarloIncomeStream {
   const defaults = createMonteCarloIncomeStream(
-    incomeStreamMeta.id || `income-${index + 1}`
+    incomeStreamMeta.id || `income-${index + 1}`,
   );
   return {
     ...defaults,

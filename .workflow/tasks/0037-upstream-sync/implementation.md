@@ -89,7 +89,6 @@ Every upstream commit from the fork point to `6ef6d303d` is now on the branch, i
 - Fork commit `3b2ce78b5`: closing-transfer tests expect amounts after D1.
 - Gate after `3b2ce78b5`: typecheck, repo-wide oxlint and every lage test task pass. VRT screenshots are upstream renders and still need regenerating (D20).
 
-
 ## Sync of 2026-10-27 (branch upstream-sync-2026-10b)
 
 Upstream tip `fd08b56ee`. 23 of the 24 commits after `d1a536f35` were cherry-picked with `-x`. Adapted picks:

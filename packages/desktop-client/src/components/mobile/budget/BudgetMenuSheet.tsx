@@ -86,9 +86,7 @@ export function BudgetMenuSheet({
             <AmountInput
               value={integerToAmount(budgeted)}
               onEnter={close}
-              onChange={amount =>
-                onUpdateBudget(amountToInteger(amount))
-              }
+              onChange={amount => onUpdateBudget(amountToInteger(amount))}
               onFocus={() => setIsCalculatorOpen(isMobileCalculatorEnabled)}
               onBlur={() => setIsCalculatorOpen(false)}
               data-testid="budget-amount"

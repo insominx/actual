@@ -1,6 +1,7 @@
 # Candidate Edits from the 2026-10-21 Retrospective
 
 Status (2026-10-21): applied with the user's approval ("do it").
+
 - Applied: both `AGENTS.md` edits, `*.snap text eol=lf` in `.gitattributes` (snapshots checked out again as LF), and the Bash-cwd memory.
 - Not applied: the full `core.autocrlf=false` renormalize. It would also need `core.eol=lf`, and it rewrites every working file. Left for the repo owner.
 

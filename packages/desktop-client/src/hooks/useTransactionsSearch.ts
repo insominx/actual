@@ -39,11 +39,7 @@ export function useTransactionsSearch({
         } else if (searchText) {
           resetQueryRef.current?.();
           updateQueryRef.current(previousQuery =>
-            queries.transactionsSearch(
-              previousQuery,
-              searchText,
-              dateFormat,
-            ),
+            queries.transactionsSearch(previousQuery, searchText, dateFormat),
           );
           setIsSearching(true);
         }

@@ -14,4 +14,3 @@ describe('areaChartDomainEdge', () => {
     expect(areaChartDomainEdge(8, 1_000, 'max')).toBe(0);
   });
 });
-

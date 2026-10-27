@@ -344,10 +344,7 @@ export class Action {
       const balanceOfPrefetch = new Map<string, number>();
       for (const [key, integerAmount] of transaction['_balanceOfPrefetched'] ??
         []) {
-        balanceOfPrefetch.set(
-          key,
-          integerToAmount(integerAmount),
-        );
+        balanceOfPrefetch.set(key, integerToAmount(integerAmount));
       }
 
       hfInstance = HyperFormula.buildEmpty({

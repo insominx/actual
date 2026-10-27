@@ -1228,10 +1228,7 @@ const Transaction = memo(function Transaction({
     currencyCode !== prevCurrencyCode
   ) {
     setTransaction(
-      serializeTransaction(
-        originalTransaction,
-        showZeroInDeposit,
-      ),
+      serializeTransaction(originalTransaction, showZeroInDeposit),
     );
     setPrevTransaction(originalTransaction);
     setPrevShowZero(showZeroInDeposit);
@@ -1388,9 +1385,7 @@ const Transaction = memo(function Transaction({
       );
       // Run the transaction through the formatting so that we know
       // it's always showing the formatted result
-      setTransaction(
-        serializeTransaction(deserialized, showZeroInDeposit),
-      );
+      setTransaction(serializeTransaction(deserialized, showZeroInDeposit));
 
       const deserializedName = ['credit', 'debit'].includes(name)
         ? 'amount'

@@ -303,7 +303,6 @@ describe('BALANCE_OF in query mode', () => {
   });
 });
 
-
 describe('formula execution stability', () => {
   let executionCount: number;
 

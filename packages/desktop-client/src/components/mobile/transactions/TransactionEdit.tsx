@@ -1405,8 +1405,9 @@ const TransactionEditInner = memo<TransactionEditInnerProps>(
                     void onUpdateInner(
                       childTrans,
                       'amount',
-                      integerToAmount(amountToInteger(childTrans.amount) +
-                          remaining),
+                      integerToAmount(
+                        amountToInteger(childTrans.amount) + remaining,
+                      ),
                     );
                   }}
                 />
@@ -1708,7 +1709,9 @@ function TransactionEditUnconnected({
             lastTransaction?.account ||
             null,
           category: searchParamCategory || locationState?.categoryId || null,
-          amount: -amountToInteger(parseFloat(searchParams.get('amount') || '') || 0),
+          amount: -amountToInteger(
+            parseFloat(searchParams.get('amount') || '') || 0,
+          ),
           cleared: searchParams.get('cleared') === 'true',
           notes: searchParams.get('notes') || '',
         },
@@ -2200,7 +2203,10 @@ function FillRemainingButton({
         <Trans>
           Use remaining:{' '}
           {{
-            amount: integerToCurrencyWithDecimal(Math.abs(remaining), currencyCode),
+            amount: integerToCurrencyWithDecimal(
+              Math.abs(remaining),
+              currencyCode,
+            ),
           }}
         </Trans>
       </Text>

@@ -1244,28 +1244,18 @@ export async function doImport(data: Budget) {
       step: 'transactions',
       total: data.transactions.length,
       run: tick =>
-        importTransactions(
-          data,
-          entityIdMap,
-          flagNameConflicts,
-          tick 
-        ),
+        importTransactions(data, entityIdMap, flagNameConflicts, tick),
     },
     {
       step: 'scheduled-transactions',
       total: data.scheduled_transactions.length,
       run: tick =>
-        importScheduledTransactions(
-          data,
-          entityIdMap,
-          flagNameConflicts,
-          tick 
-        ),
+        importScheduledTransactions(data, entityIdMap, flagNameConflicts, tick),
     },
     {
       step: 'budgets',
       total: data.months.length,
-      run: tick => importBudgets(data, entityIdMap, tick ),
+      run: tick => importBudgets(data, entityIdMap, tick),
     },
   ]);
 }

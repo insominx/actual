@@ -106,15 +106,9 @@ export function MonteCarlo() {
       return;
     }
 
-    setConfig(
-      monteCarloConfigFromMeta(widget?.meta),
-    );
+    setConfig(monteCarloConfigFromMeta(widget?.meta));
     setSelectionsInitialized(true);
-  }, [
-    selectionsInitialized,
-    isLoading,
-    widget?.meta,
-  ]);
+  }, [selectionsInitialized, isLoading, widget?.meta]);
 
   // Only the stable `mutate` is kept: the mutation result is a new object
   // every render, and closing over it would defeat memoisation below
