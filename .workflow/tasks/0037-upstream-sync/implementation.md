@@ -88,3 +88,21 @@ Every upstream commit from the fork point to `6ef6d303d` is now on the branch, i
 - Fork commit `caffb3336`: fork code fitted to the new lint rules without suppressions.
 - Fork commit `3b2ce78b5`: closing-transfer tests expect amounts after D1.
 - Gate after `3b2ce78b5`: typecheck, repo-wide oxlint and every lage test task pass. VRT screenshots are upstream renders and still need regenerating (D20).
+
+
+## Sync of 2026-10-27 (branch upstream-sync-2026-10b)
+
+Upstream tip `fd08b56ee`. 23 of the 24 commits after `d1a536f35` were cherry-picked with `-x`. Adapted picks:
+
+- `97a7ca50f` (per-budget SimpleFIN): kept the fork's try/catch around the status request and the error-stays-open modal behavior.
+- `160b2c99a`: the fork's `api.ts` already merges the fields onto the stored transaction, so only the tests and release note came across.
+- `2ccf885b4` and the dependency bumps: the fork's `yarn.lock` was kept and reconciled with `yarn install` (D14).
+- `e13ae7506`: kept the fork's `decimalPlaces` threading into the Monte Carlo config.
+- `3cb525963` (automatic budget range): kept the fork's expense view, `budgetId` and mobile init error handling; bounds tests went into `sync-events-dashboard.test.ts` (D16).
+- `21c2b3f70`: took upstream's goal helper (decimal places), and re-applied the fork's `prewarmMonth` try/catch.
+- `1b245f260`: both sides' tests kept; the cache-barrier helper now takes `isReceived` (`9f90cde08`).
+- `d9d15c12f`: kept the fork's `isCurrent` guard and column-width props next to upstream's focus props.
+
+Not applied: `fd08b56ee` (D24).
+
+Verification: `yarn typecheck` passes. `@actual-app/web` passes (1578 tests). Core and sync-server pass except two upstream symlink tests in `atomic-write.test.ts`, which fail with `EPERM` because this Windows account cannot create symlinks.
