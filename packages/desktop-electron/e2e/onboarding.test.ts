@@ -12,6 +12,9 @@ test.describe('Onboarding', () => {
   });
 
   test('checks the page visuals', async ({ electronPage }) => {
+    // Park the pointer in the corner: wherever the window opens under it, it
+    // can rest on the Start button and capture its hover color.
+    await electronPage.mouse.move(0, 0);
     await expect(electronPage).toHaveScreenshot();
     await configurationPage.clickOnNoServer();
     await expect(electronPage).toHaveScreenshot();
