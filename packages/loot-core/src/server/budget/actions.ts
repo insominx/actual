@@ -7,7 +7,7 @@ import { batchMessages } from '#server/sync';
 import { getLocale } from '#shared/locale';
 import * as monthUtils from '#shared/months';
 import { roundHalfAwayFromZero } from '#shared/schedules';
-import { integerToCurrencyScaled, safeNumber } from '#shared/util';
+import { integerToCurrencyWithDecimal, safeNumber } from '#shared/util';
 import type { IntegerAmount } from '#shared/util';
 import type { CategoryEntity } from '#types/models';
 
@@ -794,7 +794,7 @@ async function addMovementNotes({
   from: CategoryEntity['id'] | 'to-budget';
   currencyCode: string;
 }) {
-  const displayAmount = integerToCurrencyScaled(amount, currencyCode);
+  const displayAmount = integerToCurrencyWithDecimal(amount, currencyCode);
 
   const monthBudgetNotesId = `budget-${month}`;
   const existingMonthBudgetNotes = addNewLine(
