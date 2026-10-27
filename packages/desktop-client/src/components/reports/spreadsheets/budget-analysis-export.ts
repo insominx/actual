@@ -15,10 +15,7 @@ type IntervalRow = {
 
 const FORMULA_TRIGGERS = /^[=+\-@\t\r]/;
 
-export function buildBudgetAnalysisCsv(
-  rows: IntervalRow[],
-  decimalPlaces = 2,
-): string {
+export function buildBudgetAnalysisCsv(rows: IntervalRow[]): string {
   const month = t('Month');
   const budgeted = t('Budgeted');
   const spent = t('Spent');
@@ -30,10 +27,10 @@ export function buildBudgetAnalysisCsv(
   return csvStringify(
     rows.map(row => [
       row.date,
-      integerToAmount(row.budgeted, decimalPlaces),
-      integerToAmount(row.spent, decimalPlaces),
-      integerToAmount(row.overspendingAdjustment, decimalPlaces),
-      integerToAmount(row.balance, decimalPlaces),
+      integerToAmount(row.budgeted),
+      integerToAmount(row.spent),
+      integerToAmount(row.overspendingAdjustment),
+      integerToAmount(row.balance),
     ]),
     {
       header: true,

@@ -30,7 +30,7 @@ describe('reservation properties', () => {
         priority: 0,
         directive: 'template',
       } as ByTemplate;
-      const claim = getByClaim(template, month, 2, 'k', 'label');
+      const claim = getByClaim(template, month, 'k', 'label');
       expect(claim).not.toBeNull();
       const period = annual ? repeat * 12 : repeat;
       // Reference: smallest templateMonth + k * period that is >= month.

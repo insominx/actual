@@ -68,10 +68,6 @@ export function clearCachedUserPreferences(): void {
   cachedUserPreferences = null;
 }
 
-export function getCachedCurrencyDecimalPlaces(): number {
-  return cachedUserPreferences?.currency.decimalPlaces ?? 2;
-}
-
 function getUserPreferences(): UserPreferences {
   if (!cachedUserPreferences) {
     // If not loaded, use defaults
@@ -201,10 +197,7 @@ export class CustomFunctionsPlugin extends FunctionPlugin {
       state,
       this.metadata('INTEGER_TO_AMOUNT'),
       (integerAmount: number, decimalPlaces?: number) => {
-        return integerToAmount(
-          integerAmount,
-          decimalPlaces ?? getCachedCurrencyDecimalPlaces(),
-        );
+        return integerToAmount(integerAmount, decimalPlaces);
       },
     );
   }

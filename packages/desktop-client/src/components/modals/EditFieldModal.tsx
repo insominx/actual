@@ -27,7 +27,6 @@ import { LabeledCheckbox } from '#components/forms/LabeledCheckbox';
 import { InputField } from '#components/mobile/MobileForms';
 import { DateSelect } from '#components/select/DateSelect';
 import { useDateFormat } from '#hooks/useDateFormat';
-import { useFormat } from '#hooks/useFormat';
 import type { Modal as ModalType } from '#modals/modalsSlice';
 
 const itemStyle: CSSProperties = {
@@ -59,7 +58,6 @@ export function EditFieldModal({
   onClose,
 }: EditFieldModalProps) {
   const { t } = useTranslation();
-  const format = useFormat();
   const dateFormat = useDateFormat() || 'MM/dd/yyyy';
   const noteInputRef = useRef<HTMLInputElement | null>(null);
   const noteReplaceInputRef = useRef<HTMLInputElement | null>(null);
@@ -74,16 +72,15 @@ export function EditFieldModal({
     if (value != null) {
       // Process the value if needed
       if (name === 'amount') {
-        const decimalPlaces = format.currency.decimalPlaces;
         if (typeof value === 'string') {
           const parsed = currencyToAmount(value);
           if (parsed === null) {
             alert(t('Invalid amount value'));
             return;
           }
-          value = amountToInteger(parsed, decimalPlaces);
+          value = amountToInteger(parsed);
         } else if (typeof value === 'number') {
-          value = amountToInteger(value, decimalPlaces);
+          value = amountToInteger(value);
         }
       }
 

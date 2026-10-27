@@ -492,7 +492,6 @@ export async function getScheduleClaims(
   templates: ScheduleTemplate[],
   month: string,
   category: CategoryEntity,
-  currency: Currency,
 ): Promise<ScheduleClaimsResult> {
   if (templates.length === 0) {
     return { ok: true, claims: [] };
@@ -556,7 +555,6 @@ export async function getScheduleClaims(
       [...uniqueById.values()],
       month,
       category,
-      currency,
     );
   } catch {
     return { ok: false, reason: 'inactive-schedule' };

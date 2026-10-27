@@ -2327,7 +2327,6 @@ describe('CategoryTemplateContext', () => {
         '2024-01',
         0,
         0,
-        'USD',
         true,
       );
       const result = await instance.runTemplatesForPriority(
@@ -2357,7 +2356,6 @@ describe('CategoryTemplateContext', () => {
         '2024-01',
         1040,
         0,
-        'USD',
         true,
       );
       const result = await instance.runTemplatesForPriority(
@@ -2391,7 +2389,6 @@ describe('CategoryTemplateContext', () => {
         '2024-01',
         1040,
         0,
-        'USD',
         true,
       );
       expect(instance.runRemainder(20000, 15000)).toBe(8900);

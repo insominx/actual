@@ -995,19 +995,13 @@ function CrossoverInner({ widget }: CrossoverInnerProps) {
                         value={
                           expectedContribution === null
                             ? ''
-                            : integerToAmount(
-                                expectedContribution,
-                                format.currency.decimalPlaces,
-                              )
+                            : integerToAmount(expectedContribution)
                         }
                         onChange={e =>
                           setExpectedContribution(
                             isNaN(e.target.valueAsNumber)
                               ? null
-                              : amountToInteger(
-                                  e.target.valueAsNumber,
-                                  format.currency.decimalPlaces,
-                                ),
+                              : amountToInteger(e.target.valueAsNumber),
                           )
                         }
                         onBlur={() => {

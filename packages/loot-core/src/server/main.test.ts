@@ -120,37 +120,6 @@ describe('Budgets', () => {
 });
 
 describe('Accounts', () => {
-  test('opening balance uses the budget currency scale', async () => {
-    db.runQuery(
-      `INSERT INTO preferences (id, value) VALUES ('defaultCurrencyCode', 'JPY')`,
-    );
-    const id = await runHandler(handlers['account-create'], {
-      name: 'Yen cash',
-      balance: 1000,
-    });
-    const row = db.firstSync<{ amount: number }>(
-      `SELECT amount FROM v_transactions WHERE account = ? AND starting_balance_flag = 1`,
-      [id],
-    );
-    expect(row?.amount).toBe(1000);
-  });
-
-  test('api opening balance keeps the stored integer for yen', async () => {
-    await prefs.loadPrefs();
-    db.runQuery(
-      `INSERT INTO preferences (id, value) VALUES ('defaultCurrencyCode', 'JPY')`,
-    );
-    const id = await runHandler(handlers['api/account-create'], {
-      account: { name: 'Yen cash' },
-      initialBalance: 1000,
-    });
-    const row = db.firstSync<{ amount: number }>(
-      `SELECT amount FROM v_transactions WHERE account = ? AND starting_balance_flag = 1`,
-      [id],
-    );
-    expect(row?.amount).toBe(1000);
-  });
-
   test('forced closure rejects a missing transfer counterpart before unlinking', async () => {
     const id = await runHandler(handlers['account-create'], {
       name: 'Deleting',

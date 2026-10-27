@@ -37,7 +37,6 @@ import { LabeledCheckbox } from '#components/forms/LabeledCheckbox';
 import { TableHeader, TableWithNavigator } from '#components/table';
 import { useCategories } from '#hooks/useCategories';
 import { useDateFormat } from '#hooks/useDateFormat';
-import { useFormat } from '#hooks/useFormat';
 import { useSyncedPrefs } from '#hooks/useSyncedPrefs';
 import { payeeQueries } from '#payees';
 
@@ -124,7 +123,6 @@ export function ImportTransactionsModal({
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const dateFormat = useDateFormat() || ('MM/dd/yyyy' as const);
-  const decimalPlaces = useFormat().currency.decimalPlaces;
   const [prefs, savePrefs] = useSyncedPrefs();
   const { data: { list: categories } = { list: [] } } = useCategories();
 
@@ -291,14 +289,14 @@ export function ImportTransactionsModal({
           ...finalTransaction,
           category: category_id,
           date,
-          amount: amountToInteger(amount, decimalPlaces),
+          amount: amountToInteger(amount),
           cleared: clearOnImport,
         });
       }
 
       return previewTransactions;
     },
-    [categories, clearOnImport, decimalPlaces],
+    [categories, clearOnImport],
   );
 
   const parse = useCallback(
@@ -643,7 +641,7 @@ export function ImportTransactionsModal({
         ...finalTransaction,
         category: category_id,
         date,
-        amount: amountToInteger(amount, decimalPlaces),
+        amount: amountToInteger(amount),
         cleared: clearOnImport,
         notes: importNotes ? finalTransaction.notes : null,
       });

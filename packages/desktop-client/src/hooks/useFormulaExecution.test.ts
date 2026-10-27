@@ -270,35 +270,6 @@ describe('BALANCE_OF in query mode', () => {
     expect(balanceQuery).toBeDefined();
   });
 
-  it('keeps a yen account balance in whole units', async () => {
-    initServer({
-      'formula-load-user-preferences': async () => ({
-        currency: getCurrency('JPY'),
-        numberFormat: 'comma-dot',
-        decimalPlaces: 0,
-        thousandsSeparator: ',',
-        decimalSeparator: '.',
-        locale: 'en-US',
-        currencySymbolPosition: 'before',
-        currencySpaceBetweenAmountAndSymbol: false,
-      }),
-      query: async payload => {
-        queryPayloads.push(payload as unknown as SerializedQuery);
-        return { data: 1000, dependencies: [] };
-      },
-    });
-
-    const { result } = renderHook(
-      () =>
-        useFormulaExecution('=BALANCE_OF("acc1")', {}, 0, undefined, [
-          { id: 'acc1', name: 'Yen cash' },
-        ]),
-      { wrapper: TestProviders },
-    );
-
-    await waitFor(() => expect(result.current.result).toBe(1000));
-  });
-
   it('resolves an account by exact name', async () => {
     const { result } = renderHook(
       () =>
@@ -332,37 +303,6 @@ describe('BALANCE_OF in query mode', () => {
   });
 });
 
-describe('QUERY amount scale', () => {
-  beforeEach(() => {
-    initServer({
-      'formula-load-user-preferences': async () => ({
-        currency: getCurrency('JPY'),
-        numberFormat: 'comma-dot',
-        decimalPlaces: 0,
-        thousandsSeparator: ',',
-        decimalSeparator: '.',
-        locale: 'en-US',
-        currencySymbolPosition: 'before',
-        currencySpaceBetweenAmountAndSymbol: false,
-      }),
-      'make-filters-from-conditions': async () => ({ filters: [] }),
-      query: async () => ({ data: 1000, dependencies: [] }),
-    });
-  });
-
-  afterEach(async () => {
-    await clearServer();
-  });
-
-  it('keeps a yen query sum in whole units', async () => {
-    const { result } = renderHook(
-      () => useFormulaExecution('=QUERY("Expenses")', { Expenses: {} }),
-      { wrapper: TestProviders },
-    );
-
-    await waitFor(() => expect(result.current.result).toBe(1000));
-  });
-});
 
 describe('formula execution stability', () => {
   let executionCount: number;

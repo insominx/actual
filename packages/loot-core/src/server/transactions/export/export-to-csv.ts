@@ -89,7 +89,6 @@ export async function exportToCSV(
   accounts,
   categoryGroups,
   payees,
-  decimalPlaces = 2,
 ) {
   const accountNamesById = accounts.reduce((reduced, { id, name }) => {
     reduced[id] = name;
@@ -128,7 +127,7 @@ export async function exportToCSV(
       Payee: payeeNamesById[payee],
       Notes: notes,
       Category: categoryNamesById[category],
-      Amount: amount == null ? 0 : integerToAmount(amount, decimalPlaces),
+      Amount: amount == null ? 0 : integerToAmount(amount),
       Cleared: cleared,
       Reconciled: reconciled,
     }),
@@ -137,7 +136,7 @@ export async function exportToCSV(
   return csvStringify(transactionsForExport, csvStringifyOptions);
 }
 
-export async function exportQueryToCSV(query, decimalPlaces = 2) {
+export async function exportQueryToCSV(query) {
   const { data: transactions } = await aqlQuery(
     query
       .select([
@@ -175,9 +174,9 @@ export async function exportQueryToCSV(query, decimalPlaces = 2) {
         ? 0
         : trans.Amount == null
           ? 0
-          : integerToAmount(trans.Amount, decimalPlaces),
+          : integerToAmount(trans.Amount),
       Split_Amount: trans.IsParent
-        ? integerToAmount(trans.Amount, decimalPlaces)
+        ? integerToAmount(trans.Amount)
         : 0,
       Cleared:
         trans.Reconciled === true

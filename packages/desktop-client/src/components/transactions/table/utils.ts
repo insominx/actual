@@ -1,5 +1,4 @@
 import { evalArithmetic } from '@actual-app/core/shared/arithmetic';
-import { getDecimalPlaces } from '@actual-app/core/shared/currencies';
 import { currentDay } from '@actual-app/core/shared/months';
 import {
   amountToInteger,
@@ -29,19 +28,9 @@ export type TransactionUpdateFunction = <T extends keyof SerializedTransaction>(
   value: SerializedTransaction[T],
 ) => void;
 
-function formatEditableAmount(value: number, currencyCode?: string): string {
-  // Two-decimal currencies keep the existing hide-fraction edit string.
-  // Other currencies must use their own scale or 1,234 yen shows as 12.34.
-  if (currencyCode != null && getDecimalPlaces(currencyCode) !== 2) {
-    return integerToCurrencyWithDecimal(value, currencyCode);
-  }
-  return integerToCurrencyWithDecimal(value);
-}
-
 export function serializeTransaction(
   transaction: TransactionEntity,
   showZeroInDeposit?: boolean,
-  currencyCode?: string,
 ): SerializedTransaction {
   const { amount, date: originalDate } = transaction;
 
@@ -72,15 +61,14 @@ export function serializeTransaction(
   return {
     ...transaction,
     date,
-    debit: debit != null ? formatEditableAmount(debit, currencyCode) : '',
-    credit: credit != null ? formatEditableAmount(credit, currencyCode) : '',
+    debit: debit != null ? integerToCurrencyWithDecimal(debit) : '',
+    credit: credit != null ? integerToCurrencyWithDecimal(credit) : '',
   };
 }
 
 export function deserializeTransaction(
   transaction: SerializedTransaction,
   originalTransaction: TransactionEntity,
-  currencyCode?: string,
 ) {
   const { debit, credit, date: originalDate, ...realTransaction } = transaction;
 
@@ -92,11 +80,9 @@ export function deserializeTransaction(
     amount = evalArithmetic(credit, null);
   }
 
-  const decimalPlaces =
-    currencyCode != null ? getDecimalPlaces(currencyCode) : 2;
   amount =
     amount != null
-      ? amountToInteger(amount, decimalPlaces)
+      ? amountToInteger(amount)
       : (realTransaction.amount ?? originalTransaction.amount);
   let date = originalDate;
   if (date == null) {

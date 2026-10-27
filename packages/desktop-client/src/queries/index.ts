@@ -84,12 +84,10 @@ export function transactionsSearch(
   currentQuery: Query,
   search: string,
   dateFormat: SyncedPrefs['dateFormat'],
-  decimalPlaces = 2,
 ) {
   // Amounts are matched by magnitude, so "-50" must find -50.00 too
   const parsedAmount = currencyToAmount(search);
   const amount = parsedAmount == null ? null : Math.abs(parsedAmount);
-  const amountScale = 10 ** decimalPlaces;
   const escapedSearch = search.replace(/[\\%?]/g, '\\$&');
 
   // Support various date formats
@@ -114,14 +112,13 @@ export function transactionsSearch(
         amount != null && {
           amount: {
             $transform: '$abs',
-            $eq: amountToInteger(amount, decimalPlaces),
+            $eq: amountToInteger(amount),
           },
         },
         amount != null &&
-          Number.isInteger(amount) &&
-          decimalPlaces > 0 && {
+          Number.isInteger(amount) && {
             amount: {
-              $transform: { $abs: { $idiv: ['$', amountScale] } },
+              $transform: { $abs: { $idiv: ['$', 100] } },
               $eq: amount,
             },
           },

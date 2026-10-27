@@ -144,10 +144,7 @@ export function AmountInput({
         newText = '';
       } else {
         // Typed digits are in the currency's smallest unit (cents, whole yen)
-        const amount = integerToAmount(
-          parseInt(digits, 10),
-          format.currency.decimalPlaces,
-        );
+        const amount = integerToAmount(parseInt(digits, 10));
         newText = format.forEdit(amountToInteger(amount));
       }
     }

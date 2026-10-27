@@ -23,7 +23,6 @@ import type {
 } from '#components/reports/reports/monte-carlo/monteCarloSimulation';
 import { Field, Row, TableHeader } from '#components/table';
 import { FinancialInput } from '#components/util/FinancialInput';
-import { useFormat } from '#hooks/useFormat';
 
 const INCOME_ROW_HEIGHT = 43;
 
@@ -47,7 +46,6 @@ export function MonteCarloIncomeStreams({
   onConfigChange,
 }: MonteCarloIncomeStreamsProps) {
   const { t } = useTranslation();
-  const format = useFormat();
 
   function updateIncomeStream(
     incomeStreamId: string,
@@ -79,7 +77,7 @@ export function MonteCarloIncomeStreams({
     onConfigChange({
       incomeStreams: [
         ...incomeStreams,
-        createMonteCarloIncomeStream(uuidv4(), format.currency.decimalPlaces),
+        createMonteCarloIncomeStream(uuidv4()),
       ],
     });
   }

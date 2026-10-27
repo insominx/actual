@@ -2,11 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ALLOCATION_PRESETS,
-  createMonteCarloContribution,
-  createMonteCarloIncomeStream,
   createMonteCarloInvestmentPhase,
-  createMonteCarloPot,
-  createMonteCarloSpendingPhase,
   getHistoricalMixStats,
   getHistoricalPresetStats,
   getMonteCarloHorizonYears,
@@ -140,30 +136,6 @@ function deterministicDepletionYear(
   }
   return null;
 }
-
-describe('currency scale of new plan defaults', () => {
-  it('keeps two-decimal currencies in cents and stores yen as whole units', () => {
-    expect(createMonteCarloPot('pot', 2).startingBalance).toBe(50_000_000);
-    expect(createMonteCarloPot('pot', 0).startingBalance).toBe(500_000);
-    expect(createMonteCarloContribution('c', 'pot', 2).annualAmount).toBe(
-      1_000_000,
-    );
-    expect(createMonteCarloContribution('c', 'pot', 0).annualAmount).toBe(
-      10_000,
-    );
-    expect(createMonteCarloIncomeStream('i', 0).annualAmount).toBe(10_000);
-    expect(createMonteCarloSpendingPhase('p', null, 0).annualWithdrawal).toBe(
-      20_000,
-    );
-    expect(
-      monteCarloConfigFromMeta(undefined, 0).spendingPhases[0].annualWithdrawal,
-    ).toBe(20_000);
-    expect(
-      monteCarloConfigFromMeta(undefined, 0).pots.find(pot => !pot.isSurplus)
-        ?.startingBalance,
-    ).toBe(500_000);
-  });
-});
 
 describe('surplus pot defaults', () => {
   it('starts new plans with a surplus cash pot ahead of an ordinary pot', () => {

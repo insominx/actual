@@ -18,7 +18,7 @@ import { TextOneLine } from '@actual-app/components/text-one-line';
 import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
 import { isPreviewId } from '@actual-app/core/shared/transactions';
-import { integerToCurrencyScaled } from '@actual-app/core/shared/util';
+import { integerToCurrencyWithDecimal } from '@actual-app/core/shared/util';
 import type { IntegerAmount } from '@actual-app/core/shared/util';
 import type {
   AccountEntity,
@@ -321,7 +321,7 @@ export function TransactionListItem({
                   ...textStyle,
                 }}
               >
-                {integerToCurrencyScaled(amount, currencyCode)}
+                {integerToCurrencyWithDecimal(amount, currencyCode)}
               </Text>
               {showRunningBalance && runningBalance !== undefined && (
                 <Text
@@ -336,7 +336,7 @@ export function TransactionListItem({
                     }),
                   }}
                 >
-                  {integerToCurrencyScaled(runningBalance, currencyCode)}
+                  {integerToCurrencyWithDecimal(runningBalance, currencyCode)}
                 </Text>
               )}
             </View>

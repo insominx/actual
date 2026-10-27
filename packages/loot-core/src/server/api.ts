@@ -8,7 +8,6 @@ import { fetch } from '#platform/server/fetch';
 import { logger } from '#platform/server/log';
 import * as sqlite from '#platform/server/sqlite';
 import { canonicalJson } from '#shared/canonical-json';
-import { getCurrency } from '#shared/currencies';
 import {
   getBankSyncError,
   getDownloadError,
@@ -2769,20 +2768,10 @@ async function performAccountCreation({
     offBudget: account.offbudget,
     closed: account.closed,
     // The public API passes a stored integer. Turn it back into major units
-    // with the budget currency so account-create stores that same integer.
-    balance:
-      initialBalance != null
-        ? integerToAmount(initialBalance, budgetDecimalPlaces())
-        : null,
+    // so account-create stores that same integer.
+    balance: initialBalance != null ? integerToAmount(initialBalance) : null,
     openingDate,
   });
-}
-function budgetDecimalPlaces() {
-  const code = db.firstSync<{ value: string }>(
-    `SELECT value FROM preferences WHERE id = ?`,
-    ['defaultCurrencyCode'],
-  )?.value;
-  return getCurrency(code ?? '').decimalPlaces;
 }
 
 handlers['api/account-create'] = withMutation(performAccountCreation);

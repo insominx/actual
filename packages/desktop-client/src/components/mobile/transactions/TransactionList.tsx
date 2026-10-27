@@ -34,7 +34,7 @@ import { isPreviewId } from '@actual-app/core/shared/transactions';
 import { validForTransfer } from '@actual-app/core/shared/transfer';
 import {
   groupById,
-  integerToCurrencyScaled,
+  integerToCurrencyWithDecimal,
 } from '@actual-app/core/shared/util';
 import type { IntegerAmount } from '@actual-app/core/shared/util';
 import type {
@@ -516,7 +516,7 @@ function SelectedTransactionsFloatingActionBar({
                       case 'amount':
                         displayValue = Number.isNaN(Number(value))
                           ? value
-                          : integerToCurrencyScaled(
+                          : integerToCurrencyWithDecimal(
                               Number(value),
                               currencyCode,
                             );

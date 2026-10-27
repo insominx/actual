@@ -674,10 +674,7 @@ export class CategoryTemplateContext {
   }
 
   private removeFractionDown(amount: number): number {
-    return amountToInteger(
-      Math.floor(integerToAmount(amount, this.currency.decimalPlaces)),
-      this.currency.decimalPlaces,
-    );
+    return amountToInteger(Math.floor(integerToAmount(amount)));
   }
 
   //-----------------------------------------------------------------------------

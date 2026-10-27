@@ -238,13 +238,11 @@ export function AreaGraph({
   const labelsMin = areaChartDomainEdge(
     dataMin,
     extendRangeAmount,
-    format.currency.decimalPlaces,
     'min',
   );
   const labelsMax = areaChartDomainEdge(
     dataMax,
     extendRangeAmount,
-    format.currency.decimalPlaces,
     'max',
   );
   const lastLabel = data.intervalData.length - 1;

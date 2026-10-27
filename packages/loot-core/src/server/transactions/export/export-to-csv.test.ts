@@ -98,18 +98,4 @@ describe('exportToCSV', () => {
       ),
     ).toBe('(SPLIT) rent');
   });
-
-  it('exports yen amounts as whole units', async () => {
-    const csv = await exportToCSV(
-      [makeTransaction({ amount: -2500 })],
-      accounts,
-      categoryGroups,
-      [{ id: 'p1', name: 'Shop' }],
-      0,
-    );
-    const rows = csvParse(csv, { columns: true }) as Array<
-      Record<string, string>
-    >;
-    expect(rows[0].Amount).toBe('-2500');
-  });
 });

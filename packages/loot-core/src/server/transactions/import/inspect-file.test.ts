@@ -54,8 +54,4 @@ describe('inspectImportFile amount scale', () => {
   it('keeps cents for a two-decimal budget currency', async () => {
     expect(await inspectAmount('USD')).toBe(-100000);
   });
-
-  it('stores a yen amount as whole units', async () => {
-    expect(await inspectAmount('JPY')).toBe(-1000);
-  });
 });

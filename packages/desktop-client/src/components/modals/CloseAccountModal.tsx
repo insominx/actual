@@ -11,7 +11,7 @@ import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { spacing } from '@actual-app/components/tokens';
 import { View } from '@actual-app/components/view';
-import { integerToCurrencyScaled } from '@actual-app/core/shared/util';
+import { integerToCurrencyWithDecimal } from '@actual-app/core/shared/util';
 import type { AccountEntity } from '@actual-app/core/types/models';
 import type { TransObjectLiteral } from '@actual-app/core/types/util';
 
@@ -135,7 +135,7 @@ export function CloseAccountModal({
         <strong>
           {
             {
-              balance: integerToCurrencyScaled(balance, currencyCode),
+              balance: integerToCurrencyWithDecimal(balance, currencyCode),
             } as TransObjectLiteral
           }
         </strong>

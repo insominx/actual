@@ -18,7 +18,6 @@ import {
   defaultMappings,
   mappingsFromString,
 } from '#server/util/custom-sync-mapping';
-import { getDecimalPlaces } from '#shared/currencies';
 import * as monthUtils from '#shared/months';
 import { q } from '#shared/query';
 import {
@@ -675,11 +674,6 @@ export async function planReconciledTransactions(
   const added = [];
   const updatedPreview = [];
   const existingPayeeMap = new Map<string, string>();
-  const currencyCode = db.firstSync<{ value: string }>(
-    `SELECT value FROM preferences WHERE id = ?`,
-    ['defaultCurrencyCode'],
-  )?.value;
-  const decimalPlaces = getDecimalPlaces(currencyCode ?? '');
 
   const {
     payeesToCreate,
@@ -748,7 +742,7 @@ export async function planReconciledTransactions(
           existingPayeeMap.set(existing.payee, payee?.name);
         }
         existing.payee_name = existingPayeeMap.get(existing.payee);
-        existing.amount = integerToAmount(existing.amount, decimalPlaces);
+        existing.amount = integerToAmount(existing.amount);
         updatedPreview.push({ transaction: trans, existing });
       } else {
         updatedPreview.push({ transaction: trans, ignored: true });

@@ -6,7 +6,6 @@ import { amountToInteger, integerToAmount } from '@actual-app/core/shared/util';
 
 import { AmountInput as LegacyAmountInput } from '#components/util/AmountInput';
 import { useFeatureFlag } from '#hooks/useFeatureFlag';
-import { useFormat } from '#hooks/useFormat';
 import { useSyncedPref } from '#hooks/useSyncedPref';
 
 import { CalculatorAmountInput } from './CalculatorAmountInput';
@@ -35,7 +34,6 @@ export const SplitAmountInput = memo(function SplitAmountInput({
   keyboardHeader,
 }: SplitAmountInputProps) {
   const mobileCalculatorEnabled = useFeatureFlag('mobileCalculator');
-  const decimalPlaces = useFormat().currency.decimalPlaces;
   const [hideFraction] = useSyncedPref('hideFraction');
   const [focused, setFocused] = useState(autoFocus);
 
@@ -87,13 +85,13 @@ export const SplitAmountInput = memo(function SplitAmountInput({
         onFocus?.(event);
       }}
       onUpdate={amount => {
-        const nextAmount = integerToAmount(amount, decimalPlaces);
+        const nextAmount = integerToAmount(amount);
         if (nextAmount !== value) {
           onChange?.(nextAmount);
         }
       }}
       style={{ marginRight: 8 }}
-      value={amountToInteger(value, decimalPlaces)}
+      value={amountToInteger(value)}
       zeroSign={negate ? '-' : '+'}
     />
   );

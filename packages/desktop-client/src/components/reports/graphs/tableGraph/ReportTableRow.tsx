@@ -41,11 +41,8 @@ type ReportTableRowProps = {
   scopeTagNames?: string[];
 };
 
-export function amountOverflowsCell(
-  amount: number,
-  decimalPlaces: number,
-): boolean {
-  return Math.abs(amount) / 10 ** decimalPlaces > 100_000;
+export function amountOverflowsCell(amount: number): boolean {
+  return Math.abs(amount) / 100 > 100_000;
 }
 
 const getAmountColor = (amount: number) => {
@@ -80,8 +77,7 @@ export const ReportTableRow = memo(
       intervalsCount > 0 ? Math.round(item[balanceTypeOp] / intervalsCount) : 0;
     const groupByItem = groupBy === 'Interval' ? 'date' : 'name';
     const format = useFormat();
-    const showFullAmount = (amount: number) =>
-      amountOverflowsCell(amount, format.currency.decimalPlaces);
+    const showFullAmount = (amount: number) => amountOverflowsCell(amount);
 
     const navigate = useNavigate();
     const { isNarrowWidth } = useResponsive();

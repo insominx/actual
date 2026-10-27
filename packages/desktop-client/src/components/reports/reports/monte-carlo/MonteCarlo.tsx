@@ -107,14 +107,13 @@ export function MonteCarlo() {
     }
 
     setConfig(
-      monteCarloConfigFromMeta(widget?.meta, format.currency.decimalPlaces),
+      monteCarloConfigFromMeta(widget?.meta),
     );
     setSelectionsInitialized(true);
   }, [
     selectionsInitialized,
     isLoading,
     widget?.meta,
-    format.currency.decimalPlaces,
   ]);
 
   // Only the stable `mutate` is kept: the mutation result is a new object

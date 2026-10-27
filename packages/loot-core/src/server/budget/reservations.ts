@@ -8,12 +8,9 @@
 // (`accruedToDate`, `settleReservations`, `getByReservationClaims`).
 
 import { logger } from '#platform/server/log';
-import { aqlQuery } from '#server/aql';
 import * as db from '#server/db';
 import { APIError } from '#server/errors';
-import { getCurrency } from '#shared/currencies';
 import * as monthUtils from '#shared/months';
-import { q } from '#shared/query';
 import { amountToInteger } from '#shared/util';
 import type { CategoryEntity } from '#types/models';
 import type {
@@ -78,12 +75,6 @@ export async function getReservations({
     throw APIError('Reservations are only available for envelope budgets');
   }
 
-  const { data: currencyPref }: { data: Array<{ value: string }> } =
-    await aqlQuery(
-      q('preferences').filter({ id: 'defaultCurrencyCode' }).select('*'),
-    );
-  const currency = getCurrency(currencyPref[0]?.value ?? '');
-
   const categories = await db.all<CategoryRecord>(
     `SELECT c.id, c.name, c.cat_group, c.goal_def, c.template_settings, n.note
      FROM categories c
@@ -96,7 +87,7 @@ export async function getReservations({
   const rows: ReservationRow[] = [];
   for (const category of categories) {
     try {
-      rows.push(await getCategoryRow(category, month, sheetName, currency));
+      rows.push(await getCategoryRow(category, month, sheetName));
     } catch (e) {
       logger.error('Failed to calculate reservations for category', e);
       rows.push({
@@ -182,7 +173,6 @@ export function settleReservations(
 export function getByClaim(
   template: ByTemplate,
   month: string,
-  decimalPlaces: number,
   key: string,
   fallbackLabel: string,
 ): ExactClaim | null {
@@ -219,7 +209,7 @@ export function getByClaim(
     }
     targetMonth = nextMonth;
   }
-  const target = amountToInteger(template.amount, decimalPlaces);
+  const target = amountToInteger(template.amount);
 
   return {
     key,
@@ -235,7 +225,6 @@ export function getByClaim(
 /** The monthly amount of a supported simple template, or `null`. */
 export function getAllowanceAmount(
   template: Extract<Template, { type: 'simple' }>,
-  decimalPlaces: number,
 ): number | null {
   if (
     template.limit != null ||
@@ -245,7 +234,7 @@ export function getAllowanceAmount(
   ) {
     return null;
   }
-  return amountToInteger(template.monthly, decimalPlaces);
+  return amountToInteger(template.monthly);
 }
 
 type TemplatesRead = { ok: true; templates: Template[] } | { ok: false };
@@ -331,7 +320,6 @@ async function getCategoryRow(
   category: CategoryRecord,
   month: string,
   sheetName: string,
-  currency: ReturnType<typeof getCurrency>,
 ): Promise<ReservationRow> {
   const unavailable = (
     reason: ReservationUnavailableReason,
@@ -354,7 +342,7 @@ async function getCategoryRow(
   read.templates.forEach((template, index) => {
     switch (template.type) {
       case 'simple': {
-        const amount = getAllowanceAmount(template, currency.decimalPlaces);
+        const amount = getAllowanceAmount(template);
         if (amount === null) {
           reasons.add('unsupported-template');
         } else {
@@ -369,7 +357,6 @@ async function getCategoryRow(
         const claim = getByClaim(
           template,
           month,
-          currency.decimalPlaces,
           `${category.id}:${index}`,
           category.name,
         );
@@ -394,7 +381,6 @@ async function getCategoryRow(
       is_income: false,
       group: category.cat_group,
     } satisfies CategoryEntity,
-    currency,
   );
   if (scheduleResult.ok === false) {
     reasons.add(scheduleResult.reason);

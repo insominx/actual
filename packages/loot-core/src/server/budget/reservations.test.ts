@@ -33,22 +33,6 @@ function simpleTemplate(monthly: number): SimpleTemplate {
   return { type: 'simple', monthly, priority: 0, directive: 'template' };
 }
 
-function byClaim(...args: Parameters<typeof getByClaim>): ExactClaim {
-  const claim = getByClaim(...args);
-  if (!claim) {
-    throw new Error('Expected a By claim');
-  }
-  return claim;
-}
-
-function allowanceAmount(...args: Parameters<typeof getAllowanceAmount>) {
-  const amount = getAllowanceAmount(...args);
-  if (amount === null) {
-    throw new Error('Expected an allowance');
-  }
-  return amount;
-}
-
 function expectReconciles(row: ReturnType<typeof settleReservations>) {
   expect(row.reserved + row.allowance + row.spare).toBe(row.balance);
 }
@@ -147,53 +131,6 @@ describe('settleReservations', () => {
   });
 });
 
-describe('F15 0-decimal currency', () => {
-  it('reconciles a JPY category', () => {
-    const allowance = allowanceAmount(simpleTemplate(5000), 0);
-    const claim = byClaim(
-      byTemplate(12000, '2026-12'),
-      '2026-09',
-      0,
-      'cat:1',
-      'Cat',
-    );
-    expect(claim).toMatchObject({
-      target: 12000,
-      monthlyRate: 1000,
-      monthsRemaining: 3,
-    });
-    const row = settleReservations(20000, [claim], allowance);
-    expect(row).toMatchObject({
-      reserved: 9000,
-      allowanceTotal: 5000,
-      allowance: 5000,
-      spare: 6000,
-    });
-    expectReconciles(row);
-  });
-});
-
-describe('F16 synthetic 3-decimal currency', () => {
-  it('keeps the exact accrual and rounds the total', () => {
-    const claim = byClaim(
-      byTemplate(12.345, '2026-12'),
-      '2026-09',
-      3,
-      'cat:0',
-      'Cat',
-    );
-    expect(claim).toMatchObject({
-      target: 12345,
-      monthlyRate: 1028.75,
-      monthsRemaining: 3,
-    });
-    expect(accruedToDate(claim)).toBe(9258.75);
-    const row = settleReservations(10000, [claim], 0);
-    expect(row).toMatchObject({ reserved: 9259, allowance: 0, spare: 741 });
-    expectReconciles(row);
-  });
-});
-
 describe('getByClaim', () => {
   it.each([0.1, 1.5, -1, Infinity, NaN, Number.MAX_SAFE_INTEGER])(
     'rejects an unsupported monthly repeat of %s',
@@ -202,7 +139,6 @@ describe('getByClaim', () => {
         getByClaim(
           { ...byTemplate(600, '2026-08'), annual: false, repeat },
           '2026-09',
-          2,
           'k',
           'Cat',
         ),
@@ -215,7 +151,6 @@ describe('getByClaim', () => {
       getByClaim(
         { ...byTemplate(600, '2026-12'), annual: undefined },
         '2026-09',
-        2,
         'k',
         'Cat',
       ),
@@ -224,7 +159,6 @@ describe('getByClaim', () => {
       getByClaim(
         { ...byTemplate(600, '2026-12'), annual: false },
         '2026-09',
-        2,
         'k',
         'Cat',
       ),
@@ -236,7 +170,6 @@ describe('getByClaim', () => {
       getByClaim(
         { ...byTemplate(600, '2026-12'), from: '2026-01' },
         '2026-09',
-        2,
         'k',
         'Cat',
       ),
@@ -252,7 +185,6 @@ describe('getByClaim', () => {
           repeat: 3,
         },
         '2026-09',
-        2,
         'k',
         'Cat',
       ),
@@ -266,14 +198,13 @@ describe('getByClaim', () => {
 
 describe('getAllowanceAmount', () => {
   it('rejects negative amounts and limits', () => {
-    expect(getAllowanceAmount(simpleTemplate(-5), 2)).toBeNull();
+    expect(getAllowanceAmount(simpleTemplate(-5))).toBeNull();
     expect(
       getAllowanceAmount(
         {
           ...simpleTemplate(5),
           limit: { amount: 10, hold: false, period: 'monthly' },
         },
-        2,
       ),
     ).toBeNull();
   });

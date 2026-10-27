@@ -17,7 +17,7 @@ import { Text } from '@actual-app/components/text';
 import { TextOneLine } from '@actual-app/components/text-one-line';
 import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
-import { integerToCurrencyScaled } from '@actual-app/core/shared/util';
+import { integerToCurrencyWithDecimal } from '@actual-app/core/shared/util';
 import type {
   CategoryEntity,
   CategoryGroupEntity,
@@ -423,7 +423,7 @@ function CategoryItem({
                 <>
                   {' '}
                   <FinancialText>
-                    {integerToCurrencyScaled(toBudget || 0, currencyCode)}
+                    {integerToCurrencyWithDecimal(toBudget || 0, currencyCode)}
                   </FinancialText>
                 </>
               )
@@ -431,7 +431,7 @@ function CategoryItem({
                 <>
                   {' '}
                   <FinancialText>
-                    {integerToCurrencyScaled(balance || 0, currencyCode)}
+                    {integerToCurrencyWithDecimal(balance || 0, currencyCode)}
                   </FinancialText>
                 </>
               )}

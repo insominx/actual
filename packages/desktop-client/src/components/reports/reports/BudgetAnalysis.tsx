@@ -343,10 +343,7 @@ function BudgetAnalysisInternal({ widget }: BudgetAnalysisInternalProps) {
 
   const onExportCsv = async () => {
     if (!data) return;
-    const csv = buildBudgetAnalysisCsv(
-      data.intervalData,
-      format.currency.decimalPlaces,
-    );
+    const csv = buildBudgetAnalysisCsv(data.intervalData);
     const reportName = (widget?.meta?.name || t('Budget Analysis'))
       .replace(/[^a-z0-9]/gi, '-')
       .toLowerCase();

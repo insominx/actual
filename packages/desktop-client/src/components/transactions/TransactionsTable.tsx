@@ -67,7 +67,7 @@ import {
 import {
   amountToCurrency,
   currencyToAmount,
-  integerToCurrencyScaled,
+  integerToCurrencyWithDecimal,
   titleFirst,
 } from '@actual-app/core/shared/util';
 import type { IntegerAmount } from '@actual-app/core/shared/util';
@@ -81,7 +81,7 @@ import type {
   TransactionEntity,
 } from '@actual-app/core/types/models';
 import { keyframes } from '@emotion/css';
-import { format as formatDate, parseISO } from 'date-fns';
+import { format as formatDate } from 'date-fns';
 
 import { getAccountsById } from '#accounts/accountsSlice';
 import { AccountAutocomplete } from '#components/autocomplete/AccountAutocomplete';
@@ -220,11 +220,11 @@ export function useAmountColumnWidths(
   currencyCode?: string,
 ): AmountColumnWidths {
   const debitCreditValues = transactions.map(t =>
-    integerToCurrencyScaled(Math.abs(t.amount ?? 0), currencyCode),
+    integerToCurrencyWithDecimal(Math.abs(t.amount ?? 0), currencyCode),
   );
   const balanceValues = balances
     ? Object.values(balances).map(balance =>
-        integerToCurrencyScaled(balance, currencyCode),
+        integerToCurrencyWithDecimal(balance, currencyCode),
       )
     : [];
 
@@ -1218,7 +1218,7 @@ const Transaction = memo(function Transaction({
   const [prevCurrencyCode, setPrevCurrencyCode] = useState(currencyCode);
   const [prevTransaction, setPrevTransaction] = useState(originalTransaction);
   const [transaction, setTransaction] = useState(() =>
-    serializeTransaction(originalTransaction, showZeroInDeposit, currencyCode),
+    serializeTransaction(originalTransaction, showZeroInDeposit),
   );
   const isPreview = isPreviewId(transaction.id);
 
@@ -1231,7 +1231,6 @@ const Transaction = memo(function Transaction({
       serializeTransaction(
         originalTransaction,
         showZeroInDeposit,
-        currencyCode,
       ),
     );
     setPrevTransaction(originalTransaction);
@@ -1386,12 +1385,11 @@ const Transaction = memo(function Transaction({
       const deserialized = deserializeTransaction(
         newTransaction,
         originalTransaction,
-        currencyCode,
       );
       // Run the transaction through the formatting so that we know
       // it's always showing the formatted result
       setTransaction(
-        serializeTransaction(deserialized, showZeroInDeposit, currencyCode),
+        serializeTransaction(deserialized, showZeroInDeposit),
       );
 
       const deserializedName = ['credit', 'debit'].includes(name)
@@ -2194,7 +2192,7 @@ const Transaction = memo(function Transaction({
             value={
               runningBalance == null || isChild || isTemporaryId(id)
                 ? ''
-                : integerToCurrencyScaled(runningBalance, currencyCode)
+                : integerToCurrencyWithDecimal(runningBalance, currencyCode)
             }
             valueStyle={{
               color:
@@ -2375,7 +2373,7 @@ const Transaction = memo(function Transaction({
                 textAlign: 'right',
               }}
             >
-              {integerToCurrencyScaled(amount, currencyCode)}
+              {integerToCurrencyWithDecimal(amount, currencyCode)}
             </Text>
           </View>
         )}
@@ -2523,7 +2521,7 @@ function TransactionError({
             <Text style={{ whiteSpace: 'nowrap' }}>
               <Trans>Amount left:</Trans>{' '}
               <Text style={{ fontWeight: 500 }}>
-                {integerToCurrencyScaled(
+                {integerToCurrencyWithDecimal(
                   isDeposit ? error.difference : -error.difference,
                   currencyCode,
                 )}

@@ -172,37 +172,6 @@ describe('importTransactions', () => {
     expect(inImported.amount).toBe(1000);
   });
 
-  it('stores yen milliunits as whole units', async () => {
-    const entityIdMap = new Map<string, string>([
-      ['ynab-account-1', 'actual-account-1'],
-    ]);
-
-    vi.mocked(send).mockImplementation(async (name: string) => {
-      if (name === 'api/payees-get') return [];
-      if (name === 'api/categories-get') return [];
-      if (name === 'api/transactions-add') return null;
-      throw new Error(`Unexpected send call: ${name}`);
-    });
-
-    await importTransactions(
-      {
-        payees: [],
-        transactions: [makeTransaction({ amount: -1_000_000 })],
-        subtransactions: [],
-      } as unknown as Parameters<typeof importTransactions>[0],
-      entityIdMap,
-      new Set(),
-      undefined,
-      0,
-    );
-
-    const imported = vi
-      .mocked(send)
-      .mock.calls.filter(([name]) => name === 'api/transactions-add')
-      .flatMap(([, args]) => args.transactions);
-    expect(imported[0].amount).toBe(-1000);
-  });
-
   it('skips deleted subtransactions of a split', async () => {
     const entityIdMap = new Map<string, string>([
       ['ynab-account-1', 'actual-account-1'],

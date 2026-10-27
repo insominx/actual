@@ -162,7 +162,6 @@ describe('runSchedule', () => {
       0,
       [],
       defaultCategory,
-      defaultCurrency,
     );
 
     expect(result.to_budget).toBe(0);
@@ -776,7 +775,6 @@ describe('runSchedule', () => {
         0,
         [],
         defaultCategory,
-        defaultCurrency,
       );
     }
 

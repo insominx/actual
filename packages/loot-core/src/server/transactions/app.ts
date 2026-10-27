@@ -3,7 +3,6 @@ import { aqlQuery } from '#server/aql';
 import * as db from '#server/db';
 import { mutator } from '#server/mutators';
 import { undoable } from '#server/undo';
-import { getCurrency } from '#shared/currencies';
 import { q, Query } from '#shared/query';
 import type { QueryState } from '#shared/query';
 import type {
@@ -118,21 +117,7 @@ async function exportTransactions({
   categoryGroups: CategoryGroupEntity[];
   payees: PayeeEntity[];
 }) {
-  return exportToCSV(
-    transactions,
-    accounts,
-    categoryGroups,
-    payees,
-    budgetDecimalPlaces(),
-  );
-}
-
-function budgetDecimalPlaces() {
-  const code = db.firstSync<{ value: string }>(
-    `SELECT value FROM preferences WHERE id = ?`,
-    ['defaultCurrencyCode'],
-  )?.value;
-  return getCurrency(code ?? '').decimalPlaces;
+  return exportToCSV(transactions, accounts, categoryGroups, payees);
 }
 
 async function exportTransactionsQuery({
@@ -140,7 +125,7 @@ async function exportTransactionsQuery({
 }: {
   query: QueryState;
 }) {
-  return exportQueryToCSV(new Query(queryState), budgetDecimalPlaces());
+  return exportQueryToCSV(new Query(queryState));
 }
 
 async function getEarliestTransaction() {

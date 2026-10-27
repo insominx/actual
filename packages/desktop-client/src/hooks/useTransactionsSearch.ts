@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Query } from '@actual-app/core/shared/query';
 import { debounce } from 'es-toolkit/compat';
 
-import { useFormat } from '#hooks/useFormat';
 import * as queries from '#queries';
 
 type UseTransactionsSearchProps = {
@@ -24,7 +23,6 @@ export function useTransactionsSearch({
   delayMs = 150,
 }: UseTransactionsSearchProps): UseTransactionsSearchResult {
   const [isSearching, setIsSearching] = useState(false);
-  const decimalPlaces = useFormat().currency.decimalPlaces;
 
   const updateQueryRef = useRef(updateQuery);
   updateQueryRef.current = updateQuery;
@@ -45,13 +43,12 @@ export function useTransactionsSearch({
               previousQuery,
               searchText,
               dateFormat,
-              decimalPlaces,
             ),
           );
           setIsSearching(true);
         }
       }, delayMs),
-    [dateFormat, decimalPlaces, delayMs, resetQueryRef, updateQueryRef],
+    [dateFormat, delayMs, resetQueryRef, updateQueryRef],
   );
 
   useEffect(() => {

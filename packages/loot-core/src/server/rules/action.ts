@@ -9,7 +9,6 @@ import type { TransactionForRules } from '#server/transactions/transaction-rules
 import {
   CustomFunctionsPlugin,
   customFunctionsTranslations,
-  getCachedCurrencyDecimalPlaces,
 } from '#shared/formulas/customFunctions';
 import { currentDay, format, parseDate } from '#shared/months';
 import { FIELD_TYPES } from '#shared/rules';
@@ -122,10 +121,7 @@ export class Action {
                   const error = `Formula for "${this.field}" must produce a numeric value. Got: ${JSON.stringify(result)}`;
                   object._ruleErrors.push(error);
                 } else {
-                  object[this.field] = amountToInteger(
-                    numValue,
-                    getCachedCurrencyDecimalPlaces(),
-                  );
+                  object[this.field] = amountToInteger(numValue);
                 }
                 break;
               }
@@ -256,10 +252,7 @@ export class Action {
                   `Formula for split amount must produce a numeric value. Got: ${JSON.stringify(result)}`,
                 );
               } else {
-                object.amount = amountToInteger(
-                  numValue,
-                  getCachedCurrencyDecimalPlaces(),
-                );
+                object.amount = amountToInteger(numValue);
               }
             } catch (err) {
               object._ruleErrors.push(
@@ -348,14 +341,12 @@ export class Action {
 
     try {
       // The prefetched balances are integers; formulas work in amounts.
-      // Zero-decimal currencies store whole units, so scale by the currency.
-      const decimalPlaces = getCachedCurrencyDecimalPlaces();
       const balanceOfPrefetch = new Map<string, number>();
       for (const [key, integerAmount] of transaction['_balanceOfPrefetched'] ??
         []) {
         balanceOfPrefetch.set(
           key,
-          integerToAmount(integerAmount, decimalPlaces),
+          integerToAmount(integerAmount),
         );
       }
 
@@ -401,7 +392,7 @@ export class Action {
           typeof rawValue === 'number'
         ) {
           // Formulas work in amounts; the transaction stores integers.
-          cellValue = integerToAmount(rawValue, decimalPlaces);
+          cellValue = integerToAmount(rawValue);
         } else {
           cellValue = rawValue;
         }

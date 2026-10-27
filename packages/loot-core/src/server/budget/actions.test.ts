@@ -254,21 +254,6 @@ describe('coverOverbudgeted', () => {
     expect(dollars?.note).toContain('Reassigned 0.90 from cat1');
   });
 
-  it('does not append a decimal to a yen cover note', async () => {
-    await prepareDatabase();
-    await coverOverbudgeted({
-      month: '2024-02',
-      category: 'cat1',
-      currencyCode: 'JPY',
-    });
-    const yen = await db.first<{ note: string }>(
-      'SELECT note FROM notes WHERE id = ?',
-      ['budget-2024-02'],
-    );
-    expect(yen?.note).toContain('Reassigned 90 from cat1');
-    expect(yen?.note).not.toContain('90.00');
-  });
-
   it('partially covers the overbudget when category leftover is insufficient', async () => {
     // Setup: cat3 has 10 leftover, overbudget is 90
     await prepareDatabase();
