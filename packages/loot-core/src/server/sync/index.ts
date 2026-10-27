@@ -412,7 +412,7 @@ async function _applyMessages(messages: Message[], isReceived = false) {
   const barrierSheet = sheet.get();
   barrierSheet?.startCacheBarrier();
   try {
-    return applyMessagesWithinCacheBarrier(messages, deferUnknownSchema);
+    return applyMessagesWithinCacheBarrier(messages, isReceived);
   } finally {
     barrierSheet?.endCacheBarrier();
   }
@@ -420,7 +420,7 @@ async function _applyMessages(messages: Message[], isReceived = false) {
 
 function applyMessagesWithinCacheBarrier(
   messages: Message[],
-  deferUnknownSchema: boolean,
+  isReceived: boolean,
 ) {
   // It's important to not mutate the clock while processing the
   // messages. We only want to mutate it if the transaction succeeds.
