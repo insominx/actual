@@ -80,7 +80,8 @@ import type {
   ScheduleEntity,
   TransactionEntity,
 } from '@actual-app/core/types/models';
-import { format as formatDate } from 'date-fns';
+import { keyframes } from '@emotion/css';
+import { format as formatDate, parseISO } from 'date-fns';
 
 import { getAccountsById } from '#accounts/accountsSlice';
 import { AccountAutocomplete } from '#components/autocomplete/AccountAutocomplete';
@@ -693,6 +694,12 @@ function HeaderCell({
   );
 }
 
+// Opens the account, bringing the transaction into view if given
+type NavigateToTransferAccount = (
+  accountId: AccountEntity['id'],
+  transactionId?: TransactionEntity['id'],
+) => void;
+
 type PayeeCellProps = {
   id: TransactionEntity['id'];
   payee?: PayeeEntity;
@@ -710,7 +717,7 @@ type PayeeCellProps = {
   onUpdate: TransactionUpdateFunction;
   onCreatePayee: (name: string) => Promise<null | PayeeEntity['id']>;
   onManagePayees: (id: PayeeEntity['id'] | undefined) => void;
-  onNavigateToTransferAccount: (id: AccountEntity['id']) => void;
+  onNavigateToTransferAccount: NavigateToTransferAccount;
   onNavigateToSchedule: (id: ScheduleEntity['id']) => void;
   columnStyle: TextColumnStyle;
 };
@@ -969,6 +976,12 @@ function PayeeCell({
   );
 }
 
+const ROW_PULSE_DURATION_MS = 2000;
+
+const rowPulse = keyframes({
+  '50%': { backgroundColor: theme.tableRowBackgroundHighlight },
+});
+
 const payeeIconButtonStyle = {
   marginLeft: -5,
   marginRight: 2,
@@ -982,7 +995,7 @@ const transferIconStyle = { width: 10, height: 10 };
 type PayeeIconsProps = {
   transaction: SerializedTransaction;
   transferAccount: AccountEntity | null;
-  onNavigateToTransferAccount: (id: AccountEntity['id']) => void;
+  onNavigateToTransferAccount: NavigateToTransferAccount;
   onNavigateToSchedule: (id: ScheduleEntity['id']) => void;
 };
 
@@ -1044,7 +1057,10 @@ function PayeeIcons({
           style={payeeIconButtonStyle}
           onPress={() => {
             if (!isTemporaryId(transaction.id)) {
-              onNavigateToTransferAccount(transferAccount.id);
+              onNavigateToTransferAccount(
+                transferAccount.id,
+                transaction.transfer_id ?? undefined,
+              );
             }
           }}
         >
@@ -1073,6 +1089,8 @@ type TransactionProps = {
   highlighted?: boolean;
   added?: boolean;
   matched?: boolean;
+  // Highlights the row briefly to point it out
+  pulse?: boolean;
   expanded?: boolean;
   focusedField?: string;
   categoryGroups: CategoryGroupEntity[];
@@ -1102,7 +1120,7 @@ type TransactionProps = {
   onToggleSplit: (id: TransactionEntity['id']) => void;
   onCreatePayee: (name: string) => Promise<null | PayeeEntity['id']>;
   onManagePayees: (id: PayeeEntity['id'] | undefined) => void;
-  onNavigateToTransferAccount: (id: AccountEntity['id']) => void;
+  onNavigateToTransferAccount: NavigateToTransferAccount;
   onNavigateToSchedule: (id: ScheduleEntity['id']) => void;
   onNotesTagClick: (tag: string) => void;
   splitError?: ReactNode;
@@ -1141,6 +1159,7 @@ const Transaction = memo(function Transaction({
   highlighted,
   added,
   matched,
+  pulse,
   expanded,
   focusedField,
   categoryGroups,
@@ -2234,6 +2253,7 @@ const Transaction = memo(function Transaction({
       <Row
         ref={rowRef}
         {...dragProps}
+        {...(pulse && { 'data-pulse': true })}
         style={{
           backgroundColor: selected
             ? theme.tableRowBackgroundHighlight
@@ -2254,6 +2274,13 @@ const Transaction = memo(function Transaction({
           ...(highlighted || selected
             ? { color: theme.tableRowBackgroundHighlightText }
             : { color: theme.tableText }),
+          ...(pulse && {
+            animation: `${rowPulse} ${ROW_PULSE_DURATION_MS / 2}ms ease-in-out 2`,
+            '@media (prefers-reduced-motion: reduce)': {
+              animation: 'none',
+              backgroundColor: theme.tableRowBackgroundHighlight,
+            },
+          }),
           ...style,
           ...(isPreview && {
             color: theme.tableTextInactive,
@@ -2546,7 +2573,7 @@ type NewTransactionProps = {
   onEdit: (id: TransactionEntity['id'], field: string) => void;
   onManagePayees: (id: PayeeEntity['id'] | undefined) => void;
   onNavigateToSchedule: (id: ScheduleEntity['id']) => void;
-  onNavigateToTransferAccount: (id: AccountEntity['id']) => void;
+  onNavigateToTransferAccount: NavigateToTransferAccount;
   onNotesTagClick: (tag: string) => void;
   onSave: (
     tx: TransactionEntity,
@@ -2760,6 +2787,8 @@ type TransactionTableInnerProps = {
   balances: Record<TransactionEntity['id'], IntegerAmount> | null;
   columns: TransactionTableColumnId[];
   showReconciled: boolean;
+  focusedTransactionId?: TransactionEntity['id'] | null;
+  onFocusedTransactionShown?: () => void;
   currentAccountId: AccountEntity['id'];
   currentCategoryId: CategoryEntity['id'];
   isAdding: boolean;
@@ -2780,7 +2809,7 @@ type TransactionTableInnerProps = {
   onAdd: (transactions: TransactionEntity[]) => void;
   onCreatePayee: (name: string) => Promise<null | PayeeEntity['id']>;
   style?: CSSProperties;
-  onNavigateToTransferAccount: (id: AccountEntity['id']) => void;
+  onNavigateToTransferAccount: NavigateToTransferAccount;
   onNavigateToSchedule: (id: ScheduleEntity['id']) => void;
   onNotesTagClick: (tag: string) => void;
   sortField: string;
@@ -2932,9 +2961,12 @@ function TransactionTableInner({
   } = props;
 
   const onNavigateToTransferAccount = useCallback(
-    (accountId: AccountEntity['id']) => {
+    (
+      accountId: AccountEntity['id'],
+      transactionId?: TransactionEntity['id'],
+    ) => {
       onCloseAddTransactionProp();
-      onNavigateToTransferAccountProp(accountId);
+      onNavigateToTransferAccountProp(accountId, transactionId);
     },
     [onCloseAddTransactionProp, onNavigateToTransferAccountProp],
   );
@@ -3071,6 +3103,7 @@ function TransactionTableInner({
         added={isNew?.(trans.id)}
         expanded={isExpanded?.(trans.id)}
         matched={isMatched?.(trans.id)}
+        pulse={trans.id === props.focusedTransactionId}
         showZeroInDeposit={isChildDeposit}
         balance={balances?.[trans.id] ?? 0}
         amountColumnWidths={amountColumnWidths}
@@ -3308,7 +3341,7 @@ export type TransactionTableProps = {
   onAdd: (transactions: TransactionEntity[]) => void;
   onCreatePayee: (name: string) => Promise<null | PayeeEntity['id']>;
   style?: CSSProperties;
-  onNavigateToTransferAccount: (id: AccountEntity['id']) => void;
+  onNavigateToTransferAccount: NavigateToTransferAccount;
   onNavigateToSchedule: (id: ScheduleEntity['id']) => void;
   onNotesTagClick: (tag: string) => void;
   onSort: (field: string, ascDesc: 'asc' | 'desc') => void;
@@ -3332,6 +3365,9 @@ export type TransactionTableProps = {
   showSelection: boolean;
   allowSplitTransaction?: boolean;
   onManagePayees: (id?: PayeeEntity['id']) => void;
+  // The transaction to bring into view and point out, until it's shown
+  focusedTransactionId?: TransactionEntity['id'] | null;
+  onFocusedTransactionShown?: () => void;
 } & ColumnWidthProps;
 
 export const TransactionTable = forwardRef(
@@ -3494,6 +3530,38 @@ export const TransactionTable = forwardRef(
         transactionsWithExpandedSplits.map(trans => [trans.id, trans]),
       );
     }, [transactionsWithExpandedSplits]);
+
+    // Scrolls to the focused transaction once it's listed, and again when
+    // rows are added above it, e.g. upcoming scheduled transactions
+    const { focusedTransactionId, onFocusedTransactionShown } = props;
+    const focusedTransactionIndex =
+      focusedTransactionId == null
+        ? -1
+        : transactionsWithExpandedSplits.findIndex(
+            t => t.id === focusedTransactionId,
+          );
+    const isFocusedTransactionListed = focusedTransactionIndex !== -1;
+    useEffect(() => {
+      if (focusedTransactionId != null && focusedTransactionIndex !== -1) {
+        tableRef.current?.scrollTo(focusedTransactionId, 'center');
+      }
+    }, [focusedTransactionId, focusedTransactionIndex]);
+
+    // Timed here rather than on the row, which unmounts when scrolled away
+    useEffect(() => {
+      if (!isFocusedTransactionListed) {
+        return;
+      }
+      const timeout = setTimeout(
+        () => onFocusedTransactionShown?.(),
+        ROW_PULSE_DURATION_MS,
+      );
+      return () => clearTimeout(timeout);
+    }, [
+      focusedTransactionId,
+      isFocusedTransactionListed,
+      onFocusedTransactionShown,
+    ]);
 
     const transactionsByParent = useMemo(() => {
       return props.transactions.reduce(
