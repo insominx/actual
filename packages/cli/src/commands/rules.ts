@@ -85,7 +85,9 @@ export function registerRulesCommand(program: Command) {
           const rule = readJsonInput(cmdOpts) as Parameters<
             typeof api.createRule
           >[0];
-          const id = await api.createRule(rule);
+          // The API returns the created rule; print its id like the other
+          // create commands.
+          const { id } = await api.createRule(rule);
           printOutput({ id }, opts.format);
         },
         { mutates: true },

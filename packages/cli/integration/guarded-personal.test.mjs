@@ -303,8 +303,9 @@ void test('rules check reports only transactions the rules would change', async 
     );
     assert.equal(created.code, 0, created.stdout + created.stderr);
     const parsed = JSON.parse(created.stdout);
-    const { id } = parsed.data ?? parsed;
-    const ruleId = typeof id === 'string' ? id : id.id;
+    // Like the other create commands, version 1 prints the new id.
+    const { id: ruleId } = parsed.data ?? parsed;
+    assert.equal(typeof ruleId, 'string');
     const added = await cli([
       'transactions',
       'add',
