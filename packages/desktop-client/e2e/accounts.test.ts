@@ -471,7 +471,7 @@ test.describe('Accounts', () => {
         'Date,Payee,Notes,Amount\n2024-08-02,Netflix,,-8.99\n',
       );
       await dialog
-        .getByRole('button', { name: 'Import 1 transactions' })
+        .getByRole('button', { name: 'Import 1 transaction' })
         .click();
       await expect(dialog).not.toBeVisible();
 
@@ -491,7 +491,7 @@ test.describe('Accounts', () => {
       await netflixCheckbox.click();
       await netflixCheckbox.click();
       await dialog
-        .getByRole('button', { name: 'Import 1 transactions' })
+        .getByRole('button', { name: 'Import 1 transaction' })
         .click();
       await expect(dialog).not.toBeVisible();
 

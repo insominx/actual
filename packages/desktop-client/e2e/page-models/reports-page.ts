@@ -39,7 +39,7 @@ export class ReportsPage {
 
   /**
    * Locates the dashboard card whose title matches `name` and scrolls it into
-   * view, returning its clickable button.
+   * view, returning its title, which opens the report when clicked.
    *
    * `ReportCard` renders its children only once the card enters the viewport,
    * so an off-screen card has no title to match on — and a card added during
@@ -51,9 +51,10 @@ export class ReportsPage {
    * `ReportCard` latches `hasRendered`, so a card stays rendered once seen.
    */
   private async scrollDashboardCardIntoView(name: RegExp) {
-    const card = this.pageContent
-      .getByRole('button')
-      .filter({ has: this.page.getByRole('heading', { name }) });
+    // Match the card's title rather than a wrapping button: a card with its
+    // own buttons (the calendar) navigates from a plain container, since
+    // buttons can't nest. Clicking the title opens the report either way.
+    const card = this.pageContent.getByRole('heading', { name });
 
     await expect(async () => {
       const gridItems = this.pageContent.locator('.react-grid-item');
