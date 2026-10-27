@@ -9,14 +9,14 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 
 import { unzipSync, zipSync } from 'fflate';
 
 import { readRaw } from './guarded-kit.mjs';
-import { createFixture } from './harness.mjs';
+import { budgetDirectory, createFixture } from './harness.mjs';
 
 // Adversarial regressions found by the fork bug hunt. Each case is a minimal
 // request that used to pass preview and then either wrote a bad row or failed
@@ -945,9 +945,8 @@ void test(
       const first = await f.cli(['accounts', 'list']);
       assert.equal(first.code, 0, first.stderr);
       const dataDir = join(f.root, 'a');
-      const budget = (await readdir(dataDir)).find(name =>
-        name.startsWith('Agent-CLI'),
-      );
+      // Downloads get a fresh local ID; find the copy by its sync ID.
+      const budget = basename(budgetDirectory(f));
       await writeFile(
         join(dataDir, budget, 'db.sqlite'),
         Buffer.alloc(40000, 7),
@@ -977,9 +976,8 @@ void test(
       const first = await f.cli(['accounts', 'list']);
       assert.equal(first.code, 0, first.stderr);
       const dataDir = join(f.root, 'a');
-      const budget = (await readdir(dataDir)).find(name =>
-        name.startsWith('Agent-CLI'),
-      );
+      // Downloads get a fresh local ID; find the copy by its sync ID.
+      const budget = basename(budgetDirectory(f));
       const db = new DatabaseSync(join(dataDir, budget, 'db.sqlite'));
       // A newer migration next to a missing known one is what a database
       // written by another version looks like to this engine.

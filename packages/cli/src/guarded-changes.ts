@@ -336,7 +336,7 @@ async function loadRestoreArchive(
       locator.timeout,
       signal,
     );
-    if (validated.identity.id !== artifact.manifest.source.id) {
+    if (validated.archiveId !== artifact.manifest.source.id) {
       throw new AgentError(
         'INVALID_INPUT',
         'The archive identity differs from its backup manifest.',
@@ -650,10 +650,12 @@ export async function executeScopedChange(
   operationId: string | undefined,
   operation:
     | 'transactions.categorize'
+    | 'transactions.update-many'
     | 'transactions.clear'
     | 'transfers.match'
     | 'transfers.unmatch'
     | 'transfers.repair'
+    | 'transfers.create'
     | 'imports.mapping-save'
     | 'imports.file'
     | 'rules.apply'
@@ -664,6 +666,7 @@ export async function executeScopedChange(
     | 'reconcile.finish'
     | 'reconcile.adjust'
     | 'transactions.merge'
+    | 'budgets.set-type'
     | 'cash-planning.save',
   payload: Record<string, unknown>,
 ) {
@@ -1385,6 +1388,12 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
     apply: p =>
       api.applyTransactionDeletion(p as Api.TransactionDeletionProposal),
   },
+  'transactions.update-many': {
+    preview: r =>
+      api.previewTransactionUpdateMany(r as Api.TransactionUpdateManyRequest),
+    apply: p =>
+      api.applyTransactionUpdateMany(p as Api.TransactionUpdateManyProposal),
+  },
   'transactions.categorize': {
     preview: r =>
       api.previewTransactionCategorization(
@@ -1451,6 +1460,10 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
     preview: r => api.previewTransferRepair(r as Api.TransferRepairRequest),
     apply: p => api.applyTransferRepair(p as Api.TransferRepairProposal),
   },
+  'transfers.create': {
+    preview: r => api.previewTransferCreate(r as Api.TransferCreateRequest),
+    apply: p => api.applyTransferCreate(p as Api.TransferCreateProposal),
+  },
   'transactions.merge': {
     preview: r => api.previewTransactionMerge(r as Api.TransactionMergeRequest),
     apply: p => api.applyTransactionMerge(p as Api.TransactionMergeProposal),
@@ -1510,6 +1523,10 @@ const DOMAIN_ADAPTERS: Record<string, DomainAdapter> = {
     preview: r => api.previewBudgetHold(r as Api.BudgetHoldRequest),
     apply: p => api.applyBudgetHold(p as Api.BudgetHoldProposal),
   },
+  'budgets.set-type': {
+    preview: r => api.previewBudgetType(r as Api.BudgetTypeRequest),
+    apply: p => api.applyBudgetType(p as Api.BudgetTypeProposal),
+  },
   'budgets.rename': {
     preview: r => api.previewBudgetMetadata(r as Api.BudgetMetadataRequest),
     apply: p => api.applyBudgetMetadata(p as Api.BudgetMetadataProposal),
@@ -1565,6 +1582,7 @@ function changeRequest(
   | Api.ScheduleDeletionRequest
   | Api.TransactionDeletionRequest
   | Api.TransactionCategorizationRequest
+  | Api.TransactionUpdateManyRequest
   | Api.TransactionClearingRequest
   | Api.TransferMatchRequest
   | Api.ImportMappingSaveRequest
@@ -1577,6 +1595,7 @@ function changeRequest(
   | Api.ReconcileAdjustRequest
   | Api.TransferUnmatchRequest
   | Api.TransferRepairRequest
+  | Api.TransferCreateRequest
   | Api.TransactionMergeRequest
   | Api.TransactionSplitRequest
   | Api.CashPlanSaveRequest
@@ -1594,6 +1613,7 @@ function changeRequest(
   | Api.BudgetAmountRequest
   | Api.BudgetCarryoverRequest
   | Api.BudgetHoldRequest
+  | Api.BudgetTypeRequest
   | Api.BudgetMetadataRequest
   | Api.BudgetCloneRequest
   | Api.BudgetPublicationRequest {
@@ -1914,6 +1934,8 @@ function changeRequest(
             'sha256',
             'invalidRows',
             'opts',
+            'maxFuzzyDayGap',
+            'updateMatched',
           ].includes(key),
       ) ||
       typeof payload.path !== 'string' ||
@@ -1928,11 +1950,19 @@ function changeRequest(
         payload.invalidRows === 'reject' ||
         payload.invalidRows === 'skip'
       ) ||
-      !(opts === undefined || isRecord(opts))
+      !(opts === undefined || isRecord(opts)) ||
+      !(
+        payload.maxFuzzyDayGap === undefined ||
+        typeof payload.maxFuzzyDayGap === 'number'
+      ) ||
+      !(
+        payload.updateMatched === undefined ||
+        typeof payload.updateMatched === 'boolean'
+      )
     ) {
       throw new AgentError(
         'INVALID_INPUT',
-        'File import takes path, accountId and optional settings, useSaved, sha256, invalidRows (reject or skip) and opts.',
+        'File import takes path, accountId and optional settings, useSaved, sha256, invalidRows (reject or skip), opts, maxFuzzyDayGap and updateMatched.',
       );
     }
     return payload as Api.ImportFileRequest;
@@ -1958,6 +1988,32 @@ function changeRequest(
     }
     return {
       ids: payload.ids as string[],
+      ...(payload.allowReconciled === undefined
+        ? {}
+        : { allowReconciled: payload.allowReconciled }),
+    };
+  }
+  if (operation === 'transfers.create') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['id', 'account', 'allowReconciled'].includes(key),
+      ) ||
+      typeof payload.id !== 'string' ||
+      typeof payload.account !== 'string' ||
+      !(
+        payload.allowReconciled === undefined ||
+        typeof payload.allowReconciled === 'boolean'
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Transfer create takes id, account and optional allowReconciled.',
+      );
+    }
+    return {
+      id: payload.id,
+      account: payload.account,
       ...(payload.allowReconciled === undefined
         ? {}
         : { allowReconciled: payload.allowReconciled }),
@@ -2031,6 +2087,31 @@ function changeRequest(
     return {
       ids: payload.ids as string[],
       category: payload.category,
+      ...(payload.allowReconciled === undefined
+        ? {}
+        : { allowReconciled: payload.allowReconciled }),
+    };
+  }
+  if (operation === 'transactions.update-many') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(
+        key => !['rows', 'allowReconciled'].includes(key),
+      ) ||
+      !Array.isArray(payload.rows) ||
+      !payload.rows.every(isRecord) ||
+      !(
+        payload.allowReconciled === undefined ||
+        typeof payload.allowReconciled === 'boolean'
+      )
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Batch update takes rows [{id, notes?, category?, payee?, cleared?}] and optional allowReconciled.',
+      );
+    }
+    return {
+      rows: payload.rows as Api.TransactionUpdateManyRequest['rows'],
       ...(payload.allowReconciled === undefined
         ? {}
         : { allowReconciled: payload.allowReconciled }),
@@ -2291,6 +2372,19 @@ function changeRequest(
   }
   if (operation === 'budgets.reset-hold') {
     return { ...(payload as { month: string }), operation };
+  }
+  if (operation === 'budgets.set-type') {
+    if (
+      !isRecord(payload) ||
+      Object.keys(payload).some(key => key !== 'type') ||
+      (payload.type !== 'envelope' && payload.type !== 'tracking')
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        'Budget type change accepts only type: envelope or tracking.',
+      );
+    }
+    return { type: payload.type };
   }
   if (operation === 'budgets.rename') {
     return { ...(payload as { name: string }), operation, id };

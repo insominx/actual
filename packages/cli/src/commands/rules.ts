@@ -11,7 +11,11 @@ import {
 } from '#guarded-changes';
 import { readJsonInput } from '#input';
 import { printOutput } from '#output';
+import type { CheckedTransaction, RuleTestResult } from '#rules-check';
+import { RULE_CHECK_LIMIT, ruleDrift, ruleSample } from '#rules-check';
 import { errorMessage, plainInteger } from '#utils';
+
+const RULE_TEST_BATCH_LIMIT = 5000;
 
 export function registerRulesCommand(program: Command) {
   const rules = program
@@ -170,15 +174,15 @@ export function registerRulesCommand(program: Command) {
   rules
     .command('test')
     .description(
-      'Run the rules on a sample transaction as an import would, without writing: result, changed fields, rules that ran in order and payees an import would create',
+      'Run the rules on a sample transaction as an import would, without writing: result, changed fields, rules that ran in order and payees an import would create. An array of samples returns one result per sample',
     )
     .option(
       '--data <json>',
-      'Sample: {"account":"<id>","date":"2026-10-04","amount":-1250,"payee_name":"Coffee Bar","imported_payee":"...","notes":"...","category":"<id>"}',
+      'Sample: {"account":"<id>","date":"2026-10-04","amount":-1250,"payee_name":"Coffee Bar","imported_payee":"...","notes":"...","category":"<id>"}, or an array of samples (at most 5000)',
     )
     .option(
       '--file <path>',
-      'Read the sample from a JSON file (use - for stdin)',
+      'Read the sample or array of samples from a JSON file (use - for stdin)',
     )
     .option(
       '--payee-names <mode>',
@@ -191,9 +195,15 @@ export function registerRulesCommand(program: Command) {
         payeeNames?: string;
       }) => {
         const opts = program.opts();
-        const transaction = readJsonInput(
-          cmdOpts,
-        ) as Api.RuleTestRequest['transaction'];
+        const input = readJsonInput(cmdOpts);
+        if (Array.isArray(input) && input.length > RULE_TEST_BATCH_LIMIT) {
+          throw new AgentError(
+            'INVALID_INPUT',
+            `At most ${RULE_TEST_BATCH_LIMIT} samples can be tested at once.`,
+            false,
+            { field: 'data', limit: RULE_TEST_BATCH_LIMIT },
+          );
+        }
         if (
           cmdOpts.payeeNames !== undefined &&
           cmdOpts.payeeNames !== 'original' &&
@@ -206,25 +216,130 @@ export function registerRulesCommand(program: Command) {
             { field: 'payeeNames' },
           );
         }
+        const normalization = cmdOpts.payeeNames
+          ? {
+              payeeNameNormalization: cmdOpts.payeeNames as
+                | 'original'
+                | 'title-case',
+            }
+          : {};
         await withConnection(
           opts,
           async () => {
-            let result;
-            try {
-              result = await api.testRules({
-                transaction,
-                ...(cmdOpts.payeeNames
-                  ? {
-                      payeeNameNormalization: cmdOpts.payeeNames as
-                        | 'original'
-                        | 'title-case',
-                    }
-                  : {}),
-              });
-            } catch (error) {
-              throw new AgentError('INVALID_INPUT', errorMessage(error));
+            if (!Array.isArray(input)) {
+              let result;
+              try {
+                result = await api.testRules({
+                  transaction: input as Api.RuleTestRequest['transaction'],
+                  ...normalization,
+                });
+              } catch (error) {
+                throw new AgentError('INVALID_INPUT', errorMessage(error));
+              }
+              printOutput(result, opts.format);
+              return;
             }
-            printOutput(result, opts.format);
+            // One connection for the whole batch; a sample that fails reports
+            // its error in place so the other results still come back.
+            const results: Array<
+              Awaited<ReturnType<typeof api.testRules>> | { error: string }
+            > = [];
+            for (const sample of input) {
+              try {
+                results.push(
+                  await api.testRules({
+                    transaction: sample as Api.RuleTestRequest['transaction'],
+                    ...normalization,
+                  }),
+                );
+              } catch (error) {
+                results.push({ error: errorMessage(error) });
+              }
+            }
+            printOutput(results, opts.format);
+          },
+          { mutates: false },
+        );
+      },
+    );
+
+  rules
+    .command('check')
+    .description(
+      'Read-only drift check: run existing transactions through the current rules as an import would and list those whose category or payee the rules would set differently',
+    )
+    .option('--ids <ids>', 'Comma-separated transaction IDs')
+    .option('--account <id>', 'Check every transaction in this account')
+    .option(
+      '--since <date>',
+      'With --account: only from this date (YYYY-MM-DD)',
+    )
+    .action(
+      async (cmdOpts: { ids?: string; account?: string; since?: string }) => {
+        const opts = program.opts();
+        const ids = cmdOpts.ids
+          ?.split(',')
+          .map(id => id.trim())
+          .filter(Boolean);
+        if (!ids?.length === !cmdOpts.account) {
+          throw new AgentError(
+            'INVALID_INPUT',
+            'Provide either --ids or --account.',
+            false,
+            { field: 'ids' },
+          );
+        }
+        if (cmdOpts.since && !/^\d{4}-\d{2}-\d{2}$/.test(cmdOpts.since)) {
+          throw new AgentError('INVALID_INPUT', '--since must be YYYY-MM-DD.');
+        }
+        await withConnection(
+          opts,
+          async () => {
+            const filter: Record<string, unknown> = ids?.length
+              ? { id: { $oneof: ids } }
+              : {
+                  account: cmdOpts.account,
+                  ...(cmdOpts.since ? { date: { $gte: cmdOpts.since } } : {}),
+                };
+            const { data } = (await api.aqlQuery(
+              api
+                .q('transactions')
+                .filter({ ...filter, transfer_id: null, is_parent: false })
+                .select([
+                  'id',
+                  'account',
+                  'date',
+                  'amount',
+                  'imported_payee',
+                  'payee',
+                  'notes',
+                  'category',
+                ])
+                .options({ splits: 'inline' })
+                .limit(RULE_CHECK_LIMIT + 1),
+            )) as { data: CheckedTransaction[] };
+            if (data.length > RULE_CHECK_LIMIT) {
+              throw new AgentError(
+                'INVALID_INPUT',
+                `More than ${RULE_CHECK_LIMIT} transactions; narrow with --since or --ids.`,
+              );
+            }
+            const results: Array<RuleTestResult | { error: string }> = [];
+            for (const row of data) {
+              try {
+                results.push(
+                  (await api.testRules({
+                    transaction: ruleSample(
+                      row,
+                    ) as Api.RuleTestRequest['transaction'],
+                  })) as RuleTestResult,
+                );
+              } catch (error) {
+                results.push({ error: errorMessage(error) });
+              }
+            }
+            const rules = await api.getRules();
+            printOutput(ruleDrift(data, results, rules.length), opts.format);
           },
           { mutates: false },
         );

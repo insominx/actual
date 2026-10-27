@@ -38,6 +38,7 @@ import type {
   TransactionMergeOutcome,
   TransactionSplitOutcome,
   TransactionUpdateOutcome,
+  TransferCreateOutcome,
   TransferRepairOutcome,
 } from '@actual-app/api';
 
@@ -78,6 +79,7 @@ export type ChangeReceipt = {
     | TransactionMergeOutcome
     | TransactionSplitOutcome
     | TransferRepairOutcome
+    | TransferCreateOutcome
     | ImportFileOutcome
     | RuleApplyOutcome
     | SchedulePostOutcome
@@ -328,6 +330,18 @@ function canExpirePayeeCreation(receipt: ChangeReceipt) {
     outcome.payeeCreation.mappingId === outcome.payeeCreation.payeeId &&
     outcome.affectedIds.length === 1 &&
     outcome.affectedIds[0] === outcome.payeeCreation.payeeId
+  );
+}
+
+// A budget with no sync identity never synchronizes, so its local commit is
+// final. Publishing later uploads the whole file, which already holds it.
+function isLocalOnlyCommit(receipt: ChangeReceipt) {
+  return (
+    receipt.state === 'committed-local' &&
+    receipt.outcome?.status === 'committed-local' &&
+    receipt.proposal.budget !== null &&
+    receipt.proposal.budget.syncId === null &&
+    receipt.proposal.budget.cloudFileId === null
   );
 }
 
@@ -595,7 +609,7 @@ export class ChangeJournal {
     const terminal = records.items
       .filter(
         row =>
-          (row.state === 'synced' &&
+          ((row.state === 'synced' || isLocalOnlyCommit(row)) &&
             canExpireDeletion(row) &&
             canExpireClosure(row) &&
             canExpireGroupCreation(row) &&

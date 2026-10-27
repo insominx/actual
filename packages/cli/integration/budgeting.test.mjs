@@ -342,8 +342,9 @@ void test('template preview matches apply without writing and invalid templates 
       12000,
     );
 
-    // An invalid template line is reported; the engine skips it, as the
-    // app does, and the preview lists the error beside the rows.
+    // An invalid template line is reported, and since upstream #9021 the
+    // engine refuses to apply templates while any line is malformed, as the
+    // app does; the preview is refused with the error instead of writing.
     const broken = await newCategory(f, 'Broken');
     await cli([
       'notes',
@@ -358,7 +359,7 @@ void test('template preview matches apply without writing and invalid templates 
     const invalid = await cli(['budgets', 'templates']);
     assert.equal(invalid.valid, false);
     assert.ok(invalid.errors.some(line => line.startsWith('Broken')));
-    const withErrors = await cli([
+    const refused = await f.cli([
       'changes',
       'preview',
       'budgets.apply-templates',
@@ -367,16 +368,22 @@ void test('template preview matches apply without writing and invalid templates 
       '--data',
       JSON.stringify({ month, force: true }),
     ]);
-    assert.ok(
-      withErrors.proposal.after.templateErrors.some(line =>
-        line.startsWith('Broken'),
-      ),
-    );
-    // The skipped line contributes nothing to that category.
-    const brokenRow = withErrors.proposal.after.rows.find(
-      row => row.categoryId === broken,
-    );
-    assert.ok(!brokenRow || brokenRow.after.budgeted === 0);
+    assert.notEqual(refused.code, 0, refused.stdout);
+    const refusal = JSON.parse(refused.stdout).error;
+    assert.equal(refusal.code, 'INVALID_INPUT');
+    assert.match(refusal.message, /Broken: Invalid template/);
+    // Fixing the note lets the same month apply again.
+    await cli([
+      'notes',
+      'set',
+      '--category',
+      broken,
+      '--note',
+      '#template 0',
+      '--operation-id',
+      'note-broken-fixed',
+    ]);
+    assert.equal((await cli(['budgets', 'templates'])).valid, true);
     // Listing a category without templates is a precise input error.
     assert.equal(
       await errorCode(f, [
@@ -513,27 +520,27 @@ void test('template edge cases are refused at preview instead of hanging or leav
         `edge-note-${++n}`,
       ]);
 
-    // A zero repeat interval used to loop forever while applying.
+    // A zero repeat interval used to loop forever while applying. It is now an
+    // invalid template (upstream #9021), so apply is refused at preview and
+    // leaves no receipt to retry.
     await setNote('#template 10 repeat every 0 weeks starting 2026-01-01');
     const zero = await cli(['budgets', 'templates']);
     assert.equal(zero.valid, false);
     assert.ok(zero.errors.some(line => line.startsWith('Edge template')));
-    // Like any unparseable line it is skipped and contributes nothing, and the
-    // apply finishes instead of hanging.
-    const applied = await cli([
-      'budgets',
-      'apply-templates',
-      '--month',
-      month,
-      '--force',
-      '--operation-id',
-      'edge-zero',
-    ]);
-    assert.equal(applied.receipt.state, 'synced');
-    const row = applied.receipt.proposal.after.rows.find(
-      entry => entry.categoryId === category,
+    assert.equal(
+      await errorCode(f, [
+        'budgets',
+        'apply-templates',
+        '--month',
+        month,
+        '--force',
+        '--operation-id',
+        'edge-zero',
+      ]),
+      'INVALID_INPUT',
     );
-    assert.ok(!row || row.after.budgeted === 0);
+    const zeroStatus = await f.cli(['changes', 'status', 'edge-zero']);
+    assert.doesNotMatch(zeroStatus.stdout, /uncertain/);
 
     // An amount beyond the engine limit used to fail after the write began and
     // leave an uncertain receipt that can never be replayed.

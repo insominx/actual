@@ -65,6 +65,8 @@ import type {
   BudgetRestoreRequest,
   BudgetTemplatesProposal,
   BudgetTemplatesRequest,
+  BudgetTypeProposal,
+  BudgetTypeRequest,
   CashPlanSaveProposal,
   CashPlanSaveRequest,
   CategoryCreationProposal,
@@ -136,8 +138,12 @@ import type {
   TransactionMergeRequest,
   TransactionSplitProposal,
   TransactionSplitRequest,
+  TransactionUpdateManyProposal,
+  TransactionUpdateManyRequest,
   TransactionUpdateProposal,
   TransactionUpdateRequest,
+  TransferCreateProposal,
+  TransferCreateRequest,
   TransferMatchProposal,
   TransferMatchRequest,
   TransferRepairProposal,
@@ -167,6 +173,8 @@ export type {
   TransactionDeletionProposal,
   TransactionCategorizationRequest,
   TransactionCategorizationProposal,
+  TransactionUpdateManyRequest,
+  TransactionUpdateManyProposal,
   TransactionClearingRequest,
   TransactionClearingProposal,
   ImportMappingSaveRequest,
@@ -205,6 +213,9 @@ export type {
   TransferRepairRequest,
   TransferRepairProposal,
   TransferRepairOutcome,
+  TransferCreateRequest,
+  TransferCreateProposal,
+  TransferCreateOutcome,
   TransactionMergeRequest,
   TransactionMergeProposal,
   TransactionMergeOutcome,
@@ -292,6 +303,8 @@ export type {
   ChangeProposal,
   BudgetHoldProposal,
   BudgetHoldRequest,
+  BudgetTypeProposal,
+  BudgetTypeRequest,
   BudgetCarryoverProposal,
   BudgetCarryoverRequest,
   BudgetMetadataProposal,
@@ -519,6 +532,18 @@ export function applyTransactionCategorization(
 ) {
   return send('api/transactions-apply-categorization', proposal);
 }
+
+export function previewTransactionUpdateMany(
+  request: TransactionUpdateManyRequest,
+) {
+  return send('api/transactions-preview-update-many', request);
+}
+
+export function applyTransactionUpdateMany(
+  proposal: TransactionUpdateManyProposal,
+) {
+  return send('api/transactions-apply-update-many', proposal);
+}
 export function previewTransactionClearing(
   request: TransactionClearingRequest,
 ) {
@@ -712,6 +737,14 @@ export function previewTransferRepair(request: TransferRepairRequest) {
 export function applyTransferRepair(proposal: TransferRepairProposal) {
   return send('api/transfers-apply-repair', proposal);
 }
+
+export function previewTransferCreate(request: TransferCreateRequest) {
+  return send('api/transfers-preview-create', request);
+}
+
+export function applyTransferCreate(proposal: TransferCreateProposal) {
+  return send('api/transfers-apply-create', proposal);
+}
 export function previewTransactionMerge(request: TransactionMergeRequest) {
   return send('api/transactions-preview-merge', request);
 }
@@ -829,6 +862,14 @@ export function previewBudgetHold(request: BudgetHoldRequest) {
 
 export function applyBudgetHold(proposal: BudgetHoldProposal) {
   return send('api/budget-apply-hold', proposal);
+}
+
+export function previewBudgetType(request: BudgetTypeRequest) {
+  return send('api/budget-preview-type', request);
+}
+
+export function applyBudgetType(proposal: BudgetTypeProposal) {
+  return send('api/budget-apply-type', proposal);
 }
 
 export function applyBudgetCarryover(proposal: BudgetCarryoverProposal) {

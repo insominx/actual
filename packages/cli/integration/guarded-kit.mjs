@@ -5,7 +5,12 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { pathToFileURL } from 'node:url';
 
-import { createFixture, isolatedEnv, repoRoot } from './harness.mjs';
+import {
+  budgetDirectory,
+  createFixture,
+  isolatedEnv,
+  repoRoot,
+} from './harness.mjs';
 
 // Shared packaged proof for guarded domain adapters. Every case uses a real
 // disposable sync server, the packaged CLI and raw SQLite reads of the owned
@@ -14,10 +19,10 @@ import { createFixture, isolatedEnv, repoRoot } from './harness.mjs';
 export async function readRaw(f) {
   const { default: Database } = await import('better-sqlite3');
   assert.ok(f.root.includes('actual-agent-cli-'));
-  const database = new Database(
-    join(f.root, 'a', f.fixture.budgetId, 'db.sqlite'),
-    { readonly: true, fileMustExist: true },
-  );
+  const database = new Database(join(budgetDirectory(f), 'db.sqlite'), {
+    readonly: true,
+    fileMustExist: true,
+  });
   try {
     const names = database
       .prepare(

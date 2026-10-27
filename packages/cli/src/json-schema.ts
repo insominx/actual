@@ -187,6 +187,30 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
             }),
           },
           object({ name: string }, ['name']),
+          object({ type: { enum: ['envelope', 'tracking'] } }, ['type']),
+          object({ id: string, account: string, allowReconciled: boolean }, [
+            'id',
+            'account',
+          ]),
+          object(
+            {
+              rows: {
+                type: 'array',
+                items: object(
+                  {
+                    id: string,
+                    notes: { anyOf: [string, { type: 'null' }] },
+                    category: nullableId,
+                    payee: string,
+                    cleared: boolean,
+                  },
+                  ['id'],
+                ),
+              },
+              allowReconciled: boolean,
+            },
+            ['rows'],
+          ),
           object({ name: string, transfer_acct: string }, ['name']),
           object({ mergeIds: { type: 'array', items: string } }, ['mergeIds']),
           object(
@@ -238,6 +262,8 @@ export function operationPayloadSchema(name: string): JsonSchema | undefined {
                   enum: ['original', 'title-case'],
                 },
               }),
+              maxFuzzyDayGap: money,
+              updateMatched: boolean,
             },
             ['path', 'accountId'],
           ),

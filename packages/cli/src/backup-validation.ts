@@ -57,6 +57,7 @@ export async function validateBackupArchive(
     await writeFile(archivePath, archive, { flag: 'wx', mode: 0o600 });
     return await new Promise<{
       identity: Record<string, unknown>;
+      archiveId: string;
       snapshot: BudgetSnapshot;
     }>((resolveResult, reject) => {
       const env = Object.fromEntries(
@@ -116,6 +117,7 @@ export async function validateBackupArchive(
           if (
             !isRecord(result) ||
             !isRecord(result.identity) ||
+            typeof result.archiveId !== 'string' ||
             !isRecord(result.snapshot) ||
             result.snapshot.schemaVersion !== 1 ||
             !isRecord(result.snapshot.tables) ||
@@ -125,6 +127,7 @@ export async function validateBackupArchive(
           }
           resolveResult({
             identity: result.identity,
+            archiveId: result.archiveId,
             snapshot: result.snapshot as BudgetSnapshot,
           });
         } catch {

@@ -471,9 +471,11 @@ export async function createAllBudgets() {
   return { start, end };
 }
 
-export async function setType(type) {
+// `force` rebuilds even when the in-memory type already matches, for callers
+// that set the type before storing the preference the rebuild reads.
+export async function setType(type, { force = false } = {}) {
   const meta = sheet.get().meta();
-  if (type === meta.budgetType) {
+  if (type === meta.budgetType && !force) {
     return;
   }
 

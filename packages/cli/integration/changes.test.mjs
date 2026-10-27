@@ -10,10 +10,15 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { createServer } from 'node:http';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { createFixture, isolatedEnv, repoRoot } from './harness.mjs';
+import {
+  budgetDirectory,
+  createFixture,
+  isolatedEnv,
+  repoRoot,
+} from './harness.mjs';
 import { test } from './shard.mjs';
 
 // Largest integer the engine accepts as an amount (see isEngineAmount); a hold
@@ -100,7 +105,7 @@ void test(
         join(f.root, 'restore-proof'),
       ]);
       const sourceMetadata = await readFile(
-        join(f.root, 'a', f.fixture.budgetId, 'metadata.json'),
+        join(budgetDirectory(f), 'metadata.json'),
       );
       const sourceCache = await readFile(
         join(f.root, 'a', '.actual-cli', f.fixture.syncId, 'state.json'),
@@ -128,7 +133,7 @@ void test(
       assert.equal(prepared.artifact.path, artifact.path);
       assert.deepEqual(await cli(['--offline', 'budgets', 'list']), before);
       assert.deepEqual(
-        await readFile(join(f.root, 'a', f.fixture.budgetId, 'metadata.json')),
+        await readFile(join(budgetDirectory(f), 'metadata.json')),
         sourceMetadata,
       );
       assert.deepEqual(
@@ -147,7 +152,7 @@ void test(
       ]);
       assert.equal(applied.state, 'committed-local');
       const destination = applied.outcome.affectedIds[0];
-      assert.notEqual(destination, f.fixture.budgetId);
+      assert.notEqual(destination, basename(budgetDirectory(f)));
       const copy = await cli([
         '--offline',
         '--budget-id',
@@ -172,7 +177,7 @@ void test(
         'restore-direct',
       ];
       const direct = await cli(directArgs);
-      assert.equal(direct.sourceBudgetId, f.fixture.budgetId);
+      assert.equal(direct.sourceBudgetId, basename(budgetDirectory(f)));
       assert.equal(direct.receipt.state, 'committed-local');
       assert.deepEqual(direct.snapshot, f.fixture.snapshot);
       const directAgain = await cli(directArgs);
@@ -258,7 +263,7 @@ void test(
         applied.outcome,
       );
       assert.deepEqual(
-        await readFile(join(f.root, 'a', f.fixture.budgetId, 'metadata.json')),
+        await readFile(join(budgetDirectory(f), 'metadata.json')),
         sourceMetadata,
       );
       assert.deepEqual(
@@ -1205,7 +1210,7 @@ void test(
         JSON.stringify({ notes: 'Guarded edit', amount: -1234 }),
       ]);
       assert.equal(prepared.state, 'prepared');
-      assert.equal(prepared.proposal.budget.id, f.fixture.budgetId);
+      assert.equal(prepared.proposal.budget.id, basename(budgetDirectory(f)));
       assert.deepEqual(await cli(list), before);
       const artifact = await cli([
         '--offline',
@@ -1476,7 +1481,7 @@ for (const { phase, operation } of [
             : 'Crash-created destination';
         const sourcePaths = (
           clones ? ['metadata.json'] : ['db.sqlite', 'metadata.json']
-        ).map(name => join(f.root, 'a', f.fixture.budgetId, name));
+        ).map(name => join(budgetDirectory(f), name));
         const sourceBefore =
           creates || clones || restores
             ? await Promise.all(sourcePaths.map(path => readFile(path)))
@@ -1497,7 +1502,7 @@ for (const { phase, operation } of [
                 accountUpdates || accountReopens
                   ? f.fixture.checking
                   : operation === 'budgets.archive' || clones
-                    ? f.fixture.budgetId
+                    ? basename(budgetDirectory(f))
                     : initial.id,
               ]),
           '--operation-id',
@@ -1710,7 +1715,10 @@ for (const { phase, operation } of [
           if (creates || restores) {
             assert.equal(recovered.proposal.budget, null);
           } else {
-            assert.equal(recovered.proposal.budget.id, f.fixture.budgetId);
+            assert.equal(
+              recovered.proposal.budget.id,
+              basename(budgetDirectory(f)),
+            );
           }
           assert.equal(recovered.proposal.delivery, 'local-only');
           if (restores) {
@@ -2144,7 +2152,7 @@ for (const offline of [false, true]) {
         await changeClosed('reopen-fixture-close', true);
         const { default: Database } = await import('better-sqlite3');
         assert.ok(f.root.includes('actual-agent-cli-'));
-        const accountPath = join(f.root, 'a', f.fixture.budgetId, 'db.sqlite');
+        const accountPath = join(budgetDirectory(f), 'db.sqlite');
         const fixtureDatabase = new Database(accountPath, {
           fileMustExist: true,
         });
@@ -2332,10 +2340,10 @@ for (const offline of [false, true]) {
         const { default: Database } = await import('better-sqlite3');
         assert.ok(f.root.includes('actual-agent-cli-'));
         const storedPayees = () => {
-          const database = new Database(
-            join(f.root, 'a', f.fixture.budgetId, 'db.sqlite'),
-            { readonly: true, fileMustExist: true },
-          );
+          const database = new Database(join(budgetDirectory(f), 'db.sqlite'), {
+            readonly: true,
+            fileMustExist: true,
+          });
           try {
             return database.prepare('SELECT * FROM payees ORDER BY id').all();
           } finally {
@@ -3287,10 +3295,10 @@ void test(
 async function readDeletionFixture(f) {
   const { default: Database } = await import('better-sqlite3');
   assert.ok(f.root.includes('actual-agent-cli-'));
-  const database = new Database(
-    join(f.root, 'a', f.fixture.budgetId, 'db.sqlite'),
-    { readonly: true, fileMustExist: true },
-  );
+  const database = new Database(join(budgetDirectory(f), 'db.sqlite'), {
+    readonly: true,
+    fileMustExist: true,
+  });
   try {
     const names = database
       .prepare(
@@ -3384,7 +3392,7 @@ for (const offline of [false, true]) {
         const { default: Database } = await import('better-sqlite3');
         assert.ok(f.root.includes('actual-agent-cli-'));
         const fixtureDatabase = new Database(
-          join(f.root, 'a', f.fixture.budgetId, 'db.sqlite'),
+          join(budgetDirectory(f), 'db.sqlite'),
           { fileMustExist: true },
         );
         try {
@@ -3751,7 +3759,7 @@ for (const offline of [false, true]) {
         const { default: Database } = await import('better-sqlite3');
         assert.ok(f.root.includes('actual-agent-cli-'));
         const providerDatabase = new Database(
-          join(f.root, 'a', f.fixture.budgetId, 'db.sqlite'),
+          join(budgetDirectory(f), 'db.sqlite'),
           { fileMustExist: true },
         );
         try {
@@ -4463,10 +4471,9 @@ function assertCategoryCreatedFixture(before, after, proposal, id, changed) {
 async function compactCategoryCreationFixture(f) {
   const { default: Database } = await import('better-sqlite3');
   assert.ok(f.root.includes('actual-agent-cli-'));
-  const database = new Database(
-    join(f.root, 'a', f.fixture.budgetId, 'db.sqlite'),
-    { fileMustExist: true },
-  );
+  const database = new Database(join(budgetDirectory(f), 'db.sqlite'), {
+    fileMustExist: true,
+  });
   try {
     const group = database
       .prepare('SELECT cat_group FROM categories WHERE id = ?')

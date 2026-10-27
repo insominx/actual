@@ -157,6 +157,7 @@ import {
   prepareBudgetMove,
   prepareTemplateApplication,
 } from './budget/guarded-allocation';
+import { performBudgetType, prepareBudgetType } from './budget/guarded-type';
 import {
   copySourceIgnoredTables,
   inspectCopySource,
@@ -282,6 +283,10 @@ import {
   prepareTransactionSplit,
 } from './transactions/guarded-split';
 import {
+  performTransactionUpdateMany,
+  prepareTransactionUpdateMany,
+} from './transactions/guarded-update-many';
+import {
   performFileImport,
   prepareFileImport,
 } from './transactions/import/guarded-file-import';
@@ -302,9 +307,11 @@ import {
   transferClearsCategory,
 } from './transactions/transfer';
 import {
+  performTransferCreate,
   performTransferMatch,
   performTransferRepair,
   performTransferUnmatch,
+  prepareTransferCreate,
   prepareTransferMatch,
   prepareTransferRepair,
   prepareTransferUnmatch,
@@ -3547,6 +3554,22 @@ function guardedCatalogHandlers<
   );
   handlers['api/preference-preview-set'] = preferenceSet.preview;
   handlers['api/preference-apply-set'] = preferenceSet.apply;
+  const budgetTypeSet = guardedCatalogHandlers(
+    prepareBudgetType,
+    guardedApply({
+      operation: 'budgets.set-type',
+      noun: 'Budget type change',
+      prepare: prepareBudgetType,
+      perform: async current => {
+        const result = await performBudgetType(current);
+        // As the settings page does after switching: recompute every cell.
+        if (result.changed) await handlers['reset-budget-cache']();
+        return result;
+      },
+    }),
+  );
+  handlers['api/budget-preview-type'] = budgetTypeSet.preview;
+  handlers['api/budget-apply-type'] = budgetTypeSet.apply;
   const accountGroupCreation = guardedCatalogHandlers(
     prepareAccountGroupCreation,
     guardedApply({
@@ -3626,6 +3649,18 @@ function guardedCatalogHandlers<
     transactionCategorization.preview;
   handlers['api/transactions-apply-categorization'] =
     transactionCategorization.apply;
+  const transactionUpdateMany = guardedCatalogHandlers(
+    prepareTransactionUpdateMany,
+    guardedApply({
+      operation: 'transactions.update-many',
+      noun: 'Transaction batch update',
+      prepare: prepareTransactionUpdateMany,
+      perform: performTransactionUpdateMany,
+    }),
+  );
+  handlers['api/transactions-preview-update-many'] =
+    transactionUpdateMany.preview;
+  handlers['api/transactions-apply-update-many'] = transactionUpdateMany.apply;
   const transactionClearing = guardedCatalogHandlers(
     prepareTransactionClearing,
     guardedApply({
@@ -3777,6 +3812,17 @@ function guardedCatalogHandlers<
   );
   handlers['api/transfers-preview-repair'] = transferRepair.preview;
   handlers['api/transfers-apply-repair'] = transferRepair.apply;
+  const transferCreate = guardedCatalogHandlers(
+    prepareTransferCreate,
+    guardedApply({
+      operation: 'transfers.create',
+      noun: 'Transfer creation',
+      prepare: prepareTransferCreate,
+      perform: performTransferCreate,
+    }),
+  );
+  handlers['api/transfers-preview-create'] = transferCreate.preview;
+  handlers['api/transfers-apply-create'] = transferCreate.apply;
   const transactionMerge = guardedCatalogHandlers(
     prepareTransactionMerge,
     guardedApply({

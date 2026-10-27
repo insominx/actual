@@ -81,6 +81,7 @@ const READ_OPERATIONS = new Set([
   'imports.preview',
   'imports.history',
   'rules.test',
+  'rules.check',
   'rules.matches',
   'schedules.inspect',
   'schedules.upcoming',

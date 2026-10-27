@@ -147,7 +147,10 @@ function link(f, accounts) {
 }
 
 void test('prerequisites before linking, then per-account outcomes for duplicates, one account, partial failure, rate limits and expired credentials', async () => {
-  const f = await createFixture();
+  // The fake provider listens on loopback, which SimpleFIN refuses unless allowed.
+  const f = await createFixture({
+    serverEnv: { ACTUAL_SIMPLEFIN_ALLOWED_NETWORKS: '127.0.0.1/32' },
+  });
   const fake = await fakeProvider();
   try {
     const cli = strict(f);
@@ -240,11 +243,13 @@ void test('prerequisites before linking, then per-account outcomes for duplicate
     assert.equal(byId[sf2].status, 'account-missing');
     fake.state.omit.clear();
 
-    // Rate limiting is distinct from an empty feed.
+    // Rate limiting is distinct from an empty feed. Upstream SimpleFIN (bank
+    // sync follows upstream, eb3f7ef3b) reports a 429 as a server error, so it
+    // surfaces as a retryable provider error rather than as rate-limited.
     fake.state.mode = 'rate';
     const limited = await cli(['bank-sync', 'refresh']);
     for (const outcome of limited.result.outcomes) {
-      assert.equal(outcome.status, 'rate-limited', JSON.stringify(outcome));
+      assert.equal(outcome.status, 'provider-error', JSON.stringify(outcome));
       assert.equal(outcome.retryable, true);
     }
 
@@ -277,8 +282,14 @@ void test('prerequisites before linking, then per-account outcomes for duplicate
   }
 });
 
-void test('a provider amount beyond the engine limit fails that account instead of poisoning balances', async () => {
-  const f = await createFixture();
+// Skipped: this checked the fork's extra provider-row validation, which was
+// returned to upstream behaviour by owner decision (eb3f7ef3b: bank sync does
+// what upstream does unless the fork's change is a verified bug fix).
+void test.skip('a provider amount beyond the engine limit fails that account instead of poisoning balances', async () => {
+  // The fake provider listens on loopback, which SimpleFIN refuses unless allowed.
+  const f = await createFixture({
+    serverEnv: { ACTUAL_SIMPLEFIN_ALLOWED_NETWORKS: '127.0.0.1/32' },
+  });
   const fake = await fakeProvider();
   try {
     const cli = strict(f);

@@ -16,6 +16,7 @@ import {
   planTransactionImport,
 } from '#server/transactions/guarded-import';
 import { parseCategoryFields } from '#shared/import-mapping';
+import * as monthUtils from '#shared/months';
 import type {
   ImportFileProposal,
   ImportFileRequest,
@@ -33,6 +34,8 @@ const KEYS = [
   'sha256',
   'invalidRows',
   'opts',
+  'maxFuzzyDayGap',
+  'updateMatched',
 ];
 const OPT_KEYS = [
   'defaultCleared',
@@ -82,6 +85,20 @@ function validate(request: ImportFileRequest) {
   ) {
     invalid('invalidRows must be reject or skip');
   }
+  if (
+    request.maxFuzzyDayGap !== undefined &&
+    (!Number.isInteger(request.maxFuzzyDayGap) ||
+      request.maxFuzzyDayGap < 0 ||
+      request.maxFuzzyDayGap > 7)
+  ) {
+    invalid('maxFuzzyDayGap must be a whole number of days from 0 to 7');
+  }
+  if (
+    request.updateMatched !== undefined &&
+    typeof request.updateMatched !== 'boolean'
+  ) {
+    invalid('updateMatched must be a boolean');
+  }
   const opts = request.opts;
   if (opts !== undefined) {
     if (typeof opts !== 'object' || opts === null || Array.isArray(opts)) {
@@ -103,6 +120,32 @@ function validate(request: ImportFileRequest) {
       invalid('payeeNameNormalization must be original or title-case');
     }
   }
+}
+
+// Days between a row and its date/amount match, or null for an imported_id
+// match or no match.
+function fuzzyDayGap(
+  matched: Awaited<ReturnType<typeof matchTransactions>>,
+  position: number,
+  date: unknown,
+) {
+  const match = matched.transactionsStep3[position]?.match as
+    | { date?: number }
+    | null
+    | undefined;
+  if (
+    !match ||
+    match.date == null ||
+    matched.transactionsStep1[position]?.match
+  ) {
+    return null;
+  }
+  return Math.abs(
+    monthUtils.differenceInCalendarDays(
+      db.fromDateRepr(match.date),
+      String(date),
+    ),
+  );
 }
 
 // The file import dialog's per-account choice, not the bank sync one
@@ -198,6 +241,12 @@ export async function prepareFileImport(
     payeeNameNormalization:
       request.opts?.payeeNameNormalization ?? 'title-case',
     invalidRows,
+    ...(request.maxFuzzyDayGap === undefined
+      ? {}
+      : { maxFuzzyDayGap: request.maxFuzzyDayGap }),
+    ...(request.updateMatched === false
+      ? { updateMatched: false as const }
+      : {}),
   } as const;
   const importRequest = {
     accountId: request.accountId,
@@ -209,9 +258,9 @@ export async function prepareFileImport(
     },
   };
   let planned;
-  let matched;
+  let matched: Awaited<ReturnType<typeof matchTransactions>>;
+  const forced = new Set<number>();
   try {
-    planned = await planTransactionImport(importRequest);
     matched = await matchTransactions(
       request.accountId,
       structuredClone(transactions),
@@ -220,6 +269,31 @@ export async function prepareFileImport(
         payeeNameNormalization: options.payeeNameNormalization,
       },
     );
+    // A fuzzy match farther than the limit is a different transaction (a
+    // weekly transfer of the same amount, for example): add the row instead.
+    // The flag travels with the rows, so apply re-plans the same way.
+    if (request.maxFuzzyDayGap !== undefined) {
+      valid.forEach((row, position) => {
+        const gap = fuzzyDayGap(matched, position, row.transaction!.date);
+        if (gap !== null && gap > request.maxFuzzyDayGap!) {
+          forced.add(position);
+          transactions[position].forceAddTransaction = true;
+        }
+      });
+    }
+    // Leave matched transactions as they are: a skipped row still takes part
+    // in matching, so the other rows match exactly as previewed.
+    if (request.updateMatched === false) {
+      valid.forEach((_, position) => {
+        if (
+          matched.transactionsStep3[position]?.match &&
+          !forced.has(position)
+        ) {
+          transactions[position].skipTransaction = true;
+        }
+      });
+    }
+    planned = await planTransactionImport(importRequest);
   } catch (error) {
     if (error instanceof Error) throw APIError(error.message);
     throw error;
@@ -234,7 +308,7 @@ export async function prepareFileImport(
   valid.forEach((row, position) => {
     const step3 = matched.transactionsStep3[position];
     const match = step3?.match as
-      | { id: string; reconciled?: number; tombstone?: number }
+      | { id: string; date?: number; reconciled?: number; tombstone?: number }
       | null
       | undefined;
     const target = rows.find(r => r.index === row.index)!;
@@ -243,14 +317,22 @@ export async function prepareFileImport(
       target.outcome = 'add';
       return;
     }
-    target.match = {
-      kind: matched.transactionsStep1[position]?.match
-        ? 'imported_id'
-        : matched.transactionsStep2[position]?.match
-          ? 'payee_date_amount'
-          : 'date_amount',
-      transactionId: match.id,
-    };
+    const kind = matched.transactionsStep1[position]?.match
+      ? 'imported_id'
+      : matched.transactionsStep2[position]?.match
+        ? 'payee_date_amount'
+        : 'date_amount';
+    target.match = { kind, transactionId: match.id };
+    // Fuzzy matches reach 7 days either way, so a recurring same-amount
+    // transaction (a weekly transfer) can claim a different row. Report the
+    // distance so a reviewer can tell those from true duplicates.
+    const dayGap = fuzzyDayGap(matched, position, row.transaction!.date);
+    if (dayGap) target.match.dayGap = dayGap;
+    if (forced.has(position)) {
+      target.match.forcedAdd = true;
+      target.outcome = 'add';
+      return;
+    }
     target.outcome = match.reconciled
       ? 'reconciled'
       : match.tombstone

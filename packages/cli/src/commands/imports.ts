@@ -4,7 +4,7 @@ import { dirname, resolve } from 'node:path';
 import type * as Api from '@actual-app/api';
 import type { Command } from 'commander';
 
-import { AgentError } from '#agent-output';
+import { addAgentWarning, AgentError } from '#agent-output';
 import { validateOperationId, withChangeJournal } from '#change-journal';
 import { withConnection } from '#connection';
 import { api } from '#engine';
@@ -53,6 +53,8 @@ type FileImportOptions = {
   uncleared?: boolean;
   payeeNames?: string;
   expectSha256?: string;
+  maxDayGap?: string | number;
+  onlyNew?: boolean;
 };
 
 function fileImportRequest(
@@ -72,6 +74,22 @@ function fileImportRequest(
       { field: 'payeeNames' },
     );
   }
+  let maxFuzzyDayGap: number | undefined;
+  if (cmdOpts.maxDayGap !== undefined) {
+    maxFuzzyDayGap = Number(cmdOpts.maxDayGap);
+    if (
+      !Number.isInteger(maxFuzzyDayGap) ||
+      maxFuzzyDayGap < 0 ||
+      maxFuzzyDayGap > 7
+    ) {
+      throw new AgentError(
+        'INVALID_INPUT',
+        '--max-day-gap must be a whole number of days from 0 to 7.',
+        false,
+        { field: 'maxDayGap' },
+      );
+    }
+  }
   const opts: NonNullable<Api.ImportFileRequest['opts']> = {};
   if (cmdOpts.uncleared) opts.defaultCleared = false;
   if (cmdOpts.reimportDeleted !== undefined) {
@@ -88,6 +106,8 @@ function fileImportRequest(
     ...(cmdOpts.expectSha256 ? { sha256: cmdOpts.expectSha256 } : {}),
     ...(cmdOpts.skipInvalid ? { invalidRows: 'skip' as const } : {}),
     ...(Object.keys(opts).length ? { opts } : {}),
+    ...(maxFuzzyDayGap === undefined ? {} : { maxFuzzyDayGap }),
+    ...(cmdOpts.onlyNew ? { updateMatched: false } : {}),
   };
 }
 
@@ -112,6 +132,14 @@ function fileImportOptions(command: Command) {
     .option(
       '--payee-names <mode>',
       'Payee name normalization: title-case (default) or original',
+    )
+    .option(
+      '--only-new',
+      'Add only rows without a match; leave matched transactions untouched (default: refresh their imported ID and payee text)',
+    )
+    .option(
+      '--max-day-gap <days>',
+      'Add (rather than merge) a row whose date/amount match is more than this many days away (0-7; default: match up to 7)',
     );
 }
 
@@ -121,6 +149,8 @@ type BatchEntry = {
   settings?: Record<string, unknown>;
   useSaved?: boolean;
   skipInvalid?: boolean;
+  maxDayGap?: number;
+  onlyNew?: boolean;
 };
 
 function readManifest(path: string): Array<BatchEntry & { path: string }> {
@@ -152,6 +182,8 @@ function readManifest(path: string): Array<BatchEntry & { path: string }> {
               'settings',
               'useSaved',
               'skipInvalid',
+              'maxDayGap',
+              'onlyNew',
             ].includes(key),
         ) ||
         typeof entry.file !== 'string' ||
@@ -168,12 +200,16 @@ function readManifest(path: string): Array<BatchEntry & { path: string }> {
         !(
           entry.skipInvalid === undefined ||
           typeof entry.skipInvalid === 'boolean'
-        ),
+        ) ||
+        !(
+          entry.maxDayGap === undefined || typeof entry.maxDayGap === 'number'
+        ) ||
+        !(entry.onlyNew === undefined || typeof entry.onlyNew === 'boolean'),
     )
   ) {
     throw new AgentError(
       'INVALID_INPUT',
-      'The batch manifest is an array of 1-20 entries with file, account and optional settings, useSaved and skipInvalid.',
+      'The batch manifest is an array of 1-20 entries with file, account and optional settings, useSaved, skipInvalid, maxDayGap and onlyNew.',
       false,
       { field: 'manifest' },
     );
@@ -195,6 +231,8 @@ function batchRequest(
     saved: entry.useSaved ?? true,
     settings: undefined,
     skipInvalid: entry.skipInvalid,
+    maxDayGap: entry.maxDayGap ?? cmdOpts.maxDayGap,
+    onlyNew: entry.onlyNew ?? cmdOpts.onlyNew,
   });
   return entry.settings ? { ...shared, settings: entry.settings } : shared;
 }
@@ -250,6 +288,35 @@ function batchOverlaps(proposals: Array<Api.ImportFileProposal | null>) {
     });
   });
   return overlaps;
+}
+
+// Fuzzy matching reaches 7 days either way, so a recurring same-amount
+// transaction (a weekly transfer) can claim a row from another week and the
+// row is never added. Name those rows so they are checked before applying.
+export function warnDateShiftedMatches(
+  proposal: Api.ImportFileProposal,
+  label = 'The file',
+) {
+  const forced = proposal.after.rows.filter(row => row.match?.forcedAdd);
+  if (forced.length) {
+    addAgentWarning(
+      `${label} has ${forced.length} row${forced.length === 1 ? '' : 's'} whose date/amount match is more than ${proposal.after.options.maxFuzzyDayGap} day(s) away, so ${forced.length === 1 ? 'it is' : 'they are'} added as new: ${forced
+        .slice(0, 10)
+        .map(row => `${row.index} (${row.match!.dayGap}d)`)
+        .join(', ')}${forced.length > 10 ? ', ...' : ''}.`,
+    );
+  }
+  const shifted = proposal.after.rows.filter(
+    row => row.match?.dayGap && !row.match.forcedAdd,
+  );
+  if (!shifted.length) return;
+  const shown = shifted
+    .slice(0, 10)
+    .map(row => `${row.index} (${row.match!.dayGap}d, ${row.outcome})`)
+    .join(', ');
+  addAgentWarning(
+    `${label} has ${shifted.length} row${shifted.length === 1 ? '' : 's'} matched to an existing transaction on a different day, so ${shifted.length === 1 ? 'it is' : 'they are'} not added: ${shown}${shifted.length > 10 ? ', ...' : ''}. A recurring same-amount transaction can be mistaken for a duplicate; check rows with match.dayGap before applying.`,
+  );
 }
 
 async function transferReview(proposals: Array<Api.ImportFileProposal | null>) {
@@ -372,6 +439,7 @@ export function registerImportsCommand(program: Command) {
           // hashes with an explanatory message; surface it as input error.
           throw new AgentError('INVALID_INPUT', errorMessage(error));
         }
+        warnDateShiftedMatches(proposal);
         printOutput(proposal, opts.format);
       },
       { mutates: false },
@@ -427,6 +495,14 @@ export function registerImportsCommand(program: Command) {
       '--payee-names <mode>',
       'Payee name normalization: title-case (default) or original',
     )
+    .option(
+      '--only-new',
+      'Add only rows without a match in every file (an entry may set onlyNew)',
+    )
+    .option(
+      '--max-day-gap <days>',
+      'Add rather than merge rows whose date/amount match is more than this many days away, for every file (0-7; an entry may set maxDayGap)',
+    )
     .action(
       async (
         manifest: string,
@@ -449,6 +525,7 @@ export function registerImportsCommand(program: Command) {
                 try {
                   const proposal = await api.previewFileImport(request);
                   proposals.push(proposal);
+                  warnDateShiftedMatches(proposal, `File ${index + 1}`);
                   files.push({
                     index,
                     path: request.path,

@@ -5,7 +5,8 @@ import { withConnection } from '#connection';
 import { api } from '#engine';
 import { executeCatalogChange, executePayeeCreation } from '#guarded-changes';
 import { printOutput } from '#output';
-import { filterByName } from '#utils';
+import { findDuplicatePayees } from '#payee-duplicates';
+import { filterByName, plainInteger } from '#utils';
 
 export function registerPayeesCommand(program: Command) {
   const payees = program.command('payees').description('Manage payees');
@@ -66,6 +67,72 @@ export function registerPayeesCommand(program: Command) {
               }),
               cmdOpts.name,
             ),
+            opts.format,
+          );
+        },
+        { mutates: false },
+      );
+    });
+
+  payees
+    .command('duplicates')
+    .description(
+      'Suggest merges for payees whose names differ only by bank noise (processor prefixes, store numbers, reference codes, locations); read-only',
+    )
+    .option(
+      '--name <text>',
+      'Only groups whose key or a member name contains this text (case-insensitive)',
+    )
+    .option('--limit <n>', 'Maximum groups to return (1-1000)', '200')
+    .action(async (cmdOpts: { name?: string; limit: string }) => {
+      const limit = plainInteger(cmdOpts.limit);
+      if (!Number.isInteger(limit) || limit < 1 || limit > 1000) {
+        throw new AgentError(
+          'INVALID_INPUT',
+          '--limit must be an integer from 1 to 1000.',
+          false,
+          { field: 'limit' },
+        );
+      }
+      const opts = program.opts();
+      await withConnection(
+        opts,
+        async () => {
+          const rows = await api.inspectCatalog('payees', {
+            includeDeleted: false,
+          });
+          // Transfer payees name accounts, not merchants; unused payees
+          // change nothing when merged.
+          const candidates = rows.filter(
+            row =>
+              !row.deleted &&
+              !row.mappedTo &&
+              !row.transferAccount &&
+              row.transactionCount > 0,
+          );
+          const needle = cmdOpts.name?.toLowerCase();
+          const groups = findDuplicatePayees(candidates).filter(
+            group =>
+              !needle ||
+              group.key.includes(needle) ||
+              [group.target, ...group.merge].some(payee =>
+                payee.name.toLowerCase().includes(needle),
+              ),
+          );
+          printOutput(
+            {
+              readOnly: true,
+              total: groups.length,
+              payeesToMerge: groups.reduce(
+                (sum, group) => sum + group.merge.length,
+                0,
+              ),
+              truncated: groups.length > limit,
+              groups: groups.slice(0, limit).map(group => ({
+                ...group,
+                mergeCommand: `payees merge --target ${group.target.id} --ids ${group.merge.map(payee => payee.id).join(',')}`,
+              })),
+            },
             opts.format,
           );
         },

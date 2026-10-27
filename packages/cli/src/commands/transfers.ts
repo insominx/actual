@@ -153,6 +153,44 @@ export function registerTransfersCommand(program: Command) {
       },
     );
 
+  transfers
+    .command('create <id>')
+    .description(
+      "Turn an existing transaction into a transfer to another account: its payee becomes that account's transfer payee and the counterpart is created and linked (guarded; the preview shows the counterpart)",
+    )
+    .option('--operation-id <id>', 'Required; durable retry ID')
+    .requiredOption('--account <id>', 'Account that receives the counterpart')
+    .option(
+      '--allow-reconciled',
+      'Allow changing a reconciled transaction',
+      false,
+    )
+    .action(
+      async (
+        id: string,
+        cmdOpts: {
+          operationId?: string;
+          account: string;
+          allowReconciled: boolean;
+        },
+      ) => {
+        const opts = program.opts();
+        printOutput(
+          await executeScopedChange(
+            opts,
+            cmdOpts.operationId,
+            'transfers.create',
+            {
+              id,
+              account: cmdOpts.account,
+              ...(cmdOpts.allowReconciled ? { allowReconciled: true } : {}),
+            },
+          ),
+          opts.format,
+        );
+      },
+    );
+
   for (const [verb, description] of [
     [
       'unmatch',

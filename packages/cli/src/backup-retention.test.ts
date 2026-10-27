@@ -31,7 +31,8 @@ it('reports a partially removed artifact and preserves the newest valid copy aft
       setImmediate(() => {
         child.stdout.write(
           JSON.stringify({
-            identity: { id: 'test-source' },
+            identity: { id: 'imported-local-id' },
+            archiveId: 'test-source',
             snapshot: { schemaVersion: 1, tables: {}, accountBalances: [] },
           }),
         );

@@ -51,7 +51,7 @@ export async function compareBudgets(
       timeout,
       signal,
     );
-    if (imported.identity.id !== id) {
+    if (imported.archiveId !== id) {
       throw new AgentError(
         'ENGINE_FAILURE',
         'The isolated snapshot has an unexpected budget identity.',

@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { cp, readdir, readFile, symlink, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { test } from 'node:test';
 
-import { createFixture } from './harness.mjs';
+import { budgetDirectory, createFixture } from './harness.mjs';
 
 void test(
   'retention previews and applies per-source policy while preserving invalid and external artifacts',
@@ -174,7 +174,7 @@ void test(
       const path = JSON.parse(created.stdout).data.path;
       const originalArchive = await readFile(join(path, 'budget.zip'));
       const sourceMetadata = await readFile(
-        join(f.root, 'a', f.fixture.budgetId, 'metadata.json'),
+        join(budgetDirectory(f), 'metadata.json'),
       );
       const sourceCachePath = join(
         f.root,
@@ -203,11 +203,11 @@ void test(
         assert.equal(result.operation, 'backups.restore');
         assert.equal(result.context.commit, 'committed-local');
         assert.equal(result.data.published, false);
-        assert.equal(result.data.sourceBudgetId, f.fixture.budgetId);
+        assert.equal(result.data.sourceBudgetId, basename(budgetDirectory(f)));
         assert.equal(result.data.syncId, null);
         assert.equal(result.data.cloudFileId, null);
         assert.equal(result.data.encryptKeyId, null);
-        assert.notEqual(result.data.id, f.fixture.budgetId);
+        assert.notEqual(result.data.id, basename(budgetDirectory(f)));
         assert.ok(!restoredIds.includes(result.data.id));
         restoredIds.push(result.data.id);
         assert.deepEqual(result.data.snapshot, f.fixture.snapshot);
@@ -276,12 +276,15 @@ void test(
         { client: 'fresh-restore' },
       );
       assert.equal(fresh.code, 0, fresh.stdout + fresh.stderr);
-      assert.notEqual(JSON.parse(fresh.stdout).data.id, f.fixture.budgetId);
+      assert.notEqual(
+        JSON.parse(fresh.stdout).data.id,
+        basename(budgetDirectory(f)),
+      );
       const matching = await f.cli([
         '--offline',
         'budgets',
         'compare',
-        f.fixture.budgetId,
+        basename(budgetDirectory(f)),
         restoredIds[0],
       ]);
       assert.equal(matching.code, 0, matching.stdout + matching.stderr);
@@ -290,7 +293,7 @@ void test(
       assert.equal(comparison.context.commit, 'none');
       assert.equal(comparison.data.sameDomainState, true);
       assert.equal(comparison.data.total, 0);
-      assert.equal(comparison.data.left.id, f.fixture.budgetId);
+      assert.equal(comparison.data.left.id, basename(budgetDirectory(f)));
       assert.equal(comparison.data.right.id, restoredIds[0]);
       const edited = await f.cli([
         '--offline',
@@ -311,7 +314,7 @@ void test(
         '--offline',
         'budgets',
         'compare',
-        f.fixture.budgetId,
+        basename(budgetDirectory(f)),
         restoredIds[0],
         '--limit',
         '1',
@@ -326,7 +329,7 @@ void test(
         '--offline',
         'budgets',
         'compare',
-        f.fixture.budgetId,
+        basename(budgetDirectory(f)),
         'missing-budget',
       ]);
       assert.equal(unknown.code, 3, unknown.stdout);
@@ -350,7 +353,7 @@ void test(
         originalArchive,
       );
       assert.deepEqual(
-        await readFile(join(f.root, 'a', f.fixture.budgetId, 'metadata.json')),
+        await readFile(join(budgetDirectory(f), 'metadata.json')),
         sourceMetadata,
       );
     } finally {

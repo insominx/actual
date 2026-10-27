@@ -760,6 +760,28 @@ export function registerBudgetsCommand(program: Command) {
     });
 
   budgets
+    .command('set-type')
+    .description(
+      'Switch between envelope and tracking budgeting (guarded; each type keeps its own budgeted amounts)',
+    )
+    .requiredOption('--type <type>', 'envelope or tracking')
+    .option('--operation-id <id>', 'Required; durable retry ID')
+    .action(async (cmdOpts: { type: string; operationId?: string }) => {
+      const opts = program.opts();
+      printOutput(
+        await executeScopedChange(
+          opts,
+          cmdOpts.operationId,
+          'budgets.set-type',
+          {
+            type: cmdOpts.type,
+          },
+        ),
+        opts.format,
+      );
+    });
+
+  budgets
     .command('reset-hold')
     .description('Reset budget hold for a month')
     .option('--operation-id <id>', 'Required for version 2; durable retry ID')

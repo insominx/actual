@@ -69,6 +69,33 @@ const unavailable = new Proxy(
   },
 ) as typeof Api;
 
+// In a source checkout, `yarn typecheck` (tsgo -b) writes tsc output over the
+// api package's bundled dist; that output imports loot-core sources Node
+// cannot load. Name the fix instead of failing with a raw module error.
+export function explainEngineLoadError(error: unknown): Error {
+  const message = error instanceof Error ? error.message : String(error);
+  if (
+    (error as { code?: string } | null)?.code === 'ERR_MODULE_NOT_FOUND' &&
+    /loot-core[\\/]src[\\/]/.test(message)
+  ) {
+    return Object.assign(
+      new Error(
+        'The engine bundle (packages/api/dist) holds TypeScript build output, usually left by `yarn typecheck`. Rebuild it with `yarn workspace @actual-app/api build`, then `yarn workspace @actual-app/cli build`.',
+      ),
+      { cause: error },
+    );
+  }
+  return error instanceof Error ? error : new Error(message);
+}
+
+async function loadEngine(): Promise<typeof Api> {
+  try {
+    return await import('@actual-app/api');
+  } catch (error) {
+    throw explainEngineLoadError(error);
+  }
+}
+
 export const api: typeof Api = engineNeeded(process.argv.slice(2))
-  ? await import('@actual-app/api')
+  ? await loadEngine()
   : unavailable;

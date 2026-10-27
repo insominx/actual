@@ -175,7 +175,10 @@ void test(
       );
       assert.equal(close.steps[0].id, 'backup');
       assert.equal(close.artifacts[0].kind, 'backup');
-      assert.ok((await stat(close.artifacts[0].path)).size > 0);
+      // A backup artifact is a directory (size 0 on Windows); check its archive.
+      assert.ok(
+        (await stat(join(close.artifacts[0].path, 'budget.zip'))).size > 0,
+      );
       const reconciled = await ok(f, [...local, 'reconcile', 'status', card]);
       assert.ok(reconciled.account.lastReconciled);
       const receipt = await ok(f, [

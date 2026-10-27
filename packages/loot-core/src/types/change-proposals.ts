@@ -305,6 +305,42 @@ export type TransactionCategorizationProposal = CatalogProposal<
   }
 >;
 
+export type TransactionUpdateManyRow = {
+  id: string;
+  notes?: string | null;
+  category?: string | null;
+  payee?: string;
+  cleared?: boolean;
+};
+export type TransactionUpdateManyRequest = {
+  rows: TransactionUpdateManyRow[];
+  allowReconciled?: boolean;
+};
+export type TransactionUpdateManyProposal = CatalogProposal<
+  'transactions.update-many',
+  TransactionUpdateManyRequest,
+  {
+    transactions: Array<{
+      id: string;
+      account: string;
+      amount: number;
+      date: number;
+      notes: string | null;
+      category: string | null;
+      payee: string | null;
+      cleared: boolean;
+      transferId: string | null;
+      reconciled: boolean;
+    }>;
+  },
+  {
+    changes: Array<{ id: string; fields: Record<string, unknown> }>;
+    changedIds: string[];
+    unchangedIds: string[];
+    reconciledIds: string[];
+  }
+>;
+
 export type TransactionClearingRequest = {
   ids: string[];
   cleared: boolean;
@@ -377,6 +413,31 @@ export type TransferMatchProposal = CatalogProposal<
     reconciledIds: string[];
   }
 >;
+export type TransferCreateRequest = {
+  id: string;
+  account: string;
+  allowReconciled?: boolean;
+};
+export type TransferCreateProposal = CatalogProposal<
+  'transfers.create',
+  TransferCreateRequest,
+  { transaction: TransferLegSnapshot },
+  {
+    classification: 'internal' | 'off-budget-internal' | 'budget-boundary';
+    payee: string;
+    categoryCleared: boolean;
+    counterpart: {
+      account: string;
+      amount: number;
+      date: string;
+      notes: string | null;
+      cleared: boolean;
+    };
+  }
+>;
+export type TransferCreateOutcome = CatalogCommit<{
+  transferCreate: { counterpartId: string };
+}>;
 export type TransferUnmatchRequest = { id: string; allowReconciled?: boolean };
 export type TransferUnmatchProposal = CatalogProposal<
   'transfers.unmatch',
@@ -503,6 +564,12 @@ export type ImportFileRequest = {
   sha256?: string;
   invalidRows?: 'reject' | 'skip';
   opts?: TransactionImportRequest['opts'];
+  // Largest day gap a date/amount match may have; a row whose fuzzy match is
+  // farther away is added instead of merged. Omitted: the engine's 7 days.
+  maxFuzzyDayGap?: number;
+  // false: leave matched transactions untouched (no imported ID, payee text or
+  // notes refresh) and add only rows without a match. Omitted: true.
+  updateMatched?: boolean;
 };
 export type ImportFileRowOutcome = {
   index: number;
@@ -516,6 +583,10 @@ export type ImportFileRowOutcome = {
   match: {
     kind: 'imported_id' | 'payee_date_amount' | 'date_amount';
     transactionId: string;
+    // Days between the row and its fuzzy match; omitted on the same day.
+    dayGap?: number;
+    // The match was farther than maxFuzzyDayGap, so the row is added instead.
+    forcedAdd?: true;
   } | null;
   errors?: string[];
 };
@@ -547,6 +618,8 @@ export type ImportFileProposal = CatalogProposal<
       reimportDeleted: boolean;
       payeeNameNormalization: 'original' | 'title-case';
       invalidRows: 'reject' | 'skip';
+      maxFuzzyDayGap?: number;
+      updateMatched?: false;
     };
   }
 >;
@@ -1046,6 +1119,14 @@ export type BudgetHoldProposal = {
       request: Extract<BudgetHoldRequest, { operation: 'budgets.reset-hold' }>;
     }
 );
+export type BudgetTypeName = 'envelope' | 'tracking';
+export type BudgetTypeRequest = { type: BudgetTypeName };
+export type BudgetTypeProposal = CatalogProposal<
+  'budgets.set-type',
+  BudgetTypeRequest,
+  { type: BudgetTypeName },
+  { type: BudgetTypeName; willWrite: boolean }
+>;
 export type BudgetCarryoverProposal = {
   schemaVersion: 1;
   operation: 'budgets.set-carryover';
@@ -1103,8 +1184,10 @@ export type ChangeProposal =
   | ScheduleDeletionProposal
   | TransactionDeletionProposal
   | TransactionCategorizationProposal
+  | TransactionUpdateManyProposal
   | TransactionClearingProposal
   | TransferMatchProposal
+  | TransferCreateProposal
   | ImportMappingSaveProposal
   | TransferUnmatchProposal
   | TransferRepairProposal
@@ -1135,6 +1218,7 @@ export type ChangeProposal =
   | BudgetAmountProposal
   | BudgetCarryoverProposal
   | BudgetHoldProposal
+  | BudgetTypeProposal
   | BudgetMetadataProposal
   | BudgetCreationProposal
   | BudgetCloneProposal

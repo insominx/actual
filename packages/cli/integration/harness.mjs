@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { rmSync } from 'node:fs';
+import { readdirSync, readFileSync, rmSync } from 'node:fs';
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -16,7 +16,11 @@ export function isolatedEnv(extra = {}) {
   const env = Object.fromEntries(
     Object.entries(process.env).filter(([key]) => !key.startsWith('ACTUAL_')),
   );
-  return { ...env, ...extra };
+  // A null value removes an inherited key (e.g. the default ACTUAL_SYNC_ID when
+  // a test selects a budget through a profile instead).
+  return Object.fromEntries(
+    Object.entries({ ...env, ...extra }).filter(([, value]) => value !== null),
+  );
 }
 
 export async function runNode(
@@ -78,6 +82,8 @@ export async function createFixture({
   fresh = false,
   browser = false,
   richBackup = false,
+  // Extra sync-server environment, such as provider network allowances.
+  serverEnv: extraServerEnv = {},
 } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'actual-agent-cli-'));
   const port = await unusedPort();
@@ -93,8 +99,10 @@ export async function createFixture({
     ...(browser
       ? { ACTUAL_WEB_ROOT: join(repoRoot, 'packages/desktop-client/build') }
       : {}),
+    ...extraServerEnv,
   };
   async function start() {
+    assertBundledServer();
     server = spawn(
       process.execPath,
       [join(repoRoot, 'packages/sync-server/build/app.js')],
@@ -111,7 +119,8 @@ export async function createFixture({
     server.stderr.on('data', data => {
       logs += data;
     });
-    const deadline = Date.now() + 15000;
+    // Generous: several disposable servers start at once under parallel test files.
+    const deadline = Date.now() + 30000;
     while (Date.now() < deadline) {
       if (server.exitCode !== null) {
         throw new Error(`Disposable server exited: ${logs}`);
@@ -294,4 +303,43 @@ export async function createFixture({
     await dispose();
     throw error;
   }
+}
+
+// A download gets a fresh local ID (only a local selection may replace an
+// existing directory), so a client's copy of the fixture budget is found by
+// its sync ID rather than assumed to share the seed's local ID.
+export function budgetDirectory(f, client = 'a') {
+  const base = join(f.root, client);
+  for (const entry of readdirSync(base, { withFileTypes: true })) {
+    if (!entry.isDirectory() || entry.name.startsWith('.')) continue;
+    try {
+      const meta = JSON.parse(
+        readFileSync(join(base, entry.name, 'metadata.json'), 'utf8'),
+      );
+      if (meta.id === f.fixture.budgetId || meta.groupId === f.fixture.syncId) {
+        return join(base, entry.name);
+      }
+    } catch {
+      // not a budget directory
+    }
+  }
+  return join(base, f.fixture.budgetId);
+}
+
+// `yarn typecheck` builds the sync-server project with tsc into the same build
+// directory, replacing the vite bundle with extensionless ESM imports that Node
+// cannot load. Fail once with the fix instead of with a server crash per test.
+let serverChecked = false;
+function assertBundledServer() {
+  if (serverChecked) return;
+  const app = readFileSync(
+    join(repoRoot, 'packages/sync-server/build/app.js'),
+    'utf8',
+  );
+  if (/from ['"]\.\/src\//.test(app)) {
+    throw new Error(
+      'packages/sync-server/build holds tsc output (left by yarn typecheck), not the server bundle. Run `yarn workspace @actual-app/sync-server build`, then rerun the integration tests.',
+    );
+  }
+  serverChecked = true;
 }

@@ -242,6 +242,52 @@ export function registerTransactionsCommand(program: Command) {
     );
 
   transactions
+    .command('update-many')
+    .description(
+      'Set notes, category, payee or cleared on many transactions at once, each row with its own values, through one guarded change',
+    )
+    .option('--operation-id <id>', 'Required; durable retry ID')
+    .option(
+      '--file <path>',
+      'JSON array of {id, notes?, category?, payee?, cleared?} (use - for stdin)',
+    )
+    .option('--data <json>', 'The same array inline')
+    .option(
+      '--allow-reconciled',
+      'Allow changing reconciled transactions (they are listed in the receipt)',
+      false,
+    )
+    .action(
+      async (cmdOpts: {
+        operationId?: string;
+        file?: string;
+        data?: string;
+        allowReconciled: boolean;
+      }) => {
+        const opts = program.opts();
+        const rows = readJsonInput(cmdOpts);
+        if (!Array.isArray(rows) || !rows.length) {
+          throw new AgentError(
+            'INVALID_INPUT',
+            'Provide a non-empty JSON array of rows with --file or --data.',
+          );
+        }
+        printOutput(
+          await executeScopedChange(
+            opts,
+            cmdOpts.operationId,
+            'transactions.update-many',
+            {
+              rows,
+              ...(cmdOpts.allowReconciled ? { allowReconciled: true } : {}),
+            },
+          ),
+          opts.format,
+        );
+      },
+    );
+
+  transactions
     .command('clear')
     .description(
       'Mark a frozen list of transactions cleared or uncleared, optionally removing their reconciled lock, through a guarded change',

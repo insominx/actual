@@ -88,7 +88,7 @@ export async function pruneBackupArtifacts(
           (deadline - Date.now()) / 1000,
           signal,
         );
-        if (checked.identity.id !== artifact.manifest.source.id) {
+        if (checked.archiveId !== artifact.manifest.source.id) {
           throw new AgentError(
             'INVALID_INPUT',
             'Archive source identity mismatch.',

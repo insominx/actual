@@ -322,20 +322,18 @@ void test(
       assert.equal(store.selected, 'clone');
       assert.equal(store.profiles.clone.budgetId, id);
       assert.equal(store.profiles.clone.syncId, undefined);
-      const reopened = await f.cli([
-        '--profile',
-        'clone',
-        'budgets',
-        'inspect',
-      ]);
+      // The harness sets ACTUAL_SYNC_ID, which outranks a profile's local budget;
+      // drop it so the profile selects the clone.
+      const reopened = await f.cli(
+        ['--profile', 'clone', 'budgets', 'inspect'],
+        { env: { ACTUAL_SYNC_ID: null } },
+      );
       assert.equal(reopened.code, 0, reopened.stderr);
       assert.equal(JSON.parse(reopened.stdout).data.id, id);
-      const cloneAccounts = await f.cli([
-        '--profile',
-        'clone',
-        'accounts',
-        'list',
-      ]);
+      const cloneAccounts = await f.cli(
+        ['--profile', 'clone', 'accounts', 'list'],
+        { env: { ACTUAL_SYNC_ID: null } },
+      );
       assert.equal(cloneAccounts.code, 0, cloneAccounts.stderr);
       assert.equal(
         JSON.parse(cloneAccounts.stdout).data.length,

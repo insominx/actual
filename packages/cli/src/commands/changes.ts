@@ -3,6 +3,8 @@ import type { Command } from 'commander';
 import { AgentError } from '#agent-output';
 import type { ChangeReceipt } from '#change-journal';
 import { validateOperationId, withChangeJournal } from '#change-journal';
+import { withConnection } from '#connection';
+import { api } from '#engine';
 import {
   applyGuardedChange,
   previewGuardedChange,
@@ -13,6 +15,16 @@ import {
   PAYLOAD_SCOPED_OPERATIONS,
 } from '#guarded-operations';
 import { printOutput } from '#output';
+import type { FieldRow, LedgerRow } from '#receipt-resolution';
+import {
+  checkFieldsLanded,
+  checkImportLanded,
+  fieldScope,
+  isImportReceipt,
+  resolutionScope,
+  resolvable,
+  resolvedOutcome,
+} from '#receipt-resolution';
 import {
   BACKUP_RECOVERY,
   diagnoseReceipt,
@@ -211,6 +223,164 @@ export function registerChangesCommand(program: Command) {
         );
       },
     );
+  changes
+    .command('resolve <operation-id>')
+    .description(
+      'Close an uncertain receipt after checking the ledger shows its planned result (imports, batch categorization and updates, transfer match and create); never replays the change',
+    )
+    .option(
+      '--dry-run',
+      'Check the ledger and report without updating the receipt',
+    )
+    .action(async (id: string, input: { dryRun?: boolean }) => {
+      validateOperationId(id);
+      const resolved = await config();
+      const receipt = await withChangeJournal(
+        resolved.dataDir,
+        resolved.lockTimeout,
+        async journal => journal.read(id),
+      );
+      if (!receipt) {
+        throw new AgentError(
+          'MISSING_CONTEXT',
+          'Operation ID was not found in this local journal.',
+        );
+      }
+      if (!resolvable(receipt)) {
+        throw new AgentError(
+          'INVALID_INPUT',
+          receipt.state !== 'uncertain'
+            ? `The receipt is ${receipt.state}, not uncertain; there is nothing to resolve.`
+            : `No ledger check exists for ${receipt.proposal.operation}; restore a backup or inspect it by hand.`,
+          false,
+          { state: receipt.state, operation: receipt.proposal.operation },
+        );
+      }
+      const check = await withConnection(
+        program.opts(),
+        async () => {
+          if (!isImportReceipt(receipt)) {
+            const select = [
+              'id',
+              'account',
+              'category',
+              'notes',
+              'payee',
+              'cleared',
+              'transfer_id',
+            ];
+            const read = async (ids: string[]) =>
+              ids.length
+                ? (
+                    (await api.aqlQuery(
+                      api
+                        .q('transactions')
+                        .filter({ id: { $oneof: ids } })
+                        .select(select)
+                        .options({ splits: 'all' }),
+                    )) as { data: FieldRow[] }
+                  ).data
+                : [];
+            const rows = await read(fieldScope(receipt));
+            const counterparts = await read(
+              rows
+                .map(row => row.transfer_id)
+                .filter((linked): linked is string => !!linked),
+            );
+            return checkFieldsLanded(receipt, rows, counterparts);
+          }
+          const scope = resolutionScope(receipt);
+          const ledger: LedgerRow[] = [];
+          for (const account of scope.accounts) {
+            const { data } = (await api.aqlQuery(
+              api
+                .q('transactions')
+                .filter({
+                  account,
+                  ...(scope.from && scope.to
+                    ? { date: [{ $gte: scope.from }, { $lte: scope.to }] }
+                    : {}),
+                })
+                .select([
+                  'id',
+                  'account',
+                  'date',
+                  'amount',
+                  'imported_id',
+                  'imported_payee',
+                ])
+                .options({ splits: 'all' }),
+            )) as { data: LedgerRow[] };
+            ledger.push(...data);
+          }
+          let updated: Array<{ id: string }> = [];
+          if (scope.updatedIds.length) {
+            const result = (await api.aqlQuery(
+              api
+                .q('transactions')
+                .filter({ id: { $oneof: scope.updatedIds } })
+                .select(['id'])
+                .options({ splits: 'all' }),
+            )) as { data: Array<{ id: string }> };
+            updated = result.data;
+          }
+          return checkImportLanded(
+            receipt,
+            ledger,
+            updated.map(row => row.id),
+          );
+        },
+        { mutates: false },
+      );
+      if (!check.verified || input.dryRun) {
+        printOutput(
+          {
+            operationId: id,
+            state: receipt.state,
+            verified: check.verified,
+            missing: check.missing,
+            ...(check.verified
+              ? { next: `actual changes resolve ${id}` }
+              : {
+                  next: 'The change did not fully land. The receipt stays uncertain; redo the missing part as a new change, or restore a backup.',
+                }),
+          },
+          'json',
+        );
+        return;
+      }
+      const updatedReceipt = await withChangeJournal(
+        resolved.dataDir,
+        resolved.lockTimeout,
+        async journal => {
+          const current = await journal.read(id);
+          if (
+            !current ||
+            current.state !== 'uncertain' ||
+            current.token !== receipt.token
+          ) {
+            throw new AgentError(
+              'STALE_PREVIEW',
+              'The receipt changed while it was being checked; run resolve again.',
+            );
+          }
+          const at = new Date().toISOString();
+          const next = {
+            ...current,
+            state: 'committed-local' as const,
+            updatedAt: at,
+            outcome: resolvedOutcome(
+              current,
+              check,
+              at,
+            ) as ChangeReceipt['outcome'],
+          };
+          await journal.write(next);
+          return next;
+        },
+      );
+      printOutput(updatedReceipt, 'json');
+    });
   changes
     .command('list')
     .description('List local receipts with disclosed truncation')

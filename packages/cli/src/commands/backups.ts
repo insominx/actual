@@ -196,7 +196,7 @@ export function registerBackupsCommand(program: Command) {
             timeout,
             signal,
           );
-          if (validated.identity.id !== artifact.manifest.source.id) {
+          if (validated.archiveId !== artifact.manifest.source.id) {
             throw new AgentError(
               'INVALID_INPUT',
               'The archive identity differs from its backup manifest.',
@@ -322,7 +322,7 @@ export function registerBackupsCommand(program: Command) {
           timeout,
           signal,
         );
-        if (result.identity.id !== artifact.manifest.source.id) {
+        if (result.archiveId !== artifact.manifest.source.id) {
           throw new AgentError(
             'INVALID_INPUT',
             'The archive identity differs from its backup manifest.',

@@ -110,6 +110,8 @@ import type {
   BudgetTemplatesOutcome,
   BudgetTemplatesProposal,
   BudgetTemplatesRequest,
+  BudgetTypeProposal,
+  BudgetTypeRequest,
   CashPlanSaveProposal,
   CashPlanSaveRequest,
   CategoryCreationOutcome,
@@ -199,9 +201,14 @@ import type {
   TransactionSplitOutcome,
   TransactionSplitProposal,
   TransactionSplitRequest,
+  TransactionUpdateManyProposal,
+  TransactionUpdateManyRequest,
   TransactionUpdateOutcome,
   TransactionUpdateProposal,
   TransactionUpdateRequest,
+  TransferCreateOutcome,
+  TransferCreateProposal,
+  TransferCreateRequest,
   TransferMatchProposal,
   TransferMatchRequest,
   TransferRepairOutcome,
@@ -543,6 +550,12 @@ export type ApiHandlers = {
   'api/transactions-apply-categorization': (
     arg: TransactionCategorizationProposal,
   ) => Promise<TransactionUpdateOutcome>;
+  'api/transactions-preview-update-many': (
+    arg: TransactionUpdateManyRequest,
+  ) => Promise<TransactionUpdateManyProposal>;
+  'api/transactions-apply-update-many': (
+    arg: TransactionUpdateManyProposal,
+  ) => Promise<TransactionUpdateOutcome>;
   'api/transactions-preview-clearing': (
     arg: TransactionClearingRequest,
   ) => Promise<TransactionClearingProposal>;
@@ -567,6 +580,12 @@ export type ApiHandlers = {
   'api/transfers-apply-repair': (
     arg: TransferRepairProposal,
   ) => Promise<TransferRepairOutcome>;
+  'api/transfers-preview-create': (
+    arg: TransferCreateRequest,
+  ) => Promise<TransferCreateProposal>;
+  'api/transfers-apply-create': (
+    arg: TransferCreateProposal,
+  ) => Promise<TransferCreateOutcome>;
   'api/transactions-preview-merge': (
     arg: TransactionMergeRequest,
   ) => Promise<TransactionMergeProposal>;
@@ -662,6 +681,12 @@ export type ApiHandlers = {
   ) => Promise<BudgetHoldProposal>;
   'api/budget-apply-hold': (
     arg: BudgetHoldProposal,
+  ) => Promise<TransactionUpdateOutcome>;
+  'api/budget-preview-type': (
+    arg: BudgetTypeRequest,
+  ) => Promise<BudgetTypeProposal>;
+  'api/budget-apply-type': (
+    arg: BudgetTypeProposal,
   ) => Promise<TransactionUpdateOutcome>;
   'api/budget-apply-carryover': (
     arg: BudgetCarryoverProposal,

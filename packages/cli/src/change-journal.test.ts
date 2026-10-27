@@ -58,6 +58,11 @@ const proposal: TransactionUpdateProposal = {
   sideEffects: ['transaction update'],
 };
 
+const syncedProposal: TransactionUpdateProposal = {
+  ...proposal,
+  budget: { id: 'test-budget', syncId: 'sync-id', cloudFileId: 'cloud-file' },
+};
+
 it('retains deletion receipts with uncertain provider removal after the retention period', async () => {
   const root = await mkdtemp(join(tmpdir(), 'actual-change-journal-'));
   const deletion: AccountDeletionProposal = {
@@ -366,7 +371,7 @@ it('expires acknowledged local archive receipts while preserving uncertainty and
       uncertain.state = 'uncertain';
       uncertain.updatedAt = ack.updatedAt;
       await journal.write(uncertain);
-      const pending = await journal.prepare('pending-sync', proposal);
+      const pending = await journal.prepare('pending-sync', syncedProposal);
       pending.state = 'committed-local';
       pending.updatedAt = ack.updatedAt;
       await journal.write(pending);
@@ -374,6 +379,47 @@ it('expires acknowledged local archive receipts while preserving uncertainty and
       expect(await journal.read('local-ack')).toBeNull();
       expect((await journal.read('local-uncertain'))?.state).toBe('uncertain');
       expect((await journal.read('pending-sync'))?.state).toBe(
+        'committed-local',
+      );
+    });
+  } finally {
+    await removeFixture(root);
+  }
+});
+
+it('expires acknowledged commits to a local-only budget, which never synchronizes', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'actual-change-journal-'));
+  try {
+    await withChangeJournal(root, 1, async journal => {
+      const outcome = {
+        status: 'committed-local' as const,
+        changed: true,
+        checkpoint: 'observed' as const,
+        affectedIds: ['transaction'],
+      };
+      const local = await journal.prepare('local-commit', proposal);
+      local.state = 'committed-local';
+      local.updatedAt = '2000-01-01T00:00:00.000Z';
+      local.outcome = outcome;
+      await journal.write(local);
+      const remote = await journal.prepare('remote-commit', syncedProposal);
+      remote.state = 'committed-local';
+      remote.updatedAt = local.updatedAt;
+      remote.outcome = outcome;
+      await journal.write(remote);
+      const unacknowledged = await journal.prepare('local-no-outcome', {
+        ...proposal,
+        request: { id: 'transaction', fields: { notes: 'other' } },
+      });
+      unacknowledged.state = 'committed-local';
+      unacknowledged.updatedAt = local.updatedAt;
+      await journal.write(unacknowledged);
+      await journal.prepare('next', proposal);
+      expect(await journal.read('local-commit')).toBeNull();
+      expect((await journal.read('remote-commit'))?.state).toBe(
+        'committed-local',
+      );
+      expect((await journal.read('local-no-outcome'))?.state).toBe(
         'committed-local',
       );
     });

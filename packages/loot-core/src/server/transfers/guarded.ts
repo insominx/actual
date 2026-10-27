@@ -12,8 +12,13 @@ import {
   rowMatches,
 } from '#server/guarded-proposal';
 import { batchUpdateTransactions } from '#server/transactions';
-import { transferClearsCategory } from '#server/transactions/transfer';
+import {
+  prepareTransferTransaction,
+  transferClearsCategory,
+} from '#server/transactions/transfer';
 import type {
+  TransferCreateProposal,
+  TransferCreateRequest,
   TransferLegSnapshot,
   TransferMatchProposal,
   TransferMatchRequest,
@@ -413,5 +418,138 @@ export async function performTransferRepair(current: TransferRepairProposal) {
     changed: true,
     affectedIds: [row.id, after.counterpart.id],
     counterpartId: after.counterpart.id,
+  };
+}
+
+// Turn one existing transaction into a transfer to another account: its payee
+// becomes that account's transfer payee and the engine's transfer owner inserts
+// and links the counterpart, as the transaction editor does. The preview shows
+// the exact counterpart row (after rules) that apply creates.
+export async function prepareTransferCreate(
+  request: TransferCreateRequest,
+): Promise<TransferCreateProposal> {
+  onlyKeys(
+    request,
+    ['id', 'account', 'allowReconciled'],
+    'Invalid transfer create request: provide id, account and optional allowReconciled',
+  );
+  const allowReconciled = checkAllowReconciled(request.allowReconciled);
+  const row = await live(request.id, 'id');
+  if (row.isParent || row.isChild) {
+    throw APIError(
+      `Transaction ${row.id} is part of a split; set the transfer on the child's payee with transactions split`,
+    );
+  }
+  if (row.transferred_id || (await isTransferPayee(row.description))) {
+    throw APIError(
+      `Transaction ${row.id} is already a transfer; unmatch or repair it first`,
+    );
+  }
+  if (row.reconciled && !allowReconciled) {
+    throw APIError(
+      `Transaction ${row.id} is reconciled; pass allowReconciled to turn it into a transfer`,
+    );
+  }
+  if (typeof request.account !== 'string' || !request.account) {
+    throw APIError('Invalid transfer create request: account is required');
+  }
+  if (request.account === row.acct) {
+    throw APIError("The transfer target is the transaction's own account");
+  }
+  const fromAccount = await account(row.acct);
+  const toAccount = await account(request.account);
+  const payee = await transferPayee(request.account);
+  const full = await db.first<{
+    notes: string | null;
+    schedule: string | null;
+  }>('SELECT notes, schedule FROM transactions WHERE id = ?', [row.id]);
+  const counterpart = await prepareTransferTransaction(
+    {
+      id: row.id,
+      account: row.acct,
+      amount: row.amount,
+      date: db.fromDateRepr(row.date),
+      notes: full?.notes ?? null,
+      schedule: full?.schedule ?? null,
+    } as unknown as Parameters<typeof prepareTransferTransaction>[0],
+    request.account,
+  );
+  if (!counterpart) {
+    throw APIError(`Transaction ${row.id} cannot carry a transfer`);
+  }
+  const clears = transferClearsCategory(
+    fromAccount.offbudget,
+    toAccount.offbudget,
+  );
+  return {
+    schemaVersion: 1,
+    operation: 'transfers.create',
+    budget: guardedBudgetIdentity(),
+    request,
+    before: {
+      sourceHash: await guardedSourceHash(),
+      transaction: snapshot(row),
+    },
+    after: {
+      classification: classifyTransfer(
+        !!fromAccount.offbudget,
+        !!toAccount.offbudget,
+      ),
+      payee,
+      categoryCleared: clears,
+      counterpart: {
+        account: request.account,
+        amount: counterpart.amount,
+        date: String(counterpart.date),
+        notes: counterpart.notes ?? null,
+        cleared: !!counterpart.cleared,
+      },
+    },
+    references: {},
+    sideEffects: [
+      `set the payee of ${row.id} to the target account's transfer payee; the engine's transfer owner inserts one counterpart transaction there and links both${
+        clears ? ', and both categories are cleared' : ''
+      }; amounts and dates are unchanged`,
+    ],
+  };
+}
+
+export async function performTransferCreate(current: TransferCreateProposal) {
+  const { transaction } = current.before;
+  await batchUpdateTransactions({
+    updated: [
+      {
+        id: transaction.id,
+        payee: current.after.payee,
+      } satisfies Partial<TransactionEntity>,
+    ],
+    runTransfers: true,
+  });
+  const after = await raw(transaction.id);
+  const linked = after?.transferred_id ? await raw(after.transferred_id) : null;
+  const plan = current.after.counterpart;
+  if (
+    !after ||
+    !linked ||
+    !rowMatches(after, {
+      description: current.after.payee,
+      amount: transaction.amount,
+      date: transaction.date,
+      acct: transaction.account,
+      tombstone: 0,
+    }) ||
+    !rowMatches(linked, {
+      acct: plan.account,
+      amount: plan.amount,
+      transferred_id: transaction.id,
+      tombstone: 0,
+    })
+  ) {
+    throw new Error('Transfer creation acknowledgement is incomplete');
+  }
+  return {
+    changed: true,
+    affectedIds: [transaction.id, linked.id],
+    transferCreate: { counterpartId: linked.id },
   };
 }
