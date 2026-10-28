@@ -1,5 +1,5 @@
 // Test-only: imported solely by additive-migrations.test.ts, which
-// enforces the additive-only migration policy in CI. Nothing enforces
+// enforces the additive-only migration policy in the test run. Nothing enforces
 // that policy at runtime — see `checkDatabaseValidity` for what the app
 // itself tolerates.
 import type { Database } from '@jlongster/sql.js';

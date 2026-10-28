@@ -1,7 +1,7 @@
 # Task Progress: Bring upstream actualbudget/actual changes into the fork
 
-Current status: every upstream commit through `d1a536f35` (upstream head on 2026-10-22) is applied and verified on branch `upstream-sync-2026-10`. The branch was fast-forwarded into `master` on 2026-10-22 (not pushed).
-Current phase: VRT regeneration (D20).
+Current status: every upstream commit through `fd08b56ee` (upstream head on 2026-10-27) is applied and verified on `master`, and `master` is pushed to `origin`. The first pass (through `d1a536f35`) was fast-forwarded into `master` on 2026-10-22; the second pass (24 commits) landed on 2026-10-27.
+Current phase: done. VRT screenshots were regenerated on 2026-10-27 (D20); GitHub CI was removed afterwards (task 0038).
 
 ## Dependencies
 
@@ -9,9 +9,7 @@ None. The first pass was pinned at `80f7518c8` (D12); the 2026-10-22 pass took e
 
 ## Human input required
 
-- Decisions D1 and D3–D10 in `execution-decisions.md` (D2 adopted).
-- Whether to merge `upstream-sync-2026-10` into `master`, and whether to push it.
-- VRT regeneration needs the Docker daemon (D20).
+- None. D1–D10, D22 and D24 are adopted (`execution-decisions.md`). The next VRT regeneration needs Docker (`yarn vrt:docker`), because the CI route used for D20 was removed in task 0038.
 
 ## Agent next actions
 
@@ -24,8 +22,8 @@ None. The first pass was pinned at `80f7518c8` (D12); the 2026-10-22 pass took e
 - [x] Wave 5: small UI fixes and extras (A5), except VRT regeneration.
 - [x] D2 auto bank sync applied as upstream; bank code aligned with upstream (D21).
 - [x] Apply D1, D3–D10 and D22, and the former skip list, under owner rule D23 (A6). Gate after `3b2ce78b5`: typecheck, repo lint and all test tasks pass.
-- [ ] Regenerate the affected VRT screenshots in docker (D20).
-- [x] Merge to `master` (owner, 2026-10-22; fast-forward, not pushed).
+- [x] Regenerate the affected VRT screenshots (D20; done 2026-10-27 through CI `/update-vrt`, a route removed in task 0038).
+- [x] Merge to `master` (owner, 2026-10-22; fast-forward). Pushed with the 2026-10-27 pass.
 
 ## Implementation checklist
 
@@ -41,8 +39,8 @@ None. The first pass was pinned at `80f7518c8` (D12); the 2026-10-22 pass took e
 | A2  | Clean data-correctness picks applied    | 18 picks, all clean                                                                                                      | Done                                |
 | A3  | Adapted picks applied                   | 12 picks; each `Adapted:` note names the fork side kept                                                                  | Done                                |
 | A4  | Performance picks in order              | cf34c0e3b; 137922fd6 → 148e5c233 → 0f000bf69; 0728f1a30 → a771f8280                                                      | Done; cold-load timing not measured |
-| A5  | UI fixes and extras applied             | 42 picks; 3d6a849b0 adapted (D19)                                                                                        | Done, except VRT (D20)              |
-| A6  | D1–D10 recorded; approved items applied | `execution-decisions.md`                                                                                                 | Pending owner                       |
+| A5  | UI fixes and extras applied             | 42 picks; 3d6a849b0 adapted (D19)                                                                                        | Done; VRT regenerated (D20)         |
+| A6  | D1–D10 recorded; approved items applied | `execution-decisions.md`                                                                                                 | Done                                |
 | A7  | Full gate green                         | See the gate results below                                                                                               | Done                                |
 
 ## Gate results
@@ -66,7 +64,7 @@ Lint (`oxlint --type-aware` on the 251 changed source files): exit 0, with 230 t
 
 ## Execution decision ledger
 
-See `execution-decisions.md` (D1–D20).
+See `execution-decisions.md` (D1–D24).
 
 ## Execution log
 

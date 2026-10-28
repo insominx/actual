@@ -91,7 +91,7 @@ Every upstream commit from the fork point to `6ef6d303d` is now on the branch, i
 
 ## Sync of 2026-10-27 (branch upstream-sync-2026-10b)
 
-Upstream tip `fd08b56ee`. 23 of the 24 commits after `d1a536f35` were cherry-picked with `-x`. Adapted picks:
+Upstream tip `fd08b56ee`. All 24 commits after `d1a536f35` were cherry-picked with `-x`: 23 on branch `upstream-sync-2026-10b`, then `fd08b56ee` last (D24). Adapted picks:
 
 - `97a7ca50f` (per-budget SimpleFIN): kept the fork's try/catch around the status request and the error-stays-open modal behavior.
 - `160b2c99a`: the fork's `api.ts` already merges the fields onto the stored transaction, so only the tests and release note came across.
@@ -102,6 +102,6 @@ Upstream tip `fd08b56ee`. 23 of the 24 commits after `d1a536f35` were cherry-pic
 - `1b245f260`: both sides' tests kept; the cache-barrier helper now takes `isReceived` (`9f90cde08`).
 - `d9d15c12f`: kept the fork's `isCurrent` guard and column-width props next to upstream's focus props.
 
-Not applied: `fd08b56ee` (D24).
+- `fd08b56ee` (#9313, two implied decimals for every currency): applied last under D23/D24. The fork's per-currency scaling of stored amounts was removed everywhere (`9fe602b55`, `3289fa5e3`); zero-decimal currencies are now stored x100.
 
-Verification: `yarn typecheck` passes. `@actual-app/web` passes (1578 tests). Core and sync-server pass except two upstream symlink tests in `atomic-write.test.ts`, which fail with `EPERM` because this Windows account cannot create symlinks.
+Verification: `yarn typecheck` passes. `@actual-app/web` passes (1578 tests). Core and sync-server pass except two upstream symlink tests in `atomic-write.test.ts`, which fail with `EPERM` because this Windows account cannot create symlinks. Task 0038 (D7) later made those two tests skip where symlinks are not permitted, so both suites now pass here.

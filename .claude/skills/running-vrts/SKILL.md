@@ -1,6 +1,6 @@
 ---
 name: running-vrts
-description: Use whenever adding, updating, regenerating, running, or debugging visual regression tests (VRTs) / screenshot tests in the Actual Budget repo — including phrases like "add a VRT", "add a screenshot test", "update the snapshots", "regenerate the VRT screenshots", "the VRT is failing", "yarn vrt", "vrt:docker", or "/update-vrt", and any time a UI change needs screenshot coverage. VRT snapshots must be generated inside the Linux docker image (never on the host) and snapshot updates must be scoped to the changed test only — getting either wrong produces snapshots CI ignores or rewrites every screenshot in the repo.
+description: Use whenever adding, updating, regenerating, running, or debugging visual regression tests (VRTs) / screenshot tests in the Actual Budget repo — including phrases like "add a VRT", "add a screenshot test", "update the snapshots", "regenerate the VRT screenshots", "the VRT is failing", "yarn vrt", or "vrt:docker", and any time a UI change needs screenshot coverage. VRT snapshots must be generated inside the Linux docker image (never on the host) and snapshot updates must be scoped to the changed test only — getting either wrong produces snapshots that never match the committed Linux baselines or rewrites every screenshot in the repo.
 ---
 
 # Running VRTs (Visual Regression Tests) in actualbudget/actual
@@ -32,7 +32,7 @@ reduce noise from charts and data.
   (`packages/desktop-client/playwright.config.ts`).
 - **Snapshots are Linux-only.** Committed snapshots end in
   `-chromium-linux.png` and must be generated inside the Playwright docker
-  image. A host run on macOS writes `-chromium-darwin.png`, which CI ignores.
+  image. A host run on macOS writes `-chromium-darwin.png`, which the committed Linux baselines never use.
 
 ## Writing a new VRT
 
@@ -97,5 +97,8 @@ Run all yarn commands from the repo root.
 
 ## Fallback without docker
 
-Commit only the test file; CI generates the snapshots when someone comments
-`/update-vrt` on the PR (`.github/workflows/vrt-update-generate.yml`).
+This fork has no CI to generate snapshots. If docker is unavailable, commit
+only the test file and tell the owner that the new snapshots still have to be
+generated with `yarn vrt:docker` (scoped to the changed test, with
+`--update-snapshots`) on a machine that can run docker. Never generate them on
+the host.

@@ -3,10 +3,11 @@
 // that are marked `in_app_notification: true` (release announcements get the
 // flag from the release tooling; other posts opt in by hand).
 //
-// The file is committed so it can be reviewed in the PR that adds a post;
-// autofix.ci regenerates and commits it on every PR, and the "News feed check"
-// workflow fails a PR whose committed copy is stale. The app fetches it from
-// the `master` branch on GitHub, the same way as the custom theme catalog.
+// The file is committed so it can be reviewed in the PR that adds a post.
+// Nothing regenerates or checks it in this fork, so rerun this script after a
+// blog change, from an LF checkout: with core.autocrlf=true it embeds \r\n in
+// the entries. The app fetches it from the `master` branch of
+// actualbudget/actual on GitHub, the same way as the custom theme catalog.
 //
 // Run from the repo root: `yarn generate:news-feed`.
 

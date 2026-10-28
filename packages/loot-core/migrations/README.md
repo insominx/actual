@@ -8,7 +8,7 @@ Actual supports running different app versions against the same synced budget. A
 
 That only works if newer migrations are **additive-only**: they may extend the schema, but must not remove or rename anything an older client still reads or writes through sync.
 
-Post-cutoff migrations (ids after `1780606215001`, see `ADDITIVE_ONLY_CUTOFF` in `src/server/migrate/migrations.ts`) are enforced by `src/server/migrate/additive-migrations.test.ts`. CI runs that test against the real migration chain.
+Post-cutoff migrations (ids after `1780606215001`, see `ADDITIVE_ONLY_CUTOFF` in `src/server/migrate/migrations.ts`) are enforced by `src/server/migrate/additive-migrations.test.ts`. `yarn test` runs that test against the real migration chain.
 
 ## Allowed changes
 

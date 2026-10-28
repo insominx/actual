@@ -27,7 +27,7 @@ accounts, account-groups, budgets (allocations, moves, templates, lifecycle: cre
 
 ## Decisions at a glance
 
-D1-D8 scope and acceptance setup (six personal workflows, fixtures, contention, MCP evidence). D9-D12 Playwright and VRT policy. D13-D15 adversarial fixes (date and amount floors, transfer refusal, trigger-bearing backups, 50-year cash-plan horizon). D16, D21 slow `changes` suite is sharded, not hung. D17, D24 `capabilities.preview` is honest. D18 keep the 1995 floor. D19 keep the 30 s stale lock. D20, D22 CI runs on GitHub-hosted runners with upstream-only jobs guarded. D23 lazy engine and no bundled TypeScript compiler.
+D1-D8 scope and acceptance setup (six personal workflows, fixtures, contention, MCP evidence). D9-D12 Playwright and VRT policy. D13-D15 adversarial fixes (date and amount floors, transfer refusal, trigger-bearing backups, 50-year cash-plan horizon). D16, D21 slow `changes` suite is sharded, not hung. D17, D24 `capabilities.preview` is honest. D18 keep the 1995 floor. D19 keep the 30 s stale lock. D20, D22 CI ran on GitHub-hosted runners with upstream-only jobs guarded until task 0038 removed the workflows; the local gates are now the source of truth. D23 lazy engine and no bundled TypeScript compiler.
 
 ## Test layout
 
