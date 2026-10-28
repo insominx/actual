@@ -4,6 +4,19 @@ import * as path from 'path';
 
 import { atomicWriteFile } from './atomic-write';
 
+// Creating symlinks needs a privilege that unprivileged Windows accounts lack
+const canSymlink = (() => {
+  const probeDir = fs.mkdtempSync(path.join(os.tmpdir(), 'symlink-probe-'));
+  try {
+    fs.symlinkSync(probeDir, path.join(probeDir, 'link'));
+    return true;
+  } catch {
+    return false;
+  } finally {
+    fs.rmSync(probeDir, { recursive: true, force: true });
+  }
+})();
+
 // Skips the lock-retry backoff delays while letting real file I/O complete.
 async function settle(promise: Promise<void>) {
   let isSettled = false;
@@ -72,38 +85,46 @@ describe('atomicWriteFile', () => {
     expect(fs.readFileSync(target, 'utf8')).toBe('new');
   });
 
-  test('writes through a symlink instead of replacing it', async () => {
-    const realTarget = path.join(dir, 'real-metadata.json');
-    const symlinkPath = path.join(dir, 'metadata.json');
-    fs.writeFileSync(realTarget, 'original');
-    fs.symlinkSync(realTarget, symlinkPath);
+  test(
+    'writes through a symlink instead of replacing it',
+    { skip: !canSymlink },
+    async () => {
+      const realTarget = path.join(dir, 'real-metadata.json');
+      const symlinkPath = path.join(dir, 'metadata.json');
+      fs.writeFileSync(realTarget, 'original');
+      fs.symlinkSync(realTarget, symlinkPath);
 
-    await atomicWriteFile(symlinkPath, 'new');
+      await atomicWriteFile(symlinkPath, 'new');
 
-    expect(fs.lstatSync(symlinkPath).isSymbolicLink()).toBe(true);
-    expect(fs.readFileSync(realTarget, 'utf8')).toBe('new');
-  });
+      expect(fs.lstatSync(symlinkPath).isSymbolicLink()).toBe(true);
+      expect(fs.readFileSync(realTarget, 'utf8')).toBe('new');
+    },
+  );
 
-  test('creates the target of a dangling symlink instead of replacing it', async () => {
-    // A relative link reached through a symlinked directory, so `..` must
-    // resolve from the real directory.
-    const realDir = path.join(dir, 'actual', 'nested');
-    fs.mkdirSync(realDir, { recursive: true });
-    fs.symlinkSync(realDir, path.join(dir, 'storage'));
-    const symlinkPath = path.join(realDir, 'metadata.json');
-    fs.symlinkSync(path.join('..', 'metadata.json'), symlinkPath);
-    fs.writeFileSync(path.join(dir, 'metadata.json'), 'unrelated');
+  test(
+    'creates the target of a dangling symlink instead of replacing it',
+    { skip: !canSymlink },
+    async () => {
+      // A relative link reached through a symlinked directory, so `..` must
+      // resolve from the real directory.
+      const realDir = path.join(dir, 'actual', 'nested');
+      fs.mkdirSync(realDir, { recursive: true });
+      fs.symlinkSync(realDir, path.join(dir, 'storage'));
+      const symlinkPath = path.join(realDir, 'metadata.json');
+      fs.symlinkSync(path.join('..', 'metadata.json'), symlinkPath);
+      fs.writeFileSync(path.join(dir, 'metadata.json'), 'unrelated');
 
-    await atomicWriteFile(path.join(dir, 'storage', 'metadata.json'), 'new');
+      await atomicWriteFile(path.join(dir, 'storage', 'metadata.json'), 'new');
 
-    expect(fs.lstatSync(symlinkPath).isSymbolicLink()).toBe(true);
-    expect(
-      fs.readFileSync(path.join(dir, 'actual', 'metadata.json'), 'utf8'),
-    ).toBe('new');
-    expect(fs.readFileSync(path.join(dir, 'metadata.json'), 'utf8')).toBe(
-      'unrelated',
-    );
-  });
+      expect(fs.lstatSync(symlinkPath).isSymbolicLink()).toBe(true);
+      expect(
+        fs.readFileSync(path.join(dir, 'actual', 'metadata.json'), 'utf8'),
+      ).toBe('new');
+      expect(fs.readFileSync(path.join(dir, 'metadata.json'), 'utf8')).toBe(
+        'unrelated',
+      );
+    },
+  );
 
   test(
     'keeps the permissions of the file it replaces',

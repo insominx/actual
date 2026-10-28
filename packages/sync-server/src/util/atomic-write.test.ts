@@ -5,6 +5,19 @@ import path from 'node:path';
 
 import { atomicWriteFile } from './atomic-write';
 
+// Creating symlinks needs a privilege that unprivileged Windows accounts lack
+const canSymlink = (() => {
+  const probeDir = fs.mkdtempSync(path.join(os.tmpdir(), 'symlink-probe-'));
+  try {
+    fs.symlinkSync(probeDir, path.join(probeDir, 'link'));
+    return true;
+  } catch {
+    return false;
+  } finally {
+    fs.rmSync(probeDir, { recursive: true, force: true });
+  }
+})();
+
 describe('atomicWriteFile', () => {
   let dir: string;
 
@@ -45,41 +58,49 @@ describe('atomicWriteFile', () => {
     expect(tempFiles()).toEqual([]);
   });
 
-  it('writes through a symlink instead of replacing it', async () => {
-    const realTarget = path.join(dir, 'real.blob');
-    const symlinkPath = path.join(dir, 'file-abc.blob');
-    fs.writeFileSync(realTarget, 'original');
-    fs.symlinkSync(realTarget, symlinkPath);
+  it(
+    'writes through a symlink instead of replacing it',
+    { skip: !canSymlink },
+    async () => {
+      const realTarget = path.join(dir, 'real.blob');
+      const symlinkPath = path.join(dir, 'file-abc.blob');
+      fs.writeFileSync(realTarget, 'original');
+      fs.symlinkSync(realTarget, symlinkPath);
 
-    await atomicWriteFile(symlinkPath, Buffer.from('new'));
+      await atomicWriteFile(symlinkPath, Buffer.from('new'));
 
-    expect(fs.lstatSync(symlinkPath).isSymbolicLink()).toBe(true);
-    expect(fs.readFileSync(realTarget, 'utf8')).toBe('new');
-  });
+      expect(fs.lstatSync(symlinkPath).isSymbolicLink()).toBe(true);
+      expect(fs.readFileSync(realTarget, 'utf8')).toBe('new');
+    },
+  );
 
-  it('creates the target of a dangling symlink instead of replacing it', async () => {
-    // A relative link reached through a symlinked directory, so `..` must
-    // resolve from the real directory.
-    const realDir = path.join(dir, 'actual', 'nested');
-    fs.mkdirSync(realDir, { recursive: true });
-    fs.symlinkSync(realDir, path.join(dir, 'storage'));
-    const symlinkPath = path.join(realDir, 'file-abc.blob');
-    fs.symlinkSync(path.join('..', 'file-abc.blob'), symlinkPath);
-    fs.writeFileSync(path.join(dir, 'file-abc.blob'), 'unrelated');
+  it(
+    'creates the target of a dangling symlink instead of replacing it',
+    { skip: !canSymlink },
+    async () => {
+      // A relative link reached through a symlinked directory, so `..` must
+      // resolve from the real directory.
+      const realDir = path.join(dir, 'actual', 'nested');
+      fs.mkdirSync(realDir, { recursive: true });
+      fs.symlinkSync(realDir, path.join(dir, 'storage'));
+      const symlinkPath = path.join(realDir, 'file-abc.blob');
+      fs.symlinkSync(path.join('..', 'file-abc.blob'), symlinkPath);
+      fs.writeFileSync(path.join(dir, 'file-abc.blob'), 'unrelated');
 
-    await atomicWriteFile(
-      path.join(dir, 'storage', 'file-abc.blob'),
-      Buffer.from('new'),
-    );
+      await atomicWriteFile(
+        path.join(dir, 'storage', 'file-abc.blob'),
+        Buffer.from('new'),
+      );
 
-    expect(fs.lstatSync(symlinkPath).isSymbolicLink()).toBe(true);
-    expect(
-      fs.readFileSync(path.join(dir, 'actual', 'file-abc.blob'), 'utf8'),
-    ).toBe('new');
-    expect(fs.readFileSync(path.join(dir, 'file-abc.blob'), 'utf8')).toBe(
-      'unrelated',
-    );
-  });
+      expect(fs.lstatSync(symlinkPath).isSymbolicLink()).toBe(true);
+      expect(
+        fs.readFileSync(path.join(dir, 'actual', 'file-abc.blob'), 'utf8'),
+      ).toBe('new');
+      expect(fs.readFileSync(path.join(dir, 'file-abc.blob'), 'utf8')).toBe(
+        'unrelated',
+      );
+    },
+  );
 
   it(
     'keeps the permissions of the file it replaces',
