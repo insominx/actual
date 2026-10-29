@@ -41,7 +41,7 @@ vi.mock('./template-notes', async importOriginal => {
 });
 vi.mock('./schedule-template', async importOriginal => {
   const actual = await importOriginal<typeof scheduleTemplate>();
-  return { ...actual, runSchedule: vi.fn(actual.runSchedule) };
+  return { ...actual, runScheduleForecast: vi.fn(actual.runScheduleForecast) };
 });
 
 const DUMP_TABLES = [
@@ -189,7 +189,7 @@ async function readReservations(month = '2026-09') {
   expect(actions.setBudget).not.toHaveBeenCalled();
   expect(actions.setGoal).not.toHaveBeenCalled();
   expect(templateNotes.storeNoteTemplates).not.toHaveBeenCalled();
-  expect(scheduleTemplate.runSchedule).not.toHaveBeenCalled();
+  expect(scheduleTemplate.runScheduleForecast).not.toHaveBeenCalled();
   return result;
 }
 

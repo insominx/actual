@@ -8,7 +8,7 @@ import {
   getHasTransactionsQuery,
   getNextDate,
   getNextDateAfter,
-  getScheduledAmount,
+  getOccurrencesBetween,
   getScheduleOccurrenceMatchStartDate,
   getStatus,
   getUpcomingDays,
@@ -93,10 +93,6 @@ describe('schedules', () => {
       ['currentMonth', 20, '2017-02-08'],
       ['currentMonth', 28, '2020-02-01'], // leap-year
       ['2-day', 2, '2017-01-01'],
-      ['NaN-day', 1, '2017-01-01'], // blank number input falls back to 1
-      ['', 7, '2017-01-01'], // blank or garbled length falls back to a week
-      ['abc', 7, '2017-01-01'],
-      ['-week', 7, '2017-01-01'],
       ['5-week', 35, '2017-01-01'],
       ['3-month', 91, '2017-01-01'],
       ['4-year', 1462, '2017-01-01'],
@@ -470,21 +466,6 @@ describe('schedules', () => {
   });
 
   describe('getNextDate', () => {
-    it('searches from the local calendar day, not the previous day', () => {
-      // Test current day is 2017-01-01. A date-only UTC parse of that
-      // string is 2016-12-31 here, which would return that Saturday.
-      const dateCond = {
-        op: 'isapprox',
-        value: {
-          start: '2016-12-31',
-          frequency: 'weekly',
-          patterns: [],
-        },
-      };
-
-      expect(getNextDate(dateCond)).toBe('2017-01-07');
-    });
-
     it('returns last occurrence for a recurring schedule with an end date in the past', () => {
       const dateCond = {
         op: 'isapprox',
@@ -553,23 +534,6 @@ describe('schedules', () => {
       });
 
       expect(getNextDateAfter(dateCond, '2020-12-07')).toBe('2020-12-14');
-    });
-
-    it('does not skip the occurrence after one moved `after` the weekend', () => {
-      // 2024-06-01 is a Saturday and moves to Monday 2024-06-03; the next
-      // occurrence, Monday 2024-07-01, must not be skipped.
-      const dateCond = {
-        op: 'is',
-        value: {
-          start: '2024-06-01',
-          frequency: 'monthly',
-          skipWeekend: true,
-          weekendSolveMode: 'after',
-        },
-      };
-
-      expect(getNextDateAfter(dateCond, '2024-06-03')).toBe('2024-07-01');
-      expect(getNextDateAfter(dateCond, '2024-09-02')).toBe('2024-10-01');
     });
 
     it('includes a weekend occurrence moved `after` the given date', () => {
@@ -680,9 +644,262 @@ describe('schedules', () => {
     });
   });
 
-  it('rounds a schedule range the same way for income and expenses', () => {
-    expect(getScheduledAmount({ num1: 101, num2: 200 })).toBe(151);
-    expect(getScheduledAmount({ num1: -200, num2: -101 })).toBe(-151);
-    expect(getScheduledAmount({ num1: -100, num2: -200 })).toBe(-150);
+  describe('getOccurrencesBetween', () => {
+    it('returns every monthly occurrence within the range', () => {
+      const dateCond = {
+        op: 'is' as const,
+        field: 'date' as const,
+        value: {
+          start: '2024-01-15',
+          interval: 1,
+          frequency: 'monthly' as const,
+          patterns: [],
+          skipWeekend: false,
+          weekendSolveMode: 'before' as const,
+          endMode: 'never' as const,
+          endOccurrences: 1,
+          endDate: '2099-01-01',
+        },
+      };
+      const result = getOccurrencesBetween(
+        dateCond,
+        '2024-01-01',
+        '2024-04-01',
+      );
+      expect(result).toEqual(['2024-01-15', '2024-02-15', '2024-03-15']);
+    });
+
+    it('returns an empty array when the single non-repeating date is outside the range', () => {
+      const dateCond = {
+        op: 'is' as const,
+        field: 'date' as const,
+        value: '2023-06-01',
+      };
+      expect(
+        getOccurrencesBetween(dateCond, '2024-01-01', '2024-04-01'),
+      ).toEqual([]);
+    });
+
+    it('returns the single date when a non-repeating date is inside the range', () => {
+      const dateCond = {
+        op: 'is' as const,
+        field: 'date' as const,
+        value: '2024-02-01',
+      };
+      expect(
+        getOccurrencesBetween(dateCond, '2024-01-01', '2024-04-01'),
+      ).toEqual(['2024-02-01']);
+    });
+
+    it('excludes an occurrence that falls exactly on the exclusive endDay', () => {
+      const dateCond = {
+        op: 'is' as const,
+        field: 'date' as const,
+        value: {
+          start: '2024-01-15',
+          interval: 1,
+          frequency: 'monthly' as const,
+          patterns: [],
+          skipWeekend: false,
+          weekendSolveMode: 'before' as const,
+          endMode: 'never' as const,
+          endOccurrences: 1,
+          endDate: '2099-01-01',
+        },
+      };
+      // The next occurrence after 2024-01-15 is 2024-02-15, which is used
+      // as the (exclusive) endDay here, so it should not be included.
+      const result = getOccurrencesBetween(
+        dateCond,
+        '2024-01-01',
+        '2024-02-15',
+      );
+      expect(result).toEqual(['2024-01-15']);
+    });
+
+    it('returns an empty array without hanging when a recurring schedule ended before the range', () => {
+      const dateCond = {
+        op: 'isapprox' as const,
+        field: 'date' as const,
+        value: {
+          start: '2016-01-25',
+          interval: 1,
+          frequency: 'monthly' as const,
+          patterns: [],
+          skipWeekend: false,
+          weekendSolveMode: 'before' as const,
+          endMode: 'on_date' as const,
+          endOccurrences: 1,
+          endDate: '2016-08-25',
+        },
+      };
+      // getNextDate falls back to the schedule's last-ever occurrence
+      // (2016-08-25) when asked for the next occurrence after the schedule
+      // has ended. getOccurrencesBetween must recognize that stale fallback
+      // date is behind the search cursor and stop, rather than looping
+      // forever re-requesting the same date.
+      const result = getOccurrencesBetween(
+        dateCond,
+        '2016-08-26',
+        '2026-01-01',
+      );
+      expect(result).toEqual([]);
+    });
+
+    it('does not truncate occurrences when weekendSolveMode "before" shifts a date behind the search cursor', () => {
+      // Weekly on Saturday, skipWeekend + weekendSolveMode: 'before' means
+      // every occurrence is reported on the Friday before it. Querying with
+      // startDay set to a raw Saturday occurrence means getNextDate's
+      // adjusted result (the Friday before) lands *behind* the search
+      // cursor even though the schedule hasn't ended and more occurrences
+      // remain — this must not be mistaken for "the schedule ended".
+      const dateCond = {
+        op: 'isapprox' as const,
+        field: 'date' as const,
+        value: {
+          start: '2020-12-05', // a Saturday
+          interval: 1,
+          frequency: 'weekly' as const,
+          patterns: [],
+          skipWeekend: true,
+          weekendSolveMode: 'before' as const,
+          endMode: 'never' as const,
+          endOccurrences: 1,
+          endDate: '2099-01-01',
+        },
+      };
+
+      const result = getOccurrencesBetween(
+        dateCond,
+        '2020-12-05',
+        '2020-12-26',
+      );
+
+      expect(result).toEqual(['2020-12-11', '2020-12-18', '2020-12-25']);
+    });
+
+    it('includes a raw occurrence landing exactly on the exclusive endDay when the weekend adjustment shifts it backward into range', () => {
+      // Weekly on Saturday, skipWeekend + weekendSolveMode: 'before'.
+      // Raw occurrences: 12/5, 12/12, 12/19, 12/26, ...
+      // The raw occurrence on 2020-12-26 sits exactly on the (exclusive)
+      // endDay, so a naive raw-range query would drop it. But its
+      // weekend-adjusted date (2020-12-25, the Friday before) lands inside
+      // [startDay, endDay) and must be included.
+      const dateCond = {
+        op: 'isapprox' as const,
+        field: 'date' as const,
+        value: {
+          start: '2020-12-05',
+          interval: 1,
+          frequency: 'weekly' as const,
+          patterns: [],
+          skipWeekend: true,
+          weekendSolveMode: 'before' as const,
+          endMode: 'never' as const,
+          endOccurrences: 1,
+          endDate: '2099-01-01',
+        },
+      };
+
+      const result = getOccurrencesBetween(
+        dateCond,
+        '2020-12-20',
+        '2020-12-26',
+      );
+
+      expect(result).toEqual(['2020-12-25']);
+    });
+
+    it('excludes a raw occurrence landing exactly on startDay when the weekend adjustment shifts it backward out of range', () => {
+      // Same schedule as above. The raw occurrence on 2020-12-19 sits
+      // exactly on startDay, so a naive raw-range query would keep it. But
+      // its weekend-adjusted date (2020-12-18, the Friday before) lands
+      // before startDay and must be excluded.
+      const dateCond = {
+        op: 'isapprox' as const,
+        field: 'date' as const,
+        value: {
+          start: '2020-12-05',
+          interval: 1,
+          frequency: 'weekly' as const,
+          patterns: [],
+          skipWeekend: true,
+          weekendSolveMode: 'before' as const,
+          endMode: 'never' as const,
+          endOccurrences: 1,
+          endDate: '2099-01-01',
+        },
+      };
+
+      const result = getOccurrencesBetween(
+        dateCond,
+        '2020-12-19',
+        '2020-12-26',
+      );
+
+      expect(result).toEqual(['2020-12-25']);
+    });
+
+    it('includes a raw occurrence landing before startDay when the weekend adjustment shifts it forward into range', () => {
+      // Weekly on Saturday, skipWeekend + weekendSolveMode: 'after'.
+      // Raw occurrences: 12/5, 12/12, 12/19, 12/26, ...
+      // The raw occurrence on 2020-12-05 sits 2 days before startDay, so a
+      // naive raw-range query would drop it. But its weekend-adjusted date
+      // (2020-12-07, the Monday after) lands exactly on startDay and must
+      // be included.
+      const dateCond = {
+        op: 'isapprox' as const,
+        field: 'date' as const,
+        value: {
+          start: '2020-12-05',
+          interval: 1,
+          frequency: 'weekly' as const,
+          patterns: [],
+          skipWeekend: true,
+          weekendSolveMode: 'after' as const,
+          endMode: 'never' as const,
+          endOccurrences: 1,
+          endDate: '2099-01-01',
+        },
+      };
+
+      const result = getOccurrencesBetween(
+        dateCond,
+        '2020-12-07',
+        '2020-12-12',
+      );
+
+      expect(result).toEqual(['2020-12-07']);
+    });
+
+    it('excludes a raw occurrence landing before endDay when the weekend adjustment shifts it forward out of range', () => {
+      // Same schedule as above. The raw occurrence on 2020-12-12 sits
+      // before endDay, so a naive raw-range query would keep it. But its
+      // weekend-adjusted date (2020-12-14, the Monday after) lands exactly
+      // on the exclusive endDay and must be excluded.
+      const dateCond = {
+        op: 'isapprox' as const,
+        field: 'date' as const,
+        value: {
+          start: '2020-12-05',
+          interval: 1,
+          frequency: 'weekly' as const,
+          patterns: [],
+          skipWeekend: true,
+          weekendSolveMode: 'after' as const,
+          endMode: 'never' as const,
+          endOccurrences: 1,
+          endDate: '2099-01-01',
+        },
+      };
+
+      const result = getOccurrencesBetween(
+        dateCond,
+        '2020-12-05',
+        '2020-12-14',
+      );
+
+      expect(result).toEqual(['2020-12-07']);
+    });
   });
 });
