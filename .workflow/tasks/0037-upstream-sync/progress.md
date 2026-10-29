@@ -1,7 +1,7 @@
 # Task Progress: Bring upstream actualbudget/actual changes into the fork
 
-Current status: every upstream commit through `fd08b56ee` (upstream head on 2026-10-27) is applied and verified on `master`, and `master` is pushed to `origin`. The first pass (through `d1a536f35`) was fast-forwarded into `master` on 2026-10-22; the second pass (24 commits) landed on 2026-10-27.
-Current phase: done. VRT screenshots were regenerated on 2026-10-27 (D20); GitHub CI was removed afterwards (task 0038).
+Current status: every upstream commit through `53a61855b` (upstream head on 2026-10-28) is applied and verified on `master`, and `master` is pushed to `origin`. The first pass (through `d1a536f35`) was fast-forwarded into `master` on 2026-10-22; the second pass (24 commits, through `fd08b56ee`) landed on 2026-10-27; the third pass (7 commits) landed on 2026-10-28.
+Current phase: done. VRT screenshots were regenerated on 2026-10-27 (D20); GitHub CI was removed afterwards (task 0038). The 2026-10-28 pass brought in upstream's own VRT renders for the balance forecast report; they are not regenerated for the fork yet.
 
 ## Dependencies
 
@@ -9,7 +9,7 @@ None. The first pass was pinned at `80f7518c8` (D12); the 2026-10-22 pass took e
 
 ## Human input required
 
-- None. D1–D10, D22 and D24 are adopted (`execution-decisions.md`). The next VRT regeneration needs Docker (`yarn vrt:docker`), because the CI route used for D20 was removed in task 0038.
+- None. D1–D10, D22 and D24 are adopted (`execution-decisions.md`). The 2026-10-28 balance forecast snapshots (D25) and the next VRT regeneration need Docker (`yarn vrt:docker`), because the CI route used for D20 was removed in task 0038.
 
 ## Agent next actions
 
@@ -70,3 +70,6 @@ See `execution-decisions.md` (D1–D24).
 
 - 2026-10-21: Added the `upstream` remote. A trial merge showed 181 conflicting files. Four parallel reviewers triaged the 126 commits, each trial cherry-picked in a throwaway worktree. Results are in `triage.md`.
 - 2026-10-21: Implemented waves 1–5 on `upstream-sync-2026-10`. Waves 2–5 were picked in a temporary worktree while the earlier gates ran, then fast-forwarded. The final full gate is green. See `implementation.md` for the commit list and the adaptations.
+
+- 2026-10-27: Second pass, 24 commits through `fd08b56ee` (see `implementation.md`).
+- 2026-10-28: Third pass, 7 commits through `53a61855b`, on branch `upstream-sync-2026-10-28`, fast-forwarded into `master`. Gate: `yarn typecheck` and `yarn test` pass; oxlint reports warnings only. The schedule forecast pick (#8862) took upstream's `schedule-template.ts` rewrite (D25).

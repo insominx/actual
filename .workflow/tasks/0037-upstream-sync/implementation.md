@@ -105,3 +105,13 @@ Upstream tip `fd08b56ee`. All 24 commits after `d1a536f35` were cherry-picked wi
 - `fd08b56ee` (#9313, two implied decimals for every currency): applied last under D23/D24. The fork's per-currency scaling of stored amounts was removed everywhere (`9fe602b55`, `3289fa5e3`); zero-decimal currencies are now stored x100.
 
 Verification: `yarn typecheck` passes. `@actual-app/web` passes (1578 tests). Core and sync-server pass except two upstream symlink tests in `atomic-write.test.ts`, which fail with `EPERM` because this Windows account cannot create symlinks. Task 0038 (D7) later made those two tests skip where symlinks are not permitted, so both suites now pass here.
+
+## Sync of 2026-10-28 (branch upstream-sync-2026-10-28)
+
+Upstream tip `53a61855b`. The 7 commits after `fd08b56ee` were cherry-picked with `-x`, in order: `dff6b4b21` (Undici server fetch), `77eff5384` (donut chart files), `2b2c8f5dc` (snapdom report snapshots), `6c4114143` (named balance forecast lines), `38ba95dcd` (search kept after reconciled toggle), `7caedc7c4` (Quarterly custom report interval), `53a61855b` (schedule forecast smoothing). Adapted picks:
+
+- `6c4114143`: took upstream's `<Trans count>` text for the "scheduled transactions included" line in `BalanceForecastCard.tsx`, replacing the fork's `t()` version (D23). Took upstream's VRT PNG for the daily granularity snapshot.
+- `7caedc7c4`: added upstream's `Quarterly` branch to `makeQuery.ts` and kept the fork's fix for the operator-precedence bug on the `'month'` fallback.
+- `53a61855b` (#8862, D25): took upstream's rewrite of `schedule-template.ts`, `schedule-template.test.ts` and `shared/schedules.test.ts` over the fork's versions. `runSchedule` no longer exists; `runScheduleForecast` replaces it. Re-added the fork's `getScheduleClaims` (reservations) on the new schedule list: past-due entries map to `inactive-schedule`, `monthlyRate` comes from `getMonthlyRate`, and `nextDate` from the entry's `storedNextDate`. `reservations.integration.test.ts` now mocks `runScheduleForecast`. Dropped with the fork file: the clear errors for a missing schedule or rule, the guard for a schedule with no next date, and `roundHalfAwayFromZero`; `getScheduleClaims` pre-resolves missing and ambiguous schedules, so reservations does not depend on them.
+
+Verification: `yarn typecheck` passes. `yarn test` passes. `oxlint --type-aware` on the 69 changed files reports warnings only. `oxfmt --check` differs only by CRLF on files checked out with `autocrlf`, apart from one real issue fixed in `schedule-template.ts`.
